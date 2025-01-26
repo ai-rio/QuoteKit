@@ -79,11 +79,11 @@ Bootstrap your SaaS with a modern tech stack built to move quick. Follow the gui
 
 Now we're going to run the initial [Supabase Migration](https://supabase.com/docs/reference/cli/supabase-migration-new) to create your database tables.
 
-1. Run `npx supabase login`
-1. Run `npx supabase init`
+1. Run `bunx supabase login`
+1. Run `bunx supabase init`
 1. Open your `package.json` and update both `UPDATE_THIS_WITH_YOUR_SUPABASE_PROJECT_ID` strings with your supabase project id
-1. Run `npm run supabase:link`
-1. Run `npm run migration:up`
+1. Run `bun run supabase:link`
+1. Run `bun run migration:up`
 
 ### 7. Run Stripe Fixture
 
@@ -101,8 +101,8 @@ Now we're going to run the initial [Supabase Migration](https://supabase.com/doc
 
 You did it! You should be able to look in your Stripe dashboard and see your products, and you should also see the same data has been populated in your Supabase database. Now let's test everything.
 
-1. Run `npm i`
-1. Run `npm run dev`.
+1. Run `bun i`
+1. Run `bun run dev`.
 1. Go to the app and click `Get started for free` - this will take you to the login page
 1. We haven't configured auth providers, so for now click `Continue with Email` and submit your email address
 1. Click the link sent to your email and you should be redirected back to your app - authenticated
