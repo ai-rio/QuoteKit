@@ -24,11 +24,17 @@ export async function signInWithOAuth(provider: 'github' | 'google'): Promise<Ac
   return redirect(data.url);
 }
 
-export async function signInWithEmail(email: string): Promise<ActionResponse> {
+export async function signInWithEmail(formData: FormData): Promise<ActionResponse> {
+  const email = formData.get('email') as string;
+  
+  if (!email || !email.trim()) {
+    return { data: null, error: { message: 'Email is required' } };
+  }
+
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.auth.signInWithOtp({
-    email,
+    email: email.trim(),
     options: {
       emailRedirectTo: getURL('/auth/callback'),
     },

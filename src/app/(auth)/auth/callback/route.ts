@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     const { data: userSubscription } = await supabase
       .from('subscriptions')
       .select('*, prices(*, products(*))')
+      .eq('user_id', user.id)
       .in('status', ['trialing', 'active'])
       .maybeSingle();
 
