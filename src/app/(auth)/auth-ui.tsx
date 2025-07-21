@@ -23,7 +23,7 @@ export function AuthUI({
 }: {
   mode: 'login' | 'signup';
   signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>;
-  signInWithEmail: (email: string) => Promise<ActionResponse>;
+  signInWithEmail: (formData: FormData) => Promise<ActionResponse>;
 }) {
   const [pending, setPending] = useState(false);
   const [emailFormOpen, setEmailFormOpen] = useState(false);
@@ -32,13 +32,15 @@ export function AuthUI({
     event.preventDefault();
     setPending(true);
     const form = event.target as HTMLFormElement;
-    const email = form['email'].value;
-    const response = await signInWithEmail(email);
+    const formData = new FormData(form);
+    const email = formData.get('email') as string;
+    
+    const response = await signInWithEmail(formData);
 
     if (response?.error) {
       toast({
         variant: 'destructive',
-        description: 'An error occurred while authenticating. Please try again.',
+        description: response.error.message || 'An error occurred while authenticating. Please try again.',
       });
     } else {
       toast({
