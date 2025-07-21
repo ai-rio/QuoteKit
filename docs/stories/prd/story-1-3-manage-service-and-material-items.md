@@ -14,3 +14,87 @@ so that I can quickly add them to new quotes without re-typing information.
 6. The user can edit the name, unit, or cost of any existing item in the list.  
 7. The user can delete an item from their database.  
 8. When using the quote calculator, the user can select from this list of saved items to add them to a quote.
+
+## Component Implementation
+
+### Required Shadcn/UI Components:
+- ✅ `table` - Items listing with TableHeader, TableBody, TableRow, TableCell
+- ✅ `button` - Add item, edit, delete action buttons (already installed)
+- ✅ `dialog` - Add/edit item modal forms (DialogHeader, DialogContent, DialogFooter)
+- ✅ `label` - Form field labels for item properties
+- ✅ `input` - Text inputs for item name, unit, numeric input for cost (already installed)
+- ✅ `alert` - Success/error messages for CRUD operations
+- ✅ `toast` - Real-time feedback for item operations (already installed)
+
+### Implementation Pattern:
+```tsx
+// Items management page with table and actions
+<div className="space-y-6">
+  <div className="flex justify-between items-center">
+    <h1 className="text-2xl font-bold">My Items</h1>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Add New Item</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Item</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <div className="grid gap-3">
+            <Label htmlFor="item-name">Item Name</Label>
+            <Input id="item-name" placeholder="Mulch Installation" />
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="unit">Unit</Label>
+            <Input id="unit" placeholder="cubic yard" />
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="cost">Cost/Rate per Unit ($)</Label>
+            <Input id="cost" type="number" step="0.01" placeholder="25.00" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="submit">Save Item</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+  
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>Item Name</TableHead>
+        <TableHead>Unit</TableHead>
+        <TableHead>Cost/Rate</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow>
+        <TableCell>Mulch Installation</TableCell>
+        <TableCell>cubic yard</TableCell>
+        <TableCell>$25.00</TableCell>
+        <TableCell className="text-right">
+          <Button variant="ghost" size="sm">Edit</Button>
+          <Button variant="ghost" size="sm">Delete</Button>
+        </TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</div>
+```
+
+### Key Features:
+1. **Items Table**: Professional table layout with sortable columns
+2. **Modal Forms**: Dialog component for add/edit operations
+3. **Inline Actions**: Edit/delete buttons per table row
+4. **Input Validation**: Numeric validation for cost fields
+5. **Bulk Operations**: Optional select-all functionality
+6. **Search/Filter**: Optional search functionality for large item lists
+
+### File Locations:
+- `app/(app)/items/page.tsx` - Main items management page
+- `components/items/items-table.tsx` - Items display table
+- `components/items/add-item-dialog.tsx` - Add new item modal
+- `components/items/edit-item-dialog.tsx` - Edit existing item modal
