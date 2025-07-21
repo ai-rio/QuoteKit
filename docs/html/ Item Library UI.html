@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawnQuote - Item Library</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS Script -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind CSS Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'stone-gray': '#D7D7D7',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'charcoal': '#1C1C1C',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-light-concrete font-sans">
+
+    <div id="app" class="flex h-screen bg-light-concrete">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-forest-green text-white flex flex-col p-4 flex-shrink-0">
+            <div class="flex items-center space-x-3 mb-10 px-2">
+                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                  <rect width="40" height="100" fill="#F5F5F5"/>
+                  <rect x="40" y="60" width="60" height="40" fill="#F5F5F5"/>
+                  <circle cx="80" cy="50" r="30" fill="#F5F5F5"/>
+                  <circle cx="80" cy="50" r="15" fill="#2A3D2F"/>
+                </svg>
+                <span class="text-2xl font-bold text-white font-mono">LawnQuote</span>
+            </div>
+            <nav class="flex-grow">
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-white/10">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Quotes
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg bg-white/20 font-bold mt-2">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m4-8h1m-1 4h1m-1 4h1M9 3v18m6-18v18"></path></svg>
+                    Item Library
+                </a>
+                 <a href="#" class="flex items-center p-3 rounded-lg hover:bg-white/10 mt-2">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </a>
+            </nav>
+            <div class="mt-auto">
+                 <a href="#" class="flex items-center p-3 rounded-lg hover:bg-white/10">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col">
+            <header class="bg-paper-white border-b border-stone-gray p-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-charcoal">Item Library</h1>
+                <div>
+                    <button id="add-item-btn" class="bg-equipment-yellow text-charcoal px-6 py-2 rounded-lg font-bold hover:scale-105 transform transition-transform">Add New Item</button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-paper-white p-6 rounded-lg shadow-sm border border-stone-gray">
+                        
+                        <!-- Table Header -->
+                        <div class="grid grid-cols-10 gap-4 font-bold text-sm text-charcoal/60 mb-4 px-4 border-b pb-4">
+                            <div class="col-span-4">ITEM NAME</div>
+                            <div class="col-span-2">UNIT</div>
+                            <div class="col-span-2 text-right">COST / PRICE</div>
+                            <div class="col-span-2 text-center">ACTIONS</div>
+                        </div>
+
+                        <!-- Item List Container -->
+                        <div id="item-list-container">
+                            <!-- JS will populate this -->
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    // State
+    let libraryItems = [
+        { id: 1, name: 'Lawn Mowing', unit: 'per hour', price: 50.00 },
+        { id: 2, name: 'Mulch Installation', unit: 'cubic yard', price: 75.00 },
+        { id: 3, name: 'Shrub Trimming', unit: 'each', price: 25.00 },
+        { id: 4, name: 'Fertilizer Application', unit: 'per 1000 sq ft', price: 40.00 }
+    ];
+
+    // DOM Elements
+    const itemListContainer = document.getElementById('item-list-container');
+    const addItemBtn = document.getElementById('add-item-btn');
+
+    // Functions
+    function renderLibraryItems() {
+        itemListContainer.innerHTML = '';
+
+        if (libraryItems.length === 0) {
+            itemListContainer.innerHTML = `
+                <div class="text-center py-12 text-charcoal/60">
+                    <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m4-8h1m-1 4h1m-1 4h1M9 3v18m6-18v18"></path></svg>
+                    <h3 class="mt-2 text-lg font-medium">Your library is empty.</h3>
+                    <p class="mt-1 text-sm">Add your first item to get started.</p>
+                </div>
+            `;
+            return;
+        }
+
+        libraryItems.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'grid grid-cols-10 gap-4 items-center mb-2 hover:bg-stone-gray/20 p-4 rounded-lg';
+            itemEl.innerHTML = `
+                <div class="col-span-4 font-medium">${item.name}</div>
+                <div class="col-span-2 text-charcoal/80">${item.unit}</div>
+                <div class="col-span-2 text-right font-mono text-charcoal">$${item.price.toFixed(2)}</div>
+                <div class="col-span-2 text-center flex justify-center space-x-2">
+                    <button data-id="${item.id}" class="text-charcoal/50 hover:text-forest-green p-2 rounded-full edit-btn">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z"></path></svg>
+                    </button>
+                    <button data-id="${item.id}" class="text-charcoal/50 hover:text-red-600 p-2 rounded-full delete-btn">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            `;
+            itemListContainer.appendChild(itemEl);
+        });
+    }
+    
+    // Placeholder for Add/Edit/Delete functionality
+    // In a real app, this would open a modal or switch to an inline editing view.
+    function handleAddItem() {
+        alert('This would open a form to add a new item.');
+    }
+
+    function handleDeleteItem(e) {
+        const deleteButton = e.target.closest('.delete-btn');
+        if (!deleteButton) return;
+        
+        if (confirm('Are you sure you want to delete this item?')) {
+            const id = parseInt(deleteButton.dataset.id);
+            libraryItems = libraryItems.filter(i => i.id !== id);
+            renderLibraryItems();
+        }
+    }
+    
+    function handleEditItem(e) {
+        const editButton = e.target.closest('.edit-btn');
+        if (!editButton) return;
+        alert('This would enable an inline form or open a modal to edit this item.');
+    }
+
+    // Event Listeners
+    addItemBtn.addEventListener('click', handleAddItem);
+    itemListContainer.addEventListener('click', handleDeleteItem);
+    itemListContainer.addEventListener('click', handleEditItem);
+
+
+    // Initial Render
+    renderLibraryItems();
+
+</script>
+</body>
+</html>
