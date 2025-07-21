@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
 import { deleteQuote, getQuotes } from '@/features/quotes/actions';
+import { PDFGenerator } from '@/features/quotes/components/pdf-generator';
 import { Quote } from '@/features/quotes/types';
 
 interface QuotesPageClientProps {
@@ -99,7 +100,22 @@ export function QuotesPageClient({ initialQuotes }: QuotesPageClientProps) {
                   <TableCell>
                     {new Date(quote.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const url = `/api/quotes/${quote.id}/pdf`;
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `quote-${quote.client_name.replace(/[^a-zA-Z0-9]/g, '-')}-${quote.id.slice(0, 8)}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                    >
+                      PDF
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
