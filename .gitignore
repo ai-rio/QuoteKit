@@ -71,3 +71,9 @@ Thumbs.db
 .eslintcache
 *.tgz
 *.zip
+
+#BMAD
+.bmad-core/
+
+#CLAUDE
+.claude/
