@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
 import { LineItem } from '@/features/items/types';
-import { calculateQuote, createQuote } from '@/features/quotes/actions';
+import { createQuote } from '@/features/quotes/actions';
 import { ClientInfoForm } from '@/features/quotes/components/client-info-form';
 import { LineItemsTable } from '@/features/quotes/components/line-items-table';
 import { PDFGenerator } from '@/features/quotes/components/pdf-generator';
 import { QuoteSummary } from '@/features/quotes/components/quote-summary';
 import { CreateQuoteData, QuoteLineItem } from '@/features/quotes/types';
+import { calculateQuote } from '@/features/quotes/utils';
 import { CompanySettings } from '@/features/settings/types';
 
 interface QuoteCreatorClientProps {

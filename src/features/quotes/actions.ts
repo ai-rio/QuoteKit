@@ -3,7 +3,8 @@
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 
-import { CreateQuoteData, Quote, QuoteCalculation } from './types';
+import { CreateQuoteData, Quote } from './types';
+import { calculateQuote } from './utils';
 
 export async function getQuotes(): Promise<ActionResponse<Quote[]>> {
   try {
@@ -118,22 +119,3 @@ export async function deleteQuote(quoteId: string): Promise<ActionResponse<void>
   }
 }
 
-// Utility function to calculate quote totals
-export function calculateQuote(
-  lineItems: { cost: number; quantity: number }[],
-  taxRate: number,
-  markupRate: number
-): QuoteCalculation {
-  const subtotal = lineItems.reduce((sum, item) => sum + (item.cost * item.quantity), 0);
-  const markupAmount = subtotal * (markupRate / 100);
-  const subtotalWithMarkup = subtotal + markupAmount;
-  const taxAmount = subtotalWithMarkup * (taxRate / 100);
-  const total = subtotalWithMarkup + taxAmount;
-
-  return {
-    subtotal,
-    taxAmount,
-    markupAmount,
-    total,
-  };
-}
