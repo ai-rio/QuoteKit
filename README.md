@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">QuoteKit</h1>
+  <h1 align="center">LawnQuote Software</h1>
 </p>
 
 <p align="center">
@@ -8,179 +8,195 @@
 
 ## Introduction
 
-Bootstrap your SaaS with a modern tech stack built to move quick. Follow the guide to get started.
+**LawnQuote Software** is a professional quote generation system for landscaping and lawn care businesses. Create, calculate, and deliver beautiful PDF quotes to your clients with automatic tax calculations and company branding.
 
-### What's included
+### Features Included
 
-- Next.js 15
+- **User Authentication** - Secure login with email magic links
+- **Company Settings** - Store your business info, logo, default tax and markup rates
+- **Service & Material Items** - Build your personal database of reusable services and materials
+- **Quote Calculator** - Real-time quote creation with automatic calculations
+- **PDF Generation** - Professional, branded quotes ready to send to clients
+- [Next.js 15](https://nextjs.org) - Modern React framework
 - [Supabase](https://supabase.com) - Postgres database & user authentication
-- [Stripe](https://stripe.com) - [Checkout](https://stripe.com/docs/payments/checkout), [subscriptions](https://stripe.com/docs/billing/subscriptions/overview), and [customer portal](https://stripe.com/docs/customer-management)
-- [React Email](https://react.email/) - Easily build emails and send them with [Resend](https://resend.com)
-- [Tailwindcss](https://tailwindcss.com/) - CSS framework
-- [shadcn/ui](https://ui.shadcn.com) - Prebuilt accessible components
-- Webhooks to automatically synchronize Stripe with Supabase
-- Stripe fixture to bootstrap product data
-- Supabase migrations to bootstrap and manage your db schema
-- Responsive, performant, and accessible prebuilt pages
-- Animated button borders! Now you can look cool without nerds saying you shipped too late
+- [shadcn/ui](https://ui.shadcn.com) - Beautiful, accessible UI components
+- [React PDF](https://react-pdf.org/) - Professional PDF generation
+- [Tailwindcss](https://tailwindcss.com/) - Utility-first CSS framework
 
-## Getting started
+## Quick Start (Local Development)
 
-### 1. Setup Supabase
+### 1. Clone and Install Dependencies
+
+```bash
+git clone <your-repo>
+cd QuoteKit
+npm install
+```
+
+### 2. Start Local Supabase
+
+```bash
+supabase start
+```
+
+This will start the local Supabase development environment with:
+- **API URL**: http://127.0.0.1:54321
+- **Studio URL**: http://127.0.0.1:54323 (Database admin interface)
+- **Inbucket URL**: http://127.0.0.1:54324 (Local email testing)
+
+### 3. Run Database Migrations
+
+```bash
+supabase migration up
+```
+
+This creates all the necessary tables for the application:
+- `company_settings` - Store business information and defaults
+- `line_items` - User's database of services and materials  
+- `quotes` - Generated quotes with calculations
+
+### 4. Start the Application
+
+```bash
+npm run dev
+```
+
+The application will be available at http://localhost:3000
+
+### 5. Test Email Authentication
+
+1. **Go to**: http://localhost:3000/login
+2. **Click**: "Continue with Email"
+3. **Enter any email**: e.g., `test@example.com`
+4. **Check local email server**: Go to http://127.0.0.1:54324
+5. **Click the magic link** in the email to authenticate
+
+### 6. Try the Complete Workflow
+
+Once logged in, you can:
+
+1. **Set up your company** → Go to Settings in the account menu
+2. **Add services/materials** → Go to "My Items" to build your database
+3. **Create quotes** → Go to "My Quotes" → "Create New Quote"
+4. **Generate PDFs** → After saving a quote, use the PDF generator
+
+---
+
+## Production Setup (Optional)
+
+For production deployment, you'll need to set up external services:
+
+### 1. Setup Supabase (Production)
 
 1. Go to [supabase.com](https://supabase.com) and create a project
-2. Go to Project Settings → Database → Database password and click reset database password then click generate a new password. (I know you already made one, but this fixes a [bug with their CLI where it doesn't like special characters in the password](https://github.com/supabase/supabase/issues/15184))
-3. Save this password somewhere, you can't see it after closing the box
+2. Get your project URL and API keys from Project Settings → API
+3. Update your `.env.local` with production values
 
-### 2. Setup Stripe
-
-1. Go to [stripe.com](https://stripe.com) and create a project
-2. Go to [Customer Portal Settings](https://dashboard.stripe.com/test/settings/billing/portal) and click the `Active test link` button
-
-### 3. Setup Resend
+### 2. Setup Resend (For Production Emails)
 
 1. Go to [resend.com](https://resend.com) and create an account
-2. Go to the [API Keys page](https://resend.com/api-keys) and create an API Key
-3. Add the [Supabase Resend integration](https://supabase.com/partners/integrations/resend)
+2. Get your API key from the [API Keys page](https://resend.com/api-keys)
+3. Add `RESEND_API_KEY` to your environment variables
 
-### 4. Deploy
+### 3. Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FKolbySisk%2Fnext-supabase-stripe-starter&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SUPABASE_DB_PASSWORD,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,RESEND_API_KEY&demo-title=AI%20Twitter%20Banner%20Demo&demo-url=https%3A%2F%2Fai-twitter-banner.vercel.app&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
-
-1. Next click the deploy button ⬆️
-2. On the form create a new repo and add the Supabase integration
-3. Add the environment variables that you have available. For the stripe webhook secret just put any value - we will come back to update this after configuring the webhook
-4. Click Deploy
-5. While you wait, clone your new repo and open it in your code editor. Then create a file named `.env.local`. Copy and pase the contents of `.env.local.example` into this file and add the correct values. They should be the same values you added in above.
-
-![Vercel env config](/delete-me/deplyoment-env.png)
-
-### 5. Stripe Webhook
-
-1. After deploying go to your Vercel dashboard and find your Vercel URL
-2. Next go to your Stripe dashboard, click `Developers` in the top nav, and then the `Webhooks` tab
-3. Add an endpoint. Enter your Vercel URL followed by `/api/webhooks`
-4. Click `Select events`
-5. Check `Select all events`
-6. Scroll to the bottom of the page and click `Add endpoint`
-7. Click to `Reveal` signing secret and copy it
-8. Go to your `Vercel project settings` → `Environment Variables`
-9. Update the value of the `STRIPE_WEBHOOK_SECRET` env with your newly acquired webhook secret. Press `Save`
-
-### 6. Run Supabase Migration
-
-Now we're going to run the initial [Supabase Migration](https://supabase.com/docs/reference/cli/supabase-migration-new) to create your database tables.
-
-1. Run `bunx supabase login`
-2. Run `bunx supabase init`
-3. Open your `package.json` and update both `UPDATE_THIS_WITH_YOUR_SUPABASE_PROJECT_ID` strings with your supabase project id
-4. Run `bun run supabase:link`
-5. Run `bun run migration:up`
-
-### 7. Run Stripe Fixture
-
-[Stripe fixtures](https://stripe.com/docs/cli/fixtures) are an easy way to configure your product offering without messing around in the Stripe UI.
-
-1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli#install). For Macs run: `brew install stripe/stripe-cli/stripe`
-2. Run (make sure to update the command with your Stripe sk) `stripe fixtures ./stripe-fixtures.json --api-key UPDATE_THIS_WITH_YOUR_STRIPE_SK`
-
-### 8. Last steps
-
-1. Do a `Search All` in your code editor for `UPDATE_THIS` and update all instances with the relevant value (**except for .env.local.example!**)
-2. Delete the `delete-me` dir
-
-### 9. Check it out!
-
-You did it! You should be able to look in your Stripe dashboard and see your products, and you should also see the same data has been populated in your Supabase database. Now let's test everything.
-
-1. Run `bun i`
-2. Run `bun run dev`.
-3. Go to the app and click `Get started for free` - this will take you to the login page
-4. We haven't configured auth providers, so for now click `Continue with Email` and submit your email address
-5. Click the link sent to your email and you should be redirected back to your app - authenticated
-6. Click `Get Started` on one of the plans. This will take you to a Stripe checkout page (In test mode)
-7. Enter `4242424242424242` as your credit card number. Fill out the rest of the form with any valid data and click Subscribe
-8. You should be redirect to the Account page where you can see your active subscription
-9. Click the `Manage your subscription` button
-
-**That's the end of the setup. The following are guides to help you code in your new codebase.**
+Deploy to Vercel, Netlify, or your preferred hosting platform with the environment variables from your `.env.local` file.
 
 ---
 
-## Guides
+## Application Features
 
-### Managing products
+### 🔐 Authentication System
+- **Email Magic Links**: Secure passwordless authentication
+- **User Sessions**: Persistent login with automatic redirects
+- **Account Management**: User profile and session management
 
-Your products and prices are managed via the `stripe-fixtures.json` file. You can delete your test data in Stripe on the [Developers page](https://dashboard.stripe.com/test/developers), make the changes you'd like, and then run the fixture command from above. When changes are made in Stripe the webhook hits the api route at `src/app/api/webhooks`. The handler will synchronize the data sent from Stripe to your Supabase database.
+### 🏢 Company Settings
+- **Business Information**: Store company name, address, phone
+- **Logo Upload**: Company branding (placeholder for future enhancement)
+- **Default Rates**: Set default tax and markup percentages
+- **Quote Customization**: Override defaults per quote
 
-The `metadata` field in your fixture is where we can store info about the product that can be used in your app. For example, say you have a basic product, and one of the features of the product includes a max number of team invites. You can add a field to the metadata like `team_invites`. Then update the Zod schema in `src/features/pricing/models/product-metadata.ts`
+### 📋 Service & Material Management
+- **Item Database**: Build your personal catalog of services and materials
+- **CRUD Operations**: Add, edit, delete items with validation
+- **Cost Tracking**: Unit prices and measurement units
+- **Quick Selection**: Easy item selection for quotes
 
-Then you can make use of it like this:
+### 💼 Quote Generation
+- **Client Information**: Store client names and contact details
+- **Real-time Calculations**: Automatic subtotals, tax, markup, and totals
+- **Dynamic Line Items**: Add multiple items with quantities
+- **Rate Overrides**: Quote-specific tax and markup adjustments
+- **Quote History**: View and manage all created quotes
 
-```ts
-const products = await getProducts();
-const productMetadata = productMetadataSchema.parse(products[0].metadata); // Now it's typesafe 🙌!
-productMetadata.teamInvites; // The value you set in the fixture
+### 📄 Professional PDFs
+- **Branded Output**: Company information and professional formatting
+- **Client-Focused**: Tax shown, internal markup hidden from clients
+- **Automatic Download**: Browser download with formatted filenames
+- **Print-Ready**: Clean, professional layout suitable for printing
+
+## Development Guide
+
+### Database Schema Management
+
+[Migrations](https://supabase.com/docs/reference/cli/supabase-migration-new) manage your database schema changes:
+
+```bash
+# Create a new migration
+npm run migration:new add_new_table
+
+# Apply migrations  
+npm run migration:up
 ```
 
-### Managing your database schema
+### File Structure
 
-[Migrations](https://supabase.com/docs/reference/cli/supabase-migration-new) are a powerful concept for managing your database schema. Any changes you make to your database schema should be done through migrations.
-
-Say you want to add a table named `invites`.
-
-First run `bun run migration:new add-invites-table`
-Then edit your file to include:
-
-```sql
-create table invites (
-  id uuid not null primary key default gen_random_uuid(),
-  email text not null,
-);
-alter table invites enable row level security;
+```
+src/
+├── app/                     # Next.js app router pages
+│   ├── (auth)/             # Authentication pages
+│   ├── (app)/              # Main application pages
+│   └── api/                # API routes
+├── components/             # Reusable UI components
+│   └── ui/                 # shadcn/ui components
+├── features/               # Feature-based modules
+│   ├── auth/               # Authentication logic
+│   ├── items/              # Service/material management
+│   ├── quotes/             # Quote creation & management
+│   └── settings/           # Company settings
+└── libs/                   # External service integrations
+    ├── pdf/                # PDF generation
+    └── supabase/           # Database client
 ```
 
-Then run `bun run migration:up` and your table will be added.
+### Key Technologies
 
-### Configuring auth providers
+- **Next.js 15** - React framework with App Router
+- **Supabase** - PostgreSQL database with Row Level Security
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
+- **shadcn/ui** - Pre-built accessible components
+- **React PDF** - PDF document generation
 
-There are many auth providers you can choose from. [See the Supabase docs](https://supabase.com/docs/guides/auth#providers) for the full the list and their respective guides to configure them.
+### Local Development URLs
 
-### Styling
-
-- [Learn more about shadcn/ui components](https://ui.shadcn.com/docs)
-- [Learn more about theming with shadcn/ui](https://ui.shadcn.com/docs/theming)
-- [Learn more about the Tailwindcss theme config](https://tailwindcss.com/docs/theme)
-
-### Emails
-
-Your emails live in the `src/features/emails` dir. Emails are finicky and difficult to style correctly, so make sure to reference the [React Email docs](https://react.email/docs/introduction). After creating your email component, sending an email is as simple as:
-
-```ts
-import WelcomeEmail from '@/features/emails/welcome';
-import { resendClient } from '@/libs/resend/resend-client';
-
-resendClient.emails.send({
-  from: 'no-reply@your-domain.com',
-  to: userEmail,
-  subject: 'Welcome!',
-  react: <WelcomeEmail />,
-});
-```
-
-### File structure
-
-The file structure uses the group by `feature` concept. This is where you will colocate code related to a specific feature, with the exception of UI code. Typically you want to keep your UI code in the `app` dir, with the exception of reusable components. Most of the time reusable components will be agnostic to a feature and should live in the `components` dir. The `components/ui` dir is where `shadcn/ui` components are generated to.
-
-### Going live
-
-Follow these steps when you're ready to go live:
-
-1. Activate your Stripe account and set the dashboard to live mode
-2. Repeat the steps above to create a Stripe webhook in live mode, this time using your live url
-3. Update Vercel env variables with your live Stripe pk, sk, and whsec
-4. After Vercel has redeployed with your new env variables, run the fixture command using your Stripe sk
+- **Application**: http://localhost:3000
+- **Database Admin**: http://127.0.0.1:54323
+- **Email Testing**: http://127.0.0.1:54324
+- **API Endpoint**: http://127.0.0.1:54321
 
 ---
 
-This project was inspired by Vercel's [nextjs-subscription-payments](https://github.com/vercel/nextjs-subscription-payments).
+## Architecture
+
+LawnQuote is built following modern web development practices:
+
+- **Feature-based Architecture**: Code organized by business features
+- **Server Components**: Leverage Next.js server components for performance  
+- **Row Level Security**: Database-level security with Supabase RLS
+- **Type Safety**: Full TypeScript coverage with strict mode
+- **Real-time Updates**: Optimistic UI updates for better UX
+- **Progressive Enhancement**: Works without JavaScript for core features
+
+Built from the [Next.js Supabase Starter](https://github.com/kolbysisk/next-supabase-stripe-starter) template.
