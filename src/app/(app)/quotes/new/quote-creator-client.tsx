@@ -9,6 +9,7 @@ import { LineItem } from '@/features/items/types';
 import { calculateQuote, createQuote } from '@/features/quotes/actions';
 import { ClientInfoForm } from '@/features/quotes/components/client-info-form';
 import { LineItemsTable } from '@/features/quotes/components/line-items-table';
+import { PDFGenerator } from '@/features/quotes/components/pdf-generator';
 import { QuoteSummary } from '@/features/quotes/components/quote-summary';
 import { CreateQuoteData, QuoteLineItem } from '@/features/quotes/types';
 import { CompanySettings } from '@/features/settings/types';
@@ -21,6 +22,7 @@ interface QuoteCreatorClientProps {
 export function QuoteCreatorClient({ availableItems, defaultSettings }: QuoteCreatorClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   
   // Client info state
   const [clientName, setClientName] = useState('');
@@ -114,7 +116,7 @@ export function QuoteCreatorClient({ availableItems, defaultSettings }: QuoteCre
       toast({
         description: 'Quote created successfully',
       });
-      router.push('/quotes');
+      setSavedQuoteId(response.data.id);
     }
 
     setIsLoading(false);
@@ -153,6 +155,16 @@ export function QuoteCreatorClient({ availableItems, defaultSettings }: QuoteCre
         isLoading={isLoading}
         disabled={!canSave}
       />
+
+      {savedQuoteId && (
+        <>
+          <Separator />
+          <PDFGenerator
+            quoteId={savedQuoteId}
+            clientName={clientName}
+          />
+        </>
+      )}
     </div>
   );
 }
