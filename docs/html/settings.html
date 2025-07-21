@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawnQuote - Settings</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS Script -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind CSS Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'stone-gray': '#D7D7D7',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'charcoal': '#1C1C1C',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-light-concrete font-sans">
+
+    <div id="app" class="flex h-screen bg-light-concrete">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-forest-green text-white flex flex-col p-4 flex-shrink-0">
+            <div class="flex items-center space-x-3 mb-10 px-2">
+                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+                  <rect width="40" height="100" fill="#F5F5F5"/>
+                  <rect x="40" y="60" width="60" height="40" fill="#F5F5F5"/>
+                  <circle cx="80" cy="50" r="30" fill="#F5F5F5"/>
+                  <circle cx="80" cy="50" r="15" fill="#2A3D2F"/>
+                </svg>
+                <span class="text-2xl font-bold text-white font-mono">LawnQuote</span>
+            </div>
+            <nav class="flex-grow">
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-white/10">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Quotes
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-white/10 mt-2">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m4-8h1m-1 4h1m-1 4h1M9 3v18m6-18v18"></path></svg>
+                    Item Library
+                </a>
+                 <a href="#" class="flex items-center p-3 rounded-lg bg-white/20 font-bold mt-2">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </a>
+            </nav>
+            <div class="mt-auto">
+                 <a href="#" class="flex items-center p-3 rounded-lg hover:bg-white/10">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col">
+            <header class="bg-paper-white border-b border-stone-gray p-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-charcoal">Settings</h1>
+                <div>
+                    <button id="save-btn" class="bg-forest-green text-white px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity opacity-50 cursor-not-allowed" disabled>Save Changes</button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-2xl mx-auto space-y-8">
+                    
+                    <!-- Company Profile Card -->
+                    <div class="bg-paper-white p-6 rounded-lg shadow-sm border border-stone-gray">
+                        <h2 class="text-lg font-bold mb-6 border-b pb-4">Company Profile</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="company-name" class="block text-sm font-medium text-charcoal/80 mb-1">Company Name</label>
+                                <input type="text" id="company-name" value="GreenScape Solutions" class="p-2 border border-stone-gray rounded-md w-full">
+                            </div>
+                            <div>
+                                <label for="company-address" class="block text-sm font-medium text-charcoal/80 mb-1">Address</label>
+                                <textarea id="company-address" rows="3" class="p-2 border border-stone-gray rounded-md w-full">123 Green Way, Lawnsville, USA</textarea>
+                            </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="company-phone" class="block text-sm font-medium text-charcoal/80 mb-1">Phone</label>
+                                    <input type="tel" id="company-phone" value="555-123-4567" class="p-2 border border-stone-gray rounded-md w-full">
+                                </div>
+                                <div>
+                                    <label for="company-email" class="block text-sm font-medium text-charcoal/80 mb-1">Email</label>
+                                    <input type="email" id="company-email" value="contact@greenscape.com" class="p-2 border border-stone-gray rounded-md w-full">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-charcoal/80 mb-1">Company Logo</label>
+                                <div class="mt-1 flex items-center">
+                                    <span id="logo-preview" class="inline-block h-16 w-16 rounded-lg overflow-hidden bg-stone-gray">
+                                        <img src="https://placehold.co/64x64/2A3D2F/F5F5F5?text=GS" alt="Company Logo Preview">
+                                    </span>
+                                    <input type="file" id="logo-upload" class="hidden">
+                                    <button onclick="document.getElementById('logo-upload').click()" class="ml-5 bg-white py-2 px-3 border border-stone-gray rounded-md shadow-sm text-sm leading-4 font-medium text-charcoal hover:bg-light-concrete">
+                                        Change
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Defaults Card -->
+                    <div class="bg-paper-white p-6 rounded-lg shadow-sm border border-stone-gray">
+                        <h2 class="text-lg font-bold mb-6 border-b pb-4">Financial Defaults</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="tax-rate" class="block text-sm font-medium text-charcoal/80 mb-1">Default Tax Rate (%)</label>
+                                <input type="number" id="tax-rate" value="5" class="p-2 border border-stone-gray rounded-md w-full md:w-1/3 font-mono">
+                            </div>
+                            <div>
+                                <label for="markup" class="block text-sm font-medium text-charcoal/80 mb-1">Default Profit Markup (%)</label>
+                                <input type="number" id="markup" value="20" class="p-2 border border-stone-gray rounded-md w-full md:w-1/3 font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    const formInputs = document.querySelectorAll('input, textarea');
+    const saveBtn = document.getElementById('save-btn');
+
+    formInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+    });
+
+    saveBtn.addEventListener('click', () => {
+        // In a real app, this would send the data to the server.
+        alert('Settings saved!');
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+</script>
+</body>
+</html>
+    
