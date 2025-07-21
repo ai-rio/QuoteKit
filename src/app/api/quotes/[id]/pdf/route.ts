@@ -7,9 +7,10 @@ import { renderToBuffer } from '@react-pdf/renderer';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createSupabaseServerClient();
     
     // Get the authenticated user
@@ -22,7 +23,7 @@ export async function GET(
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id) // Ensure user owns the quote
       .single();
 
