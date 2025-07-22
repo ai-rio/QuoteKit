@@ -28,7 +28,7 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
   const [logoUrl, setLogoUrl] = useState<string | null>(initialSettings?.logo_url || null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const { formData, updateField, hasChanges, canSave } = useChangeTracking(initialSettings);
+  const { formData, updateField, hasChanges, canSave, resetChanges } = useChangeTracking(initialSettings);
 
   // Wrapper function to handle type conversion for card components
   const handleFieldChange = (field: string, value: string) => {
@@ -44,11 +44,7 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
     } else {
       setLogoFile(null);
       setLogoUrl(null);
-      
-      // Delete existing logo if there was one
-      if (initialSettings?.logo_file_name) {
-        await deleteLogo(initialSettings.logo_file_name);
-      }
+      // Don't delete immediately - wait for save
     }
   };
 
@@ -62,8 +58,9 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
       let finalLogoUrl = logoUrl;
       let finalLogoFileName = initialSettings?.logo_file_name || null;
 
-      // Handle logo upload if new file was selected
+      // Handle logo changes
       if (logoFile) {
+        // New file was selected - upload it
         const uploadResult = await uploadLogo(logoFile, userId);
         
         if (uploadResult.error) {
@@ -81,6 +78,11 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
             await deleteLogo(initialSettings.logo_file_name);
           }
         }
+      } else if (logoUrl === null && initialSettings?.logo_file_name) {
+        // Logo was removed - delete the existing file
+        await deleteLogo(initialSettings.logo_file_name);
+        finalLogoUrl = null;
+        finalLogoFileName = null;
       }
 
       // Create form data for submission
@@ -109,6 +111,9 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
         toast({
           description: 'Settings saved successfully',
         });
+        
+        // Reset change tracking after successful save
+        resetChanges();
         
         // Clean up preview URL if it was created
         if (logoFile && logoUrl?.startsWith('blob:')) {

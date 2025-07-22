@@ -93,7 +93,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             <Label className="text-label text-charcoal font-medium">Company Logo</Label>
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={initialSettings?.logo_url || ''} />
+                {initialSettings?.logo_url && <AvatarImage src={initialSettings.logo_url} />}
                 <AvatarFallback>Logo</AvatarFallback>
               </Avatar>
               <Button type="button" variant="outline" disabled>

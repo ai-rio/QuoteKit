@@ -93,6 +93,10 @@ export function useChangeTracking(initialSettings: CompanySettings | null) {
     }
   };
 
+  const resetChanges = () => {
+    setHasChanges(false);
+  };
+
   return {
     formData,
     updateField,
@@ -100,6 +104,7 @@ export function useChangeTracking(initialSettings: CompanySettings | null) {
     isValidForm,
     canSave: hasChanges && isValidForm,
     validation,
-    getValidationMessage
+    getValidationMessage,
+    resetChanges
   };
 }

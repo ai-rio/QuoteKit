@@ -158,7 +158,7 @@ export function CompanyProfileCard({
             {/* Logo Preview */}
             <div className="flex-shrink-0">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={logoUrl || ''} />
+                {logoUrl && <AvatarImage src={logoUrl} />}
                 <AvatarFallback className="bg-stone-gray/20 text-charcoal/60">
                   Logo
                 </AvatarFallback>
@@ -199,12 +199,11 @@ export function CompanyProfileCard({
                   {logoUrl && (
                     <Button
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      className="border-stone-gray text-charcoal/70 hover:bg-stone-gray/20"
+                      className="bg-paper-white text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray font-bold"
                       onClick={removeLogo}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-4 w-4 mr-1" />
+                      Remove
                     </Button>
                   )}
                 </div>
