@@ -1,11 +1,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { Container } from '@/components/container';
 import { Button } from '@/components/ui/button';
 import { PricingSection } from '@/features/pricing/components/pricing-section';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 export default async function HomePage() {
+  // Check if user is authenticated
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // If user is authenticated, redirect to dashboard
+  if (user) {
+    redirect('/dashboard');
+  }
+
+  // Otherwise, show the public marketing page
   return (
     <div className='flex flex-col gap-8 lg:gap-32'>
       <HeroSection />
