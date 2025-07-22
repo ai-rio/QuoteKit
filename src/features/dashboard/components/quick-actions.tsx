@@ -26,13 +26,13 @@ function getIcon(iconName: string) {
 function getColorClasses(color: string) {
   switch (color) {
     case 'forest-green':
-      return 'bg-[#2A3D2F] hover:bg-[#2A3D2F]/90 text-white'
+      return 'bg-forest-green hover:opacity-90 text-white'
     case 'equipment-yellow':
-      return 'bg-[#F2B705] hover:bg-[#F2B705]/90 text-[#1C1C1C]'
+      return 'bg-equipment-yellow hover:bg-equipment-yellow/90 text-charcoal hover:text-charcoal'
     case 'stone-gray':
-      return 'bg-[#D7D7D7] hover:bg-[#D7D7D7]/90 text-[#1C1C1C]'
+      return 'bg-stone-gray hover:bg-stone-gray/90 text-charcoal'
     default:
-      return 'bg-[#2A3D2F] hover:bg-[#2A3D2F]/90 text-white'
+      return 'bg-forest-green hover:opacity-90 text-white'
   }
 }
 
@@ -44,15 +44,15 @@ export function QuickActions({ actions }: QuickActionsProps) {
         const colorClasses = getColorClasses(action.color)
         
         return (
-          <Card key={action.href} className="group hover:shadow-lg transition-shadow">
+          <Card key={action.href} className="group hover:shadow-lg transition-shadow bg-paper-white border-stone-gray">
             <CardHeader className="text-center pb-4">
               <div className="flex justify-center mb-3">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses}`}>
                   <Icon className="h-6 w-6" />
                 </div>
               </div>
-              <CardTitle className="text-lg">{action.title}</CardTitle>
-              <CardDescription className="text-sm">
+              <CardTitle className="text-lg font-bold text-charcoal">{action.title}</CardTitle>
+              <CardDescription className="text-sm text-charcoal/70">
                 {action.description}
               </CardDescription>
             </CardHeader>

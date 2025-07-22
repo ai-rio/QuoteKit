@@ -59,32 +59,36 @@ export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialog
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-paper-white border-stone-gray">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
+            <DialogTitle className="text-charcoal text-lg font-bold">Edit Item</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-3">
-              <Label htmlFor="edit-item-name">Item Name</Label>
+              <Label htmlFor="edit-item-name" className="text-label text-charcoal font-medium">Item Name</Label>
               <Input
                 id="edit-item-name"
                 name="name"
                 defaultValue={item.name}
+                placeholder="Enter item name"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 required
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="edit-unit">Unit</Label>
+              <Label htmlFor="edit-unit" className="text-label text-charcoal font-medium">Unit</Label>
               <Input
                 id="edit-unit"
                 name="unit"
                 defaultValue={item.unit || ''}
+                placeholder="Enter unit (e.g., sq ft, hour)"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 required
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="edit-cost">Cost/Rate per Unit ($)</Label>
+              <Label htmlFor="edit-cost" className="text-label text-charcoal font-medium">Cost/Rate per Unit ($)</Label>
               <Input
                 id="edit-cost"
                 name="cost"
@@ -92,15 +96,17 @@ export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialog
                 step="0.01"
                 min="0"
                 defaultValue={item.cost}
+                placeholder="0.00"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
                 required
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="ghost" className="text-charcoal hover:bg-stone-gray/20 active:bg-stone-gray/30" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending} className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold">
               {pending ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>

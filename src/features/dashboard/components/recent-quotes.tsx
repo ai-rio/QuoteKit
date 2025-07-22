@@ -42,19 +42,19 @@ function getStatusColor(status: string) {
 export function RecentQuotes({ quotes }: RecentQuotesProps) {
   if (quotes.length === 0) {
     return (
-      <Card>
+      <Card className="bg-paper-white border-stone-gray">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-charcoal font-bold">
             <FileText className="h-5 w-5" />
             Recent Quotes
           </CardTitle>
-          <CardDescription>Your latest quote activity</CardDescription>
+          <CardDescription className="text-charcoal/70">Your latest quote activity</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No quotes created yet</p>
-            <Button asChild className="bg-[#2A3D2F] hover:bg-[#2A3D2F]/90">
+            <FileText className="h-12 w-12 text-charcoal/30 mx-auto mb-4" />
+            <p className="text-charcoal/60 mb-4">No quotes created yet</p>
+            <Button asChild className="bg-forest-green text-white hover:opacity-90 font-bold">
               <Link href="/quotes/new">
                 Create Your First Quote
               </Link>
@@ -72,12 +72,12 @@ export function RecentQuotes({ quotes }: RecentQuotesProps) {
           <FileText className="h-5 w-5" />
           Recent Quotes
         </CardTitle>
-        <CardDescription>Your latest quote activity</CardDescription>
+        <CardDescription className="text-charcoal/70">Your latest quote activity</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {quotes.map((quote) => (
-            <div key={quote.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+            <div key={quote.id} className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete transition-colors">
               <div className="flex-1">
                 <div className="font-medium text-sm">{quote.clientName}</div>
                 <div className="text-xs text-gray-500">{formatDate(quote.createdAt)}</div>
@@ -97,7 +97,7 @@ export function RecentQuotes({ quotes }: RecentQuotesProps) {
           ))}
           {quotes.length > 0 && (
             <div className="text-center pt-4">
-              <Button variant="outline" asChild>
+              <Button asChild className="bg-forest-green text-white hover:opacity-90 font-bold">
                 <Link href="/quotes">
                   View All Quotes
                 </Link>

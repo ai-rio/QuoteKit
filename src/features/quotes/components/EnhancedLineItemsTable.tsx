@@ -54,13 +54,12 @@ export function EnhancedLineItemsTable({
 
   if (quoteLineItems.length === 0) {
     return (
-      <div className="border-2 border-dashed border-[#D7D7D7] rounded-lg p-8 text-center">
-        <div className="text-[#1C1C1C]/60 text-lg mb-4">No items added yet</div>
+      <div className="border-2 border-dashed border-stone-gray rounded-lg p-8 text-center">
+        <div className="text-charcoal/60 text-lg mb-4">No items added yet</div>
         <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
           <DialogTrigger asChild>
             <Button
-              variant="outline"
-              className="border-[#F2B705] text-[#1C1C1C] hover:bg-[#F2B705]/10"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Item
@@ -85,24 +84,24 @@ export function EnhancedLineItemsTable({
       <div className="hidden md:block">
         <Table>
           <TableHeader>
-            <TableRow className="border-[#D7D7D7]">
-              <TableHead className="font-bold text-[#1C1C1C]/60 w-[40%]">ITEM</TableHead>
-              <TableHead className="font-bold text-[#1C1C1C]/60 text-right w-[15%]">QTY</TableHead>
-              <TableHead className="font-bold text-[#1C1C1C]/60 text-right w-[15%]">PRICE</TableHead>
-              <TableHead className="font-bold text-[#1C1C1C]/60 text-right w-[20%]">TOTAL</TableHead>
+            <TableRow className="border-stone-gray">
+              <TableHead className="font-bold text-charcoal/60 w-[40%]">ITEM</TableHead>
+              <TableHead className="font-bold text-charcoal/60 text-right w-[15%]">QTY</TableHead>
+              <TableHead className="font-bold text-charcoal/60 text-right w-[15%]">PRICE</TableHead>
+              <TableHead className="font-bold text-charcoal/60 text-right w-[20%]">TOTAL</TableHead>
               <TableHead className="w-[10%]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {quoteLineItems.map((item) => (
-              <TableRow key={item.id} className="border-[#D7D7D7]/50">
+              <TableRow key={item.id} className="border-stone-gray/50">
                 <TableCell>
                   <Input
                     value={item.name}
                     onChange={(e) => handleNameChange(item.id, e.target.value)}
-                    className="border-0 bg-transparent p-0 text-base font-medium focus:bg-white focus:border focus:border-[#D7D7D7] rounded-md focus:px-3 focus:py-2"
+                    className="border-0 bg-transparent p-0 text-base font-medium text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2"
                   />
-                  <div className="text-sm text-[#1C1C1C]/60 mt-1">{item.unit || 'unit'}</div>
+                  <div className="text-sm text-charcoal/60 mt-1">{item.unit || 'unit'}</div>
                 </TableCell>
                 <TableCell className="text-right">
                   <Input
@@ -111,7 +110,7 @@ export function EnhancedLineItemsTable({
                     step="0.01"
                     value={item.quantity}
                     onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                    className="w-20 text-right font-mono border-[#D7D7D7] ml-auto"
+                    className="w-20 text-right font-mono border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green ml-auto"
                   />
                 </TableCell>
                 <TableCell className="text-right">
@@ -127,7 +126,7 @@ export function EnhancedLineItemsTable({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemoveItem(item.id)}
-                    className="text-[#1C1C1C]/50 hover:text-red-600 hover:bg-red-50"
+                    className="text-charcoal/50 hover:text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -141,45 +140,45 @@ export function EnhancedLineItemsTable({
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
         {quoteLineItems.map((item) => (
-          <div key={item.id} className="bg-[#F5F5F5] p-4 rounded-lg border border-[#D7D7D7]">
+          <div key={item.id} className="bg-light-concrete p-4 rounded-lg border border-stone-gray">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <Input
                   value={item.name}
                   onChange={(e) => handleNameChange(item.id, e.target.value)}
-                  className="border-0 bg-transparent p-0 text-base font-medium focus:bg-white focus:border focus:border-[#D7D7D7] rounded-md focus:px-3 focus:py-2"
+                  className="border-0 bg-transparent p-0 text-base font-medium text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2"
                 />
-                <div className="text-sm text-[#1C1C1C]/60 mt-1">{item.unit || 'unit'}</div>
+                <div className="text-sm text-charcoal/60 mt-1">{item.unit || 'unit'}</div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemoveItem(item.id)}
-                className="text-[#1C1C1C]/50 hover:text-red-600 hover:bg-red-50"
+                className="text-charcoal/50 hover:text-red-600 hover:bg-red-50"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <div className="text-xs text-[#1C1C1C]/60 mb-1">QTY</div>
+                <div className="text-xs text-charcoal/60 mb-1">QTY</div>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={item.quantity}
                   onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                  className="text-center font-mono border-[#D7D7D7]"
+                  className="text-center font-mono border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green"
                 />
               </div>
               <div>
-                <div className="text-xs text-[#1C1C1C]/60 mb-1">PRICE</div>
+                <div className="text-xs text-charcoal/60 mb-1">PRICE</div>
                 <div className="h-10 flex items-center justify-center font-mono text-sm">
                   ${item.cost.toFixed(2)}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-[#1C1C1C]/60 mb-1">TOTAL</div>
+                <div className="text-xs text-charcoal/60 mb-1">TOTAL</div>
                 <div className="h-10 flex items-center justify-center font-mono text-sm font-bold">
                   ${(item.quantity * item.cost).toFixed(2)}
                 </div>
@@ -194,8 +193,7 @@ export function EnhancedLineItemsTable({
         <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
           <DialogTrigger asChild>
             <Button
-              variant="outline"
-              className="border-[#F2B705] text-[#1C1C1C] hover:bg-[#F2B705]/10"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Another Item
@@ -228,22 +226,22 @@ function ItemSelectorDialog({
   onAddItem: (item: LineItem) => void;
 }) {
   return (
-    <DialogContent className="max-w-md">
+    <DialogContent className="max-w-md bg-paper-white border-stone-gray">
       <DialogHeader>
-        <DialogTitle>Select Item to Add</DialogTitle>
+        <DialogTitle className="text-charcoal font-bold">Select Item to Add</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
         <Input
           placeholder="Search items..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="border-[#D7D7D7]"
+          className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
         />
         <div className="max-h-60 overflow-y-auto space-y-2">
           {availableItems.filter(item =>
             item.name.toLowerCase().includes(searchTerm.toLowerCase())
           ).length === 0 ? (
-            <div className="text-center text-[#1C1C1C]/60 py-4">
+            <div className="text-center text-charcoal/60 py-4">
               No items found
             </div>
           ) : (
@@ -252,14 +250,14 @@ function ItemSelectorDialog({
             ).map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-3 border border-[#D7D7D7] rounded-lg hover:bg-[#F5F5F5] cursor-pointer"
+                className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete cursor-pointer"
                 onClick={() => onAddItem(item)}
               >
                 <div>
-                  <div className="font-medium">{item.name}</div>
-                  <div className="text-sm text-[#1C1C1C]/60">{item.unit || 'unit'}</div>
+                  <div className="font-medium text-charcoal">{item.name}</div>
+                  <div className="text-sm text-charcoal/60">{item.unit || 'unit'}</div>
                 </div>
-                <div className="font-mono font-bold">${item.cost.toFixed(2)}</div>
+                <div className="font-mono font-bold text-charcoal">${item.cost.toFixed(2)}</div>
               </div>
             ))
           )}

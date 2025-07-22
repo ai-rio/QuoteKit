@@ -18,7 +18,7 @@ export function LawnQuoteLogo({ className, width = 40, height = 40 }: LawnQuoteL
       <rect width="40" height="100" fill="currentColor"/>
       <rect x="40" y="60" width="60" height="40" fill="currentColor"/>
       <circle cx="80" cy="50" r="30" fill="currentColor"/>
-      <circle cx="80" cy="50" r="15" fill="#2A3D2F"/>
+      <circle cx="80" cy="50" r="15" fill="hsl(var(--forest-green))"/>
     </svg>
   )
 }

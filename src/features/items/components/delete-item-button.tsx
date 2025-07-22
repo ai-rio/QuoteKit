@@ -46,6 +46,7 @@ export function DeleteItemButton({ itemId, itemName, onItemDeleted }: DeleteItem
       size="sm"
       onClick={handleDelete}
       disabled={pending}
+      className="text-charcoal hover:bg-stone-gray/20 active:bg-stone-gray/30"
     >
       {pending ? 'Deleting...' : 'Delete'}
     </Button>

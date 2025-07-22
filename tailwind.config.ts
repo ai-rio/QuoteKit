@@ -58,6 +58,13 @@ const config: Config = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        // LawnQuote Brand Colors
+        'forest-green': 'hsl(var(--forest-green))',
+        'equipment-yellow': 'hsl(var(--equipment-yellow))',
+        'light-concrete': 'hsl(var(--light-concrete))',
+        'stone-gray': 'hsl(var(--stone-gray))',
+        'charcoal': 'hsl(var(--charcoal))',
+        'paper-white': 'hsl(var(--paper-white))',
       },
       borderRadius: {
         lg: `var(--radius)`,
@@ -65,8 +72,8 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-montserrat)', ...fontFamily.sans],
-        alt: ['var(--font-montserrat-alternates)'],
+        sans: ['var(--font-inter)', ...fontFamily.sans],
+        mono: ['var(--font-roboto-mono)', ...fontFamily.mono],
       },
       keyframes: {
         'accordion-down': {

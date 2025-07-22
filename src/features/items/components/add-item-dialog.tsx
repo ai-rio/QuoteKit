@@ -54,50 +54,55 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add New Item</Button>
+        <Button className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold">
+          Add New Item
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-paper-white border-stone-gray">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add New Item</DialogTitle>
+            <DialogTitle className="text-charcoal text-lg font-bold">Add New Item</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-3">
-              <Label htmlFor="item-name">Item Name</Label>
+              <Label htmlFor="item-name" className="text-label text-charcoal font-medium">Item Name</Label>
               <Input
                 id="item-name"
                 name="name"
-                placeholder="Mulch Installation"
+                placeholder="Enter item name"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 required
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="unit">Unit</Label>
+              <Label htmlFor="unit" className="text-label text-charcoal font-medium">Unit</Label>
               <Input
                 id="unit"
                 name="unit"
-                placeholder="cubic yard"
+                placeholder="Enter unit (e.g., sq ft, hour)"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 required
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="cost">Cost/Rate per Unit ($)</Label>
+              <Label htmlFor="cost" className="text-label text-charcoal font-medium">Cost/Rate per Unit ($)</Label>
               <Input
                 id="cost"
                 name="cost"
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="25.00"
+                placeholder="0.00"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
                 required
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="ghost" className="text-charcoal hover:bg-stone-gray/20 active:bg-stone-gray/30" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending} className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold">
               {pending ? 'Saving...' : 'Save Item'}
             </Button>
           </DialogFooter>

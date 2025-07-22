@@ -55,7 +55,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname()
 
   return (
-    <Sidebar className="bg-[#2A3D2F] text-white" {...props}>
+    <Sidebar className="bg-forest-green text-white" {...props}>
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-3 px-2">
           <LawnQuoteLogo className="text-white flex-shrink-0" />
@@ -78,7 +78,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   className={`
                     flex items-center p-3 rounded-lg font-medium
                     ${isHighlight 
-                      ? 'bg-[#F2B705] text-[#1C1C1C] font-bold hover:bg-[#F2B705]/90 hover:scale-105 transform transition-all duration-200' 
+                      ? 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200' 
                       : isActive 
                         ? 'bg-white/20 text-white font-bold' 
                         : 'text-white hover:bg-white/10'
