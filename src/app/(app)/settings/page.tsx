@@ -12,7 +12,8 @@ export default async function SettingsPage() {
     redirect('/login');
   }
 
-  const { data: settings } = await getCompanySettings();
+  const response = await getCompanySettings();
+  const settings = response?.data;
 
   return (
     <div className="container mx-auto max-w-2xl py-8">
@@ -24,7 +25,7 @@ export default async function SettingsPage() {
           </p>
         </div>
         
-        <SettingsForm initialSettings={settings} />
+        <SettingsForm initialSettings={settings || null} />
       </div>
     </div>
   );

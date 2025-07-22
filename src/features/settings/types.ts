@@ -5,6 +5,6 @@ export interface CompanySettings {
   company_address: string | null;
   company_phone: string | null;
   logo_url: string | null;
-  default_tax_rate: number;
-  default_markup_rate: number;
+  default_tax_rate: number | null;
+  default_markup_rate: number | null;
 }

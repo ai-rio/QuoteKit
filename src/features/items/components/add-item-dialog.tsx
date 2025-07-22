@@ -34,7 +34,7 @@ export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
 
     const response = await createLineItem(formData);
 
-    if (response.error) {
+    if (response?.error) {
       toast({
         variant: 'destructive',
         description: response.error.message || 'Failed to create item',

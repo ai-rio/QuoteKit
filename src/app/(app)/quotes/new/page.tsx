@@ -2,9 +2,8 @@ import { redirect } from 'next/navigation';
 
 import { getSession } from '@/features/account/controllers/get-session';
 import { getLineItems } from '@/features/items/actions';
+import { QuoteCreator } from '@/features/quotes/components/QuoteCreator';
 import { getCompanySettings } from '@/features/settings/actions';
-
-import { QuoteCreatorClient } from './quote-creator-client';
 
 export default async function NewQuotePage() {
   const session = await getSession();
@@ -13,24 +12,20 @@ export default async function NewQuotePage() {
     redirect('/login');
   }
 
-  const [{ data: items }, { data: settings }] = await Promise.all([
+  const [itemsResponse, settingsResponse] = await Promise.all([
     getLineItems(),
     getCompanySettings(),
   ]);
+  
+  const items = itemsResponse?.data;
+  const settings = settingsResponse?.data;
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Create New Quote</h1>
-          <p className="text-muted-foreground">
-            Create a professional quote for your client with automatic calculations.
-          </p>
-        </div>
-        
-        <QuoteCreatorClient 
+    <div className="min-h-screen bg-[#F5F5F5] py-8">
+      <div className="container mx-auto px-4">
+        <QuoteCreator 
           availableItems={items || []} 
-          defaultSettings={settings}
+          defaultSettings={settings || null}
         />
       </div>
     </div>

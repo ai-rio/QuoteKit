@@ -12,7 +12,8 @@ export default async function ItemsPage() {
     redirect('/login');
   }
 
-  const { data: items } = await getLineItems();
+  const response = await getLineItems();
+  const items = response?.data;
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
