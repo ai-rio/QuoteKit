@@ -4,12 +4,21 @@ import { useCallback, useState } from 'react';
 
 import { getLineItems } from '@/features/items/actions';
 import { AddItemDialog } from '@/features/items/components/add-item-dialog';
-import { ItemsTable } from '@/features/items/components/items-table';
-import { LineItem } from '@/features/items/types';
+import { ItemLibrary } from '@/features/items/components/ItemLibrary';
+import { ItemCategory, LineItem } from '@/features/items/types';
 
 interface ItemsPageClientProps {
   initialItems: LineItem[];
 }
+
+// Mock categories data - in a real app, this would come from the database
+const mockCategories: ItemCategory[] = [
+  { id: '1', user_id: 'mock-user', name: 'Lawn Care', color: '#22c55e', created_at: new Date().toISOString() },
+  { id: '2', user_id: 'mock-user', name: 'Landscaping', color: '#3b82f6', created_at: new Date().toISOString() },
+  { id: '3', user_id: 'mock-user', name: 'Materials', color: '#f59e0b', created_at: new Date().toISOString() },
+  { id: '4', user_id: 'mock-user', name: 'Equipment', color: '#ef4444', created_at: new Date().toISOString() },
+  { id: '5', user_id: 'mock-user', name: 'Maintenance', color: '#8b5cf6', created_at: new Date().toISOString() },
+];
 
 export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
   const [items, setItems] = useState<LineItem[]>(initialItems);
@@ -22,18 +31,14 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-charcoal">My Items</h1>
-          <p className="text-charcoal/70">
-            Manage your services and materials database for quick quote creation.
-          </p>
-        </div>
-        <AddItemDialog onItemAdded={refreshItems} />
+    <div className="min-h-screen bg-light-concrete p-6">
+      <div className="max-w-7xl mx-auto">
+        <ItemLibrary 
+          items={items}
+          categories={mockCategories}
+          onItemsChange={refreshItems}
+        />
       </div>
-      
-      <ItemsTable items={items} onItemsChange={refreshItems} />
     </div>
   );
 }
