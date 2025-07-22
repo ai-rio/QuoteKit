@@ -33,6 +33,16 @@
     --ring: 215 20.2% 65.1%;
 
     --radius: 0.5rem;
+
+    /* Sidebar variables for forest green theme */
+    --sidebar: 147 21% 20%; /* #2A3D2F forest green */
+    --sidebar-foreground: 0 0% 100%; /* white text */
+    --sidebar-primary: 147 21% 15%; /* darker forest green */
+    --sidebar-primary-foreground: 0 0% 100%; /* white text */
+    --sidebar-accent: 0 0% 100%; /* white with opacity */
+    --sidebar-accent-foreground: 147 21% 20%; /* forest green text */
+    --sidebar-border: 0 0% 100%; /* white with opacity */
+    --sidebar-ring: 0 0% 100%; /* white with opacity */
   }
 
   .dark {
@@ -66,6 +76,16 @@
     --ring: 216 34% 17%;
 
     --radius: 0.5rem;
+
+    /* Sidebar variables for forest green theme (dark mode) */
+    --sidebar: 147 21% 20%; /* #2A3D2F forest green */
+    --sidebar-foreground: 0 0% 100%; /* white text */
+    --sidebar-primary: 147 21% 15%; /* darker forest green */
+    --sidebar-primary-foreground: 0 0% 100%; /* white text */
+    --sidebar-accent: 0 0% 100%; /* white with opacity */
+    --sidebar-accent-foreground: 147 21% 20%; /* forest green text */
+    --sidebar-border: 0 0% 100%; /* white with opacity */
+    --sidebar-ring: 0 0% 100%; /* white with opacity */
   }
   ::selection {
     @apply text-black;

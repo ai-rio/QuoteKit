@@ -3,6 +3,39 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      company_settings: {
+        Row: {
+          company_address: string | null;
+          company_name: string | null;
+          company_phone: string | null;
+          default_markup_rate: number | null;
+          default_tax_rate: number | null;
+          id: string;
+          logo_url: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          company_address?: string | null;
+          company_name?: string | null;
+          company_phone?: string | null;
+          default_markup_rate?: number | null;
+          default_tax_rate?: number | null;
+          id: string;
+          logo_url?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          company_address?: string | null;
+          company_name?: string | null;
+          company_phone?: string | null;
+          default_markup_rate?: number | null;
+          default_tax_rate?: number | null;
+          id?: string;
+          logo_url?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       customers: {
         Row: {
           id: string;
@@ -25,6 +58,33 @@ export interface Database {
             referencedColumns: ['id'];
           }
         ];
+      };
+      line_items: {
+        Row: {
+          cost: number;
+          created_at: string | null;
+          id: string;
+          name: string;
+          unit: string | null;
+          user_id: string;
+        };
+        Insert: {
+          cost: number;
+          created_at?: string | null;
+          id?: string;
+          name: string;
+          unit?: string | null;
+          user_id: string;
+        };
+        Update: {
+          cost?: number;
+          created_at?: string | null;
+          id?: string;
+          name?: string;
+          unit?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       prices: {
         Row: {
@@ -100,6 +160,45 @@ export interface Database {
           image?: string | null;
           metadata?: Json | null;
           name?: string | null;
+        };
+        Relationships: [];
+      };
+      quotes: {
+        Row: {
+          client_contact: string | null;
+          client_name: string;
+          created_at: string | null;
+          id: string;
+          markup_rate: number;
+          quote_data: Json;
+          subtotal: number;
+          tax_rate: number;
+          total: number;
+          user_id: string;
+        };
+        Insert: {
+          client_contact?: string | null;
+          client_name: string;
+          created_at?: string | null;
+          id?: string;
+          markup_rate: number;
+          quote_data: Json;
+          subtotal: number;
+          tax_rate: number;
+          total: number;
+          user_id: string;
+        };
+        Update: {
+          client_contact?: string | null;
+          client_name?: string;
+          created_at?: string | null;
+          id?: string;
+          markup_rate?: number;
+          quote_data?: Json;
+          subtotal?: number;
+          tax_rate?: number;
+          total?: number;
+          user_id?: string;
         };
         Relationships: [];
       };

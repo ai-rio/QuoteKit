@@ -52,11 +52,17 @@ export async function GET(
         id: quote.id,
         client_name: quote.client_name,
         client_contact: quote.client_contact,
-        quote_data: quote.quote_data,
+        quote_data: quote.quote_data as {
+          id: string;
+          name: string;
+          unit: string;
+          cost: number;
+          quantity: number;
+        }[],
         subtotal: quote.subtotal,
         tax_rate: quote.tax_rate,
         total: quote.total,
-        created_at: quote.created_at,
+        created_at: quote.created_at || new Date().toISOString(),
       },
       company: {
         company_name: companyData.company_name,
