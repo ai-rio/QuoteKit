@@ -50,44 +50,47 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Company Information</CardTitle>
+      <Card className="bg-paper-white border border-stone-gray shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-section-title text-charcoal">Company Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3">
-            <Label htmlFor="company-name">Company Name</Label>
+            <Label htmlFor="company-name" className="text-label text-charcoal font-medium">Company Name</Label>
             <Input
               id="company-name"
               name="company_name"
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               placeholder="Your Company Name"
               defaultValue={initialSettings?.company_name || ''}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="company-address">Address</Label>
+            <Label htmlFor="company-address" className="text-label text-charcoal font-medium">Address</Label>
             <Input
               id="company-address"
               name="company_address"
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               placeholder="123 Main St, City, State"
               defaultValue={initialSettings?.company_address || ''}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="company-phone">Phone Number</Label>
+            <Label htmlFor="company-phone" className="text-label text-charcoal font-medium">Phone Number</Label>
             <Input
               id="company-phone"
               name="company_phone"
               type="tel"
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               placeholder="(555) 123-4567"
               defaultValue={initialSettings?.company_phone || ''}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label>Company Logo</Label>
+            <Label className="text-label text-charcoal font-medium">Company Logo</Label>
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={initialSettings?.logo_url || ''} />
@@ -103,13 +106,13 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
       <Separator />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Quote Settings</CardTitle>
+      <Card className="bg-paper-white border border-stone-gray shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-section-title text-charcoal">Quote Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3">
-            <Label htmlFor="tax-rate">Default Tax Rate (%)</Label>
+            <Label htmlFor="tax-rate" className="text-label text-charcoal font-medium">Default Tax Rate (%)</Label>
             <Input
               id="tax-rate"
               name="default_tax_rate"
@@ -117,13 +120,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               step="0.01"
               min="0"
               max="100"
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
               placeholder="8.25"
               defaultValue={initialSettings?.default_tax_rate || ''}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="markup-rate">Default Profit Markup (%)</Label>
+            <Label htmlFor="markup-rate" className="text-label text-charcoal font-medium">Default Profit Markup (%)</Label>
             <Input
               id="markup-rate"
               name="default_markup_rate"
@@ -131,12 +135,13 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
               step="0.01"
               min="0"
               max="1000"
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
               placeholder="20.00"
               defaultValue={initialSettings?.default_markup_rate || ''}
             />
           </div>
 
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold">
             {pending ? 'Saving...' : 'Save Settings'}
           </Button>
         </CardContent>
