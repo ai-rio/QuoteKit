@@ -184,7 +184,7 @@ export function QuoteCreator({
       quote_data: quoteLineItems,
       tax_rate: taxRate,
       markup_rate: markupRate,
-      status: 'final',
+      status: 'sent',
     };
 
     try {
@@ -200,7 +200,7 @@ export function QuoteCreator({
         });
         setSavedQuoteId(response.data.id);
         setQuoteNumber(response.data.quote_number || '');
-        setStatus('final');
+        setStatus('sent');
         setHasUnsavedChanges(false);
       }
     } catch (error) {

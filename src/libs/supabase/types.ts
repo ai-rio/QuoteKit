@@ -34,6 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           company_address: string | null
@@ -245,13 +281,19 @@ export type Database = {
           client_contact: string | null
           client_name: string
           created_at: string | null
+          expires_at: string | null
+          follow_up_date: string | null
           id: string
+          is_template: boolean | null
           markup_rate: number
+          notes: string | null
           quote_data: Json
           quote_number: string | null
+          sent_at: string | null
           status: Database["public"]["Enums"]["quote_status"] | null
           subtotal: number
           tax_rate: number
+          template_name: string | null
           total: number
           updated_at: string | null
           user_id: string
@@ -260,13 +302,19 @@ export type Database = {
           client_contact?: string | null
           client_name: string
           created_at?: string | null
+          expires_at?: string | null
+          follow_up_date?: string | null
           id?: string
+          is_template?: boolean | null
           markup_rate: number
+          notes?: string | null
           quote_data: Json
           quote_number?: string | null
+          sent_at?: string | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           subtotal: number
           tax_rate: number
+          template_name?: string | null
           total: number
           updated_at?: string | null
           user_id: string
@@ -275,13 +323,19 @@ export type Database = {
           client_contact?: string | null
           client_name?: string
           created_at?: string | null
+          expires_at?: string | null
+          follow_up_date?: string | null
           id?: string
+          is_template?: boolean | null
           markup_rate?: number
+          notes?: string | null
           quote_data?: Json
           quote_number?: string | null
+          sent_at?: string | null
           status?: Database["public"]["Enums"]["quote_status"] | null
           subtotal?: number
           tax_rate?: number
+          template_name?: string | null
           total?: number
           updated_at?: string | null
           user_id?: string
@@ -376,7 +430,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      quote_analytics: {
+        Row: {
+          acceptance_rate_percent: number | null
+          accepted_quotes: number | null
+          accepted_value: number | null
+          average_quote_value: number | null
+          converted_quotes: number | null
+          declined_quotes: number | null
+          draft_quotes: number | null
+          expired_quotes: number | null
+          sent_quotes: number | null
+          template_count: number | null
+          total_quote_value: number | null
+          total_quotes: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_quote_number: {
@@ -391,7 +462,13 @@ export type Database = {
     Enums: {
       pricing_plan_interval: "day" | "week" | "month" | "year"
       pricing_type: "one_time" | "recurring"
-      quote_status: "draft" | "final" | "sent" | "approved" | "rejected"
+      quote_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "declined"
+        | "expired"
+        | "converted"
       subscription_status:
         | "trialing"
         | "active"
@@ -521,7 +598,14 @@ export const Constants = {
     Enums: {
       pricing_plan_interval: ["day", "week", "month", "year"],
       pricing_type: ["one_time", "recurring"],
-      quote_status: ["draft", "final", "sent", "approved", "rejected"],
+      quote_status: [
+        "draft",
+        "sent",
+        "accepted",
+        "declined",
+        "expired",
+        "converted",
+      ],
       subscription_status: [
         "trialing",
         "active",
