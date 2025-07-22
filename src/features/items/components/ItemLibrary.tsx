@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { Search, Star, StarOff } from 'lucide-react';
+import { Plus, Search, Star, StarOff } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,7 +61,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
 
     // Apply favorites filter
     if (filters.showFavoritesOnly) {
-      filtered = filtered.filter(item => item.is_favorite);
+      filtered = filtered.filter(item => item.is_favorite === true);
     }
 
     // Apply sorting
@@ -167,9 +167,19 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
               Manage your services and materials database for quick quote creation.
             </p>
           </div>
-          <AddItemDialog onItemAdded={onItemsChange} />
+          <AddItemDialog onItemAdded={onItemsChange} categories={categories} />
         </div>
-        <EmptyState onAddItem={() => {}} />
+        <EmptyState 
+          onAddItem={() => {}} 
+          addItemDialog={
+            <AddItemDialog onItemAdded={onItemsChange} categories={categories}>
+              <Button className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Item
+              </Button>
+            </AddItemDialog>
+          }
+        />
       </div>
     );
   }
@@ -184,7 +194,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
             Manage your services and materials database for quick quote creation.
           </p>
         </div>
-        <AddItemDialog onItemAdded={onItemsChange} />
+        <AddItemDialog onItemAdded={onItemsChange} categories={categories} />
       </div>
 
       {/* Search and Filters */}
@@ -246,10 +256,14 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
 
             {/* Favorites Filter */}
             <Button
-              variant="ghost"
+              variant={filters.showFavoritesOnly ? "default" : "ghost"}
               size="sm"
               onClick={toggleFavoritesFilter}
-              className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
+              className={`font-bold transition-all ${
+                filters.showFavoritesOnly 
+                  ? 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 active:bg-equipment-yellow/80' 
+                  : 'text-charcoal/70 border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30'
+              }`}
             >
               {filters.showFavoritesOnly ? <Star className="h-4 w-4 mr-2 fill-current" /> : <StarOff className="h-4 w-4 mr-2" />}
               Favorites

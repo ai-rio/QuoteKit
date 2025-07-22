@@ -7,7 +7,7 @@ export interface LineItem {
   cost: number;
   category?: string | null;
   tags?: string[] | null;
-  is_favorite?: boolean;
+  is_favorite?: boolean | null;
   last_used_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;

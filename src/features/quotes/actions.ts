@@ -1,5 +1,6 @@
 'use server';
 
+import { updateItemLastUsed } from '@/features/items/actions';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 
@@ -54,6 +55,20 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
 
     if (error) {
       return { data: null, error };
+    }
+
+    // Update last_used_at for all items in the quote
+    try {
+      await Promise.all(
+        quoteData.quote_data.map(async (item) => {
+          if (item.id) {
+            await updateItemLastUsed(item.id);
+          }
+        })
+      );
+    } catch (updateError) {
+      // Don't fail the quote creation if updating last_used_at fails
+      console.warn('Failed to update item last_used_at:', updateError);
     }
 
     return { data: data as unknown as Quote, error: null };

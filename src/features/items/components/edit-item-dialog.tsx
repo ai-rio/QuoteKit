@@ -13,20 +13,29 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 
 import { updateLineItem } from '../actions';
-import { LineItem } from '../types';
+import { ItemCategory, LineItem } from '../types';
 
 interface EditItemDialogProps {
   item: LineItem;
   onItemUpdated: () => void;
   children: React.ReactNode;
+  categories: ItemCategory[];
 }
 
-export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialogProps) {
+export function EditItemDialog({ item, onItemUpdated, children, categories }: EditItemDialogProps) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>(item.category || 'none');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +44,9 @@ export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialog
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
     formData.append('id', item.id);
+    
+    // Add selected category to form data
+    formData.append('category', selectedCategory === 'none' ? '' : selectedCategory);
 
     const response = await updateLineItem(formData);
 
@@ -86,6 +98,28 @@ export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialog
                 className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 required
               />
+            </div>
+            <div className="grid gap-3">
+              <Label className="text-label text-charcoal font-medium">Category</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+                  <SelectValue placeholder="Select a category (optional)" />
+                </SelectTrigger>
+                <SelectContent className="bg-paper-white border-stone-gray">
+                  <SelectItem value="none">None</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: category.color || undefined }}
+                        />
+                        {category.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-3">
               <Label htmlFor="edit-cost" className="text-label text-charcoal font-medium">Cost/Rate per Unit ($)</Label>

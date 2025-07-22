@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { getLineItems } from '@/features/items/actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getCategories, getLineItems } from '@/features/items/actions';
 import { AddItemDialog } from '@/features/items/components/add-item-dialog';
+import { CategoryManager } from '@/features/items/components/CategoryManager';
 import { ItemLibrary } from '@/features/items/components/ItemLibrary';
 import { ItemCategory, LineItem } from '@/features/items/types';
 
@@ -11,17 +13,9 @@ interface ItemsPageClientProps {
   initialItems: LineItem[];
 }
 
-// Mock categories data - in a real app, this would come from the database
-const mockCategories: ItemCategory[] = [
-  { id: '1', user_id: 'mock-user', name: 'Lawn Care', color: '#22c55e', created_at: new Date().toISOString() },
-  { id: '2', user_id: 'mock-user', name: 'Landscaping', color: '#3b82f6', created_at: new Date().toISOString() },
-  { id: '3', user_id: 'mock-user', name: 'Materials', color: '#f59e0b', created_at: new Date().toISOString() },
-  { id: '4', user_id: 'mock-user', name: 'Equipment', color: '#ef4444', created_at: new Date().toISOString() },
-  { id: '5', user_id: 'mock-user', name: 'Maintenance', color: '#8b5cf6', created_at: new Date().toISOString() },
-];
-
 export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
   const [items, setItems] = useState<LineItem[]>(initialItems);
+  const [categories, setCategories] = useState<ItemCategory[]>([]);
 
   const refreshItems = useCallback(async () => {
     const response = await getLineItems();
@@ -30,14 +24,52 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
     }
   }, []);
 
+  const refreshCategories = useCallback(async () => {
+    const response = await getCategories();
+    if (response?.data) {
+      setCategories(response.data);
+    }
+  }, []);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    refreshCategories();
+  }, [refreshCategories]);
+
   return (
     <div className="min-h-screen bg-light-concrete p-6">
       <div className="max-w-7xl mx-auto">
-        <ItemLibrary 
-          items={items}
-          categories={mockCategories}
-          onItemsChange={refreshItems}
-        />
+        <Tabs defaultValue="items" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 bg-paper-white border border-stone-gray">
+            <TabsTrigger 
+              value="items" 
+              className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white"
+            >
+              Items Library
+            </TabsTrigger>
+            <TabsTrigger 
+              value="categories" 
+              className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white"
+            >
+              Manage Categories
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="items" className="space-y-6">
+            <ItemLibrary 
+              items={items}
+              categories={categories}
+              onItemsChange={refreshItems}
+            />
+          </TabsContent>
+          
+          <TabsContent value="categories" className="space-y-6">
+            <CategoryManager 
+              categories={categories}
+              onCategoriesChange={refreshCategories}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

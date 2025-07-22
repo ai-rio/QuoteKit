@@ -47,7 +47,7 @@ export function ItemsTable({ items, onItemsChange }: ItemsTableProps) {
               <TableCell className="text-charcoal">{item.unit}</TableCell>
               <TableCell className="font-mono text-charcoal">${item.cost.toFixed(2)}</TableCell>
               <TableCell className="text-right space-x-2">
-                <EditItemDialog item={item} onItemUpdated={onItemsChange}>
+                <EditItemDialog item={item} onItemUpdated={onItemsChange} categories={[]}>
                   <Button variant="ghost" size="sm" className="text-charcoal hover:bg-stone-gray/20 active:bg-stone-gray/30">
                     Edit
                   </Button>
