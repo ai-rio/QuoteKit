@@ -24,7 +24,16 @@ export async function getCompanySettings(): Promise<ActionResponse<CompanySettin
       return { data: null, error };
     }
 
-    return { data: data || null, error: null };
+    // Ensure all required fields are present for type safety
+    const settingsData = data ? {
+      ...data,
+      company_email: (data as any).company_email || null,
+      logo_file_name: (data as any).logo_file_name || null,
+      preferred_currency: (data as any).preferred_currency || 'USD',
+      quote_terms: (data as any).quote_terms || null,
+    } as CompanySettings : null;
+
+    return { data: settingsData, error: null };
   } catch (error) {
     console.error('Error getting company settings:', error);
     return { data: null, error: { message: 'Failed to get company settings' } };
@@ -43,26 +52,45 @@ export async function saveCompanySettings(formData: FormData): Promise<ActionRes
     const company_name = formData.get('company_name') as string;
     const company_address = formData.get('company_address') as string;
     const company_phone = formData.get('company_phone') as string;
+    const company_email = formData.get('company_email') as string;
+    const logo_url = formData.get('logo_url') as string;
+    const logo_file_name = formData.get('logo_file_name') as string;
+    const preferred_currency = formData.get('preferred_currency') as string;
+    const quote_terms = formData.get('quote_terms') as string;
     const default_tax_rate = parseFloat(formData.get('default_tax_rate') as string) || 0;
     const default_markup_rate = parseFloat(formData.get('default_markup_rate') as string) || 0;
 
     // Validate numeric inputs
-    if (default_tax_rate < 0 || default_tax_rate > 100) {
+    if (formData.get('default_tax_rate') && (default_tax_rate < 0 || default_tax_rate > 100)) {
       return { data: null, error: { message: 'Tax rate must be between 0 and 100' } };
     }
     
-    if (default_markup_rate < 0 || default_markup_rate > 1000) {
+    if (formData.get('default_markup_rate') && (default_markup_rate < 0 || default_markup_rate > 1000)) {
       return { data: null, error: { message: 'Markup rate must be between 0 and 1000' } };
+    }
+
+    // Validate required fields
+    if (!company_name?.trim()) {
+      return { data: null, error: { message: 'Company name is required' } };
+    }
+
+    // Validate email format if provided
+    if (company_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(company_email)) {
+      return { data: null, error: { message: 'Please enter a valid email address' } };
     }
 
     const settingsData = {
       id: user.id,
-      company_name: company_name || null,
+      company_name: company_name.trim(),
       company_address: company_address || null,
       company_phone: company_phone || null,
-      logo_url: null, // TODO: Handle file upload in future iteration
-      default_tax_rate,
-      default_markup_rate,
+      company_email: company_email || null,
+      logo_url: logo_url || null,
+      logo_file_name: logo_file_name || null,
+      preferred_currency: preferred_currency || 'USD',
+      quote_terms: quote_terms || null,
+      default_tax_rate: formData.get('default_tax_rate') ? default_tax_rate : null,
+      default_markup_rate: formData.get('default_markup_rate') ? default_markup_rate : null,
       updated_at: new Date().toISOString(),
     };
 
@@ -76,7 +104,16 @@ export async function saveCompanySettings(formData: FormData): Promise<ActionRes
       return { data: null, error };
     }
 
-    return { data, error: null };
+    // Ensure returned data matches CompanySettings interface
+    const returnData = {
+      ...data,
+      company_email: (data as any).company_email || null,
+      logo_file_name: (data as any).logo_file_name || null,
+      preferred_currency: (data as any).preferred_currency || 'USD',
+      quote_terms: (data as any).quote_terms || null,
+    } as CompanySettings;
+
+    return { data: returnData, error: null };
   } catch (error) {
     console.error('Error saving company settings:', error);
     return { data: null, error: { message: 'Failed to save company settings' } };
