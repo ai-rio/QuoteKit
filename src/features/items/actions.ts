@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 
-import { LineItem } from './types';
+import { ItemCategory, LineItem } from './types';
 
 export async function getLineItems(): Promise<ActionResponse<LineItem[]>> {
   try {
@@ -43,6 +43,7 @@ export async function createLineItem(formData: FormData): Promise<ActionResponse
     const name = formData.get('name') as string;
     const unit = formData.get('unit') as string;
     const cost = parseFloat(formData.get('cost') as string);
+    const category = formData.get('category') as string;
 
     // Validation
     if (!name?.trim()) {
@@ -62,6 +63,7 @@ export async function createLineItem(formData: FormData): Promise<ActionResponse
       name: name.trim(),
       unit: unit.trim(),
       cost,
+      category: category?.trim() || null,
     };
 
     const { data, error } = await supabase
@@ -94,6 +96,7 @@ export async function updateLineItem(formData: FormData): Promise<ActionResponse
     const name = formData.get('name') as string;
     const unit = formData.get('unit') as string;
     const cost = parseFloat(formData.get('cost') as string);
+    const category = formData.get('category') as string;
 
     // Validation
     if (!id) {
@@ -116,6 +119,7 @@ export async function updateLineItem(formData: FormData): Promise<ActionResponse
       name: name.trim(),
       unit: unit.trim(),
       cost,
+      category: category?.trim() || null,
     };
 
     const { data, error } = await supabase
@@ -180,24 +184,165 @@ export async function toggleItemFavorite(itemId: string, isFavorite: boolean): P
       return { data: null, error: { message: 'Item ID is required' } };
     }
 
-    // For now, return success without updating the database since is_favorite column doesn't exist
-    // This is a placeholder implementation until the database schema is updated
+    // Update the is_favorite field in the database
     const { data, error } = await supabase
       .from('line_items')
-      .select()
+      .update({ is_favorite: isFavorite })
       .eq('id', itemId)
-      .eq('user_id', user.id)
+      .eq('user_id', user.id) // Ensure user owns the item
+      .select()
       .single();
 
     if (error) {
       return { data: null, error };
     }
 
-    // Simulate the favorite toggle in the returned data
-    const updatedData = { ...data, is_favorite: isFavorite };
-    return { data: updatedData, error: null };
+    return { data, error: null };
   } catch (error) {
     console.error('Error toggling item favorite:', error);
     return { data: null, error: { message: 'Failed to toggle item favorite' } };
+  }
+}
+
+export async function updateItemLastUsed(itemId: string): Promise<ActionResponse<LineItem>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    if (!itemId) {
+      return { data: null, error: { message: 'Item ID is required' } };
+    }
+
+    // Update the last_used_at field to current timestamp
+    const { data, error } = await supabase
+      .from('line_items')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', itemId)
+      .eq('user_id', user.id) // Ensure user owns the item
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating item last used:', error);
+    return { data: null, error: { message: 'Failed to update item last used' } };
+  }
+}
+
+// Category Management Actions
+
+export async function getCategories(): Promise<ActionResponse<ItemCategory[]>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    const { data, error } = await supabase
+      .from('item_categories')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('name', { ascending: true });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error getting categories:', error);
+    return { data: null, error: { message: 'Failed to get categories' } };
+  }
+}
+
+export async function createCategory(formData: FormData): Promise<ActionResponse<ItemCategory>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    const name = formData.get('name') as string;
+    const color = formData.get('color') as string;
+
+    // Validation
+    if (!name?.trim()) {
+      return { data: null, error: { message: 'Category name is required' } };
+    }
+    
+    if (!color?.trim()) {
+      return { data: null, error: { message: 'Category color is required' } };
+    }
+
+    const categoryData = {
+      user_id: user.id,
+      name: name.trim(),
+      color: color.trim(),
+    };
+
+    const { data, error } = await supabase
+      .from('item_categories')
+      .insert(categoryData)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating category:', error);
+    return { data: null, error: { message: 'Failed to create category' } };
+  }
+}
+
+export async function deleteCategory(categoryId: string): Promise<ActionResponse<void>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    if (!categoryId) {
+      return { data: null, error: { message: 'Category ID is required' } };
+    }
+
+    // First, update any items that use this category to remove the category
+    await supabase
+      .from('line_items')
+      .update({ category: null })
+      .eq('user_id', user.id)
+      .eq('category', categoryId);
+
+    // Then delete the category
+    const { error } = await supabase
+      .from('item_categories')
+      .delete()
+      .eq('id', categoryId)
+      .eq('user_id', user.id); // Ensure user owns the category
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: null, error: null };
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return { data: null, error: { message: 'Failed to delete category' } };
   }
 }

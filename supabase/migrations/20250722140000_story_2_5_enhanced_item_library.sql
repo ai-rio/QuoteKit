@@ -65,19 +65,50 @@ CREATE TRIGGER update_item_categories_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Insert default categories for new users
-INSERT INTO public.item_categories (user_id, name, color) 
-SELECT 
-  auth.uid(),
-  category_name,
-  category_color
-FROM (
-  VALUES 
-    ('Labor', '#2A3D2F'),
-    ('Materials', '#F2B705'),
-    ('Equipment', '#1C1C1C')
-) AS default_categories(category_name, category_color)
-WHERE auth.uid() IS NOT NULL
-AND NOT EXISTS (
-  SELECT 1 FROM public.item_categories WHERE user_id = auth.uid()
-);
+-- Create function to insert default categories for new users
+CREATE OR REPLACE FUNCTION create_default_categories()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.item_categories (user_id, name, color) VALUES
+    (NEW.id, 'Lawn Care', '#22c55e'),
+    (NEW.id, 'Landscaping', '#3b82f6'),
+    (NEW.id, 'Materials', '#f59e0b'),
+    (NEW.id, 'Equipment', '#ef4444'),
+    (NEW.id, 'Maintenance', '#8b5cf6'),
+    (NEW.id, 'Irrigation', '#06b6d4'),
+    (NEW.id, 'Hardscaping', '#f97316'),
+    (NEW.id, 'Plant Care', '#84cc16');
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to automatically create default categories for new users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION create_default_categories();
+
+-- Insert default categories for existing users who don't have any categories yet
+DO $$
+DECLARE
+  user_record RECORD;
+BEGIN
+  FOR user_record IN 
+    SELECT id FROM auth.users 
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.item_categories WHERE user_id = auth.users.id
+    )
+  LOOP
+    INSERT INTO public.item_categories (user_id, name, color) VALUES
+      (user_record.id, 'Lawn Care', '#22c55e'),
+      (user_record.id, 'Landscaping', '#3b82f6'),
+      (user_record.id, 'Materials', '#f59e0b'),
+      (user_record.id, 'Equipment', '#ef4444'),
+      (user_record.id, 'Maintenance', '#8b5cf6'),
+      (user_record.id, 'Irrigation', '#06b6d4'),
+      (user_record.id, 'Hardscaping', '#f97316'),
+      (user_record.id, 'Plant Care', '#84cc16');
+  END LOOP;
+END $$;

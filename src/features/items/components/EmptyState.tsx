@@ -7,9 +7,10 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface EmptyStateProps {
   onAddItem: () => void;
+  addItemDialog?: React.ReactNode;
 }
 
-export function EmptyState({ onAddItem }: EmptyStateProps) {
+export function EmptyState({ onAddItem, addItemDialog }: EmptyStateProps) {
   return (
     <Card className="bg-paper-white border border-stone-gray shadow-sm">
       <CardContent className="p-12">
@@ -28,13 +29,15 @@ export function EmptyState({ onAddItem }: EmptyStateProps) {
           </p>
           
           <div className="space-y-4">
-            <Button 
-              onClick={onAddItem}
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Item
-            </Button>
+            {addItemDialog || (
+              <Button 
+                onClick={onAddItem}
+                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Item
+              </Button>
+            )}
             
             <div className="text-sm text-charcoal/60">
               <p className="mb-2">Popular item types to get started:</p>

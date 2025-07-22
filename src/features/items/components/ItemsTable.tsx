@@ -53,7 +53,7 @@ export function ItemsTable({
   const handleToggleFavorite = async (item: LineItem) => {
     setFavoriteLoading(item.id);
     try {
-      const response = await toggleItemFavorite(item.id, !item.is_favorite);
+      const response = await toggleItemFavorite(item.id, item.is_favorite !== true);
       if (response?.error) {
         toast({
           variant: 'destructive',
@@ -154,7 +154,7 @@ export function ItemsTable({
                     disabled={isFavoriteLoading}
                     className="h-8 w-8 p-0 text-charcoal/60 hover:text-equipment-yellow hover:bg-transparent"
                   >
-                    {item.is_favorite ? (
+                    {item.is_favorite === true ? (
                       <Star className="h-4 w-4 fill-current text-equipment-yellow" />
                     ) : (
                       <StarOff className="h-4 w-4" />
@@ -219,7 +219,7 @@ export function ItemsTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-paper-white border-stone-gray">
-                      <EditItemDialog item={item} onItemUpdated={onItemsChange}>
+                      <EditItemDialog item={item} onItemUpdated={onItemsChange} categories={categories}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-charcoal hover:bg-stone-gray/20">
                           Edit Item
                         </DropdownMenuItem>
