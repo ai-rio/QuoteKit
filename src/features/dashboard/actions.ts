@@ -27,15 +27,40 @@ export async function getDashboardData(): Promise<DashboardData> {
         .eq('user_id', user.id),
       supabase
         .from('company_settings')
-        .select('id')
-        .eq('user_id', user.id)
+        .select('company_name, default_tax_rate, default_markup_rate')
+        .eq('id', user.id)
         .single()
     ])
 
     // Calculate stats
     const totalQuotes = quotesResult.data?.length || 0
     const totalItems = itemsResult.data?.length || 0
-    const hasCompanySettings = !!settingsResult.data
+    
+    // Enhanced company settings validation
+    const hasValidCompanySettings = (() => {
+      if (!settingsResult.data) return false
+      
+      const settings = settingsResult.data
+      
+      // Check required fields
+      if (!settings.company_name?.trim()) return false
+      
+      // Validate tax rate if provided
+      if (settings.default_tax_rate !== null && 
+          (settings.default_tax_rate < 0 || settings.default_tax_rate > 100)) {
+        return false
+      }
+      
+      // Validate markup rate if provided
+      if (settings.default_markup_rate !== null && 
+          (settings.default_markup_rate < 0 || settings.default_markup_rate > 1000)) {
+        return false
+      }
+      
+      return true
+    })()
+    
+    const hasCompanySettings = hasValidCompanySettings
     const hasItems = totalItems > 0
     const hasCreatedQuote = totalQuotes > 0
 
