@@ -21,6 +21,7 @@ import { ItemCategory, ItemSearchFilters, LineItem } from '../types';
 import { AddItemDialog } from './add-item-dialog';
 import { BulkActions } from './BulkActions';
 import { EmptyState } from './EmptyState';
+import { ItemsCard } from './ItemsCard';
 import { ItemsTable } from './ItemsTable';
 
 interface ItemLibraryProps {
@@ -199,75 +200,80 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
 
       {/* Search and Filters */}
       <Card className="bg-paper-white border border-stone-gray shadow-sm mb-6">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            {/* Search Input */}
-            <div className="flex-1">
+        <CardContent className="p-4 sm:p-6">
+          <div className="space-y-4">
+            {/* Search Input - Full width on mobile */}
+            <div className="w-full">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-charcoal/60 h-4 w-4" />
                 <Input
                   placeholder="Search items..."
                   value={filters.searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                  className="w-full pl-10 border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 />
               </div>
             </div>
 
-            {/* Category Filter */}
-            <div className="w-full lg:w-48">
-              <Select value={filters.category} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="w-full sm:w-48 border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent className="bg-paper-white border-stone-gray">
-                  <SelectItem value="all" className="text-charcoal">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.name} className="text-charcoal">
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Filters Grid - Responsive layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {/* Category Filter */}
+              <div className="w-full">
+                <Select value={filters.category} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="w-full border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-paper-white border-stone-gray">
+                    <SelectItem value="all" className="text-charcoal">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.name} className="text-charcoal">
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Sort Options */}
-            <div className="w-full lg:w-48">
-              <Select 
-                value={`${filters.sortBy}-${filters.sortOrder}`} 
-                onValueChange={(value) => {
-                  const [sortBy, sortOrder] = value.split('-');
-                  handleSortChange(sortBy, sortOrder);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-48 border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="bg-paper-white border-stone-gray">
-                  <SelectItem value="name-asc" className="text-charcoal">Name A-Z</SelectItem>
-                  <SelectItem value="name-desc" className="text-charcoal">Name Z-A</SelectItem>
-                  <SelectItem value="cost-asc" className="text-charcoal">Cost Low-High</SelectItem>
-                  <SelectItem value="cost-desc" className="text-charcoal">Cost High-Low</SelectItem>
-                  <SelectItem value="created_at-desc" className="text-charcoal">Newest First</SelectItem>
-                  <SelectItem value="last_used_at-desc" className="text-charcoal">Recently Used</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              {/* Sort Options */}
+              <div className="w-full">
+                <Select 
+                  value={`${filters.sortBy}-${filters.sortOrder}`} 
+                  onValueChange={(value) => {
+                    const [sortBy, sortOrder] = value.split('-');
+                    handleSortChange(sortBy, sortOrder);
+                  }}
+                >
+                  <SelectTrigger className="w-full border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-paper-white border-stone-gray">
+                    <SelectItem value="name-asc" className="text-charcoal">Name A-Z</SelectItem>
+                    <SelectItem value="name-desc" className="text-charcoal">Name Z-A</SelectItem>
+                    <SelectItem value="cost-asc" className="text-charcoal">Cost Low-High</SelectItem>
+                    <SelectItem value="cost-desc" className="text-charcoal">Cost High-Low</SelectItem>
+                    <SelectItem value="created_at-desc" className="text-charcoal">Newest First</SelectItem>
+                    <SelectItem value="last_used_at-desc" className="text-charcoal">Recently Used</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Favorites Filter */}
-            <Button
-              variant={filters.showFavoritesOnly ? "default" : "ghost"}
-              size="sm"
-              onClick={toggleFavoritesFilter}
-              className={`font-bold transition-all ${
-                filters.showFavoritesOnly 
-                  ? 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 active:bg-equipment-yellow/80' 
-                  : 'text-charcoal/70 border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30'
-              }`}
-            >
-              {filters.showFavoritesOnly ? <Star className="h-4 w-4 mr-2 fill-current" /> : <StarOff className="h-4 w-4 mr-2" />}
-              Favorites
-            </Button>
+              {/* Favorites Filter */}
+              <div className="w-full sm:col-span-2 lg:col-span-2">
+                <Button
+                  variant={filters.showFavoritesOnly ? "default" : "ghost"}
+                  size="sm"
+                  onClick={toggleFavoritesFilter}
+                  className={`w-full font-bold transition-all ${
+                    filters.showFavoritesOnly 
+                      ? 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 active:bg-equipment-yellow/80' 
+                      : 'text-charcoal/70 border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30'
+                  }`}
+                >
+                  {filters.showFavoritesOnly ? <Star className="h-4 w-4 mr-2 fill-current" /> : <StarOff className="h-4 w-4 mr-2" />}
+                  Favorites
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Active Filters Display */}
@@ -317,14 +323,28 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
       )}
 
       {/* Items Table */}
-      <ItemsTable
-        items={filteredAndSortedItems}
-        categories={categories}
-        selectedItems={selectedItems}
-        onItemsChange={onItemsChange}
-        onSelectAll={handleSelectAll}
-        onItemSelect={handleItemSelect}
-      />
+      {/* Desktop Table View */}
+        <div className="hidden md:block">
+          <ItemsTable
+            items={filteredAndSortedItems}
+            categories={categories}
+            selectedItems={selectedItems}
+            onItemsChange={onItemsChange}
+            onSelectAll={handleSelectAll}
+            onItemSelect={handleItemSelect}
+          />
+        </div>
+        
+        {/* Mobile Card View */}
+        <div className="block md:hidden">
+          <ItemsCard
+            items={filteredAndSortedItems}
+            categories={categories}
+            selectedItems={selectedItems}
+            onItemsChange={onItemsChange}
+            onItemSelect={handleItemSelect}
+          />
+        </div>
     </div>
   );
 }

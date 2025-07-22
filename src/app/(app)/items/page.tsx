@@ -17,7 +17,7 @@ export default async function ItemsPage() {
 
   return (
     <div className="bg-light-concrete min-h-screen">
-      <div className="container mx-auto max-w-4xl py-8">
+      <div className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <ItemsPageClient initialItems={items || []} />
       </div>
     </div>

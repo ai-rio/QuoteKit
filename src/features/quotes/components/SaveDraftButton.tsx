@@ -31,25 +31,25 @@ export function SaveDraftButton({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
       <Button
         onClick={handleSave}
         disabled={disabled || isSaving}
-        className={`${disabled ? 'bg-paper-white' : 'bg-equipment-yellow'} text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray`}
+        className={`${disabled ? 'bg-paper-white' : 'bg-equipment-yellow'} text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray w-full sm:w-auto min-h-[44px] touch-manipulation`}
       >
         <Save className="w-4 h-4 mr-2" />
         {isSaving ? 'Saving...' : 'Save Draft'}
       </Button>
       
       {hasUnsavedChanges && (
-        <Badge variant="secondary" className="bg-equipment-yellow/20 text-charcoal">
+        <Badge variant="secondary" className="bg-equipment-yellow/20 text-charcoal whitespace-nowrap">
           <Clock className="w-3 h-3 mr-1" />
           Unsaved
         </Badge>
       )}
       
       {lastSaveTime && !hasUnsavedChanges && (
-        <Badge variant="outline" className="border-forest-green text-forest-green">
+        <Badge variant="outline" className="border-forest-green text-forest-green whitespace-nowrap">
           Saved
         </Badge>
       )}

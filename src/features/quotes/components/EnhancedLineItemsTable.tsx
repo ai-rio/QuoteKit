@@ -54,12 +54,12 @@ export function EnhancedLineItemsTable({
 
   if (quoteLineItems.length === 0) {
     return (
-      <div className="border-2 border-dashed border-stone-gray rounded-lg p-8 text-center">
-        <div className="text-charcoal/60 text-lg mb-4">No items added yet</div>
+      <div className="border-2 border-dashed border-stone-gray rounded-lg p-6 sm:p-8 text-center">
+        <div className="text-charcoal/60 text-base sm:text-lg mb-4">No items added yet</div>
         <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
           <DialogTrigger asChild>
             <Button
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Item
@@ -138,15 +138,15 @@ export function EnhancedLineItemsTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-4">
         {quoteLineItems.map((item) => (
           <div key={item.id} className="bg-light-concrete p-4 rounded-lg border border-stone-gray">
             <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
+              <div className="flex-1 pr-2">
                 <Input
                   value={item.name}
                   onChange={(e) => handleNameChange(item.id, e.target.value)}
-                  className="border-0 bg-transparent p-0 text-base font-medium text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2"
+                  className="border-0 bg-transparent p-0 text-base font-medium text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2 w-full"
                 />
                 <div className="text-sm text-charcoal/60 mt-1">{item.unit || 'unit'}</div>
               </div>
@@ -154,9 +154,9 @@ export function EnhancedLineItemsTable({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemoveItem(item.id)}
-                className="text-charcoal/50 hover:text-red-600 hover:bg-red-50"
+                className="text-charcoal/50 hover:text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] touch-manipulation"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-5 h-5" />
               </Button>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -168,18 +168,18 @@ export function EnhancedLineItemsTable({
                   step="0.01"
                   value={item.quantity}
                   onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                  className="text-center font-mono border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green"
+                  className="text-center font-mono border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green min-h-[44px] touch-manipulation"
                 />
               </div>
               <div>
                 <div className="text-xs text-charcoal/60 mb-1">PRICE</div>
-                <div className="h-10 flex items-center justify-center font-mono text-sm">
+                <div className="h-11 flex items-center justify-center font-mono text-sm">
                   ${item.cost.toFixed(2)}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-charcoal/60 mb-1">TOTAL</div>
-                <div className="h-10 flex items-center justify-center font-mono text-sm font-bold">
+                <div className="h-11 flex items-center justify-center font-mono text-sm font-bold">
                   ${(item.quantity * item.cost).toFixed(2)}
                 </div>
               </div>
@@ -193,7 +193,7 @@ export function EnhancedLineItemsTable({
         <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
           <DialogTrigger asChild>
             <Button
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Another Item
@@ -226,18 +226,18 @@ function ItemSelectorDialog({
   onAddItem: (item: LineItem) => void;
 }) {
   return (
-    <DialogContent className="max-w-md bg-paper-white border-stone-gray">
-      <DialogHeader>
-        <DialogTitle className="text-charcoal font-bold">Select Item to Add</DialogTitle>
+    <DialogContent className="max-w-md bg-paper-white border-stone-gray sm:max-w-lg w-[calc(100%-32px)] p-4 sm:p-6">
+      <DialogHeader className="pb-3 sm:pb-4">
+        <DialogTitle className="text-base sm:text-lg text-charcoal font-bold">Select Item to Add</DialogTitle>
       </DialogHeader>
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <Input
           placeholder="Search items..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+          className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
         />
-        <div className="max-h-60 overflow-y-auto space-y-2">
+        <div className="max-h-[50vh] sm:max-h-60 overflow-y-auto space-y-2">
           {availableItems.filter(item =>
             item.name.toLowerCase().includes(searchTerm.toLowerCase())
           ).length === 0 ? (
@@ -250,14 +250,14 @@ function ItemSelectorDialog({
             ).map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete cursor-pointer"
+                className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete cursor-pointer min-h-[44px] touch-manipulation"
                 onClick={() => onAddItem(item)}
               >
-                <div>
-                  <div className="font-medium text-charcoal">{item.name}</div>
-                  <div className="text-sm text-charcoal/60">{item.unit || 'unit'}</div>
+                <div className="flex-1 mr-2">
+                  <div className="font-medium text-charcoal text-sm sm:text-base">{item.name}</div>
+                  <div className="text-xs sm:text-sm text-charcoal/60">{item.unit || 'unit'}</div>
                 </div>
-                <div className="font-mono font-bold text-charcoal">${item.cost.toFixed(2)}</div>
+                <div className="font-mono font-bold text-charcoal text-sm sm:text-base whitespace-nowrap">${item.cost.toFixed(2)}</div>
               </div>
             ))
           )}

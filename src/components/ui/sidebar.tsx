@@ -14,6 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { useMobile } from "@/hooks/use-mobile"
 import { cn } from "@/utils/cn"
 import { Slot } from "@radix-ui/react-slot"
 
@@ -86,17 +87,19 @@ const SidebarProvider = React.forwardRef<
 
     const state = open ? "expanded" : "collapsed"
 
+    const isMobile = useMobile()
+
     const contextValue = React.useMemo<SidebarContext>(
       () => ({
         state,
         open,
         setOpen,
-        isMobile: false,
+        isMobile,
         openMobile,
         setOpenMobile,
         toggleSidebar,
       }),
-      [state, open, setOpen, openMobile, setOpenMobile, toggleSidebar]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
 
     return (
@@ -230,7 +233,7 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile, setOpenMobile } = useSidebar()
 
   return (
     <Button
@@ -238,10 +241,14 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn("h-7 w-7 sm:h-8 sm:w-8 touch-manipulation", className)}
       onClick={(event) => {
         onClick?.(event)
-        toggleSidebar()
+        if (isMobile) {
+          setOpenMobile(true)
+        } else {
+          toggleSidebar()
+        }
       }}
       {...props}
     >
