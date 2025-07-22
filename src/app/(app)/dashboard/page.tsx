@@ -28,8 +28,8 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-[#1C1C1C]">Dashboard</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-charcoal">Dashboard</h1>
+        <p className="text-charcoal/70 mt-1">
           Welcome to your LawnQuote dashboard
         </p>
       </div>
@@ -45,7 +45,7 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-xl font-semibold text-[#1C1C1C] mb-4">
+        <h2 className="text-xl font-semibold text-charcoal mb-4">
           Quick Actions
         </h2>
         <QuickActions actions={dashboardData.quickActions} />
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
 
       {/* Recent Quotes */}
       <div>
-        <h2 className="text-xl font-semibold text-[#1C1C1C] mb-4">
+        <h2 className="text-xl font-semibold text-charcoal mb-4">
           Recent Activity
         </h2>
         <RecentQuotes quotes={dashboardData.recentQuotes} />

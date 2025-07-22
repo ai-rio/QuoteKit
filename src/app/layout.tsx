@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 import type { Metadata } from 'next';
-import { Montserrat, Montserrat_Alternates } from 'next/font/google';
+import { Inter, Roboto_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { IoLogoFacebook, IoLogoInstagram, IoLogoTwitter } from 'react-icons/io5';
 
@@ -15,14 +15,13 @@ import '@/styles/globals.css';
 
 export const dynamic = 'force-dynamic';
 
-const montserrat = Montserrat({
-  variable: '--font-montserrat',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
-const montserratAlternates = Montserrat_Alternates({
-  variable: '--font-montserrat-alternates',
-  weight: ['500', '600', '700'],
+const robotoMono = Roboto_Mono({
+  variable: '--font-roboto-mono',
   subsets: ['latin'],
 });
 
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang='en'>
-      <body className={cn('font-sans antialiased', montserrat.variable, montserratAlternates.variable)}>
+      <body className={cn('font-sans antialiased', inter.variable, robotoMono.variable)}>
         <div className='m-auto flex h-full max-w-[1440px] flex-col px-4'>
           <AppBar />
           <main className='relative flex-1'>

@@ -218,10 +218,10 @@ export function QuoteCreator({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Quote Header */}
-      <Card>
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-[#1C1C1C]">
+            <CardTitle className="text-2xl font-bold text-charcoal">
               {status === 'draft' ? 'New Quote' : 'Quote Details'}
             </CardTitle>
             <div className="flex items-center gap-3">
@@ -229,7 +229,10 @@ export function QuoteCreator({
                 quoteNumber={quoteNumber}
                 status={status}
               />
-              <Badge variant={status === 'draft' ? 'secondary' : 'default'}>
+              <Badge 
+                variant={status === 'draft' ? 'secondary' : 'default'}
+                className={status === 'draft' ? 'bg-equipment-yellow/20 text-charcoal' : 'bg-forest-green text-white'}
+              >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </Badge>
             </div>
@@ -244,7 +247,7 @@ export function QuoteCreator({
             <Button
               onClick={handleCreateFinalQuote}
               disabled={!canSave || isLoading}
-              className="bg-[#2A3D2F] hover:bg-[#2A3D2F]/90"
+              className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
             >
               {isLoading ? 'Creating...' : 'Generate PDF'}
             </Button>
@@ -253,30 +256,30 @@ export function QuoteCreator({
       </Card>
 
       {/* Client Details */}
-      <Card>
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-bold text-[#1C1C1C]">Client Details</CardTitle>
+          <CardTitle className="text-lg font-bold text-charcoal">Client Details</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="client-name">Client Name *</Label>
+              <Label htmlFor="client-name" className="text-sm font-medium text-charcoal">Client Name *</Label>
               <Input
                 id="client-name"
                 placeholder="Enter client name"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="border-[#D7D7D7]"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-contact">Client Contact</Label>
+              <Label htmlFor="client-contact" className="text-sm font-medium text-charcoal">Client Contact</Label>
               <Input
                 id="client-contact"
                 placeholder="Phone, email, or address"
                 value={clientContact}
                 onChange={(e) => setClientContact(e.target.value)}
-                className="border-[#D7D7D7]"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
             </div>
           </div>
@@ -284,12 +287,12 @@ export function QuoteCreator({
       </Card>
 
       {/* Line Items Section */}
-      <Card>
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-lg font-bold text-[#1C1C1C]">Line Items</CardTitle>
+          <CardTitle className="text-lg font-bold text-charcoal">Line Items</CardTitle>
           <Button
             variant="default"
-            className="bg-[#F2B705] text-[#1C1C1C] hover:bg-[#F2B705]/90 font-bold"
+            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
             onClick={() => {
               // TODO: Open item selector dialog
               console.log('Opening item selector');
@@ -310,16 +313,16 @@ export function QuoteCreator({
       </Card>
 
       {/* Quote Summary */}
-      <Card>
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-bold text-[#1C1C1C]">Quote Summary</CardTitle>
+          <CardTitle className="text-lg font-bold text-charcoal">Quote Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {/* Tax and Markup Controls */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="tax-rate">Tax Rate (%)</Label>
+                <Label htmlFor="tax-rate" className="text-sm font-medium text-charcoal">Tax Rate (%)</Label>
                 <Input
                   id="tax-rate"
                   type="number"
@@ -328,11 +331,11 @@ export function QuoteCreator({
                   max="100"
                   value={taxRate}
                   onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="border-[#D7D7D7]"
+                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="markup-rate">Markup Rate (%)</Label>
+                <Label htmlFor="markup-rate" className="text-sm font-medium text-charcoal">Markup Rate (%)</Label>
                 <Input
                   id="markup-rate"
                   type="number"
@@ -341,30 +344,30 @@ export function QuoteCreator({
                   max="1000"
                   value={markupRate}
                   onChange={(e) => setMarkupRate(parseFloat(e.target.value) || 0)}
-                  className="border-[#D7D7D7]"
+                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
                 />
               </div>
             </div>
 
             {/* Calculation Display */}
-            <div className="mt-8 pt-6 border-t-2 border-[#D7D7D7]">
+            <div className="mt-8 pt-6 border-t-2 border-stone-gray">
               <div className="flex justify-end">
                 <div className="w-full md:w-1/3 space-y-3">
                   <div className="flex justify-between text-lg">
                     <span className="font-bold">Subtotal</span>
-                    <span className="font-mono">${calculation.subtotal.toFixed(2)}</span>
+                    <span className="font-mono text-charcoal">${calculation.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg">
                     <span className="font-bold">Tax ({taxRate}%)</span>
-                    <span className="font-mono">${calculation.taxAmount.toFixed(2)}</span>
+                    <span className="font-mono text-charcoal">${calculation.taxAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg">
                     <span className="font-bold">Markup ({markupRate}%)</span>
-                    <span className="font-mono">${calculation.markupAmount.toFixed(2)}</span>
+                    <span className="font-mono text-charcoal">${calculation.markupAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-2xl font-bold text-[#2A3D2F] pt-2 border-t border-[#D7D7D7]">
+                  <div className="flex justify-between text-2xl font-bold text-forest-green pt-2 border-t border-stone-gray">
                     <span>Total</span>
-                    <span className="font-mono">${calculation.total.toFixed(2)}</span>
+                    <span className="font-mono text-forest-green">${calculation.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -389,7 +392,7 @@ export function QuoteCreator({
           <CardContent className="pt-6">
             <Button
               onClick={() => window.open(`/api/quotes/${savedQuoteId}/pdf`, '_blank')}
-              className="w-full bg-[#2A3D2F] hover:bg-[#2A3D2F]/90"
+              className="w-full bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
             >
               Download PDF
             </Button>

@@ -25,8 +25,8 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">My Items</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-charcoal">My Items</h1>
+          <p className="text-charcoal/70">
             Manage your services and materials database for quick quote creation.
           </p>
         </div>

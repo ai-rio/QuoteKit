@@ -16,8 +16,10 @@ export default async function ItemsPage() {
   const items = response?.data;
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
-      <ItemsPageClient initialItems={items || []} />
+    <div className="bg-light-concrete min-h-screen">
+      <div className="container mx-auto max-w-4xl py-8">
+        <ItemsPageClient initialItems={items || []} />
+      </div>
     </div>
   );
 }

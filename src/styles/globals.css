@@ -34,6 +34,14 @@
 
     --radius: 0.5rem;
 
+    /* LawnQuote Brand Colors - Design System Alignment */
+    --forest-green: 147 21% 20%;      /* #2A3D2F */
+    --equipment-yellow: 47 95% 49%;    /* #F2B705 */
+    --light-concrete: 0 0% 96%;       /* #F5F5F5 */
+    --stone-gray: 0 0% 85%;           /* #D7D7D7 */
+    --charcoal: 0 0% 11%;             /* #1C1C1C */
+    --paper-white: 0 0% 100%;         /* #FFFFFF */
+
     /* Sidebar variables for forest green theme */
     --sidebar: 147 21% 20%; /* #2A3D2F forest green */
     --sidebar-foreground: 0 0% 100%; /* white text */
@@ -95,7 +103,7 @@
     @apply outline;
     @apply outline-2;
     @apply outline-offset-2;
-    @apply outline-pink-500;
+    outline-color: hsl(var(--forest-green));
   }
   * {
     @apply border-border;
@@ -112,7 +120,7 @@
     @apply h-full;
   }
   h1 {
-    @apply font-alt;
+    @apply font-sans;
     @apply font-bold;
     @apply text-4xl;
     @apply text-white;

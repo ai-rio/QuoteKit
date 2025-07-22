@@ -33,24 +33,23 @@ export function SaveDraftButton({
   return (
     <div className="flex items-center gap-2">
       <Button
-        variant="outline"
         onClick={handleSave}
         disabled={disabled || isSaving}
-        className="border-[#D7D7D7] text-[#1C1C1C] hover:bg-[#F5F5F5]"
+        className={`${disabled ? 'bg-paper-white' : 'bg-equipment-yellow'} text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray`}
       >
         <Save className="w-4 h-4 mr-2" />
         {isSaving ? 'Saving...' : 'Save Draft'}
       </Button>
       
       {hasUnsavedChanges && (
-        <Badge variant="secondary" className="bg-[#F2B705]/20 text-[#1C1C1C]">
+        <Badge variant="secondary" className="bg-equipment-yellow/20 text-charcoal">
           <Clock className="w-3 h-3 mr-1" />
           Unsaved
         </Badge>
       )}
       
       {lastSaveTime && !hasUnsavedChanges && (
-        <Badge variant="outline" className="border-green-200 text-green-700">
+        <Badge variant="outline" className="border-forest-green text-forest-green">
           Saved
         </Badge>
       )}

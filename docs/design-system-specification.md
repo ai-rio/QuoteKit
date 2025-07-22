@@ -79,34 +79,81 @@ font-family: 'Roboto Mono', monospace;      /* Numbers & quotes */
 
 ### Form Elements
 ```tsx
-/* Input fields with consistent styling */
+/* Input fields with consistent styling & proper contrast */
 <Input 
-  className="border-stone-gray bg-paper-white focus:border-forest-green focus:ring-forest-green"
+  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
   placeholder="Client Name"
+/>
+
+/* Currency/Number inputs with monospace font */
+<Input 
+  type="number"
+  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
+  placeholder="0.00"
 />
 
 /* Labels with proper hierarchy */
 <Label className="text-label text-charcoal font-medium">
   Client Name
 </Label>
+
+/* Form field container for dialogs */
+<div className="grid gap-3">
+  <Label htmlFor="input-id" className="text-label text-charcoal font-medium">
+    Field Label
+  </Label>
+  <Input
+    id="input-id"
+    name="fieldName"
+    className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+    placeholder="Enter value"
+    required
+  />
+</div>
 ```
 
 ### Button System
 ```tsx
 /* Primary Action Buttons */
-<Button className="bg-forest-green text-white hover:opacity-90 font-bold">
+<Button className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold">
   Generate PDF
 </Button>
 
 /* Secondary Action Buttons */
-<Button className="bg-equipment-yellow text-charcoal hover:scale-105 font-bold">
+<Button className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold">
   Add Item
 </Button>
 
-/* Subtle Action Buttons */
-<Button variant="ghost" className="text-charcoal hover:bg-stone-gray/20">
+/* Subtle Action Buttons (Save Draft) */
+<Button 
+  className={`${disabled ? 'bg-paper-white' : 'bg-equipment-yellow'} text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray`}
+>
   Save Draft
 </Button>
+```
+
+### Dynamic State Buttons
+```tsx
+/* Save Draft Button - Changes based on form state */
+<Button 
+  disabled={!canSave}
+  className={`
+    ${!canSave ? 'bg-paper-white' : 'bg-equipment-yellow'} 
+    text-charcoal 
+    hover:bg-stone-gray/20 
+    active:bg-equipment-yellow 
+    border border-stone-gray
+  `}
+>
+  {isSaving ? 'Saving...' : 'Save Draft'}
+</Button>
+
+/* States:
+- Disabled (no form data): bg-paper-white
+- Active (form data present): bg-equipment-yellow  
+- Hover: bg-stone-gray/20
+- Active/pressed: bg-equipment-yellow
+*/
 ```
 
 ### Table/List Components
@@ -169,7 +216,7 @@ font-family: 'Roboto Mono', monospace;      /* Numbers & quotes */
 ```css
 /* Button hover states */
 .btn-primary:hover { @apply opacity-90 transition-opacity; }
-.btn-secondary:hover { @apply scale-105 transform transition-transform; }
+.btn-secondary:hover { @apply bg-equipment-yellow/90 hover:text-charcoal transition-colors; }
 .btn-ghost:hover { @apply bg-stone-gray/20; }
 
 /* Interactive element feedback */
@@ -259,4 +306,115 @@ Ensure all quote creation components use standardized classes:
 4. **Responsive Excellence**: Seamless experience across all device sizes
 5. **Professional Appearance**: Clean, modern design suitable for business use
 
-This specification ensures the advanced quote creation interface maintains visual consistency, accessibility compliance, and professional appearance while delivering an excellent user experience across all devices and interaction patterns.
+This specification ensures ALL LawnQuote interfaces maintain visual consistency, accessibility compliance, and professional appearance while delivering an excellent user experience across all devices and interaction patterns.
+
+---
+
+## 🚨 MANDATORY COMPLIANCE RULES
+
+### ❌ NEVER USE These Color Patterns:
+```tsx
+// ❌ FORBIDDEN - Hardcoded hex colors
+className="text-[#1C1C1C] bg-[#F5F5F5] border-[#D7D7D7]"
+
+// ❌ FORBIDDEN - Generic gray colors  
+className="text-gray-600 bg-gray-50 border-gray-200"
+
+// ❌ FORBIDDEN - Inconsistent hover effects
+className="hover:scale-105" // Can cause contrast issues
+```
+
+### ✅ ALWAYS USE These Design System Classes:
+```tsx
+// ✅ REQUIRED - Design system colors
+className="text-charcoal bg-paper-white border-stone-gray"
+className="text-charcoal/70 bg-light-concrete" // With opacity
+
+// ✅ REQUIRED - Consistent hover states
+className="hover:opacity-90" // For primary buttons
+className="hover:bg-equipment-yellow/90 hover:text-charcoal" // For secondary
+className="hover:bg-stone-gray/20" // For ghost buttons
+```
+
+### 📋 PRE-IMPLEMENTATION CHECKLIST
+
+Before implementing ANY new story, verify:
+
+**1. Color Compliance** ✅
+- [ ] All text uses `text-charcoal` variants
+- [ ] All cards use `bg-paper-white border-stone-gray`
+- [ ] All page backgrounds use `bg-light-concrete`
+- [ ] All input fields use `bg-light-concrete` (NOT `bg-paper-white`)
+- [ ] No hardcoded hex colors (`#1C1C1C`, `#F5F5F5`, etc.)
+- [ ] No generic gray classes (`text-gray-600`, `bg-gray-50`)
+
+**2. Typography Compliance** ✅
+- [ ] Primary headings: `text-charcoal font-bold`
+- [ ] Secondary text: `text-charcoal/70`
+- [ ] Supporting text: `text-charcoal/60`
+- [ ] Financial values: `font-mono text-charcoal`
+
+**3. Button Compliance** ✅
+- [ ] Primary: `bg-forest-green text-white hover:opacity-90 active:opacity-80`
+- [ ] Secondary: `bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80`
+- [ ] Save Draft: `bg-paper-white` (disabled) or `bg-equipment-yellow` (active), `hover:bg-stone-gray/20`, `border border-stone-gray`
+
+**4. Form Input Compliance** ✅
+- [ ] All inputs: `bg-light-concrete text-charcoal`
+- [ ] All inputs: `border-stone-gray focus:border-forest-green focus:ring-forest-green`
+- [ ] All placeholders: `placeholder:text-charcoal/60`
+- [ ] Currency inputs: Additional `font-mono` class
+- [ ] All labels: `text-label text-charcoal font-medium`
+
+**5. Interactive States** ✅
+- [ ] Focus: `focus:border-forest-green focus:ring-forest-green`
+- [ ] Hover: Consistent with button system above
+- [ ] Loading: Proper loading indicators with design system colors
+
+**6. Layout Compliance** ✅
+- [ ] Page wrapper: `bg-light-concrete`
+- [ ] Header: `bg-paper-white border-stone-gray`
+- [ ] Cards: `bg-paper-white border-stone-gray shadow-sm`
+- [ ] Dialogs: `bg-paper-white border-stone-gray`
+
+### 🔍 POST-IMPLEMENTATION VERIFICATION
+
+After completing ANY story:
+
+1. **Search for violations**:
+   ```bash
+   grep -r "text-\[#" src/
+   grep -r "bg-\[#" src/
+   grep -r "border-\[#" src/
+   grep -r "text-gray" src/
+   grep -r "bg-gray" src/
+   ```
+
+2. **Verify contrast compliance**:
+   - All text has proper contrast ratios
+   - Card subheaders are readable
+   - Button states maintain contrast
+
+3. **Test hover states**:
+   - No color transitions that break contrast
+   - Consistent behavior across all interactive elements
+
+### ⚠️ COMMON VIOLATION PATTERNS TO AVOID
+
+1. **Card Subheaders**: Use `text-charcoal` not `text-gray-600`
+2. **Secondary Text**: Use `text-charcoal/70` not `text-gray-500`  
+3. **Button Hover**: Use consistent design system patterns
+4. **Dialog Backgrounds**: Always `bg-paper-white border-stone-gray`
+5. **Page Backgrounds**: Always `bg-light-concrete`
+6. **❌ INPUT BACKGROUND ERROR**: NEVER use `bg-paper-white` for inputs - always `bg-light-concrete`
+7. **Form Input Text**: Always include `text-charcoal` for input readability
+8. **Placeholder Text**: Always include `placeholder:text-charcoal/60` for proper contrast
+
+### 📖 STORY IMPLEMENTATION WORKFLOW
+
+1. **Before coding**: Review this checklist
+2. **During coding**: Use only design system classes
+3. **Before commit**: Run violation search commands
+4. **After merge**: Verify visual consistency
+
+**Remember**: Every component must be accessible, consistent, and professionally styled. No exceptions.**
