@@ -21,15 +21,15 @@ export function QuoteNumbering({ quoteNumber, status }: QuoteNumberingProps) {
   });
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="font-mono text-lg font-bold text-charcoal">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="font-mono text-base sm:text-lg font-bold text-charcoal">
         {displayNumber}
       </div>
-      <div className="text-sm text-charcoal/60">
+      <div className="text-xs sm:text-sm text-charcoal/60">
         {currentDate}
       </div>
       {status === 'draft' && (
-        <Badge variant="outline" className="border-stone-gray text-charcoal/60">
+        <Badge variant="outline" className="border-stone-gray text-charcoal/60 text-xs sm:text-sm">
           Draft
         </Badge>
       )}

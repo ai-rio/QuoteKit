@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   asChild 
                   isActive={isActive}
                   className={`
-                    flex items-center p-3 rounded-lg font-medium
+                    flex items-center p-3 sm:p-4 rounded-lg font-medium min-h-[48px] touch-manipulation
                     ${isHighlight 
                       ? 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200' 
                       : isActive 
@@ -85,9 +85,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                     }
                   `}
                 >
-                  <Link href={item.url}>
-                    <Icon className="w-6 h-6 mr-3" />
-                    {item.title}
+                  <Link href={item.url} className="flex items-center w-full">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 mr-3 flex-shrink-0" />
+                    <span className="text-sm sm:text-base">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -101,11 +101,11 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton 
               asChild 
-              className="flex items-center p-3 rounded-lg text-white hover:bg-white/10"
+              className="flex items-center p-3 sm:p-4 rounded-lg text-white hover:bg-white/10 min-h-[48px] touch-manipulation"
             >
-              <Link href="/auth/logout">
-                <LogOut className="w-6 h-6 mr-3" />
-                Logout
+              <Link href="/auth/logout" className="flex items-center w-full">
+                <LogOut className="w-5 h-5 sm:w-6 sm:h-6 mr-3 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Logout</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

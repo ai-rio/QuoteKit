@@ -216,70 +216,72 @@ export function QuoteCreator({
   const canSave = clientName.trim() && quoteLineItems.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       {/* Quote Header */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-charcoal">
+        <CardHeader className="pb-4">
+          <div className="space-y-3">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-charcoal">
               {status === 'draft' ? 'New Quote' : 'Quote Details'}
             </CardTitle>
-            <div className="flex items-center gap-3">
-              <QuoteNumbering 
-                quoteNumber={quoteNumber}
-                status={status}
-              />
-              <Badge 
-                variant={status === 'draft' ? 'secondary' : 'default'}
-                className={status === 'draft' ? 'bg-equipment-yellow/20 text-charcoal' : 'bg-forest-green text-white'}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Badge>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <QuoteNumbering 
+                  quoteNumber={quoteNumber}
+                  status={status}
+                />
+                <Badge 
+                  variant={status === 'draft' ? 'secondary' : 'default'}
+                  className={status === 'draft' ? 'bg-equipment-yellow/20 text-charcoal w-fit' : 'bg-forest-green text-white w-fit'}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Badge>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
+                <SaveDraftButton 
+                  onSave={handleSaveDraft}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  lastSaveTime={lastSaveTime}
+                  disabled={!clientName.trim()}
+                />
+                <Button
+                  onClick={handleCreateFinalQuote}
+                  disabled={!canSave || isLoading}
+                  className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold min-h-[44px] touch-manipulation"
+                >
+                  {isLoading ? 'Creating...' : 'Generate PDF'}
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <SaveDraftButton 
-              onSave={handleSaveDraft}
-              hasUnsavedChanges={hasUnsavedChanges}
-              lastSaveTime={lastSaveTime}
-              disabled={!clientName.trim()}
-            />
-            <Button
-              onClick={handleCreateFinalQuote}
-              disabled={!canSave || isLoading}
-              className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
-            >
-              {isLoading ? 'Creating...' : 'Generate PDF'}
-            </Button>
           </div>
         </CardHeader>
       </Card>
 
       {/* Client Details */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold text-charcoal">Client Details</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Client Details</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="client-name" className="text-sm font-medium text-charcoal">Client Name *</Label>
               <Input
                 id="client-name"
                 placeholder="Enter client name"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="client-contact" className="text-sm font-medium text-charcoal">Client Contact</Label>
               <Input
                 id="client-contact"
                 placeholder="Phone, email, or address"
                 value={clientContact}
                 onChange={(e) => setClientContact(e.target.value)}
-                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
               />
             </div>
           </div>
@@ -288,11 +290,11 @@ export function QuoteCreator({
 
       {/* Line Items Section */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-lg font-bold text-charcoal">Line Items</CardTitle>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Line Items</CardTitle>
           <Button
             variant="default"
-            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
             onClick={() => {
               // TODO: Open item selector dialog
               console.log('Opening item selector');
@@ -301,7 +303,7 @@ export function QuoteCreator({
             Add Item
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <EnhancedLineItemsTable
             availableItems={availableItems}
             quoteLineItems={quoteLineItems}
@@ -314,14 +316,14 @@ export function QuoteCreator({
 
       {/* Quote Summary */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold text-charcoal">Quote Summary</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Quote Summary</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
             {/* Tax and Markup Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="tax-rate" className="text-sm font-medium text-charcoal">Tax Rate (%)</Label>
                 <Input
                   id="tax-rate"
@@ -331,10 +333,10 @@ export function QuoteCreator({
                   max="100"
                   value={taxRate}
                   onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
+                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="markup-rate" className="text-sm font-medium text-charcoal">Markup Rate (%)</Label>
                 <Input
                   id="markup-rate"
@@ -344,28 +346,28 @@ export function QuoteCreator({
                   max="1000"
                   value={markupRate}
                   onChange={(e) => setMarkupRate(parseFloat(e.target.value) || 0)}
-                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60"
+                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
                 />
               </div>
             </div>
 
             {/* Calculation Display */}
-            <div className="mt-8 pt-6 border-t-2 border-stone-gray">
+            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t-2 border-stone-gray">
               <div className="flex justify-end">
-                <div className="w-full md:w-1/3 space-y-3">
-                  <div className="flex justify-between text-lg">
+                <div className="w-full sm:w-2/3 md:w-1/3 space-y-2 sm:space-y-3">
+                  <div className="flex justify-between text-base sm:text-lg">
                     <span className="font-bold">Subtotal</span>
                     <span className="font-mono text-charcoal">${calculation.subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-lg">
+                  <div className="flex justify-between text-base sm:text-lg">
                     <span className="font-bold">Tax ({taxRate}%)</span>
                     <span className="font-mono text-charcoal">${calculation.taxAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-lg">
+                  <div className="flex justify-between text-base sm:text-lg">
                     <span className="font-bold">Markup ({markupRate}%)</span>
                     <span className="font-mono text-charcoal">${calculation.markupAmount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-2xl font-bold text-forest-green pt-2 border-t border-stone-gray">
+                  <div className="flex justify-between text-xl sm:text-2xl font-bold text-forest-green pt-2 border-t border-stone-gray">
                     <span>Total</span>
                     <span className="font-mono text-forest-green">${calculation.total.toFixed(2)}</span>
                   </div>
@@ -378,7 +380,7 @@ export function QuoteCreator({
 
       {/* Auto-save status */}
       {lastSaveTime && (
-        <Alert>
+        <Alert className="text-xs sm:text-sm">
           <AlertDescription>
             Last saved: {lastSaveTime.toLocaleTimeString()}
             {hasUnsavedChanges && ' (unsaved changes)'}
@@ -389,10 +391,10 @@ export function QuoteCreator({
       {/* PDF Generation (shown after quote is saved) */}
       {savedQuoteId && (
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6">
             <Button
               onClick={() => window.open(`/api/quotes/${savedQuoteId}/pdf`, '_blank')}
-              className="w-full bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
+              className="w-full bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold min-h-[44px] touch-manipulation"
             >
               Download PDF
             </Button>

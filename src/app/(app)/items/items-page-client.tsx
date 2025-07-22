@@ -37,40 +37,38 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
   }, [refreshCategories]);
 
   return (
-    <div className="min-h-screen bg-light-concrete p-6">
-      <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="items" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-paper-white border border-stone-gray">
-            <TabsTrigger 
-              value="items" 
-              className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white"
-            >
-              Items Library
-            </TabsTrigger>
-            <TabsTrigger 
-              value="categories" 
-              className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white"
-            >
-              Manage Categories
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="items" className="space-y-6">
-            <ItemLibrary 
-              items={items}
-              categories={categories}
-              onItemsChange={refreshItems}
-            />
-          </TabsContent>
-          
-          <TabsContent value="categories" className="space-y-6">
-            <CategoryManager 
-              categories={categories}
-              onCategoriesChange={refreshCategories}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+    <div className="w-full">
+      <Tabs defaultValue="items" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 bg-paper-white border border-stone-gray">
+          <TabsTrigger 
+            value="items" 
+            className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white text-sm sm:text-base"
+          >
+            Items Library
+          </TabsTrigger>
+          <TabsTrigger 
+            value="categories" 
+            className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white text-sm sm:text-base"
+          >
+            Manage Categories
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="items" className="space-y-4 sm:space-y-6">
+          <ItemLibrary 
+            items={items}
+            categories={categories}
+            onItemsChange={refreshItems}
+          />
+        </TabsContent>
+        
+        <TabsContent value="categories" className="space-y-4 sm:space-y-6">
+          <CategoryManager 
+            categories={categories}
+            onCategoriesChange={refreshCategories}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -21,8 +21,8 @@ export default async function NewQuotePage() {
   const settings = settingsResponse?.data;
 
   return (
-    <div className="min-h-screen bg-light-concrete py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-light-concrete py-4 sm:py-6 lg:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <QuoteCreator 
           availableItems={items || []} 
           defaultSettings={settings || null}
