@@ -1,0 +1,401 @@
+'use client';
+
+import { useCallback,useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
+import { LineItem } from '@/features/items/types';
+import { CompanySettings } from '@/features/settings/types';
+
+import { createQuote, saveDraft } from '../actions';
+import { CreateQuoteData, QuoteLineItem, QuoteStatus,SaveDraftData } from '../types';
+import { calculateQuote } from '../utils';
+
+import { EnhancedLineItemsTable } from './EnhancedLineItemsTable';
+import { QuoteNumbering } from './QuoteNumbering';
+import { SaveDraftButton } from './SaveDraftButton';
+
+interface QuoteCreatorProps {
+  availableItems: LineItem[];
+  defaultSettings: CompanySettings | null;
+  initialDraft?: any; // For loading existing drafts
+}
+
+export function QuoteCreator({ 
+  availableItems, 
+  defaultSettings, 
+  initialDraft 
+}: QuoteCreatorProps) {
+  const router = useRouter();
+  
+  // State management
+  const [isLoading, setIsLoading] = useState(false);
+  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(initialDraft?.id || null);
+  const [status, setStatus] = useState<QuoteStatus>('draft');
+  const [quoteNumber, setQuoteNumber] = useState<string>('');
+  
+  // Client info state
+  const [clientName, setClientName] = useState(initialDraft?.client_name || '');
+  const [clientContact, setClientContact] = useState(initialDraft?.client_contact || '');
+  
+  // Quote line items state
+  const [quoteLineItems, setQuoteLineItems] = useState<QuoteLineItem[]>(
+    initialDraft?.quote_data || []
+  );
+  
+  // Tax and markup state (start with defaults from settings)
+  const [taxRate, setTaxRate] = useState(
+    initialDraft?.tax_rate ?? defaultSettings?.default_tax_rate ?? 0
+  );
+  const [markupRate, setMarkupRate] = useState(
+    initialDraft?.markup_rate ?? defaultSettings?.default_markup_rate ?? 0
+  );
+
+  // Calculate totals in real-time
+  const calculation = calculateQuote(quoteLineItems, taxRate, markupRate);
+
+  // Auto-save functionality
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+
+  // Mark as having unsaved changes when data changes
+  useEffect(() => {
+    if (!initialDraft) return;
+    setHasUnsavedChanges(true);
+  }, [clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft]);
+
+  // Auto-save every 30 seconds if there are unsaved changes
+  const autoSave = useCallback(async () => {
+    if (!hasUnsavedChanges || !clientName.trim()) return;
+    
+    try {
+      const draftData: SaveDraftData = {
+        id: draftId || undefined,
+        client_name: clientName,
+        client_contact: clientContact || null,
+        quote_data: quoteLineItems,
+        tax_rate: taxRate,
+        markup_rate: markupRate,
+      };
+
+      const response = await saveDraft(draftData);
+      if (response?.data) {
+        setDraftId(response.data.id);
+        setHasUnsavedChanges(false);
+        setLastSaveTime(new Date());
+      } else {
+        console.error('Auto-save failed:', response?.error);
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+  }, [hasUnsavedChanges, clientName, clientContact, quoteLineItems, taxRate, markupRate, draftId]);
+
+  useEffect(() => {
+    const interval = setInterval(autoSave, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [autoSave]);
+
+  // Line item management functions
+  function handleAddItem(itemId: string) {
+    const item = availableItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    // Check if item is already added
+    const existingItem = quoteLineItems.find(qi => qi.id === itemId);
+    if (existingItem) {
+      toast({
+        variant: 'destructive',
+        description: 'This item is already added to the quote',
+      });
+      return;
+    }
+
+    const newQuoteItem: QuoteLineItem = {
+      id: item.id,
+      name: item.name,
+      unit: item.unit,
+      cost: item.cost,
+      quantity: 1,
+    };
+
+    setQuoteLineItems(prev => [...prev, newQuoteItem]);
+  }
+
+  function handleUpdateItem(itemId: string, field: keyof QuoteLineItem, value: any) {
+    setQuoteLineItems(prev => 
+      prev.map(item => 
+        item.id === itemId ? { ...item, [field]: value } : item
+      )
+    );
+  }
+
+  function handleRemoveItem(itemId: string) {
+    setQuoteLineItems(prev => prev.filter(item => item.id !== itemId));
+  }
+
+  // Save draft manually
+  async function handleSaveDraft() {
+    if (!clientName.trim()) {
+      toast({
+        variant: 'destructive',
+        description: 'Client name is required to save draft',
+      });
+      return;
+    }
+
+    await autoSave();
+    toast({
+      description: 'Draft saved successfully',
+    });
+  }
+
+  // Create final quote
+  async function handleCreateFinalQuote() {
+    // Validation
+    if (!clientName.trim()) {
+      toast({
+        variant: 'destructive',
+        description: 'Client name is required',
+      });
+      return;
+    }
+
+    if (quoteLineItems.length === 0) {
+      toast({
+        variant: 'destructive',
+        description: 'At least one line item is required',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const quoteData: CreateQuoteData = {
+      client_name: clientName,
+      client_contact: clientContact || null,
+      quote_data: quoteLineItems,
+      tax_rate: taxRate,
+      markup_rate: markupRate,
+      status: 'final',
+    };
+
+    try {
+      const response = await createQuote(quoteData);
+      if (response?.error) {
+        toast({
+          variant: 'destructive',
+          description: response.error.message || 'Failed to create quote',
+        });
+      } else if (response?.data) {
+        toast({
+          description: 'Quote created successfully',
+        });
+        setSavedQuoteId(response.data.id);
+        setQuoteNumber(response.data.quote_number || '');
+        setStatus('final');
+        setHasUnsavedChanges(false);
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        description: 'Failed to create quote',
+      });
+    }
+
+    setIsLoading(false);
+  }
+
+  const canSave = clientName.trim() && quoteLineItems.length > 0;
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Quote Header */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-[#1C1C1C]">
+              {status === 'draft' ? 'New Quote' : 'Quote Details'}
+            </CardTitle>
+            <div className="flex items-center gap-3">
+              <QuoteNumbering 
+                quoteNumber={quoteNumber}
+                status={status}
+              />
+              <Badge variant={status === 'draft' ? 'secondary' : 'default'}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </Badge>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <SaveDraftButton 
+              onSave={handleSaveDraft}
+              hasUnsavedChanges={hasUnsavedChanges}
+              lastSaveTime={lastSaveTime}
+              disabled={!clientName.trim()}
+            />
+            <Button
+              onClick={handleCreateFinalQuote}
+              disabled={!canSave || isLoading}
+              className="bg-[#2A3D2F] hover:bg-[#2A3D2F]/90"
+            >
+              {isLoading ? 'Creating...' : 'Generate PDF'}
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Client Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold text-[#1C1C1C]">Client Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="client-name">Client Name *</Label>
+              <Input
+                id="client-name"
+                placeholder="Enter client name"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="border-[#D7D7D7]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-contact">Client Contact</Label>
+              <Input
+                id="client-contact"
+                placeholder="Phone, email, or address"
+                value={clientContact}
+                onChange={(e) => setClientContact(e.target.value)}
+                className="border-[#D7D7D7]"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Line Items Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg font-bold text-[#1C1C1C]">Line Items</CardTitle>
+          <Button
+            variant="default"
+            className="bg-[#F2B705] text-[#1C1C1C] hover:bg-[#F2B705]/90 font-bold"
+            onClick={() => {
+              // TODO: Open item selector dialog
+              console.log('Opening item selector');
+            }}
+          >
+            Add Item
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <EnhancedLineItemsTable
+            availableItems={availableItems}
+            quoteLineItems={quoteLineItems}
+            onAddItem={handleAddItem}
+            onUpdateItem={handleUpdateItem}
+            onRemoveItem={handleRemoveItem}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Quote Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-bold text-[#1C1C1C]">Quote Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Tax and Markup Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tax-rate">Tax Rate (%)</Label>
+                <Input
+                  id="tax-rate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                  className="border-[#D7D7D7]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="markup-rate">Markup Rate (%)</Label>
+                <Input
+                  id="markup-rate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1000"
+                  value={markupRate}
+                  onChange={(e) => setMarkupRate(parseFloat(e.target.value) || 0)}
+                  className="border-[#D7D7D7]"
+                />
+              </div>
+            </div>
+
+            {/* Calculation Display */}
+            <div className="mt-8 pt-6 border-t-2 border-[#D7D7D7]">
+              <div className="flex justify-end">
+                <div className="w-full md:w-1/3 space-y-3">
+                  <div className="flex justify-between text-lg">
+                    <span className="font-bold">Subtotal</span>
+                    <span className="font-mono">${calculation.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg">
+                    <span className="font-bold">Tax ({taxRate}%)</span>
+                    <span className="font-mono">${calculation.taxAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg">
+                    <span className="font-bold">Markup ({markupRate}%)</span>
+                    <span className="font-mono">${calculation.markupAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-2xl font-bold text-[#2A3D2F] pt-2 border-t border-[#D7D7D7]">
+                    <span>Total</span>
+                    <span className="font-mono">${calculation.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Auto-save status */}
+      {lastSaveTime && (
+        <Alert>
+          <AlertDescription>
+            Last saved: {lastSaveTime.toLocaleTimeString()}
+            {hasUnsavedChanges && ' (unsaved changes)'}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* PDF Generation (shown after quote is saved) */}
+      {savedQuoteId && (
+        <Card>
+          <CardContent className="pt-6">
+            <Button
+              onClick={() => window.open(`/api/quotes/${savedQuoteId}/pdf`, '_blank')}
+              className="w-full bg-[#2A3D2F] hover:bg-[#2A3D2F]/90"
+            >
+              Download PDF
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

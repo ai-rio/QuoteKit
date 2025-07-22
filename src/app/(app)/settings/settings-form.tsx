@@ -31,7 +31,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
     const response = await saveCompanySettings(formData);
 
-    if (response.error) {
+    if (response?.error) {
       setError(response.error.message || 'Failed to save settings');
     } else {
       toast({

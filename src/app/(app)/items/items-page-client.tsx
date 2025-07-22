@@ -15,9 +15,9 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
   const [items, setItems] = useState<LineItem[]>(initialItems);
 
   const refreshItems = useCallback(async () => {
-    const { data } = await getLineItems();
-    if (data) {
-      setItems(data);
+    const response = await getLineItems();
+    if (response?.data) {
+      setItems(response.data);
     }
   }, []);
 

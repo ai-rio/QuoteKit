@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FileText, Home, LogOut, Package, Settings } from "lucide-react"
+import { Home, LogOut, Package, Plus, Settings } from "lucide-react"
 
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
 import {
@@ -18,16 +18,24 @@ import {
 } from "@/components/ui/sidebar"
 
 // Navigation items matching the HTML mockup
-const navItems = [
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  highlight?: boolean;
+}
+
+const navItems: NavItem[] = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: Home,
   },
   {
-    title: "Quotes",
-    url: "/quotes",
-    icon: FileText,
+    title: "New Quote",
+    url: "/quotes/new",
+    icon: Plus,
+    highlight: true, // Special styling for primary action
   },
   {
     title: "Item Library",
@@ -60,6 +68,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           {navItems.map((item) => {
             const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
             const Icon = item.icon
+            const isHighlight = item.highlight
             
             return (
               <SidebarMenuItem key={item.title}>
@@ -67,10 +76,12 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   asChild 
                   isActive={isActive}
                   className={`
-                    flex items-center p-3 rounded-lg text-white font-medium
-                    ${isActive 
-                      ? 'bg-white/20 font-bold' 
-                      : 'hover:bg-white/10'
+                    flex items-center p-3 rounded-lg font-medium
+                    ${isHighlight 
+                      ? 'bg-[#F2B705] text-[#1C1C1C] font-bold hover:bg-[#F2B705]/90 hover:scale-105 transform transition-all duration-200' 
+                      : isActive 
+                        ? 'bg-white/20 text-white font-bold' 
+                        : 'text-white hover:bg-white/10'
                     }
                   `}
                 >

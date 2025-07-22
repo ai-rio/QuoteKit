@@ -3,7 +3,7 @@ export interface LineItem {
   id: string;
   user_id: string;
   name: string;
-  unit: string;
+  unit: string | null;
   cost: number;
-  created_at?: string;
+  created_at?: string | null;
 }

@@ -25,7 +25,7 @@ export function DeleteItemButton({ itemId, itemName, onItemDeleted }: DeleteItem
 
     const response = await deleteLineItem(itemId);
 
-    if (response.error) {
+    if (response?.error) {
       toast({
         variant: 'destructive',
         description: response.error.message || 'Failed to delete item',

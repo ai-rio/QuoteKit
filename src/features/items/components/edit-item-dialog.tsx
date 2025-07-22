@@ -38,7 +38,7 @@ export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialog
 
     const response = await updateLineItem(formData);
 
-    if (response.error) {
+    if (response?.error) {
       toast({
         variant: 'destructive',
         description: response.error.message || 'Failed to update item',
@@ -79,7 +79,7 @@ export function EditItemDialog({ item, onItemUpdated, children }: EditItemDialog
               <Input
                 id="edit-unit"
                 name="unit"
-                defaultValue={item.unit}
+                defaultValue={item.unit || ''}
                 required
               />
             </div>
