@@ -6,32 +6,44 @@ export interface Database {
       company_settings: {
         Row: {
           company_address: string | null;
+          company_email: string | null;
           company_name: string | null;
           company_phone: string | null;
           default_markup_rate: number | null;
           default_tax_rate: number | null;
           id: string;
+          logo_file_name: string | null;
           logo_url: string | null;
+          preferred_currency: string | null;
+          quote_terms: string | null;
           updated_at: string | null;
         };
         Insert: {
           company_address?: string | null;
+          company_email?: string | null;
           company_name?: string | null;
           company_phone?: string | null;
           default_markup_rate?: number | null;
           default_tax_rate?: number | null;
           id: string;
+          logo_file_name?: string | null;
           logo_url?: string | null;
+          preferred_currency?: string | null;
+          quote_terms?: string | null;
           updated_at?: string | null;
         };
         Update: {
           company_address?: string | null;
+          company_email?: string | null;
           company_name?: string | null;
           company_phone?: string | null;
           default_markup_rate?: number | null;
           default_tax_rate?: number | null;
           id?: string;
+          logo_file_name?: string | null;
           logo_url?: string | null;
+          preferred_currency?: string | null;
+          quote_terms?: string | null;
           updated_at?: string | null;
         };
         Relationships: [];
