@@ -12,6 +12,7 @@ import {
   UserPlus} from "lucide-react"
 
 import { Pagination } from "@/components/admin/pagination"
+import { UserEditModal } from "@/components/admin/user-edit-modal"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAdminUsers } from "@/hooks/use-admin-users"
+import { type AdminUser,useAdminUsers } from "@/hooks/use-admin-users"
 
 // Mock user data - will be replaced with real data from Supabase + PostHog
 
@@ -31,6 +32,8 @@ import { useAdminUsers } from "@/hooks/use-admin-users"
 export default function UsersOverview() {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { users, loading, error, pagination, refreshUsers, updateUserRole } = useAdminUsers(currentPage, 20)
 
   // Filter users based on search term
@@ -56,6 +59,20 @@ export default function UsersOverview() {
       // Show success message or notification
       console.log('Role updated successfully')
     }
+  }
+
+  const handleEditUser = (user: AdminUser) => {
+    setSelectedUser(user)
+    setIsEditModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false)
+    setSelectedUser(null)
+  }
+
+  const handleUserUpdated = () => {
+    refreshUsers()
   }
 
   return (
@@ -285,16 +302,11 @@ export default function UsersOverview() {
                       <div className="flex space-x-2">
                         <Button 
                           size="sm"
+                          onClick={() => handleEditUser(user)}
                           className="bg-forest-green text-white hover:opacity-90"
                         >
-                          View
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <Settings className="w-4 h-4 mr-1" />
+                          Edit
                         </Button>
                       </div>
                     </div>
@@ -318,6 +330,14 @@ export default function UsersOverview() {
           </div>
         )}
       </Card>
+
+      {/* User Edit Modal */}
+      <UserEditModal
+        user={selectedUser}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseModal}
+        onUserUpdated={handleUserUpdated}
+      />
     </div>
   )
 }
