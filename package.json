@@ -16,7 +16,9 @@
     "supabase:link": "env-cmd -f ./.env.local supabase link --project-ref UPDATE_THIS_WITH_YOUR_SUPABASE_PROJECT_ID",
     "migration:new": "supabase migration new",
     "migration:up": "supabase migration up --linked --debug && npm run generate-types",
-    "migration:squash": "supabase migration squash --linked"
+    "migration:squash": "supabase migration squash --linked",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -65,6 +67,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "19.0.4",
     "@types/react-dom": "19.0.2",
     "autoprefixer": "^10.4.20",
@@ -75,10 +78,13 @@
     "eslint-plugin-react": "^7.37.3",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-tailwindcss": "^3.17.5",
+    "jest": "^30.0.5",
+    "jest-environment-node": "^30.0.5",
     "postcss": "^8.4.49",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.3.0",
     "supabase": "^1.226.4",
+    "ts-jest": "^29.4.0",
     "typescript": "^5.7.3"
   },
   "overrides": {

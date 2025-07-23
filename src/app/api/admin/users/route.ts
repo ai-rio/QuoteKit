@@ -14,11 +14,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check admin role (temporarily disabled for development)
-    // const userIsAdmin = await isAdmin(user.id)
-    // if (!userIsAdmin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    // }
+    // Check admin role
+    const userIsAdmin = await isAdmin(user.id)
+    if (!userIsAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     // Get users from Supabase (with fallback for development)
     let users: any[] = []
@@ -63,6 +63,58 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching admin users:', error)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Check authentication
+    const supabase = await createSupabaseServerClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check admin role
+    const userIsAdmin = await isAdmin(user.id)
+    if (!userIsAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { userId, action, role } = body
+
+    if (!userId || !action) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    let result
+    if (action === 'grant_admin' && role === 'admin') {
+      result = await supabaseAdminClient.rpc('grant_admin_role', { target_user_id: userId })
+    } else if (action === 'revoke_admin' && role === 'user') {
+      result = await supabaseAdminClient.rpc('revoke_admin_role', { target_user_id: userId })
+    } else {
+      return NextResponse.json({ error: 'Invalid action or role' }, { status: 400 })
+    }
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error.message }, { status: 400 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `User role ${action === 'grant_admin' ? 'granted' : 'revoked'} successfully`
+    })
+
+  } catch (error) {
+    console.error('Error updating user role:', error)
     return NextResponse.json(
       { 
         error: 'Internal server error',
