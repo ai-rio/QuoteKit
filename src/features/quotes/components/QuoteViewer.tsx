@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
 import {
   Table,
   TableBody,
@@ -27,9 +26,9 @@ import {
 } from '@/components/ui/table';
 
 import { Quote } from '../types';
-import { duplicateQuote } from '../actions';
 
 import { QuotePDFViewer } from './QuotePDFViewer';
+import { SendEmailDialog } from './SendEmailDialog';
 
 interface QuoteViewerProps {
   quote: Quote;
@@ -61,6 +60,7 @@ const getStatusColor = (status: string) => {
 export function QuoteViewer({ quote, company }: QuoteViewerProps) {
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -115,41 +115,13 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
     router.push(`/quotes/${quote.id}/edit`);
   };
 
-  const handleDuplicate = async () => {
-    try {
-      const response = await duplicateQuote(quote.id);
-      
-      if (response.error) {
-        toast({
-          title: 'Failed to duplicate quote',
-          description: response.error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (response.data) {
-        toast({
-          title: 'Quote duplicated successfully',
-          description: 'Redirecting to edit the new quote...',
-        });
-        
-        // Navigate to the new quote edit page
-        router.push(`/quotes/${response.data.id}/edit`);
-      }
-    } catch (error) {
-      console.error('Error duplicating quote:', error);
-      toast({
-        title: 'Failed to duplicate quote',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
-    }
+  const handleDuplicate = () => {
+    // TODO: Implement duplication
+    alert('Quote duplication functionality will be implemented.');
   };
 
   const handleSendEmail = () => {
-    // TODO: Implement email sending
-    alert('Email sending functionality will be implemented.');
+    setIsEmailDialogOpen(true);
   };
 
   // Calculate tax amount
@@ -195,7 +167,7 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold">
+              <Button variant="outline" size="sm" className="border-stone-gray text-charcoal hover:bg-stone-gray/20">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -363,29 +335,33 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
         <CardContent>
           <div className="flex flex-wrap gap-3">
             <Button
+              variant="outline"
               onClick={handleEdit}
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit Quote
             </Button>
             <Button
+              variant="outline"
               onClick={handleDuplicate}
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
             >
               <FileText className="w-4 h-4 mr-2" />
               Duplicate Quote
             </Button>
             <Button
+              variant="outline"
               onClick={handleSendEmail}
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
             >
               <Mail className="w-4 h-4 mr-2" />
               Send via Email
             </Button>
             <Link href="/quotes">
               <Button
-                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+                variant="outline"
+                className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
               >
                 Back to All Quotes
               </Button>
@@ -393,6 +369,13 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Dialog */}
+      <SendEmailDialog
+        isOpen={isEmailDialogOpen}
+        onClose={() => setIsEmailDialogOpen(false)}
+        quote={quote}
+      />
     </div>
   );
 }

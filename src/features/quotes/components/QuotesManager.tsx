@@ -6,10 +6,9 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/components/ui/use-toast';
 
 import { BulkQuoteActions,Quote, QuoteFilters, QuoteSortOptions } from '../types';
-import { updateQuoteStatus, deleteQuotes, createTemplate, updateTemplate, deleteTemplate } from '../actions';
+import { sendBulkQuoteEmails } from '../email-actions';
 
 import { BulkActions } from './BulkActions';
 import { QuotesFilters } from './QuotesFilters';
@@ -128,69 +127,20 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   // Bulk actions implementation
   const bulkActions: BulkQuoteActions = {
     updateStatus: async (quoteIds: string[], status) => {
-      try {
-        const response = await updateQuoteStatus(quoteIds, status);
-        
-        if (response.error) {
-          console.error('Failed to update status:', response.error.message);
-          toast({
-            title: 'Failed to update status',
-            description: response.error.message,
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        // Update local state
-        setQuotes(prev => 
-          prev.map(quote => 
-            quoteIds.includes(quote.id) ? { ...quote, status } : quote
-          )
-        );
-
-        toast({
-          title: 'Status updated successfully',
-          description: `Updated ${response.data?.updated || 0} quotes to ${status}`,
-        });
-      } catch (error) {
-        console.error('Error updating status:', error);
-        toast({
-          title: 'Failed to update status',
-          description: 'Please try again.',
-          variant: 'destructive',
-        });
-      }
+      // TODO: Implement API call to update quote statuses
+      console.log('Update status for quotes:', quoteIds, 'to', status);
+      // Mock update for now
+      setQuotes(prev => 
+        prev.map(quote => 
+          quoteIds.includes(quote.id) ? { ...quote, status } : quote
+        )
+      );
     },
     delete: async (quoteIds: string[]) => {
-      try {
-        const response = await deleteQuotes(quoteIds);
-        
-        if (response.error) {
-          console.error('Failed to delete quotes:', response.error.message);
-          toast({
-            title: 'Failed to delete quotes',
-            description: response.error.message,
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        // Update local state
-        setQuotes(prev => prev.filter(quote => !quoteIds.includes(quote.id)));
-
-        toast({
-          title: 'Quotes deleted successfully',
-          description: `Deleted ${response.data?.deleted || 0} quotes`,
-          variant: 'destructive',
-        });
-      } catch (error) {
-        console.error('Error deleting quotes:', error);
-        toast({
-          title: 'Failed to delete quotes',
-          description: 'Please try again.',
-          variant: 'destructive',
-        });
-      }
+      // TODO: Implement API call to delete quotes
+      console.log('Delete quotes:', quoteIds);
+      // Mock delete for now
+      setQuotes(prev => prev.filter(quote => !quoteIds.includes(quote.id)));
     },
     export: async (quoteIds: string[]) => {
       try {
@@ -239,6 +189,47 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
       } catch (error) {
         console.error('Error during bulk export:', error);
         alert('Error occurred during bulk export. Please try again.');
+      }
+    },
+    sendEmails: async (quoteIds: string[]) => {
+      try {
+        console.log('Sending emails for quotes:', quoteIds);
+        
+        // Use the bulk email sending function
+        const result = await sendBulkQuoteEmails(quoteIds);
+        
+        if (result.success) {
+          const successCount = result.results.filter(r => r.success).length;
+          const failCount = result.results.filter(r => !r.success).length;
+          
+          if (failCount === 0) {
+            alert(`Successfully sent emails for all ${successCount} quotes.`);
+          } else {
+            alert(`Sent emails for ${successCount} quotes. ${failCount} failed to send.`);
+            console.error('Failed emails:', result.results.filter(r => !r.success));
+          }
+          
+          // Update the quotes status to 'sent' for successful emails
+          const successfulQuoteIds = result.results
+            .filter(r => r.success)
+            .map(r => r.quoteId);
+          
+          if (successfulQuoteIds.length > 0) {
+            setQuotes(prev => 
+              prev.map(quote => 
+                successfulQuoteIds.includes(quote.id) 
+                  ? { ...quote, status: 'sent' as const, sent_at: new Date().toISOString() }
+                  : quote
+              )
+            );
+          }
+        } else {
+          alert('Failed to send emails. Please try again.');
+          console.error('Bulk email error:', result);
+        }
+      } catch (error) {
+        console.error('Error sending bulk emails:', error);
+        alert('Error occurred while sending emails. Please try again.');
       }
     }
   };
@@ -325,36 +316,9 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
 
   // Template handlers
   const handleCreateTemplate = async (templateName: string, baseQuote: Quote) => {
-    try {
-      const response = await createTemplate(templateName, baseQuote.id);
-      
-      if (response.error) {
-        console.error('Failed to create template:', response.error.message);
-        toast({
-          title: 'Failed to create template',
-          description: response.error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Add the new template to local state
-      if (response.data) {
-        setQuotes(prev => [...prev, response.data]);
-        
-        toast({
-          title: 'Template created successfully',
-          description: `Created template "${templateName}"`,
-        });
-      }
-    } catch (error) {
-      console.error('Error creating template:', error);
-      toast({
-        title: 'Failed to create template',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
-    }
+    // TODO: Implement API call to create template
+    console.log('Create template:', templateName, 'from quote:', baseQuote.id);
+    alert('Template creation functionality will be implemented.');
   };
 
   const handleUseTemplate = (template: Quote) => {
@@ -363,74 +327,15 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    try {
-      const response = await deleteTemplate(templateId);
-      
-      if (response.error) {
-        console.error('Failed to delete template:', response.error.message);
-        toast({
-          title: 'Failed to delete template',
-          description: response.error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Remove the template from local state
-      if (response.data?.deleted) {
-        setQuotes(prev => prev.filter(quote => quote.id !== templateId));
-        
-        toast({
-          title: 'Template deleted successfully',
-          description: 'Template has been removed',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast({
-        title: 'Failed to delete template',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
-    }
+    // TODO: Implement API call to delete template
+    console.log('Delete template:', templateId);
+    alert('Template deletion functionality will be implemented.');
   };
 
   const handleUpdateTemplate = async (templateId: string, templateName: string) => {
-    try {
-      const response = await updateTemplate(templateId, templateName);
-      
-      if (response.error) {
-        console.error('Failed to update template:', response.error.message);
-        toast({
-          title: 'Failed to update template',
-          description: response.error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Update the template in local state
-      if (response.data) {
-        setQuotes(prev => 
-          prev.map(quote => 
-            quote.id === templateId ? response.data : quote
-          )
-        );
-        
-        toast({
-          title: 'Template updated successfully',
-          description: `Template renamed to "${templateName}"`,
-        });
-      }
-    } catch (error) {
-      console.error('Error updating template:', error);
-      toast({
-        title: 'Failed to update template',
-        description: 'Please try again.',
-        variant: 'destructive',
-      });
-    }
+    // TODO: Implement API call to update template name
+    console.log('Update template:', templateId, 'name:', templateName);
+    alert('Template update functionality will be implemented.');
   };
 
   return (

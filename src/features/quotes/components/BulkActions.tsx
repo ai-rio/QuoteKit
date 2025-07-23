@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { 
   Download,
   Edit,
+  Mail,
   Trash2,
   X
 } from 'lucide-react';
@@ -96,6 +97,18 @@ export function BulkActions({
     }
   };
 
+  const handleBulkEmail = async () => {
+    setIsLoading(true);
+    try {
+      await bulkActions.sendEmails(selectedQuotes);
+      onClearSelection();
+    } catch (error) {
+      console.error('Failed to send emails:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="bg-equipment-yellow/20 border border-equipment-yellow/30 rounded-lg p-4">
@@ -148,6 +161,17 @@ export function BulkActions({
                 Update
               </Button>
             </div>
+
+            {/* Send Emails */}
+            <Button
+              size="sm"
+              onClick={handleBulkEmail}
+              disabled={isLoading}
+              className="h-10 sm:h-8 w-full sm:w-auto bg-forest-green text-white hover:opacity-90 disabled:opacity-50"
+            >
+              <Mail className="w-3 h-3 mr-1" />
+              Send Emails
+            </Button>
 
             {/* Export */}
             <Button
