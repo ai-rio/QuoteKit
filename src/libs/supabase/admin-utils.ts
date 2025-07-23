@@ -19,6 +19,25 @@ export async function isAdmin(userId: string): Promise<boolean> {
   }
 }
 
+// Server-side admin check using regular server client (for middleware/layout usage)
+export async function isAdminServerSide(userId: string, supabaseClient: any): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseClient.rpc('is_admin', { 
+      user_id: userId 
+    })
+    
+    if (error) {
+      console.error('Error checking admin status:', error)
+      return false
+    }
+    
+    return data || false
+  } catch (error) {
+    console.error('Error checking admin status:', error)
+    return false
+  }
+}
+
 // Get current user's admin status
 export async function checkCurrentUserAdmin(): Promise<boolean> {
   try {

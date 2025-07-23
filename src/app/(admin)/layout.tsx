@@ -21,12 +21,24 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
-  // TODO: Check admin role here once implemented
-  // For now, we'll allow any authenticated user for development
-  // const isAdmin = await checkAdminRole(user.id)
-  // if (!isAdmin) {
-  //   redirect('/dashboard')
-  // }
+  // Check admin role using database function
+  try {
+    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { 
+      user_id: user.id 
+    })
+    
+    if (adminError) {
+      console.error('Error checking admin status:', adminError)
+      redirect('/dashboard')
+    }
+    
+    if (!isAdminUser) {
+      redirect('/dashboard')
+    }
+  } catch (error) {
+    console.error('Error verifying admin role:', error)
+    redirect('/dashboard')
+  }
 
   return (
     <SidebarProvider>

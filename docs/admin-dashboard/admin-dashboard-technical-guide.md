@@ -361,6 +361,17 @@ supabase db diff
 ```
 
 ### Admin User Setup
+
+#### Option 1: Using Bootstrap Script (Recommended)
+```bash
+# Grant admin role to an existing user
+npx tsx scripts/bootstrap-admin.ts admin@domain.com
+
+# Test admin access
+npx tsx scripts/test-admin-access.ts admin@domain.com
+```
+
+#### Option 2: Direct SQL (Alternative)
 ```sql
 -- Create first admin user
 UPDATE auth.users 
