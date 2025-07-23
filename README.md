@@ -19,6 +19,7 @@
 - **📝 Quote Templates** - Save and reuse frequently used quote configurations
 - **📊 Dashboard Analytics** - Overview of quotes, revenue, and business performance
 - **📄 Professional PDFs** - Branded, client-ready quotes with automatic calculations
+- **📧 Email System** - Send quotes via email with professional templates and branding
 - **📱 Mobile Responsive** - Optimized interface for all devices and screen sizes
 
 ### 🚀 Advanced Quote Features

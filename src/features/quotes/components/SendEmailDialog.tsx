@@ -104,20 +104,20 @@ export function SendEmailDialog({ isOpen, onClose, quote, companyName }: SendEma
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-paper-white border-stone-gray">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-charcoal text-section-title">
             <Mail className="h-5 w-5" />
             Send Quote Email
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-charcoal/70">
             Send quote #{quote.quote_number || quote.id.slice(0, 8)} to {quote.client_name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email-to">To</Label>
+          <div className="grid gap-3">
+            <Label htmlFor="email-to" className="text-label text-charcoal font-medium">To</Label>
             <Input
               id="email-to"
               type="email"
@@ -127,11 +127,12 @@ export function SendEmailDialog({ isOpen, onClose, quote, companyName }: SendEma
                 setEmailData((prev) => ({ ...prev, to: e.target.value }))
               }
               disabled={isSending}
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email-subject">Subject</Label>
+          <div className="grid gap-3">
+            <Label htmlFor="email-subject" className="text-label text-charcoal font-medium">Subject</Label>
             <Input
               id="email-subject"
               value={emailData.subject || ''}
@@ -139,13 +140,14 @@ export function SendEmailDialog({ isOpen, onClose, quote, companyName }: SendEma
                 setEmailData((prev) => ({ ...prev, subject: e.target.value }))
               }
               disabled={isSending}
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email-message">
+          <div className="grid gap-3">
+            <Label htmlFor="email-message" className="text-label text-charcoal font-medium">
               Additional Message{' '}
-              <span className="text-sm text-gray-500">(optional)</span>
+              <span className="text-sm text-charcoal/60">(optional)</span>
             </Label>
             <Textarea
               id="email-message"
@@ -156,12 +158,13 @@ export function SendEmailDialog({ isOpen, onClose, quote, companyName }: SendEma
                 setEmailData((prev) => ({ ...prev, message: e.target.value }))
               }
               disabled={isSending}
+              className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
             />
           </div>
 
-          <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
-            <p className="mb-1 font-medium">What will be sent:</p>
-            <ul className="space-y-1 text-xs">
+          <div className="rounded-lg bg-light-concrete border border-stone-gray p-3 text-sm text-charcoal">
+            <p className="mb-1 font-medium text-charcoal">What will be sent:</p>
+            <ul className="space-y-1 text-xs text-charcoal/70">
               <li>• Professional email with quote details</li>
               <li>• PDF attachment with complete quote</li>
               <li>• Your company branding and contact information</li>
@@ -169,18 +172,19 @@ export function SendEmailDialog({ isOpen, onClose, quote, companyName }: SendEma
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
             disabled={isSending}
+            className="bg-paper-white text-charcoal hover:bg-stone-gray/20 border border-stone-gray"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSend}
             disabled={isSending || !emailData.to}
-            className="gap-2"
+            className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold gap-2"
           >
             <Send className="h-4 w-4" />
             {isSending ? 'Sending...' : 'Send Email'}

@@ -52,10 +52,10 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
       <Head />
       <Preview>New Quote #{quote.quote_number} from {company.name}</Preview>
       <Tailwind config={tailwindConfig}>
-        <Body className="mx-auto my-auto bg-gray-50 px-2 py-10 font-sans">
-          <Container className="mx-auto mt-[40px] w-[580px] overflow-hidden rounded-lg bg-white shadow-lg">
+        <Body className="mx-auto my-auto bg-light-concrete px-2 py-10 font-sans">
+          <Container className="mx-auto mt-[40px] w-[580px] overflow-hidden rounded-lg bg-paper-white shadow-lg">
             {/* Header Section */}
-            <Section className="bg-slate-900 px-8 py-6">
+            <Section className="bg-forest-green px-8 py-6">
               <div className="flex items-center justify-between">
                 {company.logo && (
                   <Img
@@ -65,10 +65,10 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
                   />
                 )}
                 <div className="text-right">
-                  <Heading className="mb-0 text-2xl font-bold text-white">
+                  <Heading className="mb-0 text-2xl font-bold text-paper-white">
                     {company.name}
                   </Heading>
-                  <Text className="mb-0 text-sm text-gray-300">
+                  <Text className="mb-0 text-sm text-paper-white/70">
                     {company.email}
                   </Text>
                 </div>
@@ -77,49 +77,49 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
 
             {/* Main Content */}
             <Section className="px-8 py-6">
-              <Heading className="mb-4 text-xl font-semibold text-gray-900">
+              <Heading className="mb-4 text-xl font-semibold text-charcoal">
                 Hello {quote.client_name},
               </Heading>
               
-              <Text className="mb-6 text-gray-700 leading-relaxed">
+              <Text className="mb-6 text-charcoal leading-relaxed">
                 Thank you for your interest in our services. Please find attached your quote 
                 <strong> #{quote.quote_number}</strong> for your review.
               </Text>
 
               {/* Quote Summary */}
-              <Section className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <Section className="mb-6 rounded-lg border border-stone-gray bg-light-concrete p-4">
                 <div className="mb-2">
-                  <Text className="mb-1 text-sm font-medium text-gray-600">
+                  <Text className="mb-1 text-sm font-medium text-charcoal/70">
                     Quote Number
                   </Text>
-                  <Text className="mb-0 text-lg font-semibold text-gray-900">
+                  <Text className="mb-0 text-lg font-semibold text-charcoal">
                     #{quote.quote_number}
                   </Text>
                 </div>
                 <div className="mb-2">
-                  <Text className="mb-1 text-sm font-medium text-gray-600">
+                  <Text className="mb-1 text-sm font-medium text-charcoal/70">
                     Total Amount
                   </Text>
-                  <Text className="mb-0 text-2xl font-bold text-green-600">
+                  <Text className="mb-0 text-2xl font-bold text-forest-green">
                     {formatCurrency(quote.total)}
                   </Text>
                 </div>
                 <div>
-                  <Text className="mb-1 text-sm font-medium text-gray-600">
+                  <Text className="mb-1 text-sm font-medium text-charcoal/70">
                     Valid Until
                   </Text>
-                  <Text className="mb-0 text-base font-medium text-red-600">
+                  <Text className="mb-0 text-base font-medium text-equipment-yellow">
                     {formatDate(quote.expires_at)}
                   </Text>
                 </div>
               </Section>
 
-              <Text className="mb-6 text-gray-700 leading-relaxed">
+              <Text className="mb-6 text-charcoal leading-relaxed">
                 The detailed quote is attached as a PDF. Please review it carefully and 
                 let us know if you have any questions or need any modifications.
               </Text>
 
-              <Text className="mb-6 text-gray-700 leading-relaxed">
+              <Text className="mb-6 text-charcoal leading-relaxed">
                 We look forward to working with you on this project!
               </Text>
 
@@ -127,7 +127,7 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
               <Section className="text-center">
                 <Button
                   href={`${process.env.NEXT_PUBLIC_SITE_URL}/quotes/${quote.id}`}
-                  className="rounded-lg bg-slate-900 px-6 py-3 font-medium text-white hover:bg-slate-800"
+                  className="rounded-lg bg-forest-green px-6 py-3 font-medium text-paper-white hover:opacity-90"
                 >
                   View Quote Online
                 </Button>
@@ -135,13 +135,13 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
             </Section>
 
             {/* Footer */}
-            <Section className="border-t border-gray-200 bg-gray-50 px-8 py-4">
-              <Text className="mb-2 text-center text-sm text-gray-600">
+            <Section className="border-t border-stone-gray bg-light-concrete px-8 py-4">
+              <Text className="mb-2 text-center text-sm text-charcoal">
                 Best regards,<br />
                 <strong>{company.name}</strong>
               </Text>
               {(company.phone || company.address) && (
-                <Text className="mb-0 text-center text-xs text-gray-500">
+                <Text className="mb-0 text-center text-xs text-charcoal/70">
                   {company.phone && `Phone: ${company.phone}`}
                   {company.phone && company.address && ' | '}
                   {company.address}
