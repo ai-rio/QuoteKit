@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "gemini-cli Docs": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/google-gemini/gemini-cli/tree/main"
+      ]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "puppeteer-mcp-server"
+      ],
+      "env": {}
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=<project-ref>"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5eHl4YW55eHl5bmFoc3BoZWxtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODU1MTkzNywiZXhwIjoyMDY0MTI3OTM3fQ.prNRT3Jqp0Qe9Q8hi7FyoxnqLb8FBjkqHiC_Xvmy3Xc"
+      }
+    },
+    "context7": {
+      "httpUrl": "https://mcp.context7.com/mcp"
+    }
+  }
+}
+
+   
