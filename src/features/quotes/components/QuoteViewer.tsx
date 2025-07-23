@@ -136,13 +136,13 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
             variant="ghost"
             size="sm"
             onClick={() => router.back()}
-            className="text-charcoal hover:bg-stone-gray/20"
+            className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Quotes
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-charcoal">
+            <h1 className="text-quote-header text-charcoal font-bold">
               {quote.quote_number || `Quote #${quote.id.slice(0, 8)}`}
             </h1>
             <p className="text-charcoal/60 mt-1">
@@ -159,7 +159,7 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
           <Button
             onClick={handleDownload}
             disabled={isDownloading}
-            className="bg-forest-green text-white hover:opacity-90"
+            className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
           >
             <Download className="w-4 h-4 mr-2" />
             {isDownloading ? 'Generating...' : 'Download PDF'}
@@ -167,21 +167,21 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="border-stone-gray text-charcoal hover:bg-stone-gray/20">
+              <Button variant="outline" size="sm" className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleEdit}>
+            <DropdownMenuContent align="end" className="w-48 bg-paper-white border-stone-gray">
+              <DropdownMenuItem onClick={handleEdit} className="text-charcoal hover:bg-stone-gray/20">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Quote
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDuplicate}>
+              <DropdownMenuItem onClick={handleDuplicate} className="text-charcoal hover:bg-stone-gray/20">
                 <FileText className="w-4 h-4 mr-2" />
                 Duplicate Quote
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSendEmail}>
+              <DropdownMenuItem onClick={handleSendEmail} className="text-charcoal hover:bg-stone-gray/20">
                 <Mail className="w-4 h-4 mr-2" />
                 Send via Email
               </DropdownMenuItem>
@@ -330,38 +330,36 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
       {/* Quick Actions */}
       <Card className="bg-paper-white border-stone-gray">
         <CardHeader>
-          <CardTitle className="text-charcoal">Quick Actions</CardTitle>
+          <CardTitle className="text-section-title text-charcoal">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
             <Button
-              variant="outline"
               onClick={handleEdit}
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit Quote
             </Button>
             <Button
-              variant="outline"
-              onClick={handleDuplicate}
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Duplicate Quote
-            </Button>
-            <Button
-              variant="outline"
               onClick={handleSendEmail}
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+              className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
             >
               <Mail className="w-4 h-4 mr-2" />
               Send via Email
             </Button>
+            <Button
+              variant="outline"
+              onClick={handleDuplicate}
+              className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Duplicate Quote
+            </Button>
             <Link href="/quotes">
               <Button
                 variant="outline"
-                className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30"
               >
                 Back to All Quotes
               </Button>
