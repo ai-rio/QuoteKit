@@ -30,7 +30,7 @@ async function testAdminAccess(email: string) {
     console.log(`👤 Found user: ${user.email} (ID: ${user.id})`)
     
     // Check current role in metadata
-    const currentRole = user.user_metadata?.role || user.raw_user_meta_data?.role || 'user'
+    const currentRole = user.user_metadata?.role || user.user_metadata?.role || 'user'
     console.log(`🎭 Current role in metadata: ${currentRole}`)
     
     // Test the isAdmin function

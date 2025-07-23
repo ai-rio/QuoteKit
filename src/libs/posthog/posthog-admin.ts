@@ -144,26 +144,110 @@ export async function executePostHogQuery(hogqlQuery: string): Promise<PostHogQu
 }
 
 // Convenience functions for common queries
+// Simple in-memory cache for metrics (Sprint 2: Move to Redis/database)
+interface CacheEntry {
+  data: any
+  timestamp: number
+  ttl: number
+}
+
+const metricsCache = new Map<string, CacheEntry>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+function getCachedData(key: string): any | null {
+  const entry = metricsCache.get(key)
+  if (!entry) return null
+  
+  const now = Date.now()
+  if (now - entry.timestamp > entry.ttl) {
+    metricsCache.delete(key)
+    return null
+  }
+  
+  return entry.data
+}
+
+function setCachedData(key: string, data: any, ttl: number = CACHE_TTL): void {
+  metricsCache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl
+  })
+}
+
 export async function getSystemMetrics() {
+  const cacheKey = 'system-metrics'
+  
+  // Check cache first
+  const cachedMetrics = getCachedData(cacheKey)
+  if (cachedMetrics) {
+    console.log('Returning cached system metrics')
+    return cachedMetrics
+  }
+  
   try {
     const result = await executePostHogQuery(queries.systemOverview)
-    return result.results[0] || {
-      total_users: 0,
-      quotes_created: 0,
-      quotes_sent: 0,
-      quotes_accepted: 0,
-      total_revenue: 0
+    
+    // Validate the response structure
+    if (!result.results || !Array.isArray(result.results)) {
+      throw new Error('Invalid PostHog response structure')
     }
+    
+    const metrics = result.results[0] || {}
+    
+    // Ensure all required fields exist with proper defaults
+    const processedMetrics = {
+      total_users: Number(metrics.total_users) || 0,
+      quotes_created: Number(metrics.quotes_created) || 0,
+      quotes_sent: Number(metrics.quotes_sent) || 0,
+      quotes_accepted: Number(metrics.quotes_accepted) || 0,
+      total_revenue: Number(metrics.total_revenue) || 0
+    }
+    
+    // Cache the successful result
+    setCachedData(cacheKey, processedMetrics)
+    console.log('Cached new system metrics from PostHog')
+    
+    return processedMetrics
   } catch (error) {
-    console.error('Error fetching system metrics:', error)
+    console.error('Error fetching system metrics from PostHog:', error)
+    
+    // Enhanced error logging for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      })
+    }
+    
     // Return mock data if PostHog isn't configured yet
-    return {
+    // TODO: Replace with real data in Sprint 2
+    const fallbackMetrics = {
       total_users: 42,
       quotes_created: 156,
       quotes_sent: 89,
       quotes_accepted: 67,
       total_revenue: 24750
     }
+    
+    // Cache fallback data with shorter TTL
+    setCachedData(cacheKey, fallbackMetrics, 60 * 1000) // 1 minute for fallback
+    
+    return fallbackMetrics
+  }
+}
+
+// Cache management utilities for Sprint 2
+export function clearMetricsCache(): void {
+  metricsCache.clear()
+  console.log('Metrics cache cleared')
+}
+
+export function getCacheStats(): { size: number; keys: string[] } {
+  return {
+    size: metricsCache.size,
+    keys: Array.from(metricsCache.keys())
   }
 }
 
