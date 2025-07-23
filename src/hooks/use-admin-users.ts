@@ -34,6 +34,8 @@ export interface UseAdminUsersResult {
   pagination: UsersPagination | null
   refreshUsers: () => Promise<void>
   updateUserRole: (userId: string, role: 'admin' | 'user') => Promise<boolean>
+  updateUserProfile: (userId: string, data: { full_name: string }) => Promise<boolean>
+  updateUserStatus: (userId: string, status: 'active' | 'inactive') => Promise<boolean>
 }
 
 export function useAdminUsers(page: number = 1, limit: number = 20): UseAdminUsersResult {
@@ -104,6 +106,66 @@ export function useAdminUsers(page: number = 1, limit: number = 20): UseAdminUse
     }
   }
 
+  const updateUserProfile = async (userId: string, data: { full_name: string }): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update user profile')
+      }
+      
+      if (result.success) {
+        // Refresh users list to reflect the change
+        await fetchUsers()
+        return true
+      }
+      
+      return false
+    } catch (err) {
+      console.error('Error updating user profile:', err)
+      setError(err instanceof Error ? err.message : 'Failed to update user profile')
+      return false
+    }
+  }
+
+  const updateUserStatus = async (userId: string, status: 'active' | 'inactive'): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status })
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update user status')
+      }
+      
+      if (result.success) {
+        // Refresh users list to reflect the change
+        await fetchUsers()
+        return true
+      }
+      
+      return false
+    } catch (err) {
+      console.error('Error updating user status:', err)
+      setError(err instanceof Error ? err.message : 'Failed to update user status')
+      return false
+    }
+  }
+
   useEffect(() => {
     fetchUsers()
   }, [page, limit, fetchUsers])
@@ -114,6 +176,8 @@ export function useAdminUsers(page: number = 1, limit: number = 20): UseAdminUse
     error,
     pagination,
     refreshUsers: fetchUsers,
-    updateUserRole
+    updateUserRole,
+    updateUserProfile,
+    updateUserStatus
   }
 }
