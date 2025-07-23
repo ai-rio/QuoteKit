@@ -13,11 +13,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check admin role (temporarily disabled for development)
-    // const userIsAdmin = await isAdmin(user.id)
-    // if (!userIsAdmin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    // }
+    // Check admin role
+    const userIsAdmin = await isAdmin(user.id)
+    if (!userIsAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     // Get system metrics from PostHog
     const metrics = await getSystemMetrics()
