@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useMemo,useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { BulkQuoteActions,Quote, QuoteFilters, QuoteSortOptions } from '../types';
 import { sendBulkQuoteEmails } from '../email-actions';
+import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions } from '../types';
 
 import { BulkActions } from './BulkActions';
 import { QuotesFilters } from './QuotesFilters';

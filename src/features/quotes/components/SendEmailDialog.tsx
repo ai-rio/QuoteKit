@@ -26,7 +26,7 @@ interface SendEmailDialogProps {
     id: string;
     quote_number?: string;
     client_name: string;
-    client_contact?: string;
+    client_contact: string | null;
     total: number;
   };
   companyName?: string;
