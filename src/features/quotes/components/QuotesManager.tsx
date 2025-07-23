@@ -6,8 +6,10 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
 
 import { BulkQuoteActions,Quote, QuoteFilters, QuoteSortOptions } from '../types';
+import { updateQuoteStatus, deleteQuotes, createTemplate, updateTemplate, deleteTemplate } from '../actions';
 
 import { BulkActions } from './BulkActions';
 import { QuotesFilters } from './QuotesFilters';
@@ -126,25 +128,118 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   // Bulk actions implementation
   const bulkActions: BulkQuoteActions = {
     updateStatus: async (quoteIds: string[], status) => {
-      // TODO: Implement API call to update quote statuses
-      console.log('Update status for quotes:', quoteIds, 'to', status);
-      // Mock update for now
-      setQuotes(prev => 
-        prev.map(quote => 
-          quoteIds.includes(quote.id) ? { ...quote, status } : quote
-        )
-      );
+      try {
+        const response = await updateQuoteStatus(quoteIds, status);
+        
+        if (response.error) {
+          console.error('Failed to update status:', response.error.message);
+          toast({
+            title: 'Failed to update status',
+            description: response.error.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Update local state
+        setQuotes(prev => 
+          prev.map(quote => 
+            quoteIds.includes(quote.id) ? { ...quote, status } : quote
+          )
+        );
+
+        toast({
+          title: 'Status updated successfully',
+          description: `Updated ${response.data?.updated || 0} quotes to ${status}`,
+        });
+      } catch (error) {
+        console.error('Error updating status:', error);
+        toast({
+          title: 'Failed to update status',
+          description: 'Please try again.',
+          variant: 'destructive',
+        });
+      }
     },
     delete: async (quoteIds: string[]) => {
-      // TODO: Implement API call to delete quotes
-      console.log('Delete quotes:', quoteIds);
-      // Mock delete for now
-      setQuotes(prev => prev.filter(quote => !quoteIds.includes(quote.id)));
+      try {
+        const response = await deleteQuotes(quoteIds);
+        
+        if (response.error) {
+          console.error('Failed to delete quotes:', response.error.message);
+          toast({
+            title: 'Failed to delete quotes',
+            description: response.error.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Update local state
+        setQuotes(prev => prev.filter(quote => !quoteIds.includes(quote.id)));
+
+        toast({
+          title: 'Quotes deleted successfully',
+          description: `Deleted ${response.data?.deleted || 0} quotes`,
+          variant: 'destructive',
+        });
+      } catch (error) {
+        console.error('Error deleting quotes:', error);
+        toast({
+          title: 'Failed to delete quotes',
+          description: 'Please try again.',
+          variant: 'destructive',
+        });
+      }
     },
     export: async (quoteIds: string[]) => {
-      // TODO: Implement bulk PDF export
-      console.log('Export quotes:', quoteIds);
-      alert('Export functionality will be implemented in a future update.');
+      try {
+        // Get the selected quotes
+        const quotesToExport = quotes.filter(quote => quoteIds.includes(quote.id));
+        
+        if (quotesToExport.length === 0) {
+          alert('No quotes selected for export.');
+          return;
+        }
+
+        // Download each quote PDF individually
+        for (const quote of quotesToExport) {
+          try {
+            const response = await fetch(`/api/quotes/${quote.id}/pdf`, {
+              method: 'GET',
+              headers: {
+                'Cache-Control': 'no-cache',
+              },
+            });
+
+            if (!response.ok) {
+              console.error(`Failed to generate PDF for quote ${quote.id}`);
+              continue;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `quote-${quote.client_name.replace(/[^a-zA-Z0-9]/g, '-')}-${quote.id.slice(0, 8)}.pdf`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            // Small delay between downloads to avoid overwhelming the browser
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (error) {
+            console.error(`Error downloading PDF for quote ${quote.id}:`, error);
+          }
+        }
+        
+        alert(`Successfully exported ${quotesToExport.length} quote PDFs.`);
+      } catch (error) {
+        console.error('Error during bulk export:', error);
+        alert('Error occurred during bulk export. Please try again.');
+      }
     }
   };
 
@@ -172,9 +267,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   };
 
   const handleView = (quote: Quote) => {
-    // TODO: Navigate to quote view page or open modal
-    console.log('View quote:', quote.id);
-    alert('Quote view functionality will be implemented.');
+    router.push(`/quotes/${quote.id}`);
   };
 
   const handleEdit = (quote: Quote) => {
@@ -187,10 +280,43 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     alert('Quote duplication functionality will be implemented.');
   };
 
-  const handleDownload = (quote: Quote) => {
-    // TODO: Generate and download PDF
-    console.log('Download quote PDF:', quote.id);
-    alert('PDF download functionality will be implemented.');
+  const handleDownload = async (quote: Quote) => {
+    try {
+      // Call the PDF generation API
+      const response = await fetch(`/api/quotes/${quote.id}/pdf`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      // Get the PDF blob
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `quote-${quote.client_name.replace(/[^a-zA-Z0-9]/g, '-')}-${quote.id.slice(0, 8)}.pdf`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to download PDF';
+      alert(`Error: ${errorMessage}`);
+    }
   };
 
   const clearSelection = () => {
@@ -199,9 +325,36 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
 
   // Template handlers
   const handleCreateTemplate = async (templateName: string, baseQuote: Quote) => {
-    // TODO: Implement API call to create template
-    console.log('Create template:', templateName, 'from quote:', baseQuote.id);
-    alert('Template creation functionality will be implemented.');
+    try {
+      const response = await createTemplate(templateName, baseQuote.id);
+      
+      if (response.error) {
+        console.error('Failed to create template:', response.error.message);
+        toast({
+          title: 'Failed to create template',
+          description: response.error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Add the new template to local state
+      if (response.data) {
+        setQuotes(prev => [...prev, response.data]);
+        
+        toast({
+          title: 'Template created successfully',
+          description: `Created template "${templateName}"`,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating template:', error);
+      toast({
+        title: 'Failed to create template',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleUseTemplate = (template: Quote) => {
@@ -210,15 +363,74 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    // TODO: Implement API call to delete template
-    console.log('Delete template:', templateId);
-    alert('Template deletion functionality will be implemented.');
+    try {
+      const response = await deleteTemplate(templateId);
+      
+      if (response.error) {
+        console.error('Failed to delete template:', response.error.message);
+        toast({
+          title: 'Failed to delete template',
+          description: response.error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Remove the template from local state
+      if (response.data?.deleted) {
+        setQuotes(prev => prev.filter(quote => quote.id !== templateId));
+        
+        toast({
+          title: 'Template deleted successfully',
+          description: 'Template has been removed',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast({
+        title: 'Failed to delete template',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleUpdateTemplate = async (templateId: string, templateName: string) => {
-    // TODO: Implement API call to update template name
-    console.log('Update template:', templateId, 'name:', templateName);
-    alert('Template update functionality will be implemented.');
+    try {
+      const response = await updateTemplate(templateId, templateName);
+      
+      if (response.error) {
+        console.error('Failed to update template:', response.error.message);
+        toast({
+          title: 'Failed to update template',
+          description: response.error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Update the template in local state
+      if (response.data) {
+        setQuotes(prev => 
+          prev.map(quote => 
+            quote.id === templateId ? response.data : quote
+          )
+        );
+        
+        toast({
+          title: 'Template updated successfully',
+          description: `Template renamed to "${templateName}"`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating template:', error);
+      toast({
+        title: 'Failed to update template',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -295,6 +507,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
         <TabsContent value="templates">
           <QuoteTemplates
             templates={templates}
+            regularQuotes={regularQuotes}
             onCreateTemplate={handleCreateTemplate}
             onUseTemplate={handleUseTemplate}
             onDeleteTemplate={handleDeleteTemplate}

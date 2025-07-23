@@ -1,9 +1,9 @@
 import Link from "next/link"
-import { Eye,FileText } from "lucide-react"
+import { Eye, FileText } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { QuoteStatusBadge } from "@/features/quotes/components/QuoteStatusBadge"
 
 import { RecentQuote } from "../types"
 
@@ -26,18 +26,6 @@ function formatDate(dateString: string): string {
   }).format(new Date(dateString))
 }
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'approved':
-      return 'bg-green-100 text-green-800 hover:bg-green-200'
-    case 'sent':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-    case 'rejected':
-      return 'bg-red-100 text-red-800 hover:bg-red-200'
-    default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-  }
-}
 
 export function RecentQuotes({ quotes }: RecentQuotesProps) {
   if (quotes.length === 0) {
@@ -77,19 +65,22 @@ export function RecentQuotes({ quotes }: RecentQuotesProps) {
       <CardContent>
         <div className="space-y-4">
           {quotes.map((quote) => (
-            <div key={quote.id} className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete transition-colors">
+            <div key={quote.id} className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete/50 transition-colors">
               <div className="flex-1">
-                <div className="font-medium text-sm">{quote.clientName}</div>
-                <div className="text-xs text-gray-500">{formatDate(quote.createdAt)}</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium text-sm text-charcoal">{quote.clientName}</span>
+                  {quote.quoteNumber && (
+                    <span className="text-xs text-charcoal/60 font-mono">#{quote.quoteNumber}</span>
+                  )}
+                </div>
+                <div className="text-xs text-charcoal/60">{formatDate(quote.createdAt)}</div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge variant="secondary" className={getStatusColor(quote.status)}>
-                  {quote.status}
-                </Badge>
-                <div className="font-medium text-sm">{formatCurrency(quote.total)}</div>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href={`/quotes/${quote.id}`}>
-                    <Eye className="h-4 w-4" />
+                <QuoteStatusBadge status={quote.status} />
+                <div className="font-mono font-medium text-sm text-charcoal">{formatCurrency(quote.total)}</div>
+                <Button variant="ghost" size="sm" asChild className="hover:bg-stone-gray/20">
+                  <Link href={`/quotes`}>
+                    <Eye className="h-4 w-4 text-charcoal" />
                   </Link>
                 </Button>
               </div>

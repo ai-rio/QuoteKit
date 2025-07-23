@@ -1,5 +1,6 @@
 'use server'
 
+import { convertDatabaseQuoteToQuote } from "@/features/quotes/types"
 import { createSupabaseServerClient } from "@/libs/supabase/supabase-server-client"
 
 import { DashboardData, DashboardStats, RecentQuote,UserProgress } from "./types"
@@ -18,7 +19,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     const [quotesResult, itemsResult, settingsResult] = await Promise.all([
       supabase
         .from('quotes')
-        .select('id, client_name, total, created_at')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
       supabase
@@ -32,8 +33,18 @@ export async function getDashboardData(): Promise<DashboardData> {
         .single()
     ])
 
-    // Calculate stats
-    const totalQuotes = quotesResult.data?.length || 0
+    // Convert quotes to application format
+    const quotes = (quotesResult.data || []).map(convertDatabaseQuoteToQuote)
+    
+    // Calculate enhanced stats
+    const totalQuotes = quotes.filter(q => !q.is_template).length
+    const totalTemplates = quotes.filter(q => q.is_template).length
+    const draftQuotes = quotes.filter(q => !q.is_template && (q.status || 'draft') === 'draft').length
+    const sentQuotes = quotes.filter(q => !q.is_template && (q.status || 'draft') === 'sent').length
+    const acceptedQuotes = quotes.filter(q => !q.is_template && (q.status || 'draft') === 'accepted').length
+    const totalRevenue = quotes
+      .filter(q => !q.is_template && (q.status === 'accepted' || q.status === 'converted'))
+      .reduce((sum, q) => sum + q.total, 0)
     const totalItems = itemsResult.data?.length || 0
     
     // Enhanced company settings validation
@@ -70,7 +81,12 @@ export async function getDashboardData(): Promise<DashboardData> {
 
     const stats: DashboardStats = {
       totalQuotes,
+      draftQuotes,
+      sentQuotes,
+      acceptedQuotes,
+      totalRevenue,
       totalItems,
+      totalTemplates,
       recentActivity: Math.min(totalQuotes + totalItems, 10),
       setupProgress: completionPercentage
     }
@@ -82,15 +98,17 @@ export async function getDashboardData(): Promise<DashboardData> {
       completionPercentage
     }
 
-    // Get recent quotes (last 5)
-    const recentQuotes: RecentQuote[] = (quotesResult.data || [])
+    // Get recent quotes (last 5, excluding templates)
+    const recentQuotes: RecentQuote[] = quotes
+      .filter(quote => !quote.is_template)
       .slice(0, 5)
       .map(quote => ({
         id: quote.id,
         clientName: quote.client_name || 'Unnamed Client',
         total: quote.total || 0,
-        status: 'draft' as const, // For now, all quotes are draft
-        createdAt: quote.created_at || new Date().toISOString()
+        status: quote.status || 'draft',
+        createdAt: quote.created_at || new Date().toISOString(),
+        quoteNumber: quote.quote_number
       }))
 
     const quickActions = [
@@ -102,11 +120,18 @@ export async function getDashboardData(): Promise<DashboardData> {
         color: 'forest-green' as const
       },
       {
-        title: 'Manage Items',
+        title: 'Manage Quotes',
+        description: 'View and manage all your quotes',
+        href: '/quotes',
+        icon: 'file-text',
+        color: 'equipment-yellow' as const
+      },
+      {
+        title: 'Item Library',
         description: 'Add or edit services and materials',
         href: '/items',
         icon: 'package',
-        color: 'equipment-yellow' as const
+        color: 'stone-gray' as const
       },
       {
         title: 'Settings',

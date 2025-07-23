@@ -1,9 +1,14 @@
 import { LineItem } from "@/features/items/types"
-import { Quote } from "@/features/quotes/types"
+import { Quote, QuoteStatus } from "@/features/quotes/types"
 
 export interface DashboardStats {
   totalQuotes: number
+  draftQuotes: number
+  sentQuotes: number
+  acceptedQuotes: number
+  totalRevenue: number
   totalItems: number
+  totalTemplates: number
   recentActivity: number
   setupProgress: number
 }
@@ -19,8 +24,9 @@ export interface RecentQuote {
   id: string
   clientName: string
   total: number
-  status: 'draft' | 'sent' | 'approved' | 'rejected'
+  status: QuoteStatus
   createdAt: string
+  quoteNumber?: string
 }
 
 export interface QuickAction {

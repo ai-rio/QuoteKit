@@ -177,7 +177,10 @@ export function QuotesFilters({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearDateRange}
+                  onClick={() => {
+                    clearDateRange();
+                    setIsDatePickerOpen(false);
+                  }}
                   className="h-auto p-1 text-charcoal/60 hover:text-charcoal hover:bg-light-concrete/50"
                 >
                   <X className="w-3 h-3" />

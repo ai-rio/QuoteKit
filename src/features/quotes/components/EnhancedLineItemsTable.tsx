@@ -126,7 +126,7 @@ export function EnhancedLineItemsTable({
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemoveItem(item.id)}
-                    className="text-charcoal/50 hover:text-red-600 hover:bg-red-50"
+                    className="text-charcoal/50 hover:text-charcoal hover:bg-stone-gray/20"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -154,7 +154,7 @@ export function EnhancedLineItemsTable({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemoveItem(item.id)}
-                className="text-charcoal/50 hover:text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] touch-manipulation"
+                className="text-charcoal/50 hover:text-charcoal hover:bg-stone-gray/20 min-h-[44px] min-w-[44px] touch-manipulation"
               >
                 <Trash2 className="w-5 h-5" />
               </Button>

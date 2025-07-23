@@ -57,10 +57,9 @@ export function BulkActions({
             </span>
             
             <Button
-              variant="ghost"
               size="sm"
               onClick={onClearSelection}
-              className="text-charcoal/70 hover:text-charcoal hover:bg-charcoal/5"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
             >
               Clear selection
             </Button>
@@ -68,10 +67,9 @@ export function BulkActions({
           
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
               size="sm"
               onClick={handleBulkFavorite}
-              className="border-charcoal/20 text-charcoal hover:bg-charcoal/5"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
             >
               {allFavorited ? (
                 <>
@@ -87,10 +85,9 @@ export function BulkActions({
             </Button>
             
             <Button
-              variant="outline"
               size="sm"
               onClick={handleBulkDelete}
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+              className="bg-stone-gray text-charcoal hover:bg-stone-gray/80 active:bg-stone-gray/70 font-bold border border-stone-gray"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete

@@ -163,3 +163,314 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
     return { data: null, error: { message: 'Failed to save draft' } };
   }
 }
+
+export async function duplicateQuote(quoteId: string): Promise<ActionResponse<Quote>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Fetch the original quote
+    const { data: originalQuote, error: fetchError } = await supabase
+      .from('quotes')
+      .select('*')
+      .eq('id', quoteId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError || !originalQuote) {
+      return { data: null, error: { message: 'Quote not found or access denied' } };
+    }
+
+    // Create duplicated quote data
+    const duplicatedQuote = {
+      user_id: user.id,
+      client_name: `${originalQuote.client_name} (Copy)`,
+      client_contact: originalQuote.client_contact,
+      quote_data: originalQuote.quote_data,
+      subtotal: originalQuote.subtotal,
+      tax_rate: originalQuote.tax_rate,
+      markup_rate: originalQuote.markup_rate,
+      total: originalQuote.total,
+      status: 'draft' as const, // Always create duplicates as drafts
+      notes: originalQuote.notes,
+      expires_at: null, // Reset expiration
+      follow_up_date: null, // Reset follow-up
+    };
+
+    const { data, error } = await supabase
+      .from('quotes')
+      .insert(duplicatedQuote)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    // Update last_used_at for all items in the quote
+    try {
+      if (originalQuote.quote_data && Array.isArray(originalQuote.quote_data)) {
+        await Promise.all(
+          originalQuote.quote_data.map(async (item: any) => {
+            if (item.id) {
+              await updateItemLastUsed(item.id);
+            }
+          })
+        );
+      }
+    } catch (updateError) {
+      // Don't fail the duplication if updating last_used_at fails
+      console.warn('Failed to update item last_used_at:', updateError);
+    }
+
+    return { data: data as unknown as Quote, error: null };
+  } catch (error) {
+    console.error('Error duplicating quote:', error);
+    return { data: null, error: { message: 'Failed to duplicate quote' } };
+  }
+}
+
+export async function updateQuoteStatus(
+  quoteIds: string[], 
+  status: string
+): Promise<ActionResponse<{ updated: number }>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Validate status
+    const validStatuses = ['draft', 'sent', 'accepted', 'declined', 'expired', 'converted'];
+    if (!validStatuses.includes(status)) {
+      return { data: null, error: { message: 'Invalid status value' } };
+    }
+
+    // Update the quotes
+    const { data, error } = await supabase
+      .from('quotes')
+      .update({ status })
+      .in('id', quoteIds)
+      .eq('user_id', user.id)
+      .select('id');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { 
+      data: { updated: data?.length || 0 }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Error updating quote status:', error);
+    return { data: null, error: { message: 'Failed to update quote status' } };
+  }
+}
+
+export async function deleteQuotes(quoteIds: string[]): Promise<ActionResponse<{ deleted: number }>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Delete the quotes
+    const { data, error } = await supabase
+      .from('quotes')
+      .delete()
+      .in('id', quoteIds)
+      .eq('user_id', user.id)
+      .select('id');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { 
+      data: { deleted: data?.length || 0 }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Error deleting quotes:', error);
+    return { data: null, error: { message: 'Failed to delete quotes' } };
+  }
+}
+
+// Template Management Actions
+
+export async function createTemplate(
+  templateName: string, 
+  baseQuoteId: string
+): Promise<ActionResponse<Quote>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Validation
+    if (!templateName?.trim()) {
+      return { data: null, error: { message: 'Template name is required' } };
+    }
+
+    // Fetch the base quote
+    const { data: baseQuote, error: fetchError } = await supabase
+      .from('quotes')
+      .select('*')
+      .eq('id', baseQuoteId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError || !baseQuote) {
+      return { data: null, error: { message: 'Base quote not found or access denied' } };
+    }
+
+    // Create template from base quote
+    const templateData = {
+      user_id: user.id,
+      client_name: baseQuote.client_name,
+      client_contact: baseQuote.client_contact,
+      quote_data: baseQuote.quote_data,
+      subtotal: baseQuote.subtotal,
+      tax_rate: baseQuote.tax_rate,
+      markup_rate: baseQuote.markup_rate,
+      total: baseQuote.total,
+      notes: baseQuote.notes,
+      is_template: true,
+      template_name: templateName.trim(),
+    };
+
+    const { data, error } = await supabase
+      .from('quotes')
+      .insert(templateData)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { data: data as unknown as Quote, error: null };
+  } catch (error) {
+    console.error('Error creating template:', error);
+    return { data: null, error: { message: 'Failed to create template' } };
+  }
+}
+
+export async function updateTemplate(
+  templateId: string, 
+  templateName: string
+): Promise<ActionResponse<Quote>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Validation
+    if (!templateName?.trim()) {
+      return { data: null, error: { message: 'Template name is required' } };
+    }
+
+    // Update the template
+    const { data, error } = await supabase
+      .from('quotes')
+      .update({ template_name: templateName.trim() })
+      .eq('id', templateId)
+      .eq('user_id', user.id)
+      .eq('is_template', true)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (!data) {
+      return { data: null, error: { message: 'Template not found or access denied' } };
+    }
+
+    return { data: data as unknown as Quote, error: null };
+  } catch (error) {
+    console.error('Error updating template:', error);
+    return { data: null, error: { message: 'Failed to update template' } };
+  }
+}
+
+export async function deleteTemplate(templateId: string): Promise<ActionResponse<{ deleted: boolean }>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Delete the template
+    const { data, error } = await supabase
+      .from('quotes')
+      .delete()
+      .eq('id', templateId)
+      .eq('user_id', user.id)
+      .eq('is_template', true)
+      .select('id');
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return { 
+      data: { deleted: (data?.length || 0) > 0 }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    return { data: null, error: { message: 'Failed to delete template' } };
+  }
+}
+
+export async function getTemplateById(templateId: string): Promise<ActionResponse<Quote>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Fetch the template
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*')
+      .eq('id', templateId)
+      .eq('user_id', user.id)
+      .eq('is_template', true)
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (!data) {
+      return { data: null, error: { message: 'Template not found or access denied' } };
+    }
+
+    return { data: data as unknown as Quote, error: null };
+  } catch (error) {
+    console.error('Error fetching template:', error);
+    return { data: null, error: { message: 'Failed to fetch template' } };
+  }
+}

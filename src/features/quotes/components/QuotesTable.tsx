@@ -94,8 +94,9 @@ export function QuotesTable({
               <TableHead className="w-12 px-4">
                 <Checkbox
                   checked={allSelected}
+                  indeterminate={someSelected && !allSelected}
                   onCheckedChange={onSelectAll}
-                  className="border-stone-gray"
+                  className="border-2"
                 />
               </TableHead>
               <TableHead className="px-4">
@@ -155,13 +156,13 @@ export function QuotesTable({
             {quotes.map((quote) => (
               <TableRow 
                 key={quote.id}
-                className="border-stone-gray hover:bg-light-concrete/30 transition-colors"
+                className="border-stone-gray hover:bg-stone-gray/20 transition-colors"
               >
                 <TableCell className="px-4">
                   <Checkbox
                     checked={selectedQuotes.includes(quote.id)}
                     onCheckedChange={() => onQuoteSelect(quote.id)}
-                    className="border-stone-gray"
+                    className="border-2"
                   />
                 </TableCell>
                 <TableCell className="px-4 font-mono text-charcoal">
@@ -201,28 +202,28 @@ export function QuotesTable({
                     >
                       <DropdownMenuItem 
                         onClick={() => onView(quote)}
-                        className="text-charcoal hover:bg-light-concrete/50"
+                        className="text-charcoal hover:bg-stone-gray/20"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         View
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onEdit(quote)}
-                        className="text-charcoal hover:bg-light-concrete/50"
+                        className="text-charcoal hover:bg-stone-gray/20"
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onDuplicate(quote)}
-                        className="text-charcoal hover:bg-light-concrete/50"
+                        className="text-charcoal hover:bg-stone-gray/20"
                       >
                         <Copy className="w-4 h-4 mr-2" />
                         Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onDownload(quote)}
-                        className="text-charcoal hover:bg-light-concrete/50"
+                        className="text-charcoal hover:bg-stone-gray/20"
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Download PDF
@@ -248,7 +249,7 @@ export function QuotesTable({
                 <Checkbox
                   checked={selectedQuotes.includes(quote.id)}
                   onCheckedChange={() => onQuoteSelect(quote.id)}
-                  className="border-stone-gray"
+                  className="border-2"
                 />
                 <div>
                   <div className="font-mono text-sm text-charcoal font-medium">
@@ -273,28 +274,28 @@ export function QuotesTable({
                 >
                   <DropdownMenuItem 
                     onClick={() => onView(quote)}
-                    className="text-charcoal hover:bg-light-concrete/50"
+                    className="text-charcoal hover:bg-stone-gray/20"
                   >
                     <Eye className="w-4 h-4 mr-2" />
                     View
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => onEdit(quote)}
-                    className="text-charcoal hover:bg-light-concrete/50"
+                    className="text-charcoal hover:bg-stone-gray/20"
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => onDuplicate(quote)}
-                    className="text-charcoal hover:bg-light-concrete/50"
+                    className="text-charcoal hover:bg-stone-gray/20"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Duplicate
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => onDownload(quote)}
-                    className="text-charcoal hover:bg-light-concrete/50"
+                    className="text-charcoal hover:bg-stone-gray/20"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download PDF
