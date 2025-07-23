@@ -35,12 +35,20 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           {...props}
         />
         <div
-          className={`h-4 w-4 rounded-sm border border-stone-gray bg-white flex items-center justify-center cursor-pointer transition-colors ${
-            checked ? 'bg-forest-green border-forest-green' : 'hover:border-forest-green/50'
+          className={`h-5 w-5 rounded-sm border-2 border-stone-gray bg-white flex items-center justify-center cursor-pointer transition-all duration-150 ${
+            checked || indeterminate ? 'bg-paper-white border-forest-green shadow-sm' : 'hover:border-forest-green/50 hover:shadow-sm'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className || ''}`}
           onClick={() => !disabled && onCheckedChange?.(!checked)}
         >
-          {checked && <Check className="h-3 w-3 text-white" />}
+          {checked && (
+            <Check 
+              className="h-4 w-4 text-forest-green stroke-[4] drop-shadow-sm" 
+              style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.1))' }}
+            />
+          )}
+          {indeterminate && !checked && (
+            <div className="h-2.5 w-2.5 bg-forest-green rounded-sm shadow-sm" />
+          )}
         </div>
       </div>
     );

@@ -14,7 +14,7 @@ import { LineItem } from '@/features/items/types';
 import { CompanySettings } from '@/features/settings/types';
 
 import { createQuote, saveDraft } from '../actions';
-import { CreateQuoteData, QuoteLineItem, QuoteStatus,SaveDraftData } from '../types';
+import { CreateQuoteData, Quote, QuoteLineItem, QuoteStatus,SaveDraftData } from '../types';
 import { calculateQuote } from '../utils';
 
 import { EnhancedLineItemsTable } from './EnhancedLineItemsTable';
@@ -25,12 +25,14 @@ interface QuoteCreatorProps {
   availableItems: LineItem[];
   defaultSettings: CompanySettings | null;
   initialDraft?: any; // For loading existing drafts
+  templateData?: Quote | null; // For loading from templates
 }
 
 export function QuoteCreator({ 
   availableItems, 
   defaultSettings, 
-  initialDraft 
+  initialDraft,
+  templateData 
 }: QuoteCreatorProps) {
   const router = useRouter();
   
@@ -41,21 +43,29 @@ export function QuoteCreator({
   const [status, setStatus] = useState<QuoteStatus>('draft');
   const [quoteNumber, setQuoteNumber] = useState<string>('');
   
-  // Client info state
-  const [clientName, setClientName] = useState(initialDraft?.client_name || '');
-  const [clientContact, setClientContact] = useState(initialDraft?.client_contact || '');
-  
-  // Quote line items state
-  const [quoteLineItems, setQuoteLineItems] = useState<QuoteLineItem[]>(
-    initialDraft?.quote_data || []
+  // Client info state - prioritize initialDraft, then templateData, then empty
+  const [clientName, setClientName] = useState(
+    initialDraft?.client_name || templateData?.client_name || ''
+  );
+  const [clientContact, setClientContact] = useState(
+    initialDraft?.client_contact || templateData?.client_contact || ''
   );
   
-  // Tax and markup state (start with defaults from settings)
+  // Quote line items state - prioritize initialDraft, then templateData, then empty
+  const [quoteLineItems, setQuoteLineItems] = useState<QuoteLineItem[]>(
+    initialDraft?.quote_data || templateData?.quote_data || []
+  );
+  
+  // Tax and markup state - prioritize initialDraft, then templateData, then settings defaults
   const [taxRate, setTaxRate] = useState(
-    initialDraft?.tax_rate ?? defaultSettings?.default_tax_rate ?? 0
+    initialDraft?.tax_rate ?? 
+    templateData?.tax_rate ?? 
+    defaultSettings?.default_tax_rate ?? 0
   );
   const [markupRate, setMarkupRate] = useState(
-    initialDraft?.markup_rate ?? defaultSettings?.default_markup_rate ?? 0
+    initialDraft?.markup_rate ?? 
+    templateData?.markup_rate ?? 
+    defaultSettings?.default_markup_rate ?? 0
   );
 
   // Calculate totals in real-time
@@ -67,9 +77,19 @@ export function QuoteCreator({
 
   // Mark as having unsaved changes when data changes
   useEffect(() => {
-    if (!initialDraft) return;
+    if (!initialDraft && !templateData) return;
     setHasUnsavedChanges(true);
-  }, [clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft]);
+  }, [clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft, templateData]);
+
+  // Show notification when template is loaded
+  useEffect(() => {
+    if (templateData) {
+      toast({
+        title: 'Template loaded',
+        description: `Using template: ${templateData.template_name || 'Unnamed Template'}`,
+      });
+    }
+  }, [templateData]);
 
   // Auto-save every 30 seconds if there are unsaved changes
   const autoSave = useCallback(async () => {
@@ -223,6 +243,11 @@ export function QuoteCreator({
           <div className="space-y-3">
             <CardTitle className="text-xl sm:text-2xl font-bold text-charcoal">
               {status === 'draft' ? 'New Quote' : 'Quote Details'}
+              {templateData && (
+                <span className="text-sm font-normal text-charcoal/60 block">
+                  From template: {templateData.template_name || 'Unnamed Template'}
+                </span>
+              )}
             </CardTitle>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">

@@ -25,11 +25,19 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { Quote } from '../types';
 
 interface QuoteTemplatesProps {
   templates: Quote[];
+  regularQuotes: Quote[]; // Add regular quotes for template creation
   onCreateTemplate: (templateName: string, baseQuote: Quote) => Promise<void>;
   onUseTemplate: (template: Quote) => void;
   onDeleteTemplate: (templateId: string) => Promise<void>;
@@ -38,6 +46,7 @@ interface QuoteTemplatesProps {
 
 export function QuoteTemplates({
   templates,
+  regularQuotes,
   onCreateTemplate,
   onUseTemplate,
   onDeleteTemplate,
@@ -123,6 +132,52 @@ export function QuoteTemplates({
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label className="text-charcoal font-medium">
+                  Base Quote
+                </Label>
+                <Select
+                  value={selectedQuote?.id || ''}
+                  onValueChange={(value) => {
+                    const quote = regularQuotes.find(q => q.id === value);
+                    setSelectedQuote(quote || null);
+                  }}
+                >
+                  <SelectTrigger className="bg-light-concrete border-stone-gray text-charcoal focus:border-forest-green focus:ring-forest-green">
+                    <SelectValue placeholder="Select a quote to use as template" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-paper-white border-stone-gray">
+                    {regularQuotes.length === 0 ? (
+                      <SelectItem value="no-quotes" disabled>
+                        No quotes available
+                      </SelectItem>
+                    ) : (
+                      regularQuotes.map((quote) => (
+                        <SelectItem 
+                          key={quote.id} 
+                          value={quote.id}
+                          className="text-charcoal hover:bg-light-concrete/50"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{quote.client_name}</span>
+                            <span className="text-xs text-charcoal/60">
+                              {quote.quote_data?.length || 0} items • ${quote.total?.toFixed(2) || '0.00'}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {selectedQuote && (
+                  <div className="text-xs text-charcoal/60 bg-light-concrete/50 p-2 rounded">
+                    <strong>Preview:</strong> {selectedQuote.quote_data?.length || 0} items, 
+                    Tax: {((selectedQuote.tax_rate || 0) * 100).toFixed(1)}%, 
+                    Markup: {((selectedQuote.markup_rate || 0) * 100).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+
               <div className="pt-4 flex justify-end space-x-3">
                 <Button
                   variant="outline"
@@ -133,7 +188,7 @@ export function QuoteTemplates({
                 </Button>
                 <Button
                   onClick={handleCreateTemplate}
-                  disabled={!templateName.trim() || isLoading}
+                  disabled={!templateName.trim() || !selectedQuote || isLoading}
                   className="bg-forest-green text-white hover:opacity-90 disabled:opacity-50"
                 >
                   {isLoading ? 'Creating...' : 'Create Template'}
@@ -213,7 +268,7 @@ export function QuoteTemplates({
                       size="sm"
                       variant="outline"
                       onClick={() => onDeleteTemplate(template.id)}
-                      className="bg-paper-white border-red-200 text-red-600 hover:bg-red-50"
+                      className="bg-paper-white border-stone-gray text-charcoal hover:bg-stone-gray/20"
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>

@@ -24,7 +24,7 @@ const statusConfig = {
   },
   declined: {
     label: 'Declined',
-    className: 'bg-red-100 text-red-800 border-red-200'
+    className: 'bg-stone-gray text-charcoal border-stone-gray'
   },
   expired: {
     label: 'Expired',

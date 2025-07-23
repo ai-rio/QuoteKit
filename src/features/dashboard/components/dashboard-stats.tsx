@@ -1,4 +1,4 @@
-import { Activity, FileText, Package, TrendingUp } from "lucide-react"
+import { Activity, CheckCircle, DollarSign, FileText, Package, Send, TrendingUp } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -9,11 +9,40 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(amount)
+  }
+
   const statCards = [
     {
       title: "Total Quotes",
       value: stats.totalQuotes,
       icon: FileText,
+      color: "text-forest-green",
+      bgColor: "bg-forest-green/10"
+    },
+    {
+      title: "Quotes Sent",
+      value: stats.sentQuotes,
+      icon: Send,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100"
+    },
+    {
+      title: "Quotes Accepted",
+      value: stats.acceptedQuotes,
+      icon: CheckCircle,
+      color: "text-green-600",
+      bgColor: "bg-green-100"
+    },
+    {
+      title: "Total Revenue",
+      value: formatCurrency(stats.totalRevenue),
+      icon: DollarSign,
       color: "text-forest-green",
       bgColor: "bg-forest-green/10"
     },
@@ -25,23 +54,16 @@ export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
       bgColor: "bg-equipment-yellow/10"
     },
     {
-      title: "Recent Activity",
-      value: stats.recentActivity,
-      icon: Activity,
-      color: "text-forest-green",
-      bgColor: "bg-forest-green/10"
-    },
-    {
-      title: "Setup Progress",
-      value: `${stats.setupProgress}%`,
-      icon: TrendingUp,
-      color: "text-forest-green",
-      bgColor: "bg-forest-green/10"
+      title: "Quote Templates",
+      value: stats.totalTemplates,
+      icon: FileText,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100"
     }
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 lg:gap-6">
       {statCards.map((stat) => {
         const Icon = stat.icon
         return (
