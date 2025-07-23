@@ -8,14 +8,11 @@ import { AuthUI } from '../auth-ui';
 
 export default async function SignUp() {
   const session = await getSession();
-  const subscription = await getSubscription();
+  // Temporarily disable subscription check until database schema is set up
+  // const subscription = await getSubscription();
 
-  if (session && subscription) {
-    redirect('/account');
-  }
-
-  if (session && !subscription) {
-    redirect('/pricing');
+  if (session) {
+    redirect('/dashboard');
   }
 
   return (

@@ -48,8 +48,13 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Dashboard",
-        url: "/admin/admin-dashboard",
+        url: "/admin-dashboard",
         icon: Home,
+      },
+      {
+        title: "Settings",
+        url: "/admin-settings",
+        icon: Settings,
       },
     ]
   },
@@ -58,12 +63,12 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Users Overview",
-        url: "/admin/users/overview",
+        url: "/users/overview",
         icon: Users,
       },
       {
         title: "Bulk Actions",
-        url: "/admin/users/bulk-actions",
+        url: "/users/bulk-actions",
         icon: Database,
       },
     ]
@@ -73,17 +78,17 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Campaigns",
-        url: "/admin/email-system/campaigns",
+        url: "/email-system/campaigns",
         icon: Send,
       },
       {
         title: "Performance",
-        url: "/admin/email-system/performance",
+        url: "/email-system/performance",
         icon: TrendingUp,
       },
       {
         title: "Templates",
-        url: "/admin/email-system/templates",
+        url: "/email-system/templates",
         icon: Mail,
       },
     ]
@@ -93,17 +98,17 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Custom Queries",
-        url: "/admin/analytics/custom-queries",
+        url: "/analytics/custom-queries",
         icon: Search,
       },
       {
         title: "Funnels",
-        url: "/admin/analytics/funnels",
+        url: "/analytics/funnels",
         icon: TrendingUp,
       },
       {
         title: "Cohorts",
-        url: "/admin/analytics/cohorts",
+        url: "/analytics/cohorts",
         icon: BarChart3,
       },
     ]
@@ -114,9 +119,30 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 
 export function AdminSidebar({ ...props }: AdminSidebarProps) {
   const pathname = usePathname()
+  const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
+    new Set(['overview', 'user-management']) // Default expanded sections
+  )
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId)
+      } else {
+        newSet.add(sectionId)
+      }
+      return newSet
+    })
+  }
+
+  const isInSection = (sectionItems: NavItem[], currentPath: string) => {
+    return sectionItems.some(item => 
+      currentPath === item.url || currentPath.startsWith(item.url + '/')
+    )
+  }
 
   return (
-    <Sidebar className="bg-forest-green text-white" {...props}>
+    <Sidebar className="bg-forest-green text-white" variant="sidebar" {...props}>
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-3 px-2">
           <LawnQuoteLogo className="text-white flex-shrink-0" />
@@ -127,64 +153,95 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="flex-1 px-4">
-        {navGroups.map((group) => (
-          <SidebarGroup key={group.title}>
-            <SidebarGroupLabel className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-2">
-              {group.title}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
-                {group.items.map((item) => {
-                  const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                  const Icon = item.icon
-                  
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        isActive={isActive}
-                        className={`
-                          flex items-center p-3 rounded-lg font-medium min-h-[44px] touch-manipulation
-                          ${isActive 
-                            ? 'bg-white/20 text-white font-bold' 
-                            : 'text-white/90 hover:bg-white/10 hover:text-white'
-                          }
-                        `}
-                      >
-                        <Link href={item.url} className="flex items-center w-full">
-                          <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                          <span className="text-sm">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+      <SidebarContent className="flex-1 px-2">
+        {navGroups.map((group) => {
+          const sectionId = group.title.toLowerCase().replace(/\s+/g, '-')
+          const isExpanded = expandedSections.has(sectionId)
+          const isActiveSection = isInSection(group.items, pathname)
+          
+          return (
+            <SidebarGroup key={group.title}>
+              <SidebarGroupLabel className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">
+                <SidebarMenuButton
+                  onClick={() => toggleSection(sectionId)}
+                  className={`w-full justify-between p-2 rounded-md transition-colors ${
+                    isActiveSection || isExpanded
+                      ? 'bg-white/10 text-white font-bold' 
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {group.title === 'Overview' && <Home className="w-4 h-4" />}
+                    {group.title === 'User Management' && <Users className="w-4 h-4" />}
+                    {group.title === 'Email System' && <Mail className="w-4 h-4" />}
+                    {group.title === 'Analytics' && <BarChart3 className="w-4 h-4" />}
+                    {group.title}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isExpanded ? 'rotate-90' : 'rotate-0'
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </SidebarMenuButton>
+              </SidebarGroupLabel>
+              
+              {isExpanded && (
+                <SidebarGroupContent>
+                  <SidebarMenu className="space-y-1">
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                      const Icon = item.icon
+                      
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild isActive={isActive}>
+                            <Link 
+                              href={item.url} 
+                              className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-colors ml-4 ${
+                                isActive 
+                                  ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
+                                  : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
+                              }`}
+                            >
+                              <Icon className="w-4 h-4 mr-3 flex-shrink-0" />
+                              <span className="text-sm">{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </SidebarGroup>
+          )
+        })}
       </SidebarContent>
       
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
-            >
-              <Link href="/dashboard" className="flex items-center w-full">
+            <SidebarMenuButton asChild>
+              <Link 
+                href="/dashboard" 
+                className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
+              >
                 <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
                 <span className="text-sm">Back to App</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild 
-              className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
-            >
-              <Link href="/auth/logout" className="flex items-center w-full">
+            <SidebarMenuButton asChild>
+              <Link 
+                href="/auth/logout" 
+                className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
+              >
                 <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
                 <span className="text-sm">Logout</span>
               </Link>
