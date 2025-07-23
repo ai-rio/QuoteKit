@@ -1,12 +1,17 @@
+'use client'
+
+import { useState } from 'react'
 import { 
   Activity,
   Calendar,
   Download,
+  Loader2,
   MoreHorizontal,
   Search,
   Settings,
   UserPlus} from "lucide-react"
 
+import { Pagination } from "@/components/admin/pagination"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
@@ -18,52 +23,41 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAdminUsers } from "@/hooks/use-admin-users"
 
 // Mock user data - will be replaced with real data from Supabase + PostHog
-const mockUsers = [
-  {
-    id: '1',
-    email: 'john@lawncare.com',
-    company_name: 'Green Lawn Services',
-    quote_count: 12,
-    total_revenue: 4250,
-    last_active: '2 hours ago',
-    created_at: '2024-01-15',
-    status: 'active'
-  },
-  {
-    id: '2', 
-    email: 'sarah@yardpro.com',
-    company_name: 'YardPro Solutions',
-    quote_count: 8,
-    total_revenue: 2840,
-    last_active: '1 day ago', 
-    created_at: '2024-02-03',
-    status: 'active'
-  },
-  {
-    id: '3',
-    email: 'mike@grassmaster.net',
-    company_name: 'GrassMaster LLC',
-    quote_count: 23,
-    total_revenue: 8750,
-    last_active: '3 days ago',
-    created_at: '2023-11-22',
-    status: 'inactive' 
-  },
-  {
-    id: '4',
-    email: 'lisa@perfectlawns.com', 
-    company_name: 'Perfect Lawns Inc',
-    quote_count: 5,
-    total_revenue: 1580,
-    last_active: '1 week ago',
-    created_at: '2024-03-10',
-    status: 'active'
-  },
-]
+
 
 export default function UsersOverview() {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
+  const { users, loading, error, pagination, refreshUsers, updateUserRole } = useAdminUsers(currentPage, 20)
+
+  // Filter users based on search term
+  const filteredUsers = users.filter(user =>
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+
+  // Calculate summary stats
+  const totalUsers = pagination?.total || 0
+  const activeUsers = users.filter(u => u.status === 'active').length
+  const totalQuotes = users.reduce((sum, user) => sum + user.quote_count, 0)
+  const totalRevenue = users.reduce((sum, user) => sum + user.total_revenue, 0)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleRoleChange = async (userId: string, newRole: 'admin' | 'user') => {
+    const success = await updateUserRole(userId, newRole)
+    if (success) {
+      // Show success message or notification
+      console.log('Role updated successfully')
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -88,6 +82,25 @@ export default function UsersOverview() {
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <Card className="bg-paper-white border-red-300 shadow-sm">
+          <CardContent className="p-4">
+            <div className="text-red-600 text-sm">
+              Error: {error}
+              <Button 
+                onClick={refreshUsers}
+                size="sm" 
+                variant="outline" 
+                className="ml-2 text-xs"
+              >
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-paper-white border-stone-gray shadow-sm">
@@ -98,10 +111,10 @@ export default function UsersOverview() {
           </CardHeader>
           <CardContent>
             <div className="font-mono text-2xl font-bold text-charcoal">
-              {mockUsers.length}
+              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : totalUsers}
             </div>
             <p className="text-xs text-charcoal/70">
-              +1 this week
+              Platform users
             </p>
           </CardContent>
         </Card>
@@ -114,10 +127,10 @@ export default function UsersOverview() {
           </CardHeader>
           <CardContent>
             <div className="font-mono text-2xl font-bold text-charcoal">
-              {mockUsers.filter(u => u.status === 'active').length}
+              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : activeUsers}
             </div>
             <p className="text-xs text-charcoal/70">
-              75% active rate
+              {totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}% active rate
             </p>
           </CardContent>
         </Card>
@@ -130,7 +143,7 @@ export default function UsersOverview() {
           </CardHeader>
           <CardContent>
             <div className="font-mono text-2xl font-bold text-charcoal">
-              {mockUsers.reduce((sum, user) => sum + user.quote_count, 0)}
+              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : totalQuotes}
             </div>
             <p className="text-xs text-charcoal/70">
               Across all users
@@ -146,7 +159,7 @@ export default function UsersOverview() {
           </CardHeader>
           <CardContent>
             <div className="font-mono text-2xl font-bold text-charcoal">
-              ${mockUsers.reduce((sum, user) => sum + user.total_revenue, 0).toLocaleString()}
+              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : `$${totalRevenue.toLocaleString()}`}
             </div>
             <p className="text-xs text-charcoal/70">
               Platform revenue
@@ -167,7 +180,9 @@ export default function UsersOverview() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-charcoal/60 h-4 w-4" />
                 <Input
                   id="search"
-                  placeholder="Search by email or company name..."
+                  placeholder="Search by email, name, or company..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 />
               </div>
@@ -187,90 +202,121 @@ export default function UsersOverview() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="bg-paper-white border-stone-gray rounded-lg">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 font-bold text-sm text-charcoal/60 mb-2 px-6 py-3 bg-light-concrete border-b border-stone-gray">
-              <div className="col-span-3">USER</div>
-              <div className="col-span-2">QUOTES</div>
-              <div className="col-span-2">REVENUE</div>
-              <div className="col-span-2">LAST ACTIVE</div>
-              <div className="col-span-2">STATUS</div>
-              <div className="col-span-1">ACTIONS</div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-charcoal/60" />
+              <span className="ml-2 text-charcoal/70">Loading users...</span>
             </div>
-            
-            {/* User Rows */}
-            {mockUsers.map((user) => (
-              <div key={user.id} className="grid grid-cols-12 gap-4 items-center px-6 py-4 hover:bg-stone-gray/20 border-b border-stone-gray/50 last:border-b-0">
-                <div className="col-span-3">
-                  <div className="text-charcoal font-medium text-sm">
-                    {user.email}
-                  </div>
-                  <div className="text-charcoal/70 text-xs">
-                    {user.company_name}
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="font-mono text-charcoal font-semibold">
-                    {user.quote_count}
-                  </div>
-                  <div className="text-charcoal/70 text-xs">
-                    quotes created
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="font-mono text-charcoal font-semibold">
-                    ${user.total_revenue.toLocaleString()}
-                  </div>
-                  <div className="text-charcoal/70 text-xs">
-                    total value
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="flex items-center space-x-2">
-                    <Activity className="h-3 w-3 text-charcoal/70" />
-                    <span className="text-charcoal/70 text-xs">
-                      {user.last_active}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Calendar className="h-3 w-3 text-charcoal/70" />
-                    <span className="text-charcoal/70 text-xs">
-                      Since {new Date(user.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <Badge 
-                    variant={user.status === 'active' ? 'default' : 'secondary'}
-                    className={user.status === 'active' 
-                      ? 'bg-forest-green text-white' 
-                      : 'bg-stone-gray text-charcoal'
-                    }
-                  >
-                    {user.status}
-                  </Badge>
-                </div>
-                <div className="col-span-1">
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm"
-                      className="bg-forest-green text-white hover:opacity-90"
-                    >
-                      View
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+          ) : (
+            <div className="bg-paper-white border-stone-gray rounded-lg">
+              {/* Table Header */}
+              <div className="grid grid-cols-12 gap-4 font-bold text-sm text-charcoal/60 mb-2 px-6 py-3 bg-light-concrete border-b border-stone-gray">
+                <div className="col-span-3">USER</div>
+                <div className="col-span-2">QUOTES</div>
+                <div className="col-span-2">REVENUE</div>
+                <div className="col-span-2">LAST ACTIVE</div>
+                <div className="col-span-2">STATUS</div>
+                <div className="col-span-1">ACTIONS</div>
               </div>
-            ))}
-          </div>
+              
+              {/* User Rows */}
+              {filteredUsers.length === 0 ? (
+                <div className="px-6 py-8 text-center text-charcoal/70">
+                  {searchTerm ? `No users found matching "${searchTerm}"` : 'No users found'}
+                </div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div key={user.id} className="grid grid-cols-12 gap-4 items-center px-6 py-4 hover:bg-stone-gray/20 border-b border-stone-gray/50 last:border-b-0">
+                    <div className="col-span-3">
+                      <div className="text-charcoal font-medium text-sm">
+                        {user.email}
+                      </div>
+                      <div className="text-charcoal/70 text-xs">
+                        {user.full_name || user.company_name}
+                      </div>
+                      {user.role === 'admin' && (
+                        <Badge className="mt-1 text-xs bg-equipment-yellow text-charcoal">
+                          Admin
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      <div className="font-mono text-charcoal font-semibold">
+                        {user.quote_count}
+                      </div>
+                      <div className="text-charcoal/70 text-xs">
+                        {user.accepted_quotes} accepted
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="font-mono text-charcoal font-semibold">
+                        ${user.total_revenue.toLocaleString()}
+                      </div>
+                      <div className="text-charcoal/70 text-xs">
+                        {user.acceptance_rate.toFixed(1)}% rate
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="flex items-center space-x-2">
+                        <Activity className="h-3 w-3 text-charcoal/70" />
+                        <span className="text-charcoal/70 text-xs">
+                          {user.last_active ? new Date(user.last_active).toLocaleDateString() : 'Never'}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Calendar className="h-3 w-3 text-charcoal/70" />
+                        <span className="text-charcoal/70 text-xs">
+                          Since {new Date(user.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-span-2">
+                      <Badge 
+                        variant={user.status === 'active' ? 'default' : 'secondary'}
+                        className={user.status === 'active' 
+                          ? 'bg-forest-green text-white' 
+                          : 'bg-stone-gray text-charcoal'
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </div>
+                    <div className="col-span-1">
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm"
+                          className="bg-forest-green text-white hover:opacity-90"
+                        >
+                          View
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </CardContent>
+        
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="px-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+              totalItems={pagination.total}
+              itemsPerPage={pagination.limit}
+            />
+          </div>
+        )}
       </Card>
     </div>
   )

@@ -20,6 +20,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Get pagination parameters
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1')
+    const limit = parseInt(url.searchParams.get('limit') || '20')
+    const offset = (page - 1) * limit
+
     // Get users from Supabase (with fallback for development)
     let users: any[] = []
     try {
@@ -33,32 +39,73 @@ export async function GET(request: NextRequest) {
       users = data.users.map((u: any) => ({
         id: u.id,
         email: u.email,
-        role: 'user', // Default role
+        role: u.raw_user_meta_data?.role || 'user',
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
-        email_confirmed_at: u.email_confirmed_at
+        email_confirmed_at: u.email_confirmed_at,
+        full_name: u.user_metadata?.full_name || null
       }))
     }
 
     // Get user activity from PostHog
     const userActivity = await getUserActivity()
 
-    // Combine user data with activity metrics
+    // Get real quote analytics for each user
+    const { data: quoteAnalytics, error: quoteError } = await supabaseAdminClient
+      .from('quote_analytics')
+      .select('*')
+    
+    if (quoteError) {
+      console.error('Error fetching quote analytics:', quoteError)
+    }
+
+    // Get company names from users table
+    const { data: userProfiles, error: profileError } = await supabaseAdminClient
+      .from('users')
+      .select('id, full_name')
+    
+    if (profileError) {
+      console.error('Error fetching user profiles:', profileError)
+    }
+
+    // Combine user data with activity metrics and real quote data
     const usersWithActivity = users.map(user => {
       const activity = userActivity.find((a: any) => a.user_id === user.id)
+      const analytics = quoteAnalytics?.find((q: any) => q.user_id === user.id)
+      const profile = userProfiles?.find((p: any) => p.id === user.id)
+      
       return {
-        ...user,
-        quote_count: activity?.quotes_created || 0,
+        id: user.id,
+        email: user.email,
+        full_name: profile?.full_name || user.full_name || null,
+        company_name: profile?.full_name || 'Individual User', // Using full_name as company for now
+        role: user.role,
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        email_confirmed_at: user.email_confirmed_at,
+        quote_count: analytics?.total_quotes || 0,
+        total_revenue: analytics?.total_quote_value || 0,
+        accepted_quotes: analytics?.accepted_quotes || 0,
+        acceptance_rate: analytics?.acceptance_rate_percent || 0,
         event_count: activity?.event_count || 0,
         last_active: activity?.last_active || user.last_sign_in_at,
-        // Mock revenue data - replace with real data from your quotes table
-        total_revenue: Math.floor(Math.random() * 10000)
+        status: user.email_confirmed_at ? 'active' : 'inactive'
       }
     })
 
+    // Apply pagination
+    const totalUsers = usersWithActivity.length
+    const paginatedUsers = usersWithActivity.slice(offset, offset + limit)
+
     return NextResponse.json({
       success: true,
-      data: usersWithActivity
+      data: paginatedUsers,
+      pagination: {
+        page,
+        limit,
+        total: totalUsers,
+        totalPages: Math.ceil(totalUsers / limit)
+      }
     })
 
   } catch (error) {
