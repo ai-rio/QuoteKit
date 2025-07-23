@@ -86,6 +86,7 @@ export interface BulkQuoteActions {
   updateStatus: (quoteIds: string[], status: QuoteStatus) => Promise<void>;
   delete: (quoteIds: string[]) => Promise<void>;
   export: (quoteIds: string[]) => Promise<void>;
+  sendEmails: (quoteIds: string[]) => Promise<void>;
 }
 
 // Utility function to convert database quote to application quote

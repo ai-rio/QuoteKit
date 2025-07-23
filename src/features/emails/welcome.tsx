@@ -22,6 +22,7 @@ export function WelcomeEmail() {
               </Heading>
               <Text className='my-6 text-[16px]'>Go to your dashboard to get started.</Text>
               <Button href={baseUrl + '/dashboard'} className='rounded-md bg-black px-4 py-2 font-medium text-white'>
+
                 Dashboard
               </Button>
             </Section>
@@ -41,3 +42,6 @@ export function WelcomeEmail() {
 }
 
 export default WelcomeEmail;
+
+// Export quote email component
+export { default as QuoteEmail } from './quote-email';

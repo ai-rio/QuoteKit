@@ -2,12 +2,12 @@ import { redirect } from 'next/navigation';
 
 import { getSession } from '@/features/account/controllers/get-session';
 import { getLineItems } from '@/features/items/actions';
-import { QuoteCreator } from '@/features/quotes/components/QuoteCreator';
 import { getTemplateById } from '@/features/quotes/actions';
+import { QuoteCreator } from '@/features/quotes/components/QuoteCreator';
 import { getCompanySettings } from '@/features/settings/actions';
 
 interface NewQuotePageProps {
-  searchParams: { template?: string };
+  searchParams: Promise<{ template?: string }>;
 }
 
 export default async function NewQuotePage({ searchParams }: NewQuotePageProps) {
@@ -16,6 +16,9 @@ export default async function NewQuotePage({ searchParams }: NewQuotePageProps) 
   if (!session) {
     redirect('/login');
   }
+
+  // Await searchParams to handle the async nature
+  const params = await searchParams;
 
   // Fetch items and settings
   const [itemsResponse, settingsResponse] = await Promise.all([
@@ -28,10 +31,10 @@ export default async function NewQuotePage({ searchParams }: NewQuotePageProps) 
 
   // Fetch template data if template ID is provided
   let templateData = null;
-  if (searchParams.template) {
+  if (params.template) {
     try {
-      const templateResponse = await getTemplateById(searchParams.template);
-      if (templateResponse.data) {
+      const templateResponse = await getTemplateById(params.template);
+      if (templateResponse && templateResponse.data) {
         templateData = templateResponse.data;
       }
     } catch (error) {
@@ -46,7 +49,7 @@ export default async function NewQuotePage({ searchParams }: NewQuotePageProps) 
         <QuoteCreator 
           availableItems={items || []} 
           defaultSettings={settings || null}
-          templateData={templateData}
+          templateData={templateData} 
         />
       </div>
     </div>
