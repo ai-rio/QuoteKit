@@ -1,0 +1,403 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+import { createStripeAdminClient, type StripeConfig } from '@/libs/stripe/stripe-admin'
+import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client'
+
+export async function GET(request: NextRequest) {
+  try {
+    // Check authentication
+    const supabase = await createSupabaseServerClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get Stripe configuration
+    const { data: configData } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single()
+
+    if (!configData?.value) {
+      return NextResponse.json(
+        { error: 'Stripe not configured. Please configure Stripe first.' },
+        { status: 400 }
+      )
+    }
+
+    const stripeConfig = configData.value as StripeConfig
+    const stripe = createStripeAdminClient(stripeConfig)
+
+    try {
+      // Fetch products from Stripe
+      const products = await stripe.products.list({
+        limit: 100,
+        expand: ['data.default_price']
+      })
+
+      // Get stored products from database for additional metadata
+      const { data: dbProducts } = await supabaseAdminClient
+        .from('stripe_products')
+        .select('*')
+
+      // Combine Stripe data with database data
+      const combinedProducts = products.data.map(product => {
+        const dbProduct = dbProducts?.find(p => p.stripe_product_id === product.id)
+        
+        return {
+          id: dbProduct?.id || null,
+          stripe_product_id: product.id,
+          name: product.name,
+          description: product.description,
+          active: product.active,
+          default_price: product.default_price,
+          created: product.created,
+          updated: product.updated,
+          images: product.images,
+          metadata: product.metadata,
+          // Database fields
+          created_at: dbProduct?.created_at,
+          updated_at: dbProduct?.updated_at
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        products: combinedProducts,
+        total: products.data.length
+      })
+
+    } catch (stripeError: any) {
+      console.error('Stripe products fetch error:', stripeError)
+      return NextResponse.json(
+        { error: `Failed to fetch products: ${stripeError.message}` },
+        { status: 400 }
+      )
+    }
+
+  } catch (error) {
+    console.error('Error fetching Stripe products:', error)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const supabase = await createSupabaseServerClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get Stripe configuration
+    const { data: configData } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single()
+
+    if (!configData?.value) {
+      return NextResponse.json(
+        { error: 'Stripe not configured. Please configure Stripe first.' },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const { name, description, active = true, metadata = {} } = body
+
+    // Validate required fields
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Product name is required' },
+        { status: 400 }
+      )
+    }
+
+    const stripeConfig = configData.value as StripeConfig
+    const stripe = createStripeAdminClient(stripeConfig)
+
+    try {
+      // Create product in Stripe
+      const product = await stripe.products.create({
+        name,
+        description: description || '',
+        active,
+        metadata
+      })
+
+      // Store product in database for additional tracking
+      const { data: dbProduct, error: dbError } = await supabaseAdminClient
+        .from('stripe_products')
+        .insert({
+          stripe_product_id: product.id,
+          name: product.name,
+          description: product.description,
+          active: product.active,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (dbError) {
+        console.warn('Failed to store product in database:', dbError)
+        // Continue even if database storage fails
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Product created successfully',
+        product: {
+          id: dbProduct?.id || null,
+          stripe_product_id: product.id,
+          name: product.name,
+          description: product.description,
+          active: product.active,
+          created: product.created,
+          metadata: product.metadata
+        }
+      })
+
+    } catch (stripeError: any) {
+      console.error('Stripe product creation error:', stripeError)
+      return NextResponse.json(
+        { error: `Failed to create product: ${stripeError.message}` },
+        { status: 400 }
+      )
+    }
+
+  } catch (error) {
+    console.error('Error creating Stripe product:', error)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Check authentication
+    const supabase = await createSupabaseServerClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get Stripe configuration
+    const { data: configData } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single()
+
+    if (!configData?.value) {
+      return NextResponse.json(
+        { error: 'Stripe not configured. Please configure Stripe first.' },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const { 
+      stripe_product_id, 
+      name, 
+      description, 
+      active, 
+      metadata = {},
+      images,
+      statement_descriptor,
+      unit_label,
+      url
+    } = body
+
+    // Validate required fields
+    if (!stripe_product_id) {
+      return NextResponse.json(
+        { error: 'Product ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const stripeConfig = configData.value as StripeConfig
+    const stripe = createStripeAdminClient(stripeConfig)
+
+    try {
+      // Prepare update data (only include fields that are provided)
+      const updateData: any = {}
+      
+      if (name !== undefined) updateData.name = name
+      if (description !== undefined) updateData.description = description
+      if (active !== undefined) updateData.active = active
+      if (metadata !== undefined) updateData.metadata = metadata
+      if (images !== undefined) updateData.images = images
+      if (statement_descriptor !== undefined) updateData.statement_descriptor = statement_descriptor
+      if (unit_label !== undefined) updateData.unit_label = unit_label
+      if (url !== undefined) updateData.url = url
+
+      // Update product in Stripe
+      const product = await stripe.products.update(stripe_product_id, updateData)
+
+      // Update product in database
+      const { data: dbProduct, error: dbError } = await supabaseAdminClient
+        .from('stripe_products')
+        .update({
+          name: product.name,
+          description: product.description,
+          active: product.active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('stripe_product_id', stripe_product_id)
+        .select()
+        .single()
+
+      if (dbError) {
+        console.warn('Failed to update product in database:', dbError)
+        // Continue even if database update fails
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Product updated successfully',
+        product: {
+          id: dbProduct?.id || null,
+          stripe_product_id: product.id,
+          name: product.name,
+          description: product.description,
+          active: product.active,
+          updated: product.updated,
+          metadata: product.metadata,
+          images: product.images,
+          statement_descriptor: product.statement_descriptor,
+          unit_label: product.unit_label,
+          url: product.url
+        }
+      })
+
+    } catch (stripeError: any) {
+      console.error('Stripe product update error:', stripeError)
+      return NextResponse.json(
+        { error: `Failed to update product: ${stripeError.message}` },
+        { status: 400 }
+      )
+    }
+
+  } catch (error) {
+    console.error('Error updating Stripe product:', error)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // Check authentication
+    const supabase = await createSupabaseServerClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get Stripe configuration
+    const { data: configData } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single()
+
+    if (!configData?.value) {
+      return NextResponse.json(
+        { error: 'Stripe not configured. Please configure Stripe first.' },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const { stripe_product_id } = body
+
+    // Validate required fields
+    if (!stripe_product_id) {
+      return NextResponse.json(
+        { error: 'Product ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const stripeConfig = configData.value as StripeConfig
+    const stripe = createStripeAdminClient(stripeConfig)
+
+    try {
+      // Check if product has any prices
+      const prices = await stripe.prices.list({
+        product: stripe_product_id,
+        limit: 1
+      })
+
+      if (prices.data.length > 0) {
+        return NextResponse.json(
+          { 
+            error: 'Cannot delete product with associated prices. Archive the product instead or delete all prices first.',
+            has_prices: true
+          },
+          { status: 400 }
+        )
+      }
+
+      // Delete product from Stripe
+      const deletedProduct = await stripe.products.del(stripe_product_id)
+
+      // Remove product from database
+      const { error: dbError } = await supabaseAdminClient
+        .from('stripe_products')
+        .delete()
+        .eq('stripe_product_id', stripe_product_id)
+
+      if (dbError) {
+        console.warn('Failed to delete product from database:', dbError)
+        // Continue even if database deletion fails
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Product deleted successfully',
+        deleted: deletedProduct.deleted,
+        product_id: stripe_product_id
+      })
+
+    } catch (stripeError: any) {
+      console.error('Stripe product deletion error:', stripeError)
+      return NextResponse.json(
+        { error: `Failed to delete product: ${stripeError.message}` },
+        { status: 400 }
+      )
+    }
+
+  } catch (error) {
+    console.error('Error deleting Stripe product:', error)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    )
+  }
+}

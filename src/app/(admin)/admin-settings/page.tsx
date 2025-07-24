@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect,useState } from "react"
-import { AlertCircle, BarChart3, CheckCircle, Database, Mail,RefreshCw, Save, Settings } from "lucide-react"
+import { AlertCircle, BarChart3, CheckCircle, CreditCard, Database, Mail, RefreshCw, Save, Settings } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -38,6 +38,13 @@ export default function AdminSettingsPage() {
     from_name: ''
   })
   
+  const [stripeConfig, setStripeConfig] = useState({
+    secret_key: '',
+    publishable_key: '',
+    webhook_secret: '',
+    mode: 'test' as 'test' | 'live'
+  })
+  
   const [posthogStatus, setPosthogStatus] = useState<ConfigStatus>({
     isConfigured: false,
     isConnected: false,
@@ -50,8 +57,14 @@ export default function AdminSettingsPage() {
     lastChecked: null
   })
   
-  const [loading, setLoading] = useState({ posthog: false, resend: false })
-  const [testing, setTesting] = useState({ posthog: false, resend: false })
+  const [stripeStatus, setStripeStatus] = useState<ConfigStatus>({
+    isConfigured: false,
+    isConnected: false,
+    lastChecked: null
+  })
+  
+  const [loading, setLoading] = useState({ posthog: false, resend: false, stripe: false })
+  const [testing, setTesting] = useState({ posthog: false, resend: false, stripe: false })
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string; service?: string } | null>(null)
 
   useEffect(() => {
@@ -74,6 +87,14 @@ export default function AdminSettingsPage() {
         const resendData = await resendResponse.json()
         setResendConfig(resendData.config)
         setResendStatus(resendData.status)
+      }
+
+      // Fetch Stripe config
+      const stripeResponse = await fetch('/api/admin/stripe-config')
+      if (stripeResponse.ok) {
+        const stripeData = await stripeResponse.json()
+        setStripeConfig(stripeData.config)
+        setStripeStatus(stripeData.status)
       }
     } catch (error) {
       console.error('Failed to fetch configs:', error)
@@ -188,6 +209,60 @@ export default function AdminSettingsPage() {
     }
   }
 
+  const testStripeConnection = async () => {
+    setTesting(prev => ({ ...prev, stripe: true }))
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/admin/stripe-config/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stripeConfig)
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Stripe connection successful!', service: 'stripe' })
+        setStripeStatus(prev => ({ ...prev, isConnected: true, lastChecked: new Date().toISOString() }))
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Stripe connection failed', service: 'stripe' })
+        setStripeStatus(prev => ({ ...prev, isConnected: false, lastChecked: new Date().toISOString() }))
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to test Stripe connection', service: 'stripe' })
+    } finally {
+      setTesting(prev => ({ ...prev, stripe: false }))
+    }
+  }
+
+  const saveStripeConfig = async () => {
+    setLoading(prev => ({ ...prev, stripe: true }))
+    setMessage(null)
+    
+    try {
+      const response = await fetch('/api/admin/stripe-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stripeConfig)
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Stripe configuration saved successfully!', service: 'stripe' })
+        setStripeStatus(prev => ({ ...prev, isConfigured: true }))
+        setTimeout(() => testStripeConnection(), 1000)
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to save Stripe configuration', service: 'stripe' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to save Stripe configuration', service: 'stripe' })
+    } finally {
+      setLoading(prev => ({ ...prev, stripe: false }))
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -201,7 +276,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {/* PostHog Status Cards */}
         <Card className="bg-paper-white border-stone-gray shadow-sm">
           <CardContent className="p-6">
@@ -270,6 +345,43 @@ export default function AdminSettingsPage() {
                 <p className="font-medium text-charcoal">Resend Connection</p>
                 <Badge variant={resendStatus.isConnected ? "default" : "destructive"}>
                   {resendStatus.isConnected ? "Connected" : "Disconnected"}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stripe Status Cards */}
+        <Card className="bg-paper-white border-stone-gray shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              {stripeStatus.isConfigured ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+              )}
+              <div>
+                <p className="font-medium text-charcoal">Stripe Config</p>
+                <Badge variant={stripeStatus.isConfigured ? "default" : "secondary"}>
+                  {stripeStatus.isConfigured ? "Configured" : "Not Configured"}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-paper-white border-stone-gray shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              {stripeStatus.isConnected ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              )}
+              <div>
+                <p className="font-medium text-charcoal">Stripe Connection</p>
+                <Badge variant={stripeStatus.isConnected ? "default" : "destructive"}>
+                  {stripeStatus.isConnected ? "Connected" : "Disconnected"}
                 </Badge>
               </div>
             </div>
@@ -496,6 +608,157 @@ export default function AdminSettingsPage() {
               <li>Verify your domain in the Domains section</li>
               <li>Enter your API key and verified email address above</li>
               <li>Test the connection to ensure email delivery works</li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stripe Configuration */}
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-section-title text-charcoal">
+            <CreditCard className="w-5 h-5" />
+            Stripe Payment Configuration
+          </CardTitle>
+          <CardDescription className="text-charcoal/70">
+            Configure your Stripe payment processing for subscriptions and billing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Stripe Alert Message */}
+          {message && message.service === 'stripe' && (
+            <Alert className={message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
+              <AlertDescription className={message.type === 'error' ? 'text-red-700' : 'text-green-700'}>
+                {message.text}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="stripe_secret_key" className="text-label text-charcoal font-medium">
+                Secret Key *
+              </Label>
+              <Input
+                id="stripe_secret_key"
+                type="password"
+                placeholder="sk_test_... or sk_live_..."
+                value={stripeConfig.secret_key}
+                onChange={(e) => setStripeConfig(prev => ({ ...prev, secret_key: e.target.value }))}
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+              />
+              <p className="text-xs text-charcoal/60">
+                Found in your Stripe dashboard under Developers → API keys
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="stripe_publishable_key" className="text-label text-charcoal font-medium">
+                Publishable Key *
+              </Label>
+              <Input
+                id="stripe_publishable_key"
+                type="text"
+                placeholder="pk_test_... or pk_live_..."
+                value={stripeConfig.publishable_key}
+                onChange={(e) => setStripeConfig(prev => ({ ...prev, publishable_key: e.target.value }))}
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+              />
+              <p className="text-xs text-charcoal/60">
+                Public key for client-side integration
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="stripe_webhook_secret" className="text-label text-charcoal font-medium">
+                Webhook Secret
+              </Label>
+              <Input
+                id="stripe_webhook_secret"
+                type="password"
+                placeholder="whsec_..."
+                value={stripeConfig.webhook_secret}
+                onChange={(e) => setStripeConfig(prev => ({ ...prev, webhook_secret: e.target.value }))}
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+              />
+              <p className="text-xs text-charcoal/60">
+                For webhook endpoint verification
+              </p>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label className="text-label text-charcoal font-medium">
+                Mode
+              </Label>
+              <div className="flex space-x-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="stripe_mode"
+                    value="test"
+                    checked={stripeConfig.mode === 'test'}
+                    onChange={(e) => setStripeConfig(prev => ({ ...prev, mode: e.target.value as 'test' | 'live' }))}
+                    className="text-forest-green focus:ring-forest-green"
+                  />
+                  <span className="text-charcoal">Test Mode</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="stripe_mode"
+                    value="live"
+                    checked={stripeConfig.mode === 'live'}
+                    onChange={(e) => setStripeConfig(prev => ({ ...prev, mode: e.target.value as 'test' | 'live' }))}
+                    className="text-forest-green focus:ring-forest-green"
+                  />
+                  <span className="text-charcoal">Live Mode</span>
+                </label>
+              </div>
+              <p className="text-xs text-charcoal/60">
+                Test mode uses sandbox data. Live mode processes real payments.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={testStripeConnection}
+              disabled={testing.stripe || !stripeConfig.secret_key || !stripeConfig.publishable_key}
+              variant="outline"
+              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+            >
+              {testing.stripe ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Test Stripe Connection
+            </Button>
+            
+            <Button
+              onClick={saveStripeConfig}
+              disabled={loading.stripe || !stripeConfig.secret_key || !stripeConfig.publishable_key}
+              className="bg-forest-green text-white hover:opacity-90"
+            >
+              {loading.stripe ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save Stripe Config
+            </Button>
+          </div>
+
+          {/* Stripe Help Text */}
+          <div className="bg-light-concrete p-4 rounded-lg">
+            <h4 className="font-medium text-charcoal mb-2">Stripe Setup Instructions:</h4>
+            <ol className="text-sm text-charcoal/70 space-y-1 list-decimal list-inside">
+              <li>Log into your Stripe dashboard</li>
+              <li>Go to Developers → API keys</li>
+              <li>Copy your Secret and Publishable keys</li>
+              <li>For webhooks: Create endpoint pointing to /api/webhooks/stripe</li>
+              <li>Copy the webhook signing secret</li>
+              <li>Test the connection to ensure payment processing works</li>
             </ol>
           </div>
         </CardContent>
