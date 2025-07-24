@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
   BarChart3, 
+  CreditCard,
   Database,
   Home, 
   LogOut, 
@@ -70,6 +71,16 @@ const navGroups: NavGroup[] = [
         title: "Bulk Actions",
         url: "/users/bulk-actions",
         icon: Database,
+      },
+    ]
+  },
+  {
+    title: "Billing & Payments",
+    items: [
+      {
+        title: "Pricing Management",
+        url: "/pricing-management",
+        icon: CreditCard,
       },
     ]
   },

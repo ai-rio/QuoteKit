@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getUserActivity } from '@/libs/posthog/posthog-admin'
-import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
 import { getUsersWithRoles, isAdmin } from '@/libs/supabase/admin-utils'
+import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client'
 
 // Export users data as CSV
