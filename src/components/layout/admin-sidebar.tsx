@@ -11,6 +11,7 @@ import {
   Home, 
   LogOut, 
   Mail, 
+  MoreVertical,
   Search,
   Send,
   Settings,
@@ -18,6 +19,11 @@ import {
   Users} from "lucide-react"
 
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Sidebar,
   SidebarContent,
@@ -255,41 +261,39 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link 
-                href="/admin-settings" 
-                className={`flex items-center p-3 rounded-lg font-medium min-h-[44px] touch-manipulation transition-colors ${
-                  pathname === '/admin-settings' || pathname.startsWith('/admin-settings/')
-                    ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
-                    : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
-                }`}
-              >
-                <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span className="text-sm">Admin Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link 
-                href="/dashboard" 
-                className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
-              >
-                <ArrowLeft className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span className="text-sm">Back to App</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link 
-                href="/auth/logout" 
-                className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
-              >
-                <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span className="text-sm">Logout</span>
-              </Link>
-            </SidebarMenuButton>
+            <Popover>
+              <PopoverTrigger asChild>
+                <SidebarMenuButton className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation">
+                  <MoreVertical className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="text-sm">Menu</span>
+                </SidebarMenuButton>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="start">
+                <div className="space-y-1">
+                  <Link 
+                    href="/admin-settings" 
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Admin Settings</span>
+                  </Link>
+                  <Link 
+                    href="/dashboard" 
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back to App</span>
+                  </Link>
+                  <Link 
+                    href="/auth/logout" 
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
