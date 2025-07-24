@@ -131,15 +131,15 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 export function AdminSidebar({ ...props }: AdminSidebarProps) {
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
-    new Set(['overview', 'user-management']) // Default expanded sections
+    new Set(['overview']) // Default expanded section (only one at a time)
   )
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(sectionId)) {
-        newSet.delete(sectionId)
-      } else {
+      const newSet = new Set<string>()
+      // If the section is currently expanded, collapse it (empty set)
+      // If it's not expanded, expand only this section
+      if (!prev.has(sectionId)) {
         newSet.add(sectionId)
       }
       return newSet
