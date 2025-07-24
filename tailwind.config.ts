@@ -65,6 +65,10 @@ const config: Config = {
         'stone-gray': 'hsl(var(--stone-gray))',
         'charcoal': 'hsl(var(--charcoal))',
         'paper-white': 'hsl(var(--paper-white))',
+        // System Status Colors
+        'success-green': 'hsl(var(--success-green))',
+        'error-red': 'hsl(var(--error-red))',
+        'info-blue': 'hsl(var(--info-blue))',
       },
       borderRadius: {
         lg: `var(--radius)`,

@@ -384,8 +384,8 @@ export default function PricingManagementPage() {
 
       {/* Global Alert Messages */}
       {message && (
-        <Alert className={message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
-          <AlertDescription className={message.type === 'error' ? 'text-red-700' : 'text-green-700'}>
+        <Alert className={message.type === 'error' ? 'border-error-red bg-error-red/10' : 'border-success-green bg-success-green/10'}>
+          <AlertDescription className={message.type === 'error' ? 'text-error-red' : 'text-success-green'}>
             {message.text}
           </AlertDescription>
         </Alert>
@@ -410,7 +410,7 @@ export default function PricingManagementPage() {
                 disabled={loading.products}
                 variant="outline"
                 size="sm"
-                className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
               >
                 {loading.products ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -422,7 +422,7 @@ export default function PricingManagementPage() {
                 <DialogTrigger asChild>
                   <Button 
                     size="sm"
-                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold transition-all duration-200"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Product
@@ -477,13 +477,13 @@ export default function PricingManagementPage() {
                       <Button
                         variant="outline"
                         onClick={() => setShowProductDialog(false)}
-                        className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                        className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={createProduct}
-                        className="bg-forest-green text-white hover:opacity-90"
+                        className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
                       >
                         Create Product
                       </Button>
@@ -520,7 +520,7 @@ export default function PricingManagementPage() {
                         <p className="text-sm text-charcoal/70 mt-1">{product.description}</p>
                       )}
                     </div>
-                    <Badge variant={product.active ? "default" : "secondary"}>
+                    <Badge variant={product.active ? "active" : "archived"}>
                       {product.active ? "Active" : "Archived"}
                     </Badge>
                   </div>
@@ -535,7 +535,8 @@ export default function PricingManagementPage() {
                         setEditingProduct(product)
                         setShowEditProductDialog(true)
                       }}
-                      className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                      className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
+                      title="Edit Product"
                     >
                       <Edit3 className="w-3 h-3" />
                     </Button>
@@ -547,9 +548,10 @@ export default function PricingManagementPage() {
                         `Are you sure you want to ${product.active ? 'archive' : 'restore'} "${product.name}"?`,
                         () => toggleProductActive(product)
                       )}
-                      className={`border-stone-gray hover:bg-stone-gray/20 ${
-                        product.active ? 'text-orange-600 hover:text-orange-700' : 'text-forest-green hover:text-forest-green'
+                      className={`bg-paper-white border-2 hover:text-paper-white font-bold transition-all duration-200 ${
+                        product.active ? 'text-error-red border-error-red hover:bg-error-red' : 'text-success-green border-success-green hover:bg-success-green'
                       }`}
+                      title={product.active ? 'Archive Product' : 'Restore Product'}
                     >
                       {product.active ? <AlertCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                     </Button>
@@ -562,7 +564,8 @@ export default function PricingManagementPage() {
                         () => deleteProduct(product),
                         true
                       )}
-                      className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      className="bg-paper-white text-error-red border-2 border-error-red hover:bg-error-red hover:text-paper-white font-bold transition-all duration-200"
+                      title="Delete Product"
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -593,7 +596,7 @@ export default function PricingManagementPage() {
                 disabled={loading.prices}
                 variant="outline"
                 size="sm"
-                className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
               >
                 {loading.prices ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -605,7 +608,7 @@ export default function PricingManagementPage() {
                 <DialogTrigger asChild>
                   <Button 
                     size="sm"
-                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold transition-all duration-200"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Price
@@ -685,13 +688,13 @@ export default function PricingManagementPage() {
                       <Button
                         variant="outline"
                         onClick={() => setShowPriceDialog(false)}
-                        className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                        className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={createPrice}
-                        className="bg-forest-green text-white hover:opacity-90"
+                        className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
                       >
                         Create Price
                       </Button>
@@ -727,15 +730,15 @@ export default function PricingManagementPage() {
                         <span className="font-mono text-lg font-bold text-charcoal">
                           {formatCurrency(price.unit_amount, price.currency)}
                         </span>
-                        <Badge variant="outline" className="text-xs">
-                          {getRecurringText(price.recurring_interval)}
-                        </Badge>
+                        <Badge variant="outline">
+                      {getRecurringText(price.recurring_interval)}
+                    </Badge>
                       </div>
                       {price.product_name && (
                         <p className="text-sm text-charcoal/70">{price.product_name}</p>
                       )}
                     </div>
-                    <Badge variant={price.active ? "default" : "secondary"}>
+                    <Badge variant={price.active ? "active" : "archived"}>
                       {price.active ? "Active" : "Archived"}
                     </Badge>
                   </div>
@@ -750,7 +753,8 @@ export default function PricingManagementPage() {
                         setEditingPrice(price)
                         setShowEditPriceDialog(true)
                       }}
-                      className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                      className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
+                      title="Edit Price"
                     >
                       <Edit3 className="w-3 h-3" />
                     </Button>
@@ -762,9 +766,10 @@ export default function PricingManagementPage() {
                         `Are you sure you want to ${price.active ? 'archive' : 'restore'} this price (${formatCurrency(price.unit_amount, price.currency)})?`,
                         () => togglePriceActive(price)
                       )}
-                      className={`border-stone-gray hover:bg-stone-gray/20 ${
-                        price.active ? 'text-orange-600 hover:text-orange-700' : 'text-forest-green hover:text-forest-green'
+                      className={`bg-paper-white border-2 hover:text-paper-white font-bold transition-all duration-200 ${
+                        price.active ? 'text-error-red border-error-red hover:bg-error-red' : 'text-success-green border-success-green hover:bg-success-green'
                       }`}
+                      title={price.active ? 'Archive Price' : 'Restore Price'}
                     >
                       {price.active ? <AlertCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                     </Button>
@@ -831,13 +836,13 @@ export default function PricingManagementPage() {
                     setShowEditProductDialog(false)
                     setEditingProduct(null)
                   }}
-                  className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                  className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={updateProduct}
-                  className="bg-forest-green text-white hover:opacity-90"
+                  className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
                 >
                   Update Product
                 </Button>
@@ -867,7 +872,7 @@ export default function PricingManagementPage() {
                     <span className="font-mono text-lg font-bold text-charcoal">
                       {formatCurrency(editingPrice.unit_amount, editingPrice.currency)}
                     </span>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline">
                       {getRecurringText(editingPrice.recurring_interval)}
                     </Badge>
                   </div>
@@ -895,13 +900,13 @@ export default function PricingManagementPage() {
                     setShowEditPriceDialog(false)
                     setEditingPrice(null)
                   }}
-                  className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                  className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={updatePrice}
-                  className="bg-forest-green text-white hover:opacity-90"
+                  className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
                 >
                   Update Price
                 </Button>
@@ -915,7 +920,7 @@ export default function PricingManagementPage() {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="bg-paper-white border-stone-gray">
           <DialogHeader>
-            <DialogTitle className={`text-section-title ${confirmAction?.destructive ? 'text-red-600' : 'text-charcoal'}`}>
+            <DialogTitle className={`text-section-title ${confirmAction?.destructive ? 'text-error-red' : 'text-charcoal'}`}>
               {confirmAction?.title}
             </DialogTitle>
             <DialogDescription className="text-charcoal/70">
@@ -929,15 +934,15 @@ export default function PricingManagementPage() {
                 setShowConfirmDialog(false)
                 setConfirmAction(null)
               }}
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+              className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
             >
               Cancel
             </Button>
             <Button
               onClick={executeConfirmAction}
               className={confirmAction?.destructive ? 
-                "bg-red-600 text-white hover:bg-red-700" : 
-                "bg-forest-green text-white hover:opacity-90"
+                "bg-paper-white text-error-red border-2 border-error-red hover:bg-error-red hover:text-paper-white font-bold transition-all duration-200" : 
+                "bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
               }
             >
               {confirmAction?.destructive ? 'Delete' : 'Confirm'}

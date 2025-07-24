@@ -41,6 +41,11 @@
     --stone-gray: 0 0% 85%;           /* #D7D7D7 */
     --charcoal: 0 0% 11%;             /* #1C1C1C */
     --paper-white: 0 0% 100%;         /* #FFFFFF */
+    
+    /* System Status Colors */
+    --success-green: 142 76% 36%;     /* #16a34a */
+    --error-red: 0 84% 60%;           /* #dc2626 */
+    --info-blue: 221 83% 53%;         /* #2563eb */
 
     /* Sidebar variables for forest green theme */
     --sidebar: 147 21% 20%; /* #2A3D2F forest green */

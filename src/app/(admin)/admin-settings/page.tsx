@@ -276,19 +276,19 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 lg:gap-6">
         {/* PostHog Status Cards */}
         <Card className="bg-paper-white border-stone-gray shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start space-x-2 lg:space-x-3">
               {posthogStatus.isConfigured ? (
-                <CheckCircle className="w-5 h-5 text-success-green" />
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-success-green flex-shrink-0 mt-1" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-equipment-yellow" />
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-equipment-yellow flex-shrink-0 mt-1" />
               )}
-              <div>
-                <p className="font-medium text-charcoal">PostHog Config</p>
-                <Badge variant={posthogStatus.isConfigured ? "default" : "secondary"}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">PostHog Config</p>
+                <Badge variant={posthogStatus.isConfigured ? "active" : "archived"} size="sm" className="text-xs">
                   {posthogStatus.isConfigured ? "Configured" : "Not Configured"}
                 </Badge>
               </div>
@@ -297,16 +297,16 @@ export default function AdminSettingsPage() {
         </Card>
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start space-x-2 lg:space-x-3">
               {posthogStatus.isConnected ? (
-                <CheckCircle className="w-5 h-5 text-success-green" />
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-success-green flex-shrink-0 mt-1" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-error-red" />
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-error-red flex-shrink-0 mt-1" />
               )}
-              <div>
-                <p className="font-medium text-charcoal">PostHog Connection</p>
-                <Badge variant={posthogStatus.isConnected ? "default" : "destructive"}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">PostHog Connection</p>
+                <Badge variant={posthogStatus.isConnected ? "active" : "destructive"} size="sm" className="text-xs">
                   {posthogStatus.isConnected ? "Connected" : "Disconnected"}
                 </Badge>
               </div>
@@ -316,16 +316,16 @@ export default function AdminSettingsPage() {
 
         {/* Resend Status Cards */}
         <Card className="bg-paper-white border-stone-gray shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start space-x-2 lg:space-x-3">
               {resendStatus.isConfigured ? (
-                <CheckCircle className="w-5 h-5 text-success-green" />
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-success-green flex-shrink-0 mt-1" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-equipment-yellow" />
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-equipment-yellow flex-shrink-0 mt-1" />
               )}
-              <div>
-                <p className="font-medium text-charcoal">Resend Config</p>
-                <Badge variant={resendStatus.isConfigured ? "default" : "secondary"}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">Resend Config</p>
+                <Badge variant={resendStatus.isConfigured ? "active" : "archived"} size="sm" className="text-xs">
                   {resendStatus.isConfigured ? "Configured" : "Not Configured"}
                 </Badge>
               </div>
@@ -334,16 +334,16 @@ export default function AdminSettingsPage() {
         </Card>
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start space-x-2 lg:space-x-3">
               {resendStatus.isConnected ? (
-                <CheckCircle className="w-5 h-5 text-success-green" />
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-success-green flex-shrink-0 mt-1" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-error-red" />
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-error-red flex-shrink-0 mt-1" />
               )}
-              <div>
-                <p className="font-medium text-charcoal">Resend Connection</p>
-                <Badge variant={resendStatus.isConnected ? "default" : "destructive"}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">Resend Connection</p>
+                <Badge variant={resendStatus.isConnected ? "active" : "destructive"} size="sm" className="text-xs">
                   {resendStatus.isConnected ? "Connected" : "Disconnected"}
                 </Badge>
               </div>
@@ -353,16 +353,16 @@ export default function AdminSettingsPage() {
 
         {/* Stripe Status Cards */}
         <Card className="bg-paper-white border-stone-gray shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start space-x-2 lg:space-x-3">
               {stripeStatus.isConfigured ? (
-                <CheckCircle className="w-5 h-5 text-success-green" />
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-success-green flex-shrink-0 mt-1" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-equipment-yellow" />
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-equipment-yellow flex-shrink-0 mt-1" />
               )}
-              <div>
-                <p className="font-medium text-charcoal">Stripe Config</p>
-                <Badge variant={stripeStatus.isConfigured ? "default" : "secondary"}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">Stripe Config</p>
+                <Badge variant={stripeStatus.isConfigured ? "active" : "archived"} size="sm" className="text-xs">
                   {stripeStatus.isConfigured ? "Configured" : "Not Configured"}
                 </Badge>
               </div>
@@ -371,16 +371,16 @@ export default function AdminSettingsPage() {
         </Card>
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start space-x-2 lg:space-x-3">
               {stripeStatus.isConnected ? (
-                <CheckCircle className="w-5 h-5 text-success-green" />
+                <CheckCircle className="w-4 h-4 lg:w-5 lg:h-5 text-success-green flex-shrink-0 mt-1" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-error-red" />
+                <AlertCircle className="w-4 h-4 lg:w-5 lg:h-5 text-error-red flex-shrink-0 mt-1" />
               )}
-              <div>
-                <p className="font-medium text-charcoal">Stripe Connection</p>
-                <Badge variant={stripeStatus.isConnected ? "default" : "destructive"}>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">Stripe Connection</p>
+                <Badge variant={stripeStatus.isConnected ? "active" : "destructive"} size="sm" className="text-xs">
                   {stripeStatus.isConnected ? "Connected" : "Disconnected"}
                 </Badge>
               </div>
@@ -471,7 +471,7 @@ export default function AdminSettingsPage() {
               onClick={testPosthogConnection}
               disabled={testing.posthog || !posthogConfig.project_api_key || !posthogConfig.personal_api_key}
               variant="outline"
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+              className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
             >
               {testing.posthog ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -575,7 +575,7 @@ export default function AdminSettingsPage() {
               onClick={testResendConnection}
               disabled={testing.resend || !resendConfig.api_key || !resendConfig.from_email}
               variant="outline"
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+              className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
             >
               {testing.resend ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -725,7 +725,7 @@ export default function AdminSettingsPage() {
               onClick={testStripeConnection}
               disabled={testing.stripe || !stripeConfig.secret_key || !stripeConfig.publishable_key}
               variant="outline"
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+              className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
             >
               {testing.stripe ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
