@@ -9,10 +9,12 @@ import {
   MoreHorizontal,
   Search,
   Settings,
-  UserPlus} from "lucide-react"
+  UserPlus
+} from 'lucide-react'
 
-import { Pagination } from "@/components/admin/pagination"
-import { UserEditModal } from "@/components/admin/user-edit-modal"
+import { AddUserModal } from '@/components/admin/add-user-modal'
+import { Pagination } from '@/components/admin/pagination'
+import { UserEditModal } from '@/components/admin/user-edit-modal'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
@@ -34,20 +36,21 @@ export default function UsersOverview() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const { users, loading, error, pagination, refreshUsers, updateUserRole } = useAdminUsers(currentPage, 20)
 
   // Filter users based on search term
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.company_name && user.company_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   // Calculate summary stats
   const totalUsers = pagination?.total || 0
   const activeUsers = users.filter(u => u.status === 'active').length
-  const totalQuotes = users.reduce((sum, user) => sum + user.quote_count, 0)
-  const totalRevenue = users.reduce((sum, user) => sum + user.total_revenue, 0)
+  const totalQuotes = users.reduce((sum, user) => sum + (user.quote_count || 0), 0)
+  const totalRevenue = users.reduce((sum, user) => sum + (user.total_revenue || 0), 0)
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -75,6 +78,50 @@ export default function UsersOverview() {
     refreshUsers()
   }
 
+  const handleAddUser = () => {
+    setIsAddModalOpen(true)
+  }
+
+  const handleAddModalClose = () => {
+    setIsAddModalOpen(false)
+  }
+
+  const handleUserCreated = () => {
+    refreshUsers()
+  }
+
+  const handleExportData = async () => {
+    try {
+      const response = await fetch('/api/admin/users/export')
+      
+      if (!response.ok) {
+        throw new Error('Failed to export data')
+      }
+
+      // Get the CSV content
+      const csvContent = await response.text()
+      
+      // Create a blob and download link
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+    } catch (error) {
+      console.error('Error exporting data:', error)
+      // Could add toast notification here for error feedback
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -88,11 +135,17 @@ export default function UsersOverview() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <Button className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold">
+          <Button 
+            onClick={handleExportData}
+            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold"
+          >
             <Download className="w-4 h-4 mr-2" />
             Export Data
           </Button>
-          <Button className="bg-forest-green text-white hover:opacity-90 font-bold">
+          <Button 
+            onClick={handleAddUser}
+            className="bg-forest-green text-white hover:opacity-90 font-bold"
+          >
             <UserPlus className="w-4 h-4 mr-2" />
             Add User
           </Button>
@@ -259,18 +312,18 @@ export default function UsersOverview() {
                     </div>
                     <div className="col-span-2">
                       <div className="font-mono text-charcoal font-semibold">
-                        {user.quote_count}
+                        {user.quote_count || 0}
                       </div>
                       <div className="text-charcoal/70 text-xs">
-                        {user.accepted_quotes} accepted
+                        {user.accepted_quotes || 0} accepted
                       </div>
                     </div>
                     <div className="col-span-2">
                       <div className="font-mono text-charcoal font-semibold">
-                        ${user.total_revenue.toLocaleString()}
+                        ${(user.total_revenue || 0).toLocaleString()}
                       </div>
                       <div className="text-charcoal/70 text-xs">
-                        {user.acceptance_rate.toFixed(1)}% rate
+                        {(user.acceptance_rate || 0).toFixed(1)}% rate
                       </div>
                     </div>
                     <div className="col-span-2">
@@ -337,6 +390,13 @@ export default function UsersOverview() {
         isOpen={isEditModalOpen}
         onClose={handleCloseModal}
         onUserUpdated={handleUserUpdated}
+      />
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={handleAddModalClose}
+        onUserCreated={handleUserCreated}
       />
     </div>
   )

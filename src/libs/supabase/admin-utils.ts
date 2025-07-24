@@ -88,17 +88,19 @@ export async function revokeAdminRole(targetUserId: string): Promise<{ success: 
 // Get all users with their roles (admin only)
 export async function getUsersWithRoles() {
   try {
+    console.log('Calling supabase RPC: get_users_with_roles')
     const { data, error } = await supabaseAdminClient.rpc('get_users_with_roles')
     
     if (error) {
-      console.error('Error fetching users with roles:', error)
-      return []
+      console.error('RPC get_users_with_roles error:', error)
+      throw new Error(`Database function failed: ${error.message}`)
     }
     
+    console.log('RPC get_users_with_roles success, data:', data)
     return data || []
   } catch (error) {
-    console.error('Error fetching users with roles:', error)
-    return []
+    console.error('getUsersWithRoles() failed:', error)
+    throw error // Re-throw to trigger fallback
   }
 }
 
