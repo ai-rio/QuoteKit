@@ -22,9 +22,14 @@ export async function GET(request: NextRequest) {
     // Get system metrics from PostHog
     const metrics = await getSystemMetrics()
 
+    // Get rate limit stats for monitoring
+    const { getRateLimitStats } = await import('@/libs/posthog/posthog-admin')
+    const rateLimitStats = getRateLimitStats()
+
     return NextResponse.json({
       success: true,
-      data: metrics
+      data: metrics,
+      rate_limits: rateLimitStats
     })
 
   } catch (error) {

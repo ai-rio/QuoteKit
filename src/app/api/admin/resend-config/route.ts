@@ -12,11 +12,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get config from environment variables or database
-    const config = {
-      api_key: process.env.RESEND_API_KEY || '',
-      from_email: process.env.RESEND_FROM_EMAIL || '',
-      from_name: process.env.RESEND_FROM_NAME || 'LawnQuote'
+    // Try to get config from database first, then fallback to environment variables
+    let config = {
+      api_key: '',
+      from_email: '',
+      from_name: 'LawnQuote'
+    }
+
+    try {
+      const { data: dbConfig } = await supabaseAdminClient
+        .from('admin_settings')
+        .select('value')
+        .eq('key', 'resend_config')
+        .single()
+
+      if (dbConfig?.value) {
+        config = { ...config, ...dbConfig.value }
+      }
+    } catch (dbError) {
+      console.log('No database config found, using environment variables')
+    }
+
+    // Fallback to environment variables if no database config
+    if (!config.api_key) {
+      config = {
+        api_key: process.env.RESEND_API_KEY || '',
+        from_email: process.env.RESEND_FROM_EMAIL || '',
+        from_name: process.env.RESEND_FROM_NAME || 'LawnQuote'
+      }
     }
 
     const status = {
