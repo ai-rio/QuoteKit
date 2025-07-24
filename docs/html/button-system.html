@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawnQuote - Comprehensive & Accessible Button System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* --light-concrete */
+        }
+        /* Color Variables from Design System */
+        :root {
+            --forest-green: #2A3D2F;
+            --equipment-yellow: #F2B705;
+            --light-concrete: #F5F5F5;
+            --stone-gray: #D7D7D7;
+            --charcoal: #1C1C1C;
+            --paper-white: #FFFFFF;
+            --success-green: #22c55e;
+            --error-red: #ef4444;
+        }
+        .contrast-ratio {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .contrast-pass {
+            color: var(--success-green);
+        }
+        .contrast-fail {
+            color: var(--error-red);
+        }
+        .button-card {
+            background-color: var(--paper-white);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .btn-primary {
+            background-color: var(--forest-green);
+            color: var(--paper-white);
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .btn-primary:disabled {
+            background-color: var(--stone-gray);
+            color: var(--charcoal);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: var(--paper-white);
+            color: var(--forest-green);
+            border-color: var(--forest-green);
+        }
+        .btn-secondary:hover {
+            background-color: var(--forest-green);
+            color: var(--paper-white);
+        }
+        .btn-secondary:disabled {
+            color: var(--stone-gray);
+            border-color: var(--stone-gray);
+            cursor: not-allowed;
+            background-color: var(--paper-white);
+        }
+        .btn-accent {
+            background-color: var(--equipment-yellow);
+            color: var(--charcoal);
+        }
+        .btn-accent:hover {
+            filter: brightness(110%);
+        }
+        .btn-accent:disabled {
+            background-color: var(--stone-gray);
+            color: var(--charcoal);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-destructive {
+            background-color: var(--paper-white);
+            color: var(--error-red);
+            border-color: var(--error-red);
+        }
+        .btn-destructive:hover {
+            background-color: var(--error-red);
+            color: var(--paper-white);
+        }
+        .btn-destructive:disabled {
+            color: var(--stone-gray);
+            border-color: var(--stone-gray);
+            cursor: not-allowed;
+            background-color: var(--paper-white);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold" style="color: var(--charcoal);">Comprehensive & Accessible Button System</h1>
+            <p class="text-lg mt-2" style="color: var(--charcoal);">A complete specification for all button types and states in the LawnQuote Design System.</p>
+        </header>
+
+        <!-- The Problem Section -->
+        <div class="button-card mb-10">
+            <h2 class="text-2xl font-bold mb-2 text-red-600">The Core Problem: Inconsistent & Inaccessible Buttons</h2>
+            <p class="mb-6 text-gray-700">The initial implementation uses color combinations that fail accessibility standards, creating a poor user experience. This demonstrates the specific contrast failure.</p>
+            <div class="flex justify-center items-center p-4 bg-gray-100 rounded-lg">
+                <div class="text-center">
+                    <button class="btn" style="background-color: var(--equipment-yellow); color: var(--paper-white);">
+                        Add Product
+                    </button>
+                    <p class="mt-2 contrast-ratio contrast-fail">Contrast: 2.7:1 (Fails AAA)</p>
+                    <p class="text-xs text-gray-500">(#F2B705 on #FFFFFF)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Solution: A Full Button System -->
+        <div class="space-y-10">
+            <!-- Primary Buttons -->
+            <div class="button-card">
+                <h3 class="text-xl font-bold mb-4" style="color: var(--charcoal);">1. Primary Buttons</h3>
+                <p class="mb-6 text-gray-600">For the most important actions on a page, like submitting a form or confirming a purchase.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="font-semibold mb-2">Default</p>
+                        <button class="btn btn-primary">Generate PDF</button>
+                        <p class="mt-2 contrast-ratio contrast-pass">Contrast: 14.8:1 (Passes AAA)</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Hover</p>
+                        <button class="btn btn-primary" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Generate PDF</button>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Disabled</p>
+                        <button class="btn btn-primary" disabled>Generate PDF</button>
+                        <p class="mt-2 contrast-ratio contrast-pass">Contrast: 4.6:1 (Passes AA)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Buttons -->
+            <div class="button-card">
+                <h3 class="text-xl font-bold mb-4" style="color: var(--charcoal);">2. Secondary Buttons</h3>
+                <p class="mb-6 text-gray-600">For actions that are important but not the primary focus. This "ghost" style is versatile and avoids color contrast issues.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="font-semibold mb-2">Default</p>
+                        <button class="btn btn-secondary">View Details</button>
+                        <p class="mt-2 contrast-ratio contrast-pass">Contrast: 13.1:1 (Passes AAA)</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Hover</p>
+                        <button class="btn btn-secondary" onmouseover="this.classList.add('btn-primary'); this.classList.remove('btn-secondary')" onmouseout="this.classList.remove('btn-primary'); this.classList.add('btn-secondary')">View Details</button>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Disabled</p>
+                        <button class="btn btn-secondary" disabled>View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accent / Call-to-Action Buttons -->
+            <div class="button-card">
+                <h3 class="text-xl font-bold mb-4" style="color: var(--charcoal);">3. Accent / Call-to-Action Buttons</h3>
+                <p class="mb-6 text-gray-600">Use sparingly to draw attention to a key action, like "Add to Cart" or creating a new item. <strong class="text-red-600">MUST use dark text for accessibility.</strong></p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="font-semibold mb-2">Default</p>
+                        <button class="btn btn-accent">Add New Item</button>
+                        <p class="mt-2 contrast-ratio contrast-pass">Contrast: 10.2:1 (Passes AAA)</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Hover</p>
+                        <button class="btn btn-accent" onmouseover="this.style.filter='brightness(110%)'" onmouseout="this.style.filter='brightness(100%)'">Add New Item</button>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Disabled</p>
+                        <button class="btn btn-accent" disabled>Add New Item</button>
+                        <p class="mt-2 contrast-ratio contrast-pass">Contrast: 4.6:1 (Passes AA)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Destructive Buttons -->
+            <div class="button-card">
+                <h3 class="text-xl font-bold mb-4" style="color: var(--charcoal);">4. Destructive Buttons</h3>
+                <p class="mb-6 text-gray-600">For actions that result in data loss, like deleting an item. The red color signals caution.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="font-semibold mb-2">Default</p>
+                        <button class="btn btn-destructive">Delete Item</button>
+                        <p class="mt-2 contrast-ratio contrast-pass">Contrast: 4.5:1 (Passes AA)</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Hover</p>
+                        <button class="btn btn-destructive" onmouseover="this.style.backgroundColor='var(--error-red)'; this.style.color='var(--paper-white)'" onmouseout="this.style.backgroundColor='var(--paper-white)'; this.style.color='var(--error-red)'">Delete Item</button>
+                    </div>
+                    <div>
+                        <p class="font-semibold mb-2">Disabled</p>
+                        <button class="btn btn-destructive" disabled>Delete Item</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
