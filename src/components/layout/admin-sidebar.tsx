@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
+  ArrowLeft,
   BarChart3, 
   CreditCard,
   Database,
@@ -43,7 +44,7 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const navGroups: NavGroup[] = [
+const navGroups = [
   {
     title: "Overview",
     items: [
@@ -51,11 +52,6 @@ const navGroups: NavGroup[] = [
         title: "Dashboard",
         url: "/admin-dashboard",
         icon: Home,
-      },
-      {
-        title: "Settings",
-        url: "/admin-settings",
-        icon: Settings,
       },
     ]
   },
@@ -131,7 +127,7 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 export function AdminSidebar({ ...props }: AdminSidebarProps) {
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
-    new Set(['overview']) // Default expanded section (only one at a time)
+    new Set() // No sections expanded by default
   )
 
   const toggleSection = (sectionId: string) => {
@@ -165,7 +161,29 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
       </SidebarHeader>
       
       <SidebarContent className="flex-1 px-2">
-        {navGroups.map((group) => {
+        {/* Dashboard - Single item without expandable behavior */}
+        <SidebarGroup>
+          <SidebarMenu className="space-y-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link 
+                  href="/admin-dashboard" 
+                  className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-colors ${
+                    pathname === '/admin-dashboard' || pathname.startsWith('/admin-dashboard/')
+                      ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
+                      : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
+                  }`}
+                >
+                  <Home className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="text-sm">Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        
+        {/* Other expandable sections */}
+        {navGroups.slice(1).map((group) => {
           const sectionId = group.title.toLowerCase().replace(/\s+/g, '-')
           const isExpanded = expandedSections.has(sectionId)
           const isActiveSection = isInSection(group.items, pathname)
@@ -182,8 +200,8 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    {group.title === 'Overview' && <Home className="w-4 h-4" />}
                     {group.title === 'User Management' && <Users className="w-4 h-4" />}
+                    {group.title === 'Billing & Payments' && <CreditCard className="w-4 h-4" />}
                     {group.title === 'Email System' && <Mail className="w-4 h-4" />}
                     {group.title === 'Analytics' && <BarChart3 className="w-4 h-4" />}
                     {group.title}
@@ -239,10 +257,25 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link 
+                href="/admin-settings" 
+                className={`flex items-center p-3 rounded-lg font-medium min-h-[44px] touch-manipulation transition-colors ${
+                  pathname === '/admin-settings' || pathname.startsWith('/admin-settings/')
+                    ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
+                    : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
+                }`}
+              >
+                <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span className="text-sm">Admin Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link 
                 href="/dashboard" 
                 className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation"
               >
-                <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
+                <ArrowLeft className="w-5 h-5 mr-3 flex-shrink-0" />
                 <span className="text-sm">Back to App</span>
               </Link>
             </SidebarMenuButton>
