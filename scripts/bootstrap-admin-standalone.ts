@@ -2,21 +2,32 @@
 
 /**
  * Bootstrap script to create the first admin user
- * Run with: npx tsx scripts/bootstrap-admin.ts <email>
+ * Run with: npx tsx scripts/bootstrap-admin-standalone.ts <email>
  */
 
-// Load environment variables first, before any other imports
+// Load environment variables first
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env.local') })
 
-// Debug environment variables
-console.log('Environment check:')
-console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET')
-
-import { supabaseAdminClient } from '../src/libs/supabase/supabase-admin'
+import { createClient } from '@supabase/supabase-js'
 
 async function bootstrapAdmin(email: string) {
   try {
+    // Get environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    console.log('Environment check:')
+    console.log('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl)
+    console.log('SUPABASE_SERVICE_ROLE_KEY:', serviceRoleKey ? 'SET' : 'NOT SET')
+    
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('Missing required environment variables')
+      return
+    }
+    
+    // Create admin client
+    const supabaseAdminClient = createClient(supabaseUrl, serviceRoleKey)
+    
     console.log(`Setting up admin role for: ${email}`)
     
     // Find the user by email
@@ -62,8 +73,8 @@ async function bootstrapAdmin(email: string) {
 const email = process.argv[2]
 
 if (!email) {
-  console.error('Usage: npx tsx scripts/bootstrap-admin.ts <email>')
-  console.error('Example: npx tsx scripts/bootstrap-admin.ts admin@example.com')
+  console.error('Usage: npx tsx scripts/bootstrap-admin-standalone.ts <email>')
+  console.error('Example: npx tsx scripts/bootstrap-admin-standalone.ts admin@example.com')
   process.exit(1)
 }
 
