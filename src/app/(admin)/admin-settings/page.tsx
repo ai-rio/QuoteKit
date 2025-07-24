@@ -282,9 +282,9 @@ export default function AdminSettingsPage() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               {posthogStatus.isConfigured ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-green" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <AlertCircle className="w-5 h-5 text-equipment-yellow" />
               )}
               <div>
                 <p className="font-medium text-charcoal">PostHog Config</p>
@@ -300,9 +300,9 @@ export default function AdminSettingsPage() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               {posthogStatus.isConnected ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-green" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-red-600" />
+                <AlertCircle className="w-5 h-5 text-error-red" />
               )}
               <div>
                 <p className="font-medium text-charcoal">PostHog Connection</p>
@@ -319,9 +319,9 @@ export default function AdminSettingsPage() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               {resendStatus.isConfigured ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-green" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <AlertCircle className="w-5 h-5 text-equipment-yellow" />
               )}
               <div>
                 <p className="font-medium text-charcoal">Resend Config</p>
@@ -337,9 +337,9 @@ export default function AdminSettingsPage() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               {resendStatus.isConnected ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-green" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-red-600" />
+                <AlertCircle className="w-5 h-5 text-error-red" />
               )}
               <div>
                 <p className="font-medium text-charcoal">Resend Connection</p>
@@ -356,9 +356,9 @@ export default function AdminSettingsPage() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               {stripeStatus.isConfigured ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-green" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <AlertCircle className="w-5 h-5 text-equipment-yellow" />
               )}
               <div>
                 <p className="font-medium text-charcoal">Stripe Config</p>
@@ -374,9 +374,9 @@ export default function AdminSettingsPage() {
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               {stripeStatus.isConnected ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-green" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-red-600" />
+                <AlertCircle className="w-5 h-5 text-error-red" />
               )}
               <div>
                 <p className="font-medium text-charcoal">Stripe Connection</p>
@@ -403,8 +403,8 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-6">
           {/* PostHog Alert Message */}
           {message && (!message.service || message.service === 'posthog') && (
-            <Alert className={message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
-              <AlertDescription className={message.type === 'error' ? 'text-red-700' : 'text-green-700'}>
+            <Alert className={message.type === 'error' ? 'border-error-red bg-error-red/10' : 'border-success-green bg-success-green/10'}>
+              <AlertDescription className={message.type === 'error' ? 'text-error-red' : 'text-success-green'}>
                 {message.text}
               </AlertDescription>
             </Alert>
@@ -421,7 +421,7 @@ export default function AdminSettingsPage() {
                 placeholder="phc_..."
                 value={posthogConfig.project_api_key}
                 onChange={(e) => setPosthogConfig(prev => ({ ...prev, project_api_key: e.target.value }))}
-                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green"
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
             </div>
 
@@ -435,7 +435,7 @@ export default function AdminSettingsPage() {
                 placeholder="phx_..."
                 value={posthogConfig.personal_api_key}
                 onChange={(e) => setPosthogConfig(prev => ({ ...prev, personal_api_key: e.target.value }))}
-                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green"
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
             </div>
 
@@ -448,7 +448,7 @@ export default function AdminSettingsPage() {
                 placeholder="https://us.posthog.com"
                 value={posthogConfig.host}
                 onChange={(e) => setPosthogConfig(prev => ({ ...prev, host: e.target.value }))}
-                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green"
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
             </div>
 
@@ -461,7 +461,7 @@ export default function AdminSettingsPage() {
                 placeholder="12345"
                 value={posthogConfig.project_id}
                 onChange={(e) => setPosthogConfig(prev => ({ ...prev, project_id: e.target.value }))}
-                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green"
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
             </div>
           </div>
@@ -484,7 +484,7 @@ export default function AdminSettingsPage() {
             <Button
               onClick={savePosthogConfig}
               disabled={loading.posthog || !posthogConfig.project_api_key || !posthogConfig.personal_api_key}
-              className="bg-forest-green text-white hover:opacity-90"
+              className="bg-forest-green text-paper-white hover:opacity-90"
             >
               {loading.posthog ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -511,8 +511,8 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-6">
           {/* Resend Alert Message */}
           {message && message.service === 'resend' && (
-            <Alert className={message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
-              <AlertDescription className={message.type === 'error' ? 'text-red-700' : 'text-green-700'}>
+            <Alert className={message.type === 'error' ? 'border-error-red bg-error-red/10' : 'border-success-green bg-success-green/10'}>
+              <AlertDescription className={message.type === 'error' ? 'text-error-red' : 'text-success-green'}>
                 {message.text}
               </AlertDescription>
             </Alert>
@@ -529,7 +529,7 @@ export default function AdminSettingsPage() {
                 placeholder="re_..."
                 value={resendConfig.api_key}
                 onChange={(e) => setResendConfig(prev => ({ ...prev, api_key: e.target.value }))}
-                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green"
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
               <p className="text-xs text-charcoal/60">
                 Found in your Resend dashboard under API Keys
@@ -546,7 +546,7 @@ export default function AdminSettingsPage() {
                 placeholder="noreply@yourdomain.com"
                 value={resendConfig.from_email}
                 onChange={(e) => setResendConfig(prev => ({ ...prev, from_email: e.target.value }))}
-                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green"
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
               <p className="text-xs text-charcoal/60">
                 Must be from a verified domain in Resend
@@ -588,7 +588,7 @@ export default function AdminSettingsPage() {
             <Button
               onClick={saveResendConfig}
               disabled={loading.resend || !resendConfig.api_key || !resendConfig.from_email}
-              className="bg-forest-green text-white hover:opacity-90"
+              className="bg-forest-green text-paper-white hover:opacity-90"
             >
               {loading.resend ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -627,8 +627,8 @@ export default function AdminSettingsPage() {
         <CardContent className="space-y-6">
           {/* Stripe Alert Message */}
           {message && message.service === 'stripe' && (
-            <Alert className={message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
-              <AlertDescription className={message.type === 'error' ? 'text-red-700' : 'text-green-700'}>
+            <Alert className={message.type === 'error' ? 'border-error-red bg-error-red/10' : 'border-success-green bg-success-green/10'}>
+              <AlertDescription className={message.type === 'error' ? 'text-error-red' : 'text-success-green'}>
                 {message.text}
               </AlertDescription>
             </Alert>
@@ -738,7 +738,7 @@ export default function AdminSettingsPage() {
             <Button
               onClick={saveStripeConfig}
               disabled={loading.stripe || !stripeConfig.secret_key || !stripeConfig.publishable_key}
-              className="bg-forest-green text-white hover:opacity-90"
+              className="bg-forest-green text-paper-white hover:opacity-90"
             >
               {loading.stripe ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
