@@ -1,8 +1,8 @@
 # Admin Dashboard Technical Implementation Guide
 
-**Version:** 1.0  
-**Last Updated:** 2025-01-23  
-**Status:** Active Development
+**Version:** 1.1  
+**Last Updated:** 2025-07-24  
+**Status:** Active Development - Sprint 1.4 Planning
 
 ## Architecture Overview
 
@@ -13,6 +13,7 @@
 - **Database:** Supabase PostgreSQL with RLS
 - **Analytics:** PostHog (client + server integration)
 - **Email:** Resend API
+- **Payments:** Stripe API (products, prices, subscriptions)
 - **Authentication:** Supabase Auth
 
 ### Project Structure
@@ -36,13 +37,19 @@ src/
 ├── app/api/admin/                 # Admin API endpoints
 │   ├── posthog-config/           # PostHog configuration
 │   ├── resend-config/            # Resend configuration
+│   ├── stripe-config/            # Stripe configuration & pricing
 │   ├── users/                    # User management APIs
 │   └── metrics/                  # Analytics APIs
+├── app/api/webhooks/             # External service webhooks
+│   └── stripe/                   # Stripe webhook handler
 ├── components/layout/            
 │   └── admin-sidebar.tsx         # Hierarchical navigation
 ├── libs/posthog/                 # PostHog integrations
 │   ├── posthog-admin.ts          # Server-side client
 │   └── posthog-client.ts         # Client-side client
+├── libs/stripe/                  # Stripe integrations
+│   ├── stripe-admin.ts           # Server-side client
+│   └── stripe-webhooks.ts        # Webhook handling utilities
 └── libs/supabase/               # Database clients
     ├── supabase-server-client.ts
     ├── supabase-admin.ts
@@ -68,6 +75,9 @@ CREATE TABLE public.admin_settings (
 
 -- key: 'resend_config'  
 -- value: { "api_key": "re_...", "from_email": "noreply@domain.com", ... }
+
+-- key: 'stripe_config'
+-- value: { "secret_key": "sk_...", "publishable_key": "pk_...", "webhook_secret": "whsec_...", "mode": "test" }
 ```
 
 ### Admin Role System
@@ -85,6 +95,44 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### Stripe Integration Tables (Planned)
+```sql
+-- Store Stripe products for admin management
+CREATE TABLE public.stripe_products (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  stripe_product_id text UNIQUE NOT NULL,
+  name text NOT NULL,
+  description text,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Store Stripe prices for admin management
+CREATE TABLE public.stripe_prices (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  stripe_price_id text UNIQUE NOT NULL,
+  stripe_product_id text NOT NULL,
+  unit_amount integer NOT NULL,
+  currency text NOT NULL,
+  recurring_interval text, -- 'month', 'year', null for one-time
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Webhook event log for debugging and idempotency
+CREATE TABLE public.stripe_webhook_events (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  stripe_event_id text UNIQUE NOT NULL,
+  event_type text NOT NULL,
+  processed boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  processed_at timestamptz,
+  data jsonb
+);
 ```
 
 ## Implementation Status
@@ -109,6 +157,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 // src/app/(admin)/admin-settings/page.tsx
 // - PostHog API key configuration
 // - Resend email configuration  
+// - ⚠️ PENDING: Stripe payment configuration
 // - Connection testing
 // - Secure credential storage
 
@@ -117,6 +166,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 // - POST /api/admin/posthog-config/test
 // - GET/POST /api/admin/resend-config  
 // - POST /api/admin/resend-config/test
+// - ⚠️ PENDING: GET/POST /api/admin/stripe-config
+// - ⚠️ PENDING: POST /api/admin/stripe-config/test
 ```
 
 #### 3. Database Infrastructure
@@ -128,7 +179,53 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ### ❌ Outstanding Implementation
 
-#### 1. User Management (Critical)
+#### 1. Stripe Payment & Pricing Management (Critical - Sprint 1.4)
+```typescript
+// src/app/(admin)/admin-settings/page.tsx
+// Current: Only PostHog and Resend configurations
+// Needed: Stripe configuration section with pricing management
+
+interface StripeConfig {
+  secret_key: string
+  publishable_key: string
+  webhook_secret: string
+  mode: 'test' | 'live'
+}
+
+interface StripeProduct {
+  id: string
+  stripe_product_id: string
+  name: string
+  description?: string
+  prices: StripePrice[]
+  active: boolean
+}
+
+interface StripePrice {
+  id: string
+  stripe_price_id: string
+  unit_amount: number
+  currency: string
+  recurring_interval?: 'month' | 'year'
+  active: boolean
+}
+
+// Required API endpoints:
+// GET/POST /api/admin/stripe-config - Configuration management
+// POST /api/admin/stripe-config/test - Connection testing
+// GET/POST /api/admin/stripe-config/products - Product management
+// GET/POST /api/admin/stripe-config/prices - Price management
+// POST /api/webhooks/stripe - Webhook handler for real-time sync
+
+// Required UI components:
+// - Stripe configuration form with API key inputs
+// - Products list with CRUD operations
+// - Pricing plans management interface
+// - Real-time sync status indicators
+// - Test/Live mode toggle
+```
+
+#### 2. User Management (Critical)
 ```typescript
 // src/app/(admin)/users/overview/page.tsx
 // Current: Mock data only
@@ -347,6 +444,12 @@ RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL=noreply@domain.com
 RESEND_FROM_NAME=LawnQuote
 
+# Stripe Configuration (Sprint 1.4)
+STRIPE_SECRET_KEY=sk_test_... # or sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_test_... # or pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_MODE=test # or live
+
 # Admin Configuration
 ADMIN_DEFAULT_EMAIL=admin@domain.com
 ```
@@ -412,10 +515,12 @@ await logAdminAction({
 
 ## Next Steps
 
-### Immediate (Sprint 1)
-1. **Enable admin role checking** in layout.tsx
-2. **Replace mock user data** with real Supabase integration
-3. **Implement user management APIs** with proper validation
+### Immediate (Sprint 1.4) 🔄 **IN PROGRESS**
+1. **Implement Stripe configuration** in admin-settings page
+2. **Create Stripe API endpoints** following PostHog/Resend patterns
+3. **Build pricing management UI** for products and prices
+4. **Set up webhook system** for real-time synchronization
+5. **Add Stripe connection testing** functionality
 
 ### Short-term (Sprint 2)  
 1. **Real PostHog integration** for dashboard metrics
@@ -429,4 +534,4 @@ await logAdminAction({
 
 ---
 
-**Ready to begin Sprint 1:** Admin role verification and real user management implementation
+**Currently implementing Sprint 1.4:** Complete Epic 1 with Stripe payment and pricing management system
