@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Loader2, Settings, Shield, User, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Loader2, Settings, Shield, User, UserPlus, X } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -50,7 +50,7 @@ export function UserEditModal({ user, isOpen, onClose, onUserUpdated }: UserEdit
   const [isLoading, setIsLoading] = useState(false)
 
   // Update form data when user changes
-  useState(() => {
+  useEffect(() => {
     if (user) {
       setFormData({
         full_name: user.full_name || '',
@@ -188,11 +188,11 @@ export function UserEditModal({ user, isOpen, onClose, onUserUpdated }: UserEdit
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-charcoal text-section-title flex items-center gap-2">
-            <User className="h-5 w-5" />
+          <DialogTitle className="text-black text-section-title flex items-center gap-2 font-bold">
+            <User className="h-5 w-5 text-black" />
             Edit User
           </DialogTitle>
-          <DialogDescription className="text-charcoal/70">
+          <DialogDescription className="text-charcoal">
             Manage user profile, permissions, and account status
           </DialogDescription>
         </DialogHeader>
@@ -242,101 +242,68 @@ export function UserEditModal({ user, isOpen, onClose, onUserUpdated }: UserEdit
 
               {/* Role Management */}
               <div className="grid gap-3">
-                <Label className="text-label text-charcoal font-medium flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
+                <Label className="text-label text-charcoal font-medium">
                   User Role
                 </Label>
-                <div className="flex gap-2">
+                <div className="flex space-x-2">
                   <Button
                     type="button"
-                    variant={formData.role === 'user' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleRoleChange('user')}
                     disabled={isLoading}
-                    className={
-                      formData.role === 'user'
-                        ? 'bg-forest-green text-white hover:opacity-90'
-                        : 'border-stone-gray text-charcoal hover:bg-stone-gray/20'
+                    className={formData.role === 'user' 
+                      ? 'bg-forest-green text-white' 
+                      : 'bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20'
                     }
                   >
-                    <User className="h-4 w-4 mr-1" />
-                    User
+                    Regular User
                   </Button>
                   <Button
                     type="button"
-                    variant={formData.role === 'admin' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleRoleChange('admin')}
                     disabled={isLoading}
-                    className={
-                      formData.role === 'admin'
-                        ? 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90'
-                        : 'border-stone-gray text-charcoal hover:bg-stone-gray/20'
+                    className={formData.role === 'admin' 
+                      ? 'bg-equipment-yellow text-charcoal' 
+                      : 'bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20'
                     }
                   >
-                    <Shield className="h-4 w-4 mr-1" />
-                    Admin
+                    Administrator
                   </Button>
                 </div>
               </div>
 
               {/* Account Status */}
               <div className="grid gap-3">
-                <Label className="text-label text-charcoal font-medium flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
+                <Label className="text-label text-charcoal font-medium">
                   Account Status
                 </Label>
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={handleStatusToggle}
                   disabled={isLoading}
-                  className={`border-stone-gray text-charcoal hover:bg-stone-gray/20 justify-start ${
-                    formData.status === 'inactive' ? 'border-red-300 text-red-600' : ''
-                  }`}
+                  className={formData.status === 'active' 
+                    ? 'bg-forest-green text-white hover:opacity-90' 
+                    : 'bg-stone-gray text-charcoal hover:bg-stone-gray/80'
+                  }
                 >
                   {formData.status === 'active' ? 'Disable Account' : 'Enable Account'}
                 </Button>
               </div>
 
-              {/* User Statistics */}
-              <div className="bg-light-concrete p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-charcoal mb-3">Account Statistics</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-charcoal/70">Total Quotes</p>
-                    <p className="font-mono font-semibold text-charcoal">{user.quote_count}</p>
-                  </div>
-                  <div>
-                    <p className="text-charcoal/70">Total Revenue</p>
-                    <p className="font-mono font-semibold text-charcoal">${user.total_revenue.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-charcoal/70">Accepted Quotes</p>
-                    <p className="font-mono font-semibold text-charcoal">{user.accepted_quotes}</p>
-                  </div>
-                  <div>
-                    <p className="text-charcoal/70">Acceptance Rate</p>
-                    <p className="font-mono font-semibold text-charcoal">{user.acceptance_rate.toFixed(1)}%</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-stone-gray">
+              {/* Form Actions */}
+              <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={onClose}
-                  disabled={isLoading}
-                  className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
+                  className="bg-paper-white text-charcoal hover:bg-stone-gray/20 border border-stone-gray"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-forest-green text-white hover:opacity-90"
+                  className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
                 >
                   {isLoading ? (
                     <>
@@ -353,19 +320,10 @@ export function UserEditModal({ user, isOpen, onClose, onUserUpdated }: UserEdit
           
           <TabsContent value="activity" className="space-y-4">
             <UserActivityTimeline user={user} />
-            <div className="flex justify-end pt-4 border-t border-stone-gray">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="border-stone-gray text-charcoal hover:bg-stone-gray/20"
-              >
-                Close
-              </Button>
-            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
   )
 }
+
