@@ -1,13 +1,13 @@
 # Admin Dashboard Completion Roadmap
 
-**Epic:** Complete PostHog Admin Dashboard Implementation  
+**Epic:** Complete Admin Dashboard Implementation  
 **Project:** LawnQuote  
-**Last Updated:** 2025-07-23  
-**Status:** Sprint 1 Complete - Sprint 2 Preparation Complete  
+**Last Updated:** 2025-07-24  
+**Status:** Sprint 1 Complete - Sprint 1.4 Pending (Stripe Integration)  
 
 ## Product Vision
 
-> "Enable administrators to manage users, monitor analytics, and configure system integrations through a comprehensive, secure admin dashboard with real-time PostHog analytics integration."
+> "Enable administrators to manage users, monitor analytics, and configure system integrations (PostHog, Resend, Stripe) through a comprehensive, secure admin dashboard with real-time analytics and pricing management capabilities."
 
 ## Current State Assessment
 
@@ -16,6 +16,7 @@
 - [x] Hierarchical sidebar navigation with expandable sections
 - [x] PostHog configuration UI and API endpoints  
 - [x] Resend email configuration UI and API endpoints
+- [ ] **NEW:** Stripe configuration UI and pricing management system
 - [x] Database schema with admin_settings table
 - [x] Design system compliance (shadcn-ui v4)
 - [x] Basic route structure and layout
@@ -30,6 +31,7 @@
 - [x] **Critical:** Admin role verification disabled (commented out) ✅ **COMPLETED**
 - [x] **Critical:** User management uses mock data only ✅ **COMPLETED**
 - [x] **Critical:** User management actions missing ✅ **COMPLETED**
+- [ ] **Critical:** Stripe pricing management system not implemented
 - [ ] **High:** PostHog analytics showing fallback data
 - [ ] **High:** All analytics pages are placeholders
 - [ ] **Medium:** Email system functionality incomplete
@@ -40,8 +42,8 @@
 
 ### Epic 1: Foundation & Security (Must Have)
 **Priority:** P0 - Critical  
-**Sprint:** 1  
-**Story Points:** 21
+**Sprint:** 1 & 1.4  
+**Story Points:** 34
 
 #### User Story 1.1: Admin Role Verification
 **As an** admin  
@@ -133,6 +135,52 @@
 - **Design System:** Full compliance with LawnQuote design system specifications
 
 **DoD:** ✅ **COMPLETED** - Admin can fully manage user accounts through the UI with comprehensive controls
+
+#### User Story 1.4: Stripe Payment & Pricing Management
+**As an** admin  
+**I want** to manage Stripe configuration and pricing plans directly from the admin UI  
+**So that** I can configure payment processing and manage subscription tiers without accessing external systems
+
+**Status:** 🔄 **PENDING** (Sprint 1.4)
+
+**Acceptance Criteria:**
+- [ ] Configure Stripe API keys (test/live mode) through admin UI
+- [ ] Test Stripe connection and validate API keys
+- [ ] Create and edit products through admin interface
+- [ ] Manage pricing plans with different billing intervals
+- [ ] Real-time synchronization between admin UI and Stripe dashboard via webhooks
+- [ ] View subscription metrics and customer data
+
+**Tasks:**
+- [ ] Create Stripe configuration section in admin-settings page
+- [ ] Implement Stripe API endpoints following PostHog/Resend patterns
+- [ ] Build product and pricing management UI components
+- [ ] Set up webhook endpoints for real-time synchronization
+- [ ] Add Stripe connection testing functionality
+- [ ] Implement pricing plan CRUD operations
+- [ ] Add subscription metrics dashboard
+
+**Implementation Details:**
+- **Configuration:** Stripe secret/publishable keys, webhook secrets, test/live mode toggle
+- **API Endpoints:** 
+  - `GET/POST /api/admin/stripe-config` - Configuration management
+  - `POST /api/admin/stripe-config/test` - Connection testing
+  - `GET/POST /api/admin/stripe-config/products` - Product management
+  - `GET/POST /api/admin/stripe-config/prices` - Price management  
+  - `POST /api/webhooks/stripe` - Webhook handler for real-time sync
+- **Features:** Product creation, price management, multi-currency support, trial periods
+- **UI/UX:** Consistent with PostHog/Resend configuration patterns, real-time validation
+- **Testing:** Unit tests for API endpoints, integration tests for webhook handling
+- **Security:** API key masking, webhook signature verification, admin role protection
+
+**Story Points:** 13
+
+**Dependencies:**
+- Existing admin authentication system
+- Admin settings database table
+- Stripe account setup and API keys
+
+**DoD:** Admin can fully configure Stripe payments and manage pricing plans through the UI with real-time synchronization
 
 ### Epic 2: PostHog Analytics Integration (Should Have)
 **Priority:** P1 - High  
@@ -253,6 +301,20 @@
 - ✅ 40+ Jest test cases for quality assurance
 - ✅ Full design system compliance
 
+### Sprint 1.4: Stripe Integration (Week 2.5) 🔄 **PENDING**
+**Goal:** Complete Epic 1 with Stripe payment and pricing management system
+
+**Capacity:** 13 story points
+**Sprint Items:**
+- User Story 1.4: Stripe Payment & Pricing Management (13 pts)
+
+**Sprint Objectives:**
+- Extend admin-settings page with Stripe configuration section
+- Implement Stripe API endpoints following established patterns
+- Build pricing management UI for products and pricing plans
+- Set up webhook system for real-time synchronization
+- Enable full pricing plan management from admin interface
+
 ### Sprint 2: Analytics (Weeks 3-4)  
 **Goal:** Implement real PostHog analytics integration
 
@@ -286,8 +348,9 @@
 3. ~~**UX:** Missing loading states and error boundaries~~ ✅ **RESOLVED** (Story 1.2)
 4. ~~**Data:** Mock data throughout admin features~~ ✅ **RESOLVED** (Story 1.2)
 5. ~~**User Management:** No user account management capabilities~~ ✅ **RESOLVED** (Story 1.3)
-6. **TypeScript:** Database schema types need regeneration for new admin tables (admin_settings, admin_actions)
-7. **Testing:** React Testing Library setup needed enhancement ✅ **RESOLVED** (Story 1.3)
+6. **Integration:** No Stripe payment management system (Story 1.4)
+7. **TypeScript:** Database schema types need regeneration for new admin tables (admin_settings, admin_actions)
+8. **Testing:** React Testing Library setup needed enhancement ✅ **RESOLVED** (Story 1.3)
 
 ### Risk Assessment
 | Risk | Impact | Probability | Mitigation |
@@ -296,6 +359,9 @@
 | Admin security breach | Critical | Very Low | ✅ Admin role verification implemented + ongoing security review |
 | Poor performance with large datasets | Medium | ~~High~~ **Low** | ✅ Pagination and lazy loading implemented |
 | PostHog service downtime | Medium | Low | ✅ Graceful fallbacks and error handling implemented |
+| Stripe API rate limits | High | Medium | Implement webhook caching and retry logic |
+| Stripe webhook delivery failures | High | Medium | Implement webhook retry mechanism and manual sync |
+| Payment processing vulnerabilities | Critical | Low | Use Stripe's secure API patterns, never store card data |
 
 ## Success Metrics
 
@@ -317,6 +383,7 @@
 - PostHog API availability and rate limits
 - Supabase auth service reliability  
 - Resend email service integration
+- Stripe API availability and webhook delivery
 
 ### Internal Dependencies
 - Database migrations applied
