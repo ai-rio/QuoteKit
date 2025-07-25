@@ -51,12 +51,16 @@ export function QuoteTermsCard({
             value={preferredCurrency}
             onValueChange={(value) => onFieldChange('preferred_currency', value)}
           >
-            <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+            <SelectTrigger className="min-h-[44px] border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green focus:ring-2 focus:ring-offset-1">
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-paper-white border-stone-gray shadow-lg max-h-[200px] overflow-y-auto">
               {CURRENCY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value}
+                  className="min-h-[44px] text-charcoal hover:bg-light-concrete focus:bg-light-concrete cursor-pointer"
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -66,14 +70,14 @@ export function QuoteTermsCard({
 
         {/* Quote Terms */}
         <div className="grid gap-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <Label htmlFor="quote-terms" className="text-label text-charcoal font-medium">
               Default Quote Terms & Conditions
             </Label>
             <button
               type="button"
               onClick={handleUseDefaultTerms}
-              className="text-sm text-forest-green hover:text-forest-green/80 font-medium"
+              className="min-h-[44px] px-4 py-2 text-sm text-forest-green hover:text-forest-green/80 hover:bg-forest-green/5 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-1"
             >
               Use Default Terms
             </button>
@@ -81,7 +85,7 @@ export function QuoteTermsCard({
           <Textarea
             id="quote-terms"
             name="quote_terms"
-            className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 resize-none min-h-[200px]"
+            className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 resize-none min-h-[180px] sm:min-h-[200px]"
             placeholder="Enter your standard terms and conditions that will appear on quotes..."
             rows={8}
             value={quoteTerms}
