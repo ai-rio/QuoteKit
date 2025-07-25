@@ -328,7 +328,14 @@ For delete actions. Uses error color for clear visual hierarchy.
 
 ### Breakpoint Strategy
 ```css
-/* Mobile First Approach */
+/* Mobile First Approach - Tailwind Breakpoints */
+/* xs: 475px - Extra small phones */
+/* sm: 640px - Small tablets/large phones */
+/* md: 768px - Tablets */
+/* lg: 1024px - Small laptops */
+/* xl: 1280px - Large laptops */
+/* 2xl: 1536px - Desktop monitors */
+
 .quote-section {
   /* Mobile: Stack vertically */
   @apply flex flex-col gap-4;
@@ -342,11 +349,229 @@ For delete actions. Uses error color for clear visual hierarchy.
 }
 ```
 
+### Core Responsive Patterns
+
+#### 1. Stats Cards Layout
+```tsx
+/* 2x2 grid on mobile, 4 columns on desktop */
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <Card className="bg-paper-white border-stone-gray">
+    <CardContent className="p-6">
+      <div className="flex items-center">
+        <Package className="h-8 w-8 text-forest-green" />
+        <div className="ml-4">
+          <p className="text-sm font-medium text-charcoal/60">Total Items</p>
+          <p className="text-2xl font-bold text-charcoal">123</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</div>
+```
+
+#### 2. Table → Card Responsive Pattern
+```tsx
+/* Desktop Table View (lg+) */
+<div className="hidden lg:block">
+  <Table>
+    <TableHeader>
+      <TableRow className="border-stone-gray">
+        <TableHead className="text-charcoal font-semibold">Name</TableHead>
+        <TableHead className="text-charcoal font-semibold">Category</TableHead>
+        <TableHead className="text-charcoal font-semibold">Status</TableHead>
+        <TableHead className="text-charcoal font-semibold w-20">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {items.map((item) => (
+        <TableRow key={item.id} className="border-stone-gray hover:bg-light-concrete/50">
+          <TableCell className="text-charcoal">{item.name}</TableCell>
+          <TableCell className="text-charcoal">{item.category}</TableCell>
+          <TableCell>
+            <Badge className="bg-success-green text-paper-white">Active</Badge>
+          </TableCell>
+          <TableCell>
+            <div className="flex space-x-1">
+              <button className="w-8 h-8 bg-light-concrete text-charcoal rounded-lg hover:bg-stone-gray/20">
+                <Edit className="w-4 h-4" />
+              </button>
+            </div>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>
+
+/* Mobile Card View (<lg) */
+<div className="lg:hidden space-y-3 p-4">
+  {items.map((item) => (
+    <div key={item.id} className="bg-light-concrete/50 rounded-lg p-4 border border-stone-gray">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-charcoal">{item.name}</h3>
+          <p className="text-sm text-charcoal/60">{item.subcategory}</p>
+        </div>
+        <div className="flex space-x-2 ml-3">
+          <button className="w-10 h-10 bg-light-concrete text-charcoal rounded-lg hover:bg-stone-gray/20">
+            <Edit className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 text-sm">
+        <div>
+          <span className="text-charcoal/60">Category:</span>
+          <p className="text-charcoal font-medium">{item.category}</p>
+        </div>
+        <div>
+          <span className="text-charcoal/60">Status:</span>
+          <div className="mt-1">
+            <Badge className="bg-success-green text-paper-white">Active</Badge>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+#### 3. Filter Controls Responsive Layout
+```tsx
+/* Responsive filter layout */
+<Card className="bg-paper-white border-stone-gray">
+  <CardContent className="p-4">
+    <div className="space-y-4">
+      {/* Search - Full width on all devices */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-charcoal/60 h-4 w-4" />
+        <Input
+          placeholder="Search items..."
+          className="pl-10 bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+        />
+      </div>
+      
+      {/* Filter dropdowns - Stack on mobile, side by side on desktop */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Select>
+          <SelectTrigger className="bg-light-concrete text-charcoal border-stone-gray">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+        </Select>
+        <Select>
+          <SelectTrigger className="bg-light-concrete text-charcoal border-stone-gray">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+        </Select>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+```
+
+#### 4. Form Layout Responsive Patterns
+```tsx
+/* Form fields - Single column on mobile, two columns on larger screens */
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <div className="grid gap-3">
+    <Label className="text-label text-charcoal font-medium">Unit</Label>
+    <Input className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60" />
+  </div>
+  <div className="grid gap-3">
+    <Label className="text-label text-charcoal font-medium">Cost</Label>
+    <Input className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 font-mono" />
+  </div>
+</div>
+```
+
+#### 5. Dialog/Modal Responsive Design
+```tsx
+/* Mobile-friendly dialogs */
+<Dialog>
+  <DialogContent className="bg-paper-white border-stone-gray max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle className="text-charcoal">Modal Title</DialogTitle>
+    </DialogHeader>
+    
+    {/* Form content with responsive layout */}
+    <form className="space-y-4">
+      {/* Form fields stack on mobile */}
+    </form>
+    
+    <DialogFooter className="flex-col sm:flex-row gap-2">
+      <Button variant="outline" className="bg-paper-white text-charcoal border-stone-gray hover:bg-stone-gray/20">
+        Cancel
+      </Button>
+      <Button className="bg-forest-green text-paper-white hover:opacity-90">
+        Save
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
 ### Mobile Optimizations
-- **Tables → Cards**: Line items convert to cards on mobile
-- **Touch Targets**: Minimum 44px for buttons and interactive elements
-- **Typography**: Maintain readability with appropriate scaling
-- **Spacing**: Adequate padding for thumb-friendly navigation
+
+#### Touch Targets & Accessibility
+- **Minimum Touch Target**: 44px (w-10 h-10 for icon buttons, py-3 for text buttons)
+- **Button Spacing**: Minimum 8px between interactive elements
+- **Focus States**: Visible focus rings for keyboard navigation
+- **Scroll Areas**: Proper overflow handling for long content
+
+#### Typography Scaling
+```tsx
+/* Responsive text sizing */
+<h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-charcoal">
+  Main Heading
+</h1>
+<p className="text-sm sm:text-base text-charcoal/70">
+  Body text that scales appropriately
+</p>
+```
+
+#### Spacing & Layout
+```tsx
+/* Responsive padding and margins */
+<div className="p-4 sm:p-6 md:p-8">
+  <div className="space-y-4 sm:space-y-6">
+    {/* Content with appropriate spacing */}
+  </div>
+</div>
+```
+
+### Search Autocomplete Pattern
+```tsx
+/* Mobile-friendly autocomplete */
+<div className="relative">
+  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-charcoal/60 h-4 w-4 z-10" />
+  <Input
+    placeholder="Search items..."
+    className="pl-10 bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+    autoComplete="off"
+  />
+  
+  {/* Autocomplete dropdown */}
+  {showSuggestions && (
+    <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-paper-white border border-stone-gray rounded-lg shadow-lg max-h-48 overflow-y-auto">
+      {suggestions.map((suggestion, index) => (
+        <div
+          key={suggestion}
+          className={`px-4 py-3 cursor-pointer text-sm transition-colors ${
+            index === selectedIndex
+              ? 'bg-forest-green text-paper-white'
+              : 'text-charcoal hover:bg-light-concrete'
+          }`}
+        >
+          <div className="flex items-center">
+            <Search className="h-3 w-3 mr-2 opacity-60" />
+            <span className="truncate">{suggestion}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+```
 
 ## 🎯 Interactive States
 
@@ -659,6 +884,15 @@ Before implementing ANY new story, verify:
 - [ ] Cards: `bg-paper-white border-stone-gray shadow-sm`
 - [ ] Dialogs: `bg-paper-white border-stone-gray`
 
+**7. Responsive Design Compliance** ✅
+- [ ] Stats cards: `grid-cols-2 md:grid-cols-4` layout
+- [ ] Tables: Desktop table view `hidden lg:block`, Mobile card view `lg:hidden`
+- [ ] Filter controls: `flex-col sm:flex-row gap-3` for dropdowns
+- [ ] Form fields: `grid-cols-1 sm:grid-cols-2` for side-by-side inputs
+- [ ] Dialog footers: `flex-col sm:flex-row gap-2`
+- [ ] Touch targets: Minimum `w-10 h-10` (44px) for mobile
+- [ ] Dialog content: `max-h-[90vh] overflow-y-auto` for mobile scrolling
+
 ### 🔍 POST-IMPLEMENTATION VERIFICATION
 
 After completing ANY story:
@@ -681,6 +915,20 @@ After completing ANY story:
    - No color transitions that break contrast
    - Consistent behavior across all interactive elements
 
+4. **Test responsive design**:
+   - Resize browser from 375px (mobile) to 1920px (desktop)
+   - Verify tables convert to cards on mobile (`lg` breakpoint)
+   - Check touch targets are minimum 44px on mobile
+   - Confirm dialogs are scrollable and don't overflow viewport
+   - Test form layouts stack properly on small screens
+   - Verify filter controls stack vertically on mobile
+
+5. **Mobile device testing**:
+   - Test on actual mobile devices when possible
+   - Verify touch interactions work smoothly
+   - Check autocomplete dropdowns don't extend beyond viewport
+   - Confirm scroll behavior in dialogs and long lists
+
 ### ⚠️ COMMON VIOLATION PATTERNS TO AVOID
 
 1. **Card Subheaders**: Use `text-charcoal` not `text-gray-600`
@@ -691,6 +939,14 @@ After completing ANY story:
 6. **❌ INPUT BACKGROUND ERROR**: NEVER use `bg-paper-white` for inputs - always `bg-light-concrete`
 7. **Form Input Text**: Always include `text-charcoal` for input readability
 8. **Placeholder Text**: Always include `placeholder:text-charcoal/60` for proper contrast
+
+**Responsive Design Violations:**
+9. **❌ MOBILE TABLE ERROR**: NEVER leave tables without mobile card alternatives
+10. **❌ TOUCH TARGET ERROR**: NEVER use buttons smaller than 44px (`w-10 h-10`)
+11. **❌ DIALOG OVERFLOW**: NEVER create dialogs without `max-h-[90vh] overflow-y-auto`
+12. **❌ FORM LAYOUT ERROR**: NEVER use fixed `grid-cols-2` - always `grid-cols-1 sm:grid-cols-2`
+13. **❌ STATS LAYOUT ERROR**: Use `grid-cols-2 md:grid-cols-4` not `grid-cols-1 md:grid-cols-4`
+14. **❌ FILTER STACKING**: Use `flex-col sm:flex-row` for filter controls, not fixed `flex-row`
 
 ### 📖 STORY IMPLEMENTATION WORKFLOW
 

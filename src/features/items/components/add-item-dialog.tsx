@@ -85,7 +85,7 @@ export function AddItemDialog({ onItemAdded, children, categories }: AddItemDial
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[900px] bg-paper-white border-stone-gray max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[1200px] bg-paper-white border-stone-gray max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-charcoal text-lg font-bold">Add Item to Library</DialogTitle>
           

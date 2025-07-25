@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('global_items')
+      .from('global_items' as any)
       .update({
         ...updateData,
         updated_at: new Date().toISOString()
@@ -189,7 +189,7 @@ export async function DELETE(request: NextRequest) {
 
     // Soft delete by setting is_active to false
     const { data, error } = await supabase
-      .from('global_items')
+      .from('global_items' as any)
       .update({ 
         is_active: false,
         updated_at: new Date().toISOString()
