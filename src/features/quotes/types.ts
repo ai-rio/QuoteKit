@@ -18,8 +18,10 @@ export interface QuoteLineItem {
 export interface Quote {
   id: string;
   user_id: string;
-  client_name: string;
-  client_contact: string | null;
+  // Client information - new client_id field takes precedence
+  client_id?: string | null;
+  client_name: string; // Kept for backward compatibility
+  client_contact: string | null; // Kept for backward compatibility
   quote_data: QuoteLineItem[];
   subtotal: number;
   tax_rate: number;
@@ -46,8 +48,10 @@ export interface QuoteCalculation {
 }
 
 export interface CreateQuoteData {
-  client_name: string;
-  client_contact: string | null;
+  // Client information - prefer client_id over client_name
+  client_id?: string | null;
+  client_name: string; // Fallback if no client_id provided
+  client_contact: string | null; // Fallback if no client_id provided
   quote_data: QuoteLineItem[];
   tax_rate: number;
   markup_rate: number;
@@ -59,8 +63,10 @@ export interface CreateQuoteData {
 // New interface for draft save functionality
 export interface SaveDraftData {
   id?: string; // If provided, update existing draft
-  client_name?: string;
-  client_contact?: string | null;
+  // Client information - prefer client_id over client_name
+  client_id?: string | null;
+  client_name?: string; // Fallback if no client_id provided
+  client_contact?: string | null; // Fallback if no client_id provided
   quote_data?: QuoteLineItem[];
   tax_rate?: number;
   markup_rate?: number;
