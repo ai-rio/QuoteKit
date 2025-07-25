@@ -68,7 +68,7 @@ BEGIN
   WHERE s.user_id = get_user_tier.user_id 
     AND s.status IN ('active', 'trialing')
     AND s.current_period_end > NOW()
-  ORDER BY s.created_at DESC
+  ORDER BY s.created DESC
   LIMIT 1;
   
   IF FOUND THEN
@@ -183,15 +183,17 @@ CREATE OR REPLACE FUNCTION public.copy_global_item_to_personal(
 )
 RETURNS UUID AS $$
 DECLARE
-  global_item RECORD;
-  personal_item_id UUID;
+  v_global_item RECORD;
+  v_personal_item_id UUID;
+  v_input_global_item_id UUID := global_item_id;
+  v_input_custom_cost NUMERIC(10, 2) := custom_cost;
 BEGIN
   -- Check if user can access this item
-  SELECT * INTO global_item
-  FROM public.global_items
-  WHERE id = copy_global_item_to_personal.global_item_id
-    AND is_active = TRUE
-    AND public.can_access_tier(access_tier);
+  SELECT * INTO v_global_item
+  FROM public.global_items gi
+  WHERE gi.id = v_input_global_item_id
+    AND gi.is_active = TRUE
+    AND public.can_access_tier(gi.access_tier);
   
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Global item not found or access denied';
@@ -207,23 +209,27 @@ BEGIN
     tags
   ) VALUES (
     auth.uid(),
-    global_item.name,
-    global_item.unit,
-    COALESCE(custom_cost, global_item.cost),
-    COALESCE(global_item.subcategory, (SELECT name FROM public.global_categories WHERE id = global_item.category_id)),
-    global_item.tags
-  ) RETURNING id INTO personal_item_id;
+    v_global_item.name,
+    v_global_item.unit,
+    COALESCE(v_input_custom_cost, v_global_item.cost),
+    COALESCE(v_global_item.subcategory, (SELECT name FROM public.global_categories WHERE id = v_global_item.category_id)),
+    v_global_item.tags
+  ) RETURNING id INTO v_personal_item_id;
   
-  -- Track usage
-  INSERT INTO public.user_global_item_usage (user_id, global_item_id, last_used_at, usage_count)
-  VALUES (auth.uid(), copy_global_item_to_personal.global_item_id, NOW(), 1)
-  ON CONFLICT (user_id, global_item_id) 
-  DO UPDATE SET 
-    last_used_at = NOW(),
-    usage_count = user_global_item_usage.usage_count + 1,
-    updated_at = NOW();
+  -- Track usage - use separate INSERT without ON CONFLICT to avoid ambiguity
+  BEGIN
+    INSERT INTO public.user_global_item_usage (user_id, global_item_id, last_used_at, usage_count)
+    VALUES (auth.uid(), v_input_global_item_id, NOW(), 1);
+  EXCEPTION WHEN unique_violation THEN
+    UPDATE public.user_global_item_usage 
+    SET last_used_at = NOW(),
+        usage_count = usage_count + 1,
+        updated_at = NOW()
+    WHERE user_id = auth.uid() 
+      AND global_item_id = v_input_global_item_id;
+  END;
   
-  RETURN personal_item_id;
+  RETURN v_personal_item_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

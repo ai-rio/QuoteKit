@@ -33,28 +33,42 @@ export async function getLineItems(): Promise<ActionResponse<LineItem[]>> {
 
 export async function createLineItem(formData: FormData): Promise<ActionResponse<LineItem>> {
   try {
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    });
+    
     const supabase = await createSupabaseServerClient();
     
+    console.log('Creating line item - checking authentication...');
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error('Authentication failed:', userError);
       return { data: null, error: { message: 'User not authenticated' } };
     }
+
+    console.log('User authenticated:', user.id);
 
     const name = formData.get('name') as string;
     const unit = formData.get('unit') as string;
     const cost = parseFloat(formData.get('cost') as string);
     const category = formData.get('category') as string;
 
+    console.log('Form data received:', { name, unit, cost, category });
+
     // Validation
     if (!name?.trim()) {
+      console.error('Validation failed: Item name is required');
       return { data: null, error: { message: 'Item name is required' } };
     }
     
     if (!unit?.trim()) {
+      console.error('Validation failed: Unit is required');
       return { data: null, error: { message: 'Unit is required' } };
     }
     
     if (isNaN(cost) || cost < 0) {
+      console.error('Validation failed: Invalid cost:', cost);
       return { data: null, error: { message: 'Cost must be a valid positive number' } };
     }
 
@@ -66,6 +80,8 @@ export async function createLineItem(formData: FormData): Promise<ActionResponse
       category: category?.trim() || null,
     };
 
+    console.log('Inserting item data:', itemData);
+
     const { data, error } = await supabase
       .from('line_items')
       .insert(itemData)
@@ -73,12 +89,14 @@ export async function createLineItem(formData: FormData): Promise<ActionResponse
       .single();
 
     if (error) {
+      console.error('Database error creating line item:', error);
       return { data: null, error };
     }
 
+    console.log('Line item created successfully:', data);
     return { data, error: null };
   } catch (error) {
-    console.error('Error creating line item:', error);
+    console.error('Unexpected error creating line item:', error);
     return { data: null, error: { message: 'Failed to create line item' } };
   }
 }

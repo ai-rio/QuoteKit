@@ -126,16 +126,28 @@ export async function copyGlobalItemToPersonal(
   customCost?: number
 ): Promise<ActionResponse<string>> {
   try {
+    console.log('Starting copyGlobalItemToPersonal:', { globalItemId, customCost });
+    
     const supabase = await createSupabaseServerClient();
     
+    console.log('Checking user authentication...');
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error('User authentication failed:', userError);
       return { data: null, error: { message: 'User not authenticated' } };
     }
 
+    console.log('User authenticated:', user.id);
+
     if (!globalItemId) {
+      console.error('Global item ID is missing');
       return { data: null, error: { message: 'Global item ID is required' } };
     }
+
+    console.log('Calling database function copy_global_item_to_personal with params:', {
+      global_item_id: globalItemId,
+      custom_cost: customCost || null
+    });
 
     // Call the database function to copy the item
     const { data, error } = await supabase.rpc('copy_global_item_to_personal', {
@@ -143,13 +155,17 @@ export async function copyGlobalItemToPersonal(
       custom_cost: customCost || null
     });
 
+    console.log('Database function result:', { data, error });
+
     if (error) {
+      console.error('Database error copying global item:', error);
       return { data: null, error };
     }
 
+    console.log('Global item copied successfully:', data);
     return { data: data as string, error: null };
   } catch (error) {
-    console.error('Error copying global item to personal:', error);
+    console.error('Unexpected error copying global item to personal:', error);
     return { data: null, error: { message: 'Failed to copy item to personal library' } };
   }
 }
