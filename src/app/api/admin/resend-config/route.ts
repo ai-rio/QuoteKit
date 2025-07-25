@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         .eq('key', 'resend_config')
         .single()
 
-      if (dbConfig?.value) {
+      if (dbConfig?.value && typeof dbConfig.value === 'object') {
         config = { ...config, ...dbConfig.value }
       }
     } catch (dbError) {

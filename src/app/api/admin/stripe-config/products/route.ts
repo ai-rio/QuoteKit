@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const stripeConfig = configData.value as StripeConfig
+    const stripeConfig = configData.value as unknown as StripeConfig
     const stripe = createStripeAdminClient(stripeConfig)
 
     try {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const stripeConfig = configData.value as StripeConfig
+    const stripeConfig = configData.value as unknown as StripeConfig
     const stripe = createStripeAdminClient(stripeConfig)
 
     try {
@@ -232,7 +232,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const stripeConfig = configData.value as StripeConfig
+    const stripeConfig = configData.value as unknown as StripeConfig
     const stripe = createStripeAdminClient(stripeConfig)
 
     try {
@@ -341,7 +341,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const stripeConfig = configData.value as StripeConfig
+    const stripeConfig = configData.value as unknown as StripeConfig
     const stripe = createStripeAdminClient(stripeConfig)
 
     try {
