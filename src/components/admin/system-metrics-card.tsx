@@ -119,18 +119,38 @@ export function SystemMetricsCard() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Refresh and Status */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-charcoal">System Analytics</h2>
-          <p className="text-sm text-charcoal/70">
+      {/* PostHog Configuration Notice */}
+      {metrics.error && metrics.error.includes('not configured') && (
+        <Card className="bg-paper-white border-stone-gray shadow-sm border-l-4 border-l-equipment-yellow">
+          <CardContent className="flex items-center p-4">
+            <AlertTriangle className="h-5 w-5 text-equipment-yellow mr-3" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-charcoal">
+                PostHog Analytics Setup Required
+              </p>
+              <p className="text-xs text-charcoal/70">
+                Configure PostHog in Admin Settings to see real system metrics. Currently showing zero values.
+              </p>
+            </div>
+            <Badge variant="outline" className="text-equipment-yellow border-equipment-yellow">
+              Setup Required
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Header with Refresh and Status - Mobile Responsive */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div className="flex-1">
+          <h2 className="text-lg sm:text-xl font-bold text-charcoal">System Analytics</h2>
+          <p className="text-xs sm:text-sm text-charcoal/70">
             Live metrics from PostHog • Last updated: {new Date(metrics.last_updated).toLocaleTimeString()}
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          {/* Rate Limit Status */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          {/* Rate Limit Status - Hidden on mobile */}
           {rateLimits && (
-            <div className="text-xs text-charcoal/60">
+            <div className="hidden md:block text-xs text-charcoal/60">
               <div>API Usage: {rateLimits.current_minute}/{rateLimits.limits.per_minute}/min</div>
               <div>{rateLimits.current_hour}/{rateLimits.limits.per_hour}/hour</div>
             </div>
@@ -139,7 +159,7 @@ export function SystemMetricsCard() {
           {/* Status Badge */}
           {metrics.error ? (
             <Badge variant="outline" className="text-equipment-yellow border-equipment-yellow">
-              {metrics.error.includes('sample data') ? 'Sample Data' : 'Error'}
+              {metrics.error.includes('not configured') ? 'Setup Required' : 'Connection Issue'}
             </Badge>
           ) : (
             <Badge variant="outline" className="text-success-green border-success-green">
@@ -147,29 +167,29 @@ export function SystemMetricsCard() {
             </Badge>
           )}
           
-          {/* Refresh Button */}
+          {/* Refresh Button - Touch friendly */}
           <button
             onClick={() => fetchMetrics(true)}
             disabled={refreshing}
-            className="flex items-center space-x-1 px-3 py-1 bg-light-concrete text-charcoal rounded-lg font-semibold hover:bg-stone-gray/20 focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-1 px-3 py-2 bg-light-concrete text-charcoal rounded-lg font-semibold hover:bg-stone-gray/20 focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px] justify-center sm:justify-start"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      {/* Key Metrics Grid - Mobile First Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6">
         <Card className="bg-paper-white border-stone-gray shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-charcoal">
+            <CardTitle className="text-xs sm:text-sm font-medium text-charcoal truncate">
               Total Users
             </CardTitle>
-            <Users className="h-4 w-4 text-charcoal/70" />
+            <Users className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal/70 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-charcoal">
+          <CardContent className="p-4 lg:p-6">
+            <div className="font-mono text-xl sm:text-2xl font-bold text-charcoal">
               {metrics.total_users}
             </div>
             <p className="text-xs text-charcoal/70">
@@ -180,13 +200,13 @@ export function SystemMetricsCard() {
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-charcoal">
+            <CardTitle className="text-xs sm:text-sm font-medium text-charcoal truncate">
               Quotes Created
             </CardTitle>
-            <FileText className="h-4 w-4 text-charcoal/70" />
+            <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal/70 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-charcoal">
+          <CardContent className="p-4 lg:p-6">
+            <div className="font-mono text-xl sm:text-2xl font-bold text-charcoal">
               {metrics.quotes_created}
             </div>
             <p className="text-xs text-charcoal/70">
@@ -197,13 +217,13 @@ export function SystemMetricsCard() {
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-charcoal">
+            <CardTitle className="text-xs sm:text-sm font-medium text-charcoal truncate">
               Conversion Rate
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-charcoal/70" />
+            <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal/70 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-charcoal">
+          <CardContent className="p-4 lg:p-6">
+            <div className="font-mono text-xl sm:text-2xl font-bold text-charcoal">
               {conversionRate}%
             </div>
             <p className="text-xs text-charcoal/70">
@@ -214,13 +234,13 @@ export function SystemMetricsCard() {
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-charcoal">
+            <CardTitle className="text-xs sm:text-sm font-medium text-charcoal truncate">
               Total Revenue
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-charcoal/70" />
+            <DollarSign className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal/70 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-charcoal">
+          <CardContent className="p-4 lg:p-6">
+            <div className="font-mono text-xl sm:text-2xl font-bold text-charcoal">
               ${metrics.total_revenue?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-charcoal/70">
@@ -231,13 +251,13 @@ export function SystemMetricsCard() {
 
         <Card className="bg-paper-white border-stone-gray shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-charcoal">
+            <CardTitle className="text-xs sm:text-sm font-medium text-charcoal truncate">
               Avg Quote Value
             </CardTitle>
-            <Activity className="h-4 w-4 text-charcoal/70" />
+            <Activity className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal/70 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-2xl font-bold text-charcoal">
+          <CardContent className="p-4 lg:p-6">
+            <div className="font-mono text-xl sm:text-2xl font-bold text-charcoal">
               ${metrics.average_quote_value?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-charcoal/70">
@@ -247,27 +267,27 @@ export function SystemMetricsCard() {
         </Card>
       </div>
 
-      {/* Detailed Analytics */}
+      {/* Detailed Analytics - Mobile Enhanced */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-section-title text-charcoal">
+          <CardTitle className="text-base sm:text-lg font-bold text-charcoal">
             Quote Performance
           </CardTitle>
-          <CardDescription className="text-charcoal/70">
+          <CardDescription className="text-xs sm:text-sm text-charcoal/70">
             Quote creation and conversion metrics
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-1 sm:space-y-0">
             <span className="text-sm text-charcoal/70">Quotes Created</span>
-            <span className="font-mono text-charcoal font-semibold">
+            <span className="font-mono text-charcoal font-semibold text-base">
               {metrics.quotes_created}
             </span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-1 sm:space-y-0">
             <span className="text-sm text-charcoal/70">Quotes Sent</span>
             <div className="flex items-center space-x-2">
-              <span className="font-mono text-charcoal font-semibold">
+              <span className="font-mono text-charcoal font-semibold text-base">
                 {metrics.quotes_sent}
               </span>
               <span className="text-xs text-charcoal/60">
@@ -275,19 +295,19 @@ export function SystemMetricsCard() {
               </span>
             </div>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-1 sm:space-y-0">
             <span className="text-sm text-charcoal/70">Quotes Accepted</span>
-            <span className="font-mono text-charcoal font-semibold">
+            <span className="font-mono text-charcoal font-semibold text-base">
               {metrics.quotes_accepted}
             </span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
             <span className="text-sm text-charcoal/70">Conversion Rate</span>
-            <div className="flex items-center space-x-2">
-              <span className="font-mono text-charcoal font-semibold">
+            <div className="flex items-center space-x-3">
+              <span className="font-mono text-charcoal font-semibold text-base">
                 {conversionRate}%
               </span>
-              <div className="w-16 bg-stone-gray/30 rounded-full h-2">
+              <div className="w-20 sm:w-16 bg-stone-gray/30 rounded-full h-2">
                 <div 
                   className="bg-forest-green h-2 rounded-full" 
                   style={{ width: `${Math.min(conversionRate, 100)}%` }}
