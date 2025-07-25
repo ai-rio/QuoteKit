@@ -469,24 +469,24 @@ export async function getSystemMetrics() {
       return emptyMetrics
     }
     
-    // For other errors, return sample data for demonstration
-    const sampleMetrics = {
-      total_users: 147,
-      quotes_created: 234,
-      quotes_sent: 189,
-      quotes_accepted: 142,
-      total_revenue: 89750,
-      conversion_rate: 61,
-      send_rate: 81,
-      average_quote_value: 632,
+    // For other errors, return empty metrics (ready for when PostHog is configured)
+    const emptyMetrics = {
+      total_users: 0,
+      quotes_created: 0,
+      quotes_sent: 0,
+      quotes_accepted: 0,
+      total_revenue: 0,
+      conversion_rate: 0,
+      send_rate: 0,
+      average_quote_value: 0,
       last_updated: new Date().toISOString(),
-      error: 'Using sample data - PostHog connection issue'
+      error: 'PostHog connection issue. Metrics will display once PostHog is properly configured.'
     }
     
-    // Cache sample data with shorter TTL (2 minutes)
-    setCachedData(cacheKey, sampleMetrics, 2 * 60 * 1000)
+    // Cache empty metrics with shorter TTL (30 seconds for faster updates)
+    setCachedData(cacheKey, emptyMetrics, 30 * 1000)
     
-    return sampleMetrics
+    return emptyMetrics
   }
 }
 
