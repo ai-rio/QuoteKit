@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+
+import { useSidebar } from "@/components/ui/sidebar"
 
 /**
  * Custom hook to detect mobile devices based on screen width
@@ -25,4 +27,41 @@ export function useMobile() {
   }, [])
 
   return isMobile
+}
+
+export function useMobileSidebar() {
+  const { isMobile, setOpenMobile } = useSidebar()
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
+
+  // Auto-close sidebar and collapse sections on navigation for mobile
+  const handleNavigation = useCallback(() => {
+    if (isMobile) {
+      setExpandedSections(new Set())
+      setTimeout(() => setOpenMobile(false), 100)
+    }
+  }, [isMobile, setOpenMobile])
+
+  // Smart section toggle with mobile behavior
+  const toggleSection = useCallback((sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set<string>()
+      if (!prev.has(sectionId)) {
+        newSet.add(sectionId)
+        
+        // Auto-collapse on mobile after delay
+        if (isMobile) {
+          setTimeout(() => setExpandedSections(new Set()), 4000)
+        }
+      }
+      return newSet
+    })
+  }, [isMobile])
+
+  return {
+    expandedSections,
+    setExpandedSections,
+    toggleSection,
+    handleNavigation,
+    isMobile
+  }
 }

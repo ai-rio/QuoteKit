@@ -1,6 +1,6 @@
-import { Activity, CheckCircle, DollarSign, FileText, Package, Send, TrendingUp } from "lucide-react"
+import { CheckCircle, DollarSign, FileText, Package, Send } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 import { DashboardStats } from "../types"
 
@@ -22,66 +22,58 @@ export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
       title: "Total Quotes",
       value: stats.totalQuotes,
       icon: FileText,
-      color: "text-forest-green",
-      bgColor: "bg-forest-green/10"
+      color: "text-forest-green"
     },
     {
-      title: "Quotes Sent",
+      title: "Quotes Sent", 
       value: stats.sentQuotes,
       icon: Send,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100"
+      color: "text-info-blue"
     },
     {
       title: "Quotes Accepted",
       value: stats.acceptedQuotes,
       icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-100"
+      color: "text-success-green"
     },
     {
       title: "Total Revenue",
       value: formatCurrency(stats.totalRevenue),
       icon: DollarSign,
-      color: "text-forest-green",
-      bgColor: "bg-forest-green/10"
+      color: "text-forest-green"
     },
     {
       title: "Items in Library",
       value: stats.totalItems,
       icon: Package,
-      color: "text-equipment-yellow",
-      bgColor: "bg-equipment-yellow/10"
+      color: "text-equipment-yellow"
     },
     {
       title: "Quote Templates",
       value: stats.totalTemplates,
       icon: FileText,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100"
+      color: "text-charcoal"
     }
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 lg:gap-6">
       {statCards.map((stat) => {
         const Icon = stat.icon
         return (
-          <Card key={stat.title} className="bg-paper-white border-stone-gray">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-charcoal">
-                {stat.title}
-              </CardTitle>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${stat.bgColor}`}>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
+          <Card key={stat.title} className="bg-paper-white border-stone-gray shadow-sm">
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start space-x-2 lg:space-x-3">
+                <Icon className={`w-4 h-4 lg:w-5 lg:h-5 ${stat.color} flex-shrink-0 mt-1`} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-charcoal mb-2 text-sm lg:text-base truncate">{stat.title}</p>
+                  <p className="text-xl lg:text-2xl font-bold text-charcoal">{stat.value}</p>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-charcoal">{stat.value}</div>
             </CardContent>
           </Card>
         )
-      })}
+})}
     </div>
   )
 }
