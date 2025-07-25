@@ -56,6 +56,8 @@ export function FinancialDefaultsCard({
             id="tax-rate"
             name="default_tax_rate"
             type="text"
+            inputMode="decimal"
+            autoComplete="off"
             className={`border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60 ${
               taxRate && !validateTaxRate(taxRate) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
             }`}
@@ -80,6 +82,8 @@ export function FinancialDefaultsCard({
             id="markup-rate"
             name="default_markup_rate"
             type="text"
+            inputMode="decimal"
+            autoComplete="off"
             className={`border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60 ${
               markupRate && !validateMarkupRate(markupRate) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
             }`}

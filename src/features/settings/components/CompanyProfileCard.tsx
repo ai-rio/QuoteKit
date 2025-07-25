@@ -118,8 +118,8 @@ export function CompanyProfileCard({
           />
         </div>
 
-        {/* Contact Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Contact Information - Improved Mobile Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="grid gap-3">
             <Label htmlFor="company-phone" className="text-label text-charcoal font-medium">
               Phone Number
@@ -128,6 +128,8 @@ export function CompanyProfileCard({
               id="company-phone"
               name="company_phone"
               type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               placeholder="(555) 123-4567"
               value={companyPhone}
@@ -143,6 +145,8 @@ export function CompanyProfileCard({
               id="company-email"
               name="company_email"
               type="email"
+              inputMode="email"
+              autoComplete="email"
               className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               placeholder="contact@yourcompany.com"
               value={companyEmail}
@@ -151,24 +155,24 @@ export function CompanyProfileCard({
           </div>
         </div>
 
-        {/* Logo Upload Section */}
+        {/* Logo Upload Section - Mobile Optimized */}
         <div className="grid gap-3">
           <Label className="text-label text-charcoal font-medium">Company Logo</Label>
-          <div className="flex items-start gap-4">
-            {/* Logo Preview */}
-            <div className="flex-shrink-0">
-              <Avatar className="h-20 w-20">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            {/* Logo Preview - Centered on Mobile */}
+            <div className="flex justify-center sm:justify-start">
+              <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
                 {logoUrl && <AvatarImage src={logoUrl} />}
-                <AvatarFallback className="bg-stone-gray/20 text-charcoal/60">
+                <AvatarFallback className="bg-stone-gray/20 text-charcoal/60 text-xs sm:text-sm">
                   Logo
                 </AvatarFallback>
               </Avatar>
             </div>
 
-            {/* Upload Controls */}
+            {/* Upload Controls - Full Width on Mobile */}
             <div className="flex-1 min-w-0">
               <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors min-h-[120px] sm:min-h-[140px] ${
                   dragActive
                     ? 'border-forest-green bg-forest-green/5'
                     : 'border-stone-gray bg-light-concrete'
@@ -178,18 +182,19 @@ export function CompanyProfileCard({
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <Upload className="mx-auto h-6 w-6 text-charcoal/60 mb-2" />
-                <p className="text-sm text-charcoal/70 mb-2">
-                  Drag and drop your logo here, or click to browse
+                <Upload className="mx-auto h-8 w-8 sm:h-6 sm:w-6 text-charcoal/60 mb-3 sm:mb-2" />
+                <p className="text-sm sm:text-sm text-charcoal/70 mb-2">
+                  <span className="hidden sm:inline">Drag and drop your logo here, or click to browse</span>
+                  <span className="sm:hidden">Tap to select your logo</span>
                 </p>
-                <p className="text-xs text-charcoal/60 mb-3">
+                <p className="text-xs text-charcoal/60 mb-4 sm:mb-3">
                   PNG, JPG or GIF (max 5MB)
                 </p>
                 
-                <div className="flex items-center gap-2 justify-center">
+                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-2 justify-center">
                   <Button
                     type="button"
-                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold"
+                    className="w-full sm:w-auto min-h-[44px] px-6 py-3 bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold rounded-lg"
                     disabled={uploading}
                     onClick={() => document.getElementById('logo-upload')?.click()}
                   >
@@ -199,7 +204,7 @@ export function CompanyProfileCard({
                   {logoUrl && (
                     <Button
                       type="button"
-                      className="bg-paper-white text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray font-bold"
+                      className="w-full sm:w-auto min-h-[44px] px-6 py-3 bg-paper-white text-charcoal hover:bg-stone-gray/20 active:bg-equipment-yellow border border-stone-gray font-bold rounded-lg"
                       onClick={removeLogo}
                     >
                       <X className="h-4 w-4 mr-1" />

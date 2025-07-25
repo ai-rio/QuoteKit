@@ -132,10 +132,10 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
   return (
     <div className="space-y-6">
       {/* Header with Save Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-charcoal">Settings</h1>
-          <p className="text-charcoal/70">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-charcoal">Settings</h1>
+          <p className="text-sm sm:text-base text-charcoal/70">
             Manage your company information and quote settings.
           </p>
         </div>
@@ -143,11 +143,11 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
         <Button
           onClick={handleSave}
           disabled={!canSave || isSaving}
-          className={`${
+          className={`w-full sm:w-auto min-h-[44px] px-6 py-3 rounded-lg font-bold transition-all duration-200 ${
             !canSave 
               ? 'bg-paper-white text-charcoal/60' 
               : 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80'
-          } font-bold border border-stone-gray`}
+          } border border-stone-gray`}
         >
           {isSaving ? (
             <>
@@ -199,10 +199,10 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
         />
       </form>
 
-      {/* Change Indicator */}
+      {/* Change Indicator - Mobile Optimized */}
       {hasChanges && (
-        <div className="fixed bottom-6 right-6 bg-equipment-yellow text-charcoal px-4 py-2 rounded-lg shadow-lg border border-stone-gray">
-          <p className="text-sm font-medium">Unsaved changes</p>
+        <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 sm:w-auto bg-equipment-yellow text-charcoal px-4 py-3 rounded-lg shadow-lg border border-stone-gray z-50">
+          <p className="text-sm font-medium text-center sm:text-left">Unsaved changes</p>
         </div>
       )}
     </div>
