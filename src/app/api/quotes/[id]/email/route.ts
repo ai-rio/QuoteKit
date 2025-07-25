@@ -17,7 +17,7 @@ interface EmailQuoteRequest {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -27,12 +27,13 @@ export async function POST(
 
     const { to, subject, message }: EmailQuoteRequest = await request.json();
     const supabase = await createSupabaseServerClient();
+    const { id } = await params;
 
     // Get quote details
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', session.user.id)
       .single();
 

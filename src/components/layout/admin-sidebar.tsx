@@ -12,6 +12,7 @@ import {
   LogOut, 
   Mail, 
   MoreVertical,
+  Package,
   Search,
   Send,
   Settings,
@@ -83,6 +84,16 @@ const navGroups = [
         title: "Pricing Management",
         url: "/pricing-management",
         icon: CreditCard,
+      },
+    ]
+  },
+  {
+    title: "Content Management",
+    items: [
+      {
+        title: "Global Items Library",
+        url: "/global-items",
+        icon: Package,
       },
     ]
   },

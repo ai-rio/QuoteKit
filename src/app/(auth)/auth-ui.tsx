@@ -20,13 +20,18 @@ export function AuthUI({
   mode,
   signInWithOAuth,
   signInWithEmail,
+  signInWithPassword,
+  signUpWithEmail,
 }: {
   mode: 'login' | 'signup';
   signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>;
   signInWithEmail: (formData: FormData) => Promise<ActionResponse>;
+  signInWithPassword?: (formData: FormData) => Promise<ActionResponse>;
+  signUpWithEmail?: (formData: FormData) => Promise<ActionResponse>;
 }) {
   const [pending, setPending] = useState(false);
   const [emailFormOpen, setEmailFormOpen] = useState(false);
+  const [usePassword, setUsePassword] = useState(false);
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,8 +39,24 @@ export function AuthUI({
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
     const email = formData.get('email') as string;
-    
-    const response = await signInWithEmail(formData);
+
+    let response: ActionResponse | undefined;
+
+    if (mode === 'signup') {
+      if (signUpWithEmail) {
+        response = await signUpWithEmail(formData);
+      } else {
+        console.error('signUpWithEmail function is not provided in signup mode');
+        return;
+      }
+    } else {
+      // Login mode
+      if (usePassword && signInWithPassword) {
+        response = await signInWithPassword(formData);
+      } else {
+        response = await signInWithEmail(formData);
+      }
+    }
 
     if (response?.error) {
       toast({
@@ -43,9 +64,13 @@ export function AuthUI({
         description: response.error.message || 'An error occurred while authenticating. Please try again.',
       });
     } else {
-      toast({
-        description: `To continue, click the link in the email sent to: ${email}`,
-      });
+      if (mode === 'login' && usePassword) {
+        // Password login handles redirect internally
+      } else {
+        toast({
+          description: `To continue, click the link in the email sent to: ${email}`,
+        });
+      }
     }
 
     form.reset();
@@ -100,6 +125,32 @@ export function AuthUI({
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className='mt-[-2px] w-full rounded-b-md bg-zinc-900 p-8'>
+              {mode === 'login' && signInWithPassword && (
+                <div className='mb-4 flex justify-center gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setUsePassword(false)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      !usePassword 
+                        ? 'bg-cyan-500 text-black' 
+                        : 'bg-zinc-800 text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    Magic Link
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setUsePassword(true)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      usePassword 
+                        ? 'bg-cyan-500 text-black' 
+                        : 'bg-zinc-800 text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    Password
+                  </button>
+                </div>
+              )}
               <form onSubmit={handleEmailSubmit}>
                 <Input
                   type='email'
@@ -108,6 +159,15 @@ export function AuthUI({
                   aria-label='Enter your email'
                   autoFocus
                 />
+                {(mode === 'signup' || (mode === 'login' && usePassword)) && (
+                  <Input
+                    type='password'
+                    name='password'
+                    placeholder='Enter your password'
+                    aria-label='Enter your password'
+                    className='mt-4'
+                  />
+                )}
                 <div className='mt-4 flex justify-end gap-2'>
                   <Button type='button' onClick={() => setEmailFormOpen(false)}>
                     Cancel

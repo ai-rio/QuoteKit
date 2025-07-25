@@ -33,6 +33,17 @@ export async function signInWithEmail(formData: FormData): Promise<ActionRespons
 
   const supabase = await createSupabaseServerClient();
 
+  // Check if the user exists
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email.trim())
+    .single();
+
+  if (userError || !user) {
+    return { data: null, error: { message: 'User not found. Please sign up first.' } };
+  }
+
   const { error } = await supabase.auth.signInWithOtp({
     email: email.trim(),
     options: {
@@ -46,6 +57,64 @@ export async function signInWithEmail(formData: FormData): Promise<ActionRespons
   }
 
   return { data: null, error: null };
+}
+
+export async function signUpWithEmail(formData: FormData): Promise<ActionResponse> {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  if (!email || !email.trim()) {
+    return { data: null, error: { message: 'Email is required' } };
+  }
+
+  if (!password || !password.trim()) {
+    return { data: null, error: { message: 'Password is required' } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase.auth.signUp({
+    email: email.trim(),
+    password: password.trim(),
+    options: {
+      emailRedirectTo: getURL('/auth/callback'),
+    },
+  });
+
+  if (error) {
+    console.error(error);
+    return { data: null, error: error };
+  }
+
+  return { data: null, error: null };
+}
+
+export async function signInWithPassword(formData: FormData): Promise<ActionResponse> {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  if (!email || !email.trim()) {
+    return { data: null, error: { message: 'Email is required' } };
+  }
+
+  if (!password || !password.trim()) {
+    return { data: null, error: { message: 'Password is required' } };
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password: password.trim(),
+  });
+
+  if (error) {
+    console.error(error);
+    return { data: null, error: error };
+  }
+
+  // Redirect to dashboard after successful login
+  redirect('/dashboard');
 }
 
 export async function signOut(): Promise<ActionResponse> {

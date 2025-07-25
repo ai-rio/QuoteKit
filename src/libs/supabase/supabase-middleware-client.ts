@@ -41,18 +41,53 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const {
+      data: { user },
+      error
+    } = await supabase.auth.getUser();
 
-  // Add route guards here
-  // const guardedRoutes = ['/dashboard'];
-  // if (!user && guardedRoutes.includes(request.nextUrl.pathname)) {
-  //   // no user, potentially respond by redirecting the user to the login page
-  //   const url = request.nextUrl.clone();
-  //   url.pathname = '/login';
-  //   return NextResponse.redirect(url);
-  // }
+    // Handle case where JWT references non-existent user
+    if (error?.code === 'user_not_found' || (error?.status === 403 && error?.message?.includes('User from sub claim in JWT does not exist'))) {
+      console.log('Clearing invalid session for non-existent user');
+      
+      // Clear the auth cookies by setting them to expire
+      const response = NextResponse.next({ request });
+      
+      // Clear all Supabase auth cookies
+      const authCookies = ['sb-access-token', 'sb-refresh-token', 'supabase-auth-token', 'supabase.auth.token'];
+      for (const cookieName of authCookies) {
+        response.cookies.set(cookieName, '', {
+          expires: new Date(0),
+          path: '/',
+        });
+      }
+      
+      return response;
+    }
+
+    // Add route guards here
+    // const guardedRoutes = ['/dashboard'];
+    // if (!user && guardedRoutes.includes(request.nextUrl.pathname)) {
+    //   // no user, potentially respond by redirecting the user to the login page
+    //   const url = request.nextUrl.clone();
+    //   url.pathname = '/login';
+    //   return NextResponse.redirect(url);
+    // }
+
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    // On any auth error, clear cookies and continue
+    const response = NextResponse.next({ request });
+    const authCookies = ['sb-access-token', 'sb-refresh-token', 'supabase-auth-token', 'supabase.auth.token'];
+    for (const cookieName of authCookies) {
+      response.cookies.set(cookieName, '', {
+        expires: new Date(0),
+        path: '/',
+      });
+    }
+    return response;
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

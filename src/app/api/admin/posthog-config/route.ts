@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         .eq('key', 'posthog_config')
         .single()
 
-      if (dbConfig?.value) {
+      if (dbConfig?.value && typeof dbConfig.value === 'object') {
         config = { ...config, ...dbConfig.value }
       }
     } catch (dbError) {
