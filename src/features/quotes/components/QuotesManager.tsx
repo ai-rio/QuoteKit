@@ -7,10 +7,13 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { createTemplate, deleteQuotes, deleteTemplate, updateTemplate } from '../actions';
 import { sendBulkQuoteEmails } from '../email-actions';
+import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions, QuoteStatus } from '../types';
 
 import { BulkActions } from './BulkActions';
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import { QuotesFilters } from './QuotesFilters';
 import { QuotesTable } from './QuotesTable';
 import { QuoteTemplates } from './QuoteTemplates';
@@ -22,7 +25,11 @@ interface QuotesManagerProps {
 export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   const router = useRouter();
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
+  const { duplicate, isDuplicating } = useDuplicateQuote();
   const [selectedQuotes, setSelectedQuotes] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [filters, setFilters] = useState<QuoteFilters>({
     status: 'all',
     client: '',
@@ -137,10 +144,26 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
       );
     },
     delete: async (quoteIds: string[]) => {
-      // TODO: Implement API call to delete quotes
-      console.log('Delete quotes:', quoteIds);
-      // Mock delete for now
-      setQuotes(prev => prev.filter(quote => !quoteIds.includes(quote.id)));
+      try {
+        const result = await deleteQuotes(quoteIds);
+        
+        if (result.error) {
+          alert(`Failed to delete quotes: ${result.error.message || 'Unknown error'}`);
+          return;
+        }
+        
+        // Remove deleted quotes from local state
+        setQuotes(prev => prev.filter(quote => !quoteIds.includes(quote.id)));
+        
+        // Clear selection after successful deletion
+        setSelectedQuotes([]);
+        
+        const deletedCount = result.data?.deleted || quoteIds.length;
+        alert(`Successfully deleted ${deletedCount} quote${deletedCount === 1 ? '' : 's'}.`);
+      } catch (error) {
+        console.error('Error deleting quotes:', error);
+        alert('An unexpected error occurred while deleting quotes.');
+      }
     },
     export: async (quoteIds: string[]) => {
       try {
@@ -265,10 +288,24 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     router.push(`/quotes/${quote.id}/edit`);
   };
 
-  const handleDuplicate = (quote: Quote) => {
-    // TODO: Implement quote duplication
-    console.log('Duplicate quote:', quote.id);
-    alert('Quote duplication functionality will be implemented.');
+  const handleDuplicate = async (quote: Quote) => {
+    try {
+      const result = await duplicate(quote.id);
+      
+      if (result.success && result.quote) {
+        // Optimistically add the duplicated quote to the list
+        setQuotes(prev => [result.quote!, ...prev]);
+        
+        // Navigate to edit the new duplicate
+        router.push(`/quotes/${result.quote.id}/edit`);
+      } else {
+        // Show error message - using alert for now, could be replaced with toast
+        alert(`Failed to duplicate quote: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error duplicating quote:', error);
+      alert('An unexpected error occurred while duplicating the quote.');
+    }
   };
 
   const handleDownload = async (quote: Quote) => {
@@ -327,15 +364,64 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     );
   };
 
+  const handleDelete = (quote: Quote) => {
+    setQuoteToDelete(quote);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!quoteToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteQuotes([quoteToDelete.id]);
+      
+      if (result.error) {
+        alert(`Failed to delete quote: ${result.error.message || 'Unknown error'}`);
+      } else {
+        // Remove the quote from the local state
+        setQuotes(prev => prev.filter(quote => quote.id !== quoteToDelete.id));
+        setDeleteDialogOpen(false);
+        setQuoteToDelete(null);
+      }
+    } catch (error) {
+      console.error('Error deleting quote:', error);
+      alert('An unexpected error occurred while deleting the quote.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(false);
+      setQuoteToDelete(null);
+    }
+  };
+
   const clearSelection = () => {
     setSelectedQuotes([]);
   };
 
   // Template handlers
   const handleCreateTemplate = async (templateName: string, baseQuote: Quote) => {
-    // TODO: Implement API call to create template
-    console.log('Create template:', templateName, 'from quote:', baseQuote.id);
-    alert('Template creation functionality will be implemented.');
+    try {
+      const result = await createTemplate(templateName, baseQuote.id);
+      
+      if (result.error) {
+        alert(`Failed to create template: ${result.error.message || 'Unknown error'}`);
+        return;
+      }
+      
+      if (result.data) {
+        // Add the new template to the local state
+        setQuotes(prev => [result.data!, ...prev]);
+        alert(`Template "${templateName}" created successfully!`);
+      }
+    } catch (error) {
+      console.error('Error creating template:', error);
+      alert('An unexpected error occurred while creating the template.');
+    }
   };
 
   const handleUseTemplate = (template: Quote) => {
@@ -344,15 +430,51 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    // TODO: Implement API call to delete template
-    console.log('Delete template:', templateId);
-    alert('Template deletion functionality will be implemented.');
+    try {
+      const result = await deleteTemplate(templateId);
+      
+      if (result.error) {
+        alert(`Failed to delete template: ${result.error.message || 'Unknown error'}`);
+        return;
+      }
+      
+      if (result.data?.deleted) {
+        // Remove the template from the local state
+        setQuotes(prev => prev.filter(quote => quote.id !== templateId));
+        alert('Template deleted successfully!');
+      } else {
+        alert('Template not found or could not be deleted.');
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      alert('An unexpected error occurred while deleting the template.');
+    }
   };
 
   const handleUpdateTemplate = async (templateId: string, templateName: string) => {
-    // TODO: Implement API call to update template name
-    console.log('Update template:', templateId, 'name:', templateName);
-    alert('Template update functionality will be implemented.');
+    try {
+      const result = await updateTemplate(templateId, templateName);
+      
+      if (result.error) {
+        alert(`Failed to update template: ${result.error.message || 'Unknown error'}`);
+        return;
+      }
+      
+      if (result.data) {
+        // Update the template in the local state
+        setQuotes(prev => 
+          prev.map(quote => 
+            quote.id === templateId 
+              ? { ...quote, template_name: templateName }
+              : quote
+          )
+        );
+        alert(`Template renamed to "${templateName}" successfully!`);
+      }
+    } catch (error) {
+      console.error('Error updating template:', error);
+      alert('An unexpected error occurred while updating the template.');
+    }
   };
 
   return (
@@ -419,6 +541,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
             onDuplicate={handleDuplicate}
             onDownload={handleDownload}
             onStatusUpdate={handleStatusUpdate}
+            onDelete={handleDelete}
           />
 
           {/* Results Summary */}
@@ -438,6 +561,16 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        quotes={quoteToDelete ? [quoteToDelete] : []}
+        isBulkDelete={false}
+      />
     </div>
   );
 }

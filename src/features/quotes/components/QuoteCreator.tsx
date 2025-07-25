@@ -286,12 +286,14 @@ export function QuoteCreator({
                   quoteNumber={quoteNumber}
                   status={status}
                 />
-                <Badge 
-                  variant={status === 'draft' ? 'secondary' : 'default'}
-                  className={status === 'draft' ? 'bg-equipment-yellow/20 text-charcoal w-fit' : 'bg-forest-green text-white w-fit'}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Badge>
+                {status !== 'draft' && (
+                  <Badge 
+                    variant="default"
+                    className="bg-forest-green text-white w-fit"
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Badge>
+                )}
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
                 <SaveDraftButton 

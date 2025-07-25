@@ -10,7 +10,8 @@ import {
   Edit,
   Eye,
   MoreHorizontal,
-  RefreshCw} from 'lucide-react';
+  RefreshCw,
+  Trash} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -46,6 +47,7 @@ interface QuotesTableProps {
   onDuplicate: (quote: Quote) => void;
   onDownload: (quote: Quote) => void;
   onStatusUpdate: (quoteId: string, newStatus: QuoteStatus) => void;
+  onDelete: (quote: Quote) => void;
 }
 
 export function QuotesTable({
@@ -59,7 +61,8 @@ export function QuotesTable({
   onEdit,
   onDuplicate,
   onDownload,
-  onStatusUpdate
+  onStatusUpdate,
+  onDelete
 }: QuotesTableProps) {
   const allSelected = quotes.length > 0 && selectedQuotes.length === quotes.length;
   const someSelected = selectedQuotes.length > 0;
@@ -244,6 +247,13 @@ export function QuotesTable({
                         <Download className="w-4 h-4 mr-2" />
                         Download PDF
                       </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => onDelete(quote)}
+                        className="text-error-red hover:bg-error-red/10"
+                      >
+                        <Trash className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -327,6 +337,13 @@ export function QuotesTable({
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(quote)}
+                    className="text-error-red hover:bg-error-red/10"
+                  >
+                    <Trash className="w-4 h-4 mr-2" />
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -3,6 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+
+import { useMobileSidebar } from "@/hooks/use-mobile"
 import { 
   ArrowLeft,
   BarChart3, 
@@ -143,21 +145,7 @@ interface AdminSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 
 export function AdminSidebar({ ...props }: AdminSidebarProps) {
   const pathname = usePathname()
-  const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
-    new Set() // No sections expanded by default
-  )
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => {
-      const newSet = new Set<string>()
-      // If the section is currently expanded, collapse it (empty set)
-      // If it's not expanded, expand only this section
-      if (!prev.has(sectionId)) {
-        newSet.add(sectionId)
-      }
-      return newSet
-    })
-  }
+  const { expandedSections, toggleSection, handleNavigation, isMobile } = useMobileSidebar()
 
   const isInSection = (sectionItems: NavItem[], currentPath: string) => {
     return sectionItems.some(item => 
@@ -185,7 +173,8 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
               <SidebarMenuButton asChild>
                 <Link 
                   href="/admin-dashboard" 
-                  className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-colors ${
+                  onClick={handleNavigation}
+                  className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-all duration-150 ease-out active:scale-95 ${
                     pathname === '/admin-dashboard' || pathname.startsWith('/admin-dashboard/')
                       ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
                       : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
@@ -210,7 +199,7 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
               <SidebarGroupLabel className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">
                 <SidebarMenuButton
                   onClick={() => toggleSection(sectionId)}
-                  className={`w-full justify-between p-2 rounded-md transition-colors ${
+                  className={`w-full justify-between p-2 rounded-md transition-colors active:bg-white/20 active:scale-95 transition-all duration-150 ease-out ${
                     isActiveSection || isExpanded
                       ? 'bg-white/10 text-white font-bold' 
                       : 'text-white/70 hover:bg-white/5 hover:text-white'
@@ -248,7 +237,8 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                           <SidebarMenuButton asChild isActive={isActive}>
                             <Link 
                               href={item.url} 
-                              className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-colors ml-4 ${
+                              onClick={handleNavigation}
+                              className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-all duration-150 ease-out active:scale-95 ml-4 ${
                                 isActive 
                                   ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
                                   : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
@@ -274,7 +264,7 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
           <SidebarMenuItem>
             <Popover>
               <PopoverTrigger asChild>
-                <SidebarMenuButton className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation">
+                <SidebarMenuButton className="flex items-center p-3 rounded-lg text-white/90 hover:bg-white/10 hover:text-white min-h-[44px] touch-manipulation active:bg-white/20 active:scale-95 transition-all duration-150 ease-out">
                   <MoreVertical className="w-5 h-5 mr-3 flex-shrink-0" />
                   <span className="text-sm">Menu</span>
                 </SidebarMenuButton>
@@ -283,6 +273,7 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                 <div className="space-y-1">
                   <Link 
                     href="/admin-settings" 
+                    onClick={handleNavigation}
                     className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
                     <Settings className="h-4 w-4" />
@@ -290,6 +281,7 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                   </Link>
                   <Link 
                     href="/dashboard" 
+                    onClick={handleNavigation}
                     className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
                     <ArrowLeft className="h-4 w-4" />
@@ -297,6 +289,7 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                   </Link>
                   <Link 
                     href="/auth/logout" 
+                    onClick={handleNavigation}
                     className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
                     <LogOut className="h-4 w-4" />

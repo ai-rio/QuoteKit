@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Download, Edit, FileText, Mail, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Download, Edit, FileText, Mail, MoreHorizontal, Trash } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,8 +25,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { deleteQuotes } from '../actions';
+import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { Quote } from '../types';
 
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import { QuotePDFViewer } from './QuotePDFViewer';
 import { SendEmailDialog } from './SendEmailDialog';
 
@@ -61,6 +64,9 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { duplicate, isDuplicating } = useDuplicateQuote();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -115,13 +121,54 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
     router.push(`/quotes/${quote.id}/edit`);
   };
 
-  const handleDuplicate = () => {
-    // TODO: Implement duplication
-    alert('Quote duplication functionality will be implemented.');
+  const handleDuplicate = async () => {
+    try {
+      const result = await duplicate(quote.id);
+      
+      if (result.success && result.quote) {
+        // Navigate to edit the new duplicate
+        router.push(`/quotes/${result.quote.id}/edit`);
+      } else {
+        // Show error message - using alert for now, could be replaced with toast
+        alert(`Failed to duplicate quote: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error duplicating quote:', error);
+      alert('An unexpected error occurred while duplicating the quote.');
+    }
   };
 
   const handleSendEmail = () => {
     setIsEmailDialogOpen(true);
+  };
+
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteQuotes([quote.id]);
+      
+      if (result.error) {
+        alert(`Failed to delete quote: ${result.error.message || 'Unknown error'}`);
+      } else {
+        // Navigate back to quotes list after successful deletion
+        router.push('/quotes');
+      }
+    } catch (error) {
+      console.error('Error deleting quote:', error);
+      alert('An unexpected error occurred while deleting the quote.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(false);
+    }
   };
 
   // Calculate tax amount
@@ -130,36 +177,44 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Quotes
-          </Button>
-          <div>
-            <h1 className="text-quote-header text-charcoal font-bold">
-              {quote.quote_number || `Quote #${quote.id.slice(0, 8)}`}
-            </h1>
-            <p className="text-charcoal/60 mt-1">
-              Created on {formatDate(quote.created_at)}
-            </p>
+      <div className="space-y-4 sm:space-y-0">
+        {/* Top row - Back button and title */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30 flex-shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Back to Quotes</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+            
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-charcoal truncate">
+                {quote.quote_number || `Quote #${quote.id.slice(0, 8)}`}
+              </h1>
+              <p className="text-sm sm:text-base text-charcoal/60 mt-1">
+                Created on {formatDate(quote.created_at)}
+              </p>
+            </div>
+          </div>
+          
+          {/* Badge - always visible */}
+          <div className="flex-shrink-0">
+            <Badge className={getStatusColor(quote.status || 'draft')}>
+              {(quote.status || 'draft').charAt(0).toUpperCase() + (quote.status || 'draft').slice(1)}
+            </Badge>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Badge className={getStatusColor(quote.status || 'draft')}>
-            {(quote.status || 'draft').charAt(0).toUpperCase() + (quote.status || 'draft').slice(1)}
-          </Badge>
-          
+        {/* Bottom row - Action buttons (stacked on mobile) */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-3 sm:justify-end">
           <Button
             onClick={handleDownload}
             disabled={isDownloading}
-            className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold"
+            className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold w-full sm:w-auto"
           >
             <Download className="w-4 h-4 mr-2" />
             {isDownloading ? 'Generating...' : 'Download PDF'}
@@ -167,8 +222,12 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30">
-                <MoreHorizontal className="w-4 h-4" />
+              <Button 
+                variant="outline" 
+                className="bg-paper-white text-charcoal border border-stone-gray hover:bg-stone-gray/20 active:bg-stone-gray/30 w-full sm:w-auto"
+              >
+                <MoreHorizontal className="w-4 h-4 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Actions</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 bg-paper-white border-stone-gray">
@@ -356,6 +415,15 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
               <FileText className="w-4 h-4 mr-2" />
               Duplicate Quote
             </Button>
+            <Button
+              variant="outline"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-paper-white text-error-red border border-error-red hover:bg-error-red/10 active:bg-error-red/20"
+            >
+              <Trash className="w-4 h-4 mr-2" />
+              Delete Quote
+            </Button>
             <Link href="/quotes">
               <Button
                 variant="outline"
@@ -373,6 +441,16 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
         isOpen={isEmailDialogOpen}
         onClose={() => setIsEmailDialogOpen(false)}
         quote={quote}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        quotes={[quote]}
+        isBulkDelete={false}
       />
     </div>
   );
