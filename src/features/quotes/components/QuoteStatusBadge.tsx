@@ -12,27 +12,27 @@ interface QuoteStatusBadgeProps {
 const statusConfig = {
   draft: {
     label: 'Draft',
-    className: 'bg-stone-gray/30 text-charcoal border-stone-gray'
+    className: 'bg-stone-gray text-charcoal border-stone-gray'
   },
   sent: {
     label: 'Sent',
-    className: 'bg-equipment-yellow/20 text-charcoal border-equipment-yellow/30'
+    className: 'bg-info-blue text-paper-white border-info-blue'
   },
   accepted: {
     label: 'Accepted',
-    className: 'bg-forest-green/20 text-forest-green border-forest-green/30'
+    className: 'bg-success-green text-paper-white border-success-green'
   },
   declined: {
     label: 'Declined',
-    className: 'bg-stone-gray text-charcoal border-stone-gray'
+    className: 'bg-error-red text-paper-white border-error-red'
   },
   expired: {
     label: 'Expired',
-    className: 'bg-stone-gray/20 text-charcoal/60 border-stone-gray/30'
+    className: 'bg-charcoal/60 text-paper-white border-charcoal/60'
   },
   converted: {
     label: 'Converted',
-    className: 'bg-forest-green/30 text-forest-green border-forest-green/40'
+    className: 'bg-forest-green text-paper-white border-forest-green'
   }
 } as const;
 

@@ -9,7 +9,8 @@ import {
   Download,
   Edit,
   Eye,
-  MoreHorizontal} from 'lucide-react';
+  MoreHorizontal,
+  RefreshCw} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,9 +29,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { Quote, QuoteSortOptions } from '../types';
+import { Quote, QuoteSortOptions, QuoteStatus } from '../types';
 
 import { QuoteStatusBadge } from './QuoteStatusBadge';
+import { StatusUpdateDropdown } from './StatusUpdateDropdown';
 
 interface QuotesTableProps {
   quotes: Quote[];
@@ -43,6 +45,7 @@ interface QuotesTableProps {
   onEdit: (quote: Quote) => void;
   onDuplicate: (quote: Quote) => void;
   onDownload: (quote: Quote) => void;
+  onStatusUpdate: (quoteId: string, newStatus: QuoteStatus) => void;
 }
 
 export function QuotesTable({
@@ -55,7 +58,8 @@ export function QuotesTable({
   onView,
   onEdit,
   onDuplicate,
-  onDownload
+  onDownload,
+  onStatusUpdate
 }: QuotesTableProps) {
   const allSelected = quotes.length > 0 && selectedQuotes.length === quotes.length;
   const someSelected = selectedQuotes.length > 0;
@@ -214,6 +218,18 @@ export function QuotesTable({
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
+                      <StatusUpdateDropdown 
+                        quote={quote} 
+                        onStatusUpdate={onStatusUpdate}
+                      >
+                        <DropdownMenuItem 
+                          className="text-charcoal hover:bg-stone-gray/20"
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Update Status
+                        </DropdownMenuItem>
+                      </StatusUpdateDropdown>
                       <DropdownMenuItem 
                         onClick={() => onDuplicate(quote)}
                         className="text-charcoal hover:bg-stone-gray/20"
@@ -286,6 +302,18 @@ export function QuotesTable({
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
+                  <StatusUpdateDropdown 
+                    quote={quote} 
+                    onStatusUpdate={onStatusUpdate}
+                  >
+                    <DropdownMenuItem 
+                      className="text-charcoal hover:bg-stone-gray/20"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Update Status
+                    </DropdownMenuItem>
+                  </StatusUpdateDropdown>
                   <DropdownMenuItem 
                     onClick={() => onDuplicate(quote)}
                     className="text-charcoal hover:bg-stone-gray/20"

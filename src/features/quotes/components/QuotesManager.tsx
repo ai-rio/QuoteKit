@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { sendBulkQuoteEmails } from '../email-actions';
-import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions } from '../types';
+import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions, QuoteStatus } from '../types';
 
 import { BulkActions } from './BulkActions';
 import { QuotesFilters } from './QuotesFilters';
@@ -310,6 +310,23 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     }
   };
 
+  const handleStatusUpdate = (quoteId: string, newStatus: QuoteStatus) => {
+    // Optimistically update the quote status in the local state
+    setQuotes(prev => 
+      prev.map(quote => 
+        quote.id === quoteId 
+          ? { 
+              ...quote, 
+              status: newStatus, 
+              updated_at: new Date().toISOString(),
+              // Set sent_at timestamp if status is sent
+              ...(newStatus === 'sent' && { sent_at: new Date().toISOString() })
+            } 
+          : quote
+      )
+    );
+  };
+
   const clearSelection = () => {
     setSelectedQuotes([]);
   };
@@ -401,6 +418,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}
             onDownload={handleDownload}
+            onStatusUpdate={handleStatusUpdate}
           />
 
           {/* Results Summary */}
