@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FileText, Home, LogOut, Package, Plus, Settings } from "lucide-react"
+import { FileText, Home, LogOut, Package, Plus, Settings, Users } from "lucide-react"
 
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
 import {
@@ -46,6 +46,11 @@ const navItems: NavItem[] = [
     title: "Item Library",
     url: "/items",
     icon: Package,
+  },
+  {
+    title: "Clients",
+    url: "/clients",
+    icon: Users,
   },
   {
     title: "Settings",

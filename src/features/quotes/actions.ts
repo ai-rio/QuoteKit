@@ -16,9 +16,9 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
       return { data: null, error: { message: 'User not authenticated' } };
     }
 
-    // Validation
-    if (!quoteData.client_name?.trim()) {
-      return { data: null, error: { message: 'Client name is required' } };
+    // Validation - require either client_id or client_name
+    if (!quoteData.client_id && !quoteData.client_name?.trim()) {
+      return { data: null, error: { message: 'Client information is required' } };
     }
 
     if (!quoteData.quote_data || quoteData.quote_data.length === 0) {
@@ -38,7 +38,8 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
 
     const newQuote = {
       user_id: user.id,
-      client_name: quoteData.client_name.trim(),
+      client_id: quoteData.client_id || null,
+      client_name: quoteData.client_name?.trim() || '',
       client_contact: quoteData.client_contact?.trim() || null,
       quote_data: quoteData.quote_data as any,
       subtotal: calculation.subtotal,
@@ -91,7 +92,8 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
     if (draftData.id) {
       const updateData: any = {};
       
-      if (draftData.client_name !== undefined) updateData.client_name = draftData.client_name.trim();
+      if (draftData.client_id !== undefined) updateData.client_id = draftData.client_id;
+      if (draftData.client_name !== undefined) updateData.client_name = draftData.client_name?.trim() || '';
       if (draftData.client_contact !== undefined) updateData.client_contact = draftData.client_contact?.trim() || null;
       if (draftData.quote_data !== undefined) updateData.quote_data = draftData.quote_data as any;
       if (draftData.tax_rate !== undefined) updateData.tax_rate = draftData.tax_rate;
@@ -124,9 +126,9 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
       return { data: data as unknown as Quote, error: null };
     }
 
-    // Create new draft
-    if (!draftData.client_name?.trim()) {
-      return { data: null, error: { message: 'Client name is required' } };
+    // Create new draft - require either client_id or client_name
+    if (!draftData.client_id && !draftData.client_name?.trim()) {
+      return { data: null, error: { message: 'Client information is required' } };
     }
 
     const calculation = calculateQuote(
@@ -137,7 +139,8 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
 
     const newDraft = {
       user_id: user.id,
-      client_name: draftData.client_name.trim(),
+      client_id: draftData.client_id || null,
+      client_name: draftData.client_name?.trim() || '',
       client_contact: draftData.client_contact?.trim() || null,
       quote_data: (draftData.quote_data || []) as any,
       subtotal: calculation.subtotal,

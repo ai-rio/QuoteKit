@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { ClientSelector } from '@/features/clients/components/ClientSelector';
+import { ClientOption } from '@/features/clients/types';
 import { LineItem } from '@/features/items/types';
 import { CompanySettings } from '@/features/settings/types';
 
@@ -43,7 +45,22 @@ export function QuoteCreator({
   const [status, setStatus] = useState<QuoteStatus>('draft');
   const [quoteNumber, setQuoteNumber] = useState<string>('');
   
-  // Client info state - prioritize initialDraft, then templateData, then empty
+  // Client info state - support both new client_id approach and legacy client_name
+  const [selectedClient, setSelectedClient] = useState<ClientOption | null>(() => {
+    // If we have a client_id, we'll need to load the client data
+    // For now, fall back to legacy data if available
+    if (initialDraft?.client_name || templateData?.client_name) {
+      return {
+        id: '', // We don't have the ID for legacy data
+        name: initialDraft?.client_name || templateData?.client_name || '',
+        email: initialDraft?.client_contact || templateData?.client_contact || null,
+        phone: null,
+      };
+    }
+    return null;
+  });
+  
+  // Legacy client info for backward compatibility
   const [clientName, setClientName] = useState(
     initialDraft?.client_name || templateData?.client_name || ''
   );
@@ -75,11 +92,23 @@ export function QuoteCreator({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
 
+  // Handle client selection
+  const handleClientSelect = (client: ClientOption) => {
+    setSelectedClient(client);
+    if (client) {
+      setClientName(client.name);
+      setClientContact(client.email || client.phone || '');
+    } else {
+      setClientName('');
+      setClientContact('');
+    }
+  };
+
   // Mark as having unsaved changes when data changes
   useEffect(() => {
     if (!initialDraft && !templateData) return;
     setHasUnsavedChanges(true);
-  }, [clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft, templateData]);
+  }, [selectedClient, clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft, templateData]);
 
   // Show notification when template is loaded
   useEffect(() => {
@@ -98,6 +127,7 @@ export function QuoteCreator({
     try {
       const draftData: SaveDraftData = {
         id: draftId || undefined,
+        client_id: selectedClient?.id || null,
         client_name: clientName,
         client_contact: clientContact || null,
         quote_data: quoteLineItems,
@@ -116,7 +146,7 @@ export function QuoteCreator({
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [hasUnsavedChanges, clientName, clientContact, quoteLineItems, taxRate, markupRate, draftId]);
+  }, [hasUnsavedChanges, selectedClient?.id, clientName, clientContact, quoteLineItems, taxRate, markupRate, draftId]);
 
   useEffect(() => {
     const interval = setInterval(autoSave, 30000); // 30 seconds
@@ -199,6 +229,7 @@ export function QuoteCreator({
     setIsLoading(true);
 
     const quoteData: CreateQuoteData = {
+      client_id: selectedClient?.id || null,
       client_name: clientName,
       client_contact: clientContact || null,
       quote_data: quoteLineItems,
@@ -288,28 +319,12 @@ export function QuoteCreator({
           <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Client Details</CardTitle>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="client-name" className="text-sm font-medium text-charcoal">Client Name *</Label>
-              <Input
-                id="client-name"
-                placeholder="Enter client name"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
-              />
-            </div>
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="client-contact" className="text-sm font-medium text-charcoal">Client Contact</Label>
-              <Input
-                id="client-contact"
-                placeholder="Phone, email, or address"
-                value={clientContact}
-                onChange={(e) => setClientContact(e.target.value)}
-                className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
-              />
-            </div>
-          </div>
+          <ClientSelector
+            selectedClient={selectedClient}
+            onClientSelect={handleClientSelect}
+            placeholder="Select or search for a client..."
+            className="min-h-[44px] touch-manipulation"
+          />
         </CardContent>
       </Card>
 
