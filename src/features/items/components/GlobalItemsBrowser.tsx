@@ -249,6 +249,12 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
     try {
       setCopying(true);
       
+      console.log('Copying item:', {
+        globalItemId: selectedItem.id,
+        customCost: customCost ? parseFloat(customCost) : undefined,
+        itemName: selectedItem.name
+      });
+      
       const response = await fetch('/api/global-items/copy', {
         method: 'POST',
         headers: {
@@ -260,17 +266,32 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
         }),
       });
 
+      console.log('Copy response status:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('Copy successful:', result);
         setShowCopyDialog(false);
         setSelectedItem(null);
         setCustomCost('');
         onItemAdded?.();
       } else {
-        const error = await response.json();
-        console.error('Error copying item:', error);
+        let errorMessage = 'Failed to copy item';
+        try {
+          const errorData = await response.json();
+          console.error('Copy error response:', errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          console.error('Raw response text:', await response.text());
+        }
+        
+        // Show user-friendly error
+        alert(`Error copying item: ${errorMessage}`);
       }
     } catch (error) {
-      console.error('Error copying item:', error);
+      console.error('Network error copying item:', error);
+      alert('Network error occurred while copying item. Please try again.');
     } finally {
       setCopying(false);
     }

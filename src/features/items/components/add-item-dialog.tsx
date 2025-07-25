@@ -51,15 +51,28 @@ export function AddItemDialog({ onItemAdded, children, categories }: AddItemDial
       formData.append('category', selectedCategory);
     }
 
+    console.log('Submitting item creation with data:', {
+      name: formData.get('name'),
+      unit: formData.get('unit'),
+      cost: formData.get('cost'),
+      category: formData.get('category')
+    });
+
     const response = await createLineItem(formData);
 
+    console.log('Create item response:', response);
+
     if (response?.error) {
+      console.error('Error creating item:', response.error);
       toast({
         variant: 'destructive',
-        description: response.error.message || 'Failed to create item',
+        title: 'Failed to create item',
+        description: response.error.message || 'Unknown error occurred',
       });
     } else {
+      console.log('Item created successfully:', response.data);
       toast({
+        title: 'Success',
         description: 'Item created successfully',
       });
       form.reset();

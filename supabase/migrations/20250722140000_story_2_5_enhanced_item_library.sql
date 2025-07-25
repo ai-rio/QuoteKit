@@ -84,11 +84,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger to automatically create default categories for new users
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION create_default_categories();
+-- Note: Temporarily disabled due to permissions on auth.users in local development
+-- DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+-- CREATE TRIGGER on_auth_user_created
+--   AFTER INSERT ON auth.users
+--   FOR EACH ROW
+--   EXECUTE FUNCTION create_default_categories();
 
 -- Insert default categories for existing users who don't have any categories yet
 DO $$
