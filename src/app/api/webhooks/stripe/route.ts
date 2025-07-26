@@ -21,12 +21,13 @@ export async function POST(request: NextRequest) {
       .eq('key', 'stripe_config')
       .single()
 
-    if (!configData?.value?.webhook_secret) {
+    const config = configData?.value as any;
+    if (!config?.webhook_secret) {
       console.error('Webhook secret not configured')
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 400 })
     }
 
-    const stripeConfig = configData.value
+    const stripeConfig = configData?.value as any
     const stripe = createStripeAdminClient(stripeConfig)
 
     let event: Stripe.Event
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       event = stripe.webhooks.constructEvent(
         body,
         signature,
-        stripeConfig.webhook_secret
+        config.webhook_secret
       )
     } catch (error: any) {
       console.error('Webhook signature verification failed:', error.message)
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
           stripe_event_id: event.id,
           event_type: event.type,
           processed: false,
-          data: event.data,
+          data: event.data as any,
           created_at: new Date().toISOString()
         }, {
           onConflict: 'stripe_event_id',

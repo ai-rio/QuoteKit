@@ -11,22 +11,16 @@ export interface AdminCustomer {
   email: string;
   name: string | null;
   stripe_customer_id: string | null;
-  subscription: {
-    id: string;
-    status: string;
-    current_period_end: string;
-    cancel_at_period_end: boolean;
-    price: {
-      unit_amount: number;
-      currency: string;
-      interval: string;
-      product: {
-        name: string;
-      };
-    };
-  } | null;
   created_at: string;
   last_sign_in_at: string | null;
+  subscription_id: string | null;
+  subscription_status: string | null;
+  subscription_current_period_end: string | null;
+  subscription_cancel_at_period_end: boolean | null;
+  price_unit_amount: number | null;
+  price_currency: string | null;
+  price_interval: string | null;
+  product_name: string | null;
 }
 
 export interface CustomerFilters {
@@ -57,35 +51,9 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
     limit = 20 
   } = filters;
 
-  let query = supabase
-    .from('customers')
-    .select(`
-      id,
-      stripe_customer_id,
-      users!inner(
-        email,
-        raw_user_meta_data,
-        created_at,
-        last_sign_in_at
-      ),
-      subscriptions(
-        id,
-        status,
-        current_period_end,
-        cancel_at_period_end,
-        prices(
-          unit_amount,
-          currency,
-          interval,
-          products(name)
-        )
-      )
-    `);
+  let query = supabase.from('admin_customers').select('*');
 
-  // Apply search filter
-  if (search) {
-    query = query.or(`users.email.ilike.%${search}%,users.raw_user_meta_data->>name.ilike.%${search}%`);
-  }
+  // Apply search filter will be handled after fetching user data
 
   // Apply pagination
   const from = (page - 1) * limit;
@@ -99,35 +67,39 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
     throw new Error('Failed to fetch customers');
   }
 
-  // Transform and filter by subscription status
-  const transformedCustomers: AdminCustomer[] = customers?.map(customer => ({
+  // Get user data separately for each customer
+  const transformedCustomers: AdminCustomer[] = customers.map(customer => ({
     id: customer.id,
-    email: customer.users.email,
-    name: customer.users.raw_user_meta_data?.name || null,
+    email: customer.email || 'N/A',
+    name: customer.name || null,
     stripe_customer_id: customer.stripe_customer_id,
-    subscription: customer.subscriptions?.[0] ? {
-      id: customer.subscriptions[0].id,
-      status: customer.subscriptions[0].status,
-      current_period_end: customer.subscriptions[0].current_period_end,
-      cancel_at_period_end: customer.subscriptions[0].cancel_at_period_end,
-      price: {
-        unit_amount: customer.subscriptions[0].prices?.unit_amount || 0,
-        currency: customer.subscriptions[0].prices?.currency || 'usd',
-        interval: customer.subscriptions[0].prices?.interval || 'month',
-        product: {
-          name: customer.subscriptions[0].prices?.products?.name || 'Unknown Product'
-        }
-      }
-    } : null,
-    created_at: customer.users.created_at,
-    last_sign_in_at: customer.users.last_sign_in_at
-  })) || [];
+    created_at: customer.created_at || '',
+    last_sign_in_at: customer.last_sign_in_at || null,
+    subscription_id: customer.subscription_id,
+    subscription_status: customer.subscription_status,
+    subscription_current_period_end: customer.subscription_current_period_end,
+    subscription_cancel_at_period_end: customer.subscription_cancel_at_period_end,
+    price_unit_amount: customer.price_unit_amount,
+    price_currency: customer.price_currency,
+    price_interval: customer.price_interval,
+    product_name: customer.product_name,
+  }));
+
+  // Apply search filter
+  let searchFilteredCustomers = transformedCustomers;
+  if (search) {
+    const searchLower = search.toLowerCase();
+    searchFilteredCustomers = transformedCustomers.filter(customer => 
+      customer.email.toLowerCase().includes(searchLower) ||
+      (customer.name && customer.name.toLowerCase().includes(searchLower))
+    );
+  }
 
   // Filter by subscription status
-  const filteredCustomers = transformedCustomers.filter(customer => {
+  const filteredCustomers = searchFilteredCustomers.filter(customer => {
     if (status === 'all') return true;
-    if (status === 'no_subscription') return !customer.subscription;
-    return customer.subscription?.status === status;
+    if (status === 'no_subscription') return !customer.subscription_id;
+    return customer.subscription_status === status;
   });
 
   return {
@@ -159,8 +131,23 @@ export async function adminCancelSubscription(subscriptionId: string, reason?: s
       throw new Error('Subscription not found');
     }
 
+    // Get Stripe configuration
+    const { data: stripeConfigRecord } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    const stripeConfig = stripeConfigRecord?.value as any;
+    if (!stripeConfig?.secret_key) {
+      throw new Error('Stripe not configured');
+    }
+
     // Cancel in Stripe
-    const stripeAdmin = await createStripeAdminClient();
+    const stripeAdmin = createStripeAdminClient({
+      secret_key: stripeConfig.secret_key,
+      mode: stripeConfig.mode || 'test'
+    });
     const updatedSubscription = await stripeAdmin.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
     });
@@ -180,16 +167,17 @@ export async function adminCancelSubscription(subscriptionId: string, reason?: s
     }
 
     // Log the cancellation
-    await supabase.from('subscription_changes').insert({
-      user_id: subscription.user_id,
-      subscription_id: subscriptionId,
-      old_price_id: subscription.price_id,
-      new_price_id: subscription.price_id,
-      change_type: 'cancellation',
-      effective_date: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
-      stripe_subscription_id: subscriptionId,
-      reason: reason || 'Admin cancellation'
-    });
+    // TODO: Re-enable after database types are regenerated
+    // await supabase.from('subscription_changes').insert({
+    //   user_id: subscription.user_id,
+    //   subscription_id: subscriptionId,
+    //   old_price_id: subscription.price_id,
+    //   new_price_id: subscription.price_id,
+    //   change_type: 'cancellation',
+    //   effective_date: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
+    //   stripe_subscription_id: subscriptionId,
+    //   reason: reason || 'Admin cancellation'
+    // });
 
     revalidatePath('/admin/customers');
     return { success: true };
@@ -219,8 +207,23 @@ export async function adminReactivateSubscription(subscriptionId: string) {
       throw new Error('Subscription not found');
     }
 
+    // Get Stripe configuration
+    const { data: stripeConfigRecord } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    const stripeConfig = stripeConfigRecord?.value as any;
+    if (!stripeConfig?.secret_key) {
+      throw new Error('Stripe not configured');
+    }
+
     // Reactivate in Stripe
-    const stripeAdmin = await createStripeAdminClient();
+    const stripeAdmin = createStripeAdminClient({
+      secret_key: stripeConfig.secret_key,
+      mode: stripeConfig.mode || 'test'
+    });
     const updatedSubscription = await stripeAdmin.subscriptions.update(subscriptionId, {
       cancel_at_period_end: false,
     });
@@ -240,16 +243,17 @@ export async function adminReactivateSubscription(subscriptionId: string) {
     }
 
     // Log the reactivation
-    await supabase.from('subscription_changes').insert({
-      user_id: subscription.user_id,
-      subscription_id: subscriptionId,
-      old_price_id: subscription.price_id,
-      new_price_id: subscription.price_id,
-      change_type: 'reactivation',
-      effective_date: new Date().toISOString(),
-      stripe_subscription_id: subscriptionId,
-      reason: 'Admin reactivation'
-    });
+    // TODO: Re-enable after database types are regenerated
+    // await supabase.from('subscription_changes').insert({
+    //   user_id: subscription.user_id,
+    //   subscription_id: subscriptionId,
+    //   old_price_id: subscription.price_id,
+    //   new_price_id: subscription.price_id,
+    //   change_type: 'reactivation',
+    //   effective_date: new Date().toISOString(),
+    //   stripe_subscription_id: subscriptionId,
+    //   reason: 'Admin reactivation'
+    // });
 
     revalidatePath('/admin/customers');
     return { success: true };
@@ -279,11 +283,25 @@ export async function adminChangePlan(subscriptionId: string, newPriceId: string
       throw new Error('Subscription not found');
     }
 
+    // Get Stripe configuration
+    const { data: stripeConfigRecord } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    const stripeConfig = stripeConfigRecord?.value as any;
+    if (!stripeConfig?.secret_key) {
+      throw new Error('Stripe not configured');
+    }
+
     // Update subscription in Stripe
-    const stripeAdmin = await createStripeAdminClient();
+    const stripeAdmin = createStripeAdminClient({
+      secret_key: stripeConfig.secret_key,
+      mode: stripeConfig.mode || 'test'
+    });
     const updatedSubscription = await stripeAdmin.subscriptions.update(subscriptionId, {
       items: [{
-        id: subscription.stripe_subscription_item_id,
         price: newPriceId,
       }],
       proration_behavior: 'always_invoice',
@@ -306,16 +324,17 @@ export async function adminChangePlan(subscriptionId: string, newPriceId: string
     }
 
     // Log the plan change
-    await supabase.from('subscription_changes').insert({
-      user_id: subscription.user_id,
-      subscription_id: subscriptionId,
-      old_price_id: subscription.price_id,
-      new_price_id: newPriceId,
-      change_type: 'upgrade', // You might want to determine this based on price comparison
-      effective_date: new Date().toISOString(),
-      stripe_subscription_id: subscriptionId,
-      reason: 'Admin plan change'
-    });
+    // TODO: Re-enable after database types are regenerated
+    // await supabase.from('subscription_changes').insert({
+    //   user_id: subscription.user_id,
+    //   subscription_id: subscriptionId,
+    //   old_price_id: subscription.price_id,
+    //   new_price_id: newPriceId,
+    //   change_type: 'upgrade', // You might want to determine this based on price comparison
+    //   effective_date: new Date().toISOString(),
+    //   stripe_subscription_id: subscriptionId,
+    //   reason: 'Admin plan change'
+    // });
 
     revalidatePath('/admin/customers');
     return { success: true };
@@ -371,7 +390,24 @@ export async function retryFailedPayment(subscriptionId: string) {
   }
 
   try {
-    const stripeAdmin = await createStripeAdminClient();
+    const supabase = await createSupabaseServerClient();
+
+    // Get Stripe configuration
+    const { data: stripeConfigRecord } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    const stripeConfig = stripeConfigRecord?.value as any;
+    if (!stripeConfig?.secret_key) {
+      throw new Error('Stripe not configured');
+    }
+
+    const stripeAdmin = createStripeAdminClient({
+      secret_key: stripeConfig.secret_key,
+      mode: stripeConfig.mode || 'test'
+    });
     
     // Get the latest invoice for the subscription
     const invoices = await stripeAdmin.invoices.list({

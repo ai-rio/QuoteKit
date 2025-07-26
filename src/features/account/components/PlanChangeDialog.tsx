@@ -50,7 +50,7 @@ export function PlanChangeDialog({
 
     if (!selectedPrice) return;
 
-    const isUpgrade = selectedPrice.unit_amount > currentPlan.price * 100;
+    const isUpgrade = (selectedPrice.unit_amount || 0) > currentPlan.price * 100;
 
     setIsChanging(true);
     try {
@@ -112,7 +112,7 @@ export function PlanChangeDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {availablePlans.map((product) =>
                 product.prices.map((price) => {
-                  const changeInfo = getChangeType(price.unit_amount);
+                  const changeInfo = getChangeType(price.unit_amount || 0);
                   const isSelected = selectedPriceId === price.id;
                   const isCurrent = price.unit_amount === currentPlan.price * 100;
                   const Icon = changeInfo.icon;
@@ -134,7 +134,7 @@ export function PlanChangeDialog({
                           <div>
                             <h4 className="font-bold text-charcoal">{product.name}</h4>
                             <p className="text-sm text-charcoal/70">
-                              {formatPrice(price.unit_amount)}/{price.interval}
+                              {formatPrice(price.unit_amount || 0)}/{price.interval}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
