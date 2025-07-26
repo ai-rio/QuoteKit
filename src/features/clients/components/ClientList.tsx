@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/table';
 
 import { deleteClient,getClientsWithAnalytics } from '../actions';
-import { ClientSearchFilters,ClientWithAnalytics } from '../types';
+import { Client, ClientSearchFilters,ClientWithAnalytics } from '../types';
 
 import { ClientForm } from './ClientForm';
 
@@ -123,13 +123,42 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
     setFilters(prev => ({ ...prev, hasQuotes }));
   };
 
-  const handleCreateClient = (client: ClientWithAnalytics) => {
-    setClients(prev => [client as ClientWithAnalytics, ...prev]);
+  const handleCreateClient = (client: Client) => {
+    // Transform Client to ClientWithAnalytics with default analytics values
+    const clientWithAnalytics: ClientWithAnalytics = {
+      ...client,
+      total_quotes: 0,
+      accepted_quotes: 0,
+      declined_quotes: 0,
+      total_quote_value: 0,
+      accepted_value: 0,
+      average_quote_value: 0,
+      acceptance_rate_percent: 0,
+      last_quote_date: null,
+    };
+    setClients(prev => [clientWithAnalytics, ...prev]);
     setShowCreateDialog(false);
   };
 
-  const handleEditClient = (client: ClientWithAnalytics) => {
-    setClients(prev => prev.map(c => c.id === client.id ? client as ClientWithAnalytics : c));
+  const handleEditClient = (client: Client) => {
+    // Transform Client to ClientWithAnalytics, preserving existing analytics data
+    setClients(prev => prev.map(c => {
+      if (c.id === client.id) {
+        // Keep existing analytics data from the current client
+        return {
+          ...client,
+          total_quotes: c.total_quotes,
+          accepted_quotes: c.accepted_quotes,
+          declined_quotes: c.declined_quotes,
+          total_quote_value: c.total_quote_value,
+          accepted_value: c.accepted_value,
+          average_quote_value: c.average_quote_value,
+          acceptance_rate_percent: c.acceptance_rate_percent,
+          last_quote_date: c.last_quote_date,
+        };
+      }
+      return c;
+    }));
     setShowEditDialog(false);
     setSelectedClient(null);
   };

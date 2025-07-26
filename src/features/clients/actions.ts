@@ -27,7 +27,18 @@ export async function getClients(): Promise<ActionResponse<Client[]>> {
       return { data: null, error };
     }
 
-    return { data: data || [], error: null };
+    // Transform data to handle null values
+    const transformedData = (data || []).map(item => ({
+      ...item,
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
+      email: item.email || undefined,
+      phone: item.phone || undefined,
+      address: item.address || undefined,
+      notes: item.notes || undefined,
+    }));
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Unexpected error fetching clients:', error);
     return { data: null, error: { message: 'Failed to fetch clients' } };
@@ -82,15 +93,15 @@ export async function getClientsWithAnalytics(
 
     // Transform the data to match our ClientWithAnalytics interface
     const transformedData = (data || []).map(item => ({
-      id: item.client_id,
-      user_id: item.user_id,
-      name: item.client_name,
-      email: item.email,
-      phone: item.phone,
+      id: item.client_id || '',
+      user_id: item.user_id || '',
+      name: item.client_name || '',
+      email: item.email || undefined,
+      phone: item.phone || undefined,
       address: null, // Not included in analytics view, would need separate query
       notes: null, // Not included in analytics view, would need separate query
-      created_at: item.client_since,
-      updated_at: item.client_since, // Using created_at as fallback
+      created_at: item.client_since || new Date().toISOString(),
+      updated_at: item.client_since || new Date().toISOString(), // Using created_at as fallback
       total_quotes: item.total_quotes || 0,
       accepted_quotes: item.accepted_quotes || 0,
       declined_quotes: item.declined_quotes || 0,
@@ -129,7 +140,18 @@ export async function getClientById(clientId: string): Promise<ActionResponse<Cl
       return { data: null, error };
     }
 
-    return { data, error: null };
+    // Transform data to handle null values
+    const transformedData = data ? {
+      ...data,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      address: data.address || undefined,
+      notes: data.notes || undefined,
+    } : null;
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Unexpected error fetching client:', error);
     return { data: null, error: { message: 'Failed to fetch client' } };
@@ -184,8 +206,19 @@ export async function createClient(formData: FormData): Promise<ActionResponse<C
       return { data: null, error };
     }
 
+    // Transform data to handle null values
+    const transformedData = data ? {
+      ...data,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      address: data.address || undefined,
+      notes: data.notes || undefined,
+    } : null;
+
     revalidatePath('/clients');
-    return { data, error: null };
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Unexpected error creating client:', error);
     return { data: null, error: { message: 'Failed to create client' } };
@@ -242,8 +275,19 @@ export async function updateClient(clientId: string, formData: FormData): Promis
       return { data: null, error };
     }
 
+    // Transform data to handle null values
+    const transformedData = data ? {
+      ...data,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      address: data.address || undefined,
+      notes: data.notes || undefined,
+    } : null;
+
     revalidatePath('/clients');
-    return { data, error: null };
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Unexpected error updating client:', error);
     return { data: null, error: { message: 'Failed to update client' } };

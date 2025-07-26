@@ -69,7 +69,7 @@ export function AddItemDialog({ onItemAdded, children, categories }: AddItemDial
         title: 'Failed to create item',
         description: response.error.message || 'Unknown error occurred',
       });
-    } else {
+    } else if (response) {
       console.log('Item created successfully:', response.data);
       toast({
         title: 'Success',
