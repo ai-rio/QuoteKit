@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getAvailablePlans } from '@/features/account/actions/subscription-actions';
+import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedCurrentPlanCard';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getBillingHistory, getPaymentMethods,getSubscription } from '@/features/account/controllers/get-subscription';
 import { SubscriptionWithProduct } from '@/features/pricing/types';
@@ -38,10 +40,11 @@ export default async function AccountPage() {
     redirect('/login');
   }
 
-  const [subscription, billingHistory, paymentMethods] = await Promise.all([
+  const [subscription, billingHistory, paymentMethods, availablePlans] = await Promise.all([
     getSubscription(),
     getBillingHistory(),
     getPaymentMethods(),
+    getAvailablePlans(),
   ]);
 
   return (
@@ -54,7 +57,7 @@ export default async function AccountPage() {
 
         {/* Current Plan Section */}
         <Suspense fallback={<CardSkeleton />}>
-          <CurrentPlanCard subscription={subscription} />
+          <EnhancedCurrentPlanCard subscription={subscription} availablePlans={availablePlans} />
         </Suspense>
 
         {/* Billing History Section */}
@@ -68,97 +71,6 @@ export default async function AccountPage() {
         </Suspense>
       </div>
     </div>
-  );
-}
-
-function CurrentPlanCard({ subscription }: { subscription: SubscriptionWithProduct | null }) {
-  const getStatusBadge = (status: string) => {
-    const statusColors = {
-      active: 'bg-forest-green text-paper-white',
-      trialing: 'bg-equipment-yellow text-charcoal',
-      past_due: 'bg-red-500 text-paper-white',
-      canceled: 'bg-stone-gray text-charcoal',
-    };
-
-    return (
-      <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-stone-gray text-charcoal'}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  return (
-    <Card className="bg-paper-white border-stone-gray">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl text-charcoal">Current Plan</CardTitle>
-            <CardDescription className="text-charcoal/70">Your subscription details</CardDescription>
-          </div>
-          <DollarSign className="h-6 w-6 text-charcoal/60" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        {subscription ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-charcoal">
-                  {subscription.prices?.products?.name || 'Unknown Plan'}
-                </h3>
-                <p className="text-sm text-charcoal/70">
-                  ${((subscription.prices?.unit_amount || 0) / 100).toFixed(0)}/
-                  {subscription.prices?.interval || 'month'}
-                </p>
-              </div>
-              {getStatusBadge(subscription.status || 'unknown')}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-gray">
-              <div>
-                <p className="text-sm font-medium text-charcoal">Next billing date</p>
-                <p className="text-sm text-charcoal/70">
-                  {new Date(subscription.current_period_end).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-charcoal">Billing period</p>
-                <p className="text-sm text-charcoal/70">
-                  {new Date(subscription.current_period_start).toLocaleDateString()} - {' '}
-                  {new Date(subscription.current_period_end).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button 
-                className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
-                asChild
-              >
-                <a href="/manage-subscription">Manage Subscription</a>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-stone-gray text-charcoal hover:bg-light-concrete h-10"
-                asChild
-              >
-                <a href="/pricing">Upgrade Plan</a>
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-charcoal/70 mb-4">You don&apos;t have an active subscription</p>
-            <Button 
-              className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
-              asChild
-            >
-              <a href="/pricing">Start Subscription</a>
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
