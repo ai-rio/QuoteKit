@@ -147,12 +147,13 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
     try {
       const result = await deleteQuotes([quote.id]);
       
-      if (result.error) {
+      if (result?.error) {
         alert(`Failed to delete quote: ${result.error.message || 'Unknown error'}`);
-      } else {
-        // Navigate back to quotes list after successful deletion
-        router.push('/quotes');
+        return;
       }
+      
+      // Navigate back to quotes list after successful deletion
+      router.push('/quotes');
     } catch (error) {
       console.error('Error deleting quote:', error);
       alert('An unexpected error occurred while deleting the quote.');

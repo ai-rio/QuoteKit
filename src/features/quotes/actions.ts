@@ -4,7 +4,7 @@ import { updateItemLastUsed } from '@/features/items/actions';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 
-import { CreateQuoteData, Quote, SaveDraftData } from './types';
+import { CreateQuoteData, Quote, QuoteStatus, SaveDraftData } from './types';
 import { calculateQuote } from './utils';
 
 export async function createQuote(quoteData: CreateQuoteData): Promise<ActionResponse<Quote>> {
@@ -239,7 +239,7 @@ export async function duplicateQuote(quoteId: string): Promise<ActionResponse<Qu
 
 export async function updateQuoteStatus(
   quoteIds: string[], 
-  status: string
+  status: QuoteStatus
 ): Promise<ActionResponse<{ updated: number }>> {
   try {
     const supabase = await createSupabaseServerClient();

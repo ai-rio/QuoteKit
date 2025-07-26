@@ -20,6 +20,15 @@ export function useDuplicateQuote() {
     try {
       const result = await duplicateQuote(quoteId);
 
+      if (!result) {
+        const errorMessage = 'No response received from duplicate quote action';
+        setError(errorMessage);
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+
       if (result.error) {
         const errorMessage = result.error.message || 'Failed to duplicate quote';
         setError(errorMessage);

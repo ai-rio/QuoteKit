@@ -8,7 +8,11 @@ const config = {
     '**/*.(test|spec).+(ts|tsx|js)'
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: {
+        jsx: 'react-jsx'
+      }
+    }],
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -18,6 +22,7 @@ const config = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^lucide-react$': '<rootDir>/tests/__mocks__/lucide-react.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testPathIgnorePatterns: [
@@ -25,7 +30,7 @@ const config = {
     '<rootDir>/node_modules/',
   ],
   transformIgnorePatterns: [
-    '/node_modules/',
+    '/node_modules/(?!(lucide-react)/)',
     '^.+\\.module\\.(css|sass|scss)$',
   ],
 };

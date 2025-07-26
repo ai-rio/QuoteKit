@@ -51,7 +51,7 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
     limit = 20 
   } = filters;
 
-  let query = supabase.from('admin_customers').select('*');
+  let query = supabase.from('admin_customers').select('*') as any;
 
   // Apply search filter will be handled after fetching user data
 
@@ -68,7 +68,7 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
   }
 
   // Get user data separately for each customer
-  const transformedCustomers: AdminCustomer[] = customers.map(customer => ({
+  const transformedCustomers: AdminCustomer[] = (customers as any[]).map((customer: any) => ({
     id: customer.id,
     email: customer.email || 'N/A',
     name: customer.name || null,
