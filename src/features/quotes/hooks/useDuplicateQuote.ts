@@ -20,7 +20,7 @@ export function useDuplicateQuote() {
     try {
       const result = await duplicateQuote(quoteId);
 
-      if (result.error) {
+      if (result?.error) {
         const errorMessage = result.error.message || 'Failed to duplicate quote';
         setError(errorMessage);
         return {
@@ -29,10 +29,10 @@ export function useDuplicateQuote() {
         };
       }
 
-      if (result.data) {
+      if (result?.data) {
         return {
           success: true,
-          quote: result.data,
+          quote: result.data!,
         };
       }
 

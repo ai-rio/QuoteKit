@@ -99,14 +99,14 @@ export async function sendQuoteEmail(data: SendQuoteEmailData): Promise<EmailRes
           created_at: quote.created_at || new Date().toISOString(),
         },
         company: {
-          company_name: companySettings?.company_name,
-          company_address: companySettings?.company_address,
-          company_phone: companySettings?.company_phone,
-          logo_url: companySettings?.logo_url,
+          company_name: companySettings?.company_name || 'Your Company',
+          company_address: companySettings?.company_address || null,
+          company_phone: companySettings?.company_phone || null,
+          logo_url: companySettings?.logo_url || null,
         },
       };
       
-      pdfBuffer = await renderToBuffer(React.createElement(QuotePDFTemplate, pdfData));
+      pdfBuffer = await renderToBuffer(React.createElement(QuotePDFTemplate, pdfData) as any);
     } catch (error) {
       console.error('Failed to generate PDF:', error);
       // Continue without PDF attachment
@@ -123,14 +123,14 @@ export async function sendQuoteEmail(data: SendQuoteEmailData): Promise<EmailRes
           quote_number: quote.quote_number || `Q-${quote.id.slice(0, 8)}`,
           client_name: quote.client_name,
           total: quote.total,
-          expires_at: quote.expires_at,
+          expires_at: quote.expires_at || '',
         },
         company: {
           name: companySettings?.company_name || 'Your Company',
           email: companySettings?.company_email || session.user.email || '',
-          phone: companySettings?.company_phone,
-          address: companySettings?.company_address,
-          logo: companySettings?.logo_url,
+          phone: companySettings?.company_phone || undefined,
+          address: companySettings?.company_address || undefined,
+          logo: companySettings?.logo_url || undefined,
         },
       }),
       attachments: pdfBuffer ? [

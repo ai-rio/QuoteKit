@@ -13,14 +13,20 @@ export interface AdminCustomer {
   stripe_customer_id: string | null;
   created_at: string;
   last_sign_in_at: string | null;
-  subscription_id: string | null;
-  subscription_status: string | null;
-  subscription_current_period_end: string | null;
-  subscription_cancel_at_period_end: boolean | null;
-  price_unit_amount: number | null;
-  price_currency: string | null;
-  price_interval: string | null;
-  product_name: string | null;
+  subscription: {
+    id: string;
+    status: string;
+    current_period_end: string;
+    cancel_at_period_end: boolean;
+    price: {
+      unit_amount: number;
+      currency: string;
+      interval: string;
+      product: {
+        name: string;
+      };
+    };
+  } | null;
 }
 
 export interface CustomerFilters {
@@ -51,7 +57,12 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
     limit = 20 
   } = filters;
 
-  let query = supabase.from('admin_customers').select('*');
+  let query = supabase
+    .from('customers')
+    .select(`
+      id,
+      stripe_customer_id
+    `);
 
   // Apply search filter will be handled after fetching user data
 
@@ -67,23 +78,59 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
     throw new Error('Failed to fetch customers');
   }
 
-  // Get user data separately for each customer
-  const transformedCustomers: AdminCustomer[] = customers.map(customer => ({
-    id: customer.id,
-    email: customer.email || 'N/A',
-    name: customer.name || null,
-    stripe_customer_id: customer.stripe_customer_id,
-    created_at: customer.created_at || '',
-    last_sign_in_at: customer.last_sign_in_at || null,
-    subscription_id: customer.subscription_id,
-    subscription_status: customer.subscription_status,
-    subscription_current_period_end: customer.subscription_current_period_end,
-    subscription_cancel_at_period_end: customer.subscription_cancel_at_period_end,
-    price_unit_amount: customer.price_unit_amount,
-    price_currency: customer.price_currency,
-    price_interval: customer.price_interval,
-    product_name: customer.product_name,
-  }));
+  // Get user data and subscriptions separately for each customer
+  const transformedCustomers: AdminCustomer[] = [];
+  
+  if (customers) {
+    for (const customer of customers) {
+      // Get user data
+      const { data: userData } = await supabase.auth.admin.getUserById(customer.id);
+      
+      // Get subscription data
+      const { data: subscriptionData } = await supabase
+        .from('subscriptions')
+        .select(`
+          id,
+          status,
+          current_period_end,
+          cancel_at_period_end,
+          prices(
+            unit_amount,
+            currency,
+            interval,
+            products(name)
+          )
+        `)
+        .eq('user_id', customer.id)
+        .in('status', ['active', 'trialing', 'canceled', 'past_due'])
+        .order('created', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      transformedCustomers.push({
+        id: customer.id,
+        email: userData.user?.email || 'N/A',
+        name: userData.user?.user_metadata?.name || null,
+        stripe_customer_id: customer.stripe_customer_id,
+        created_at: userData.user?.created_at || '',
+        last_sign_in_at: userData.user?.last_sign_in_at || null,
+        subscription: subscriptionData ? {
+          id: subscriptionData.id,
+          status: subscriptionData.status || 'unknown',
+          current_period_end: subscriptionData.current_period_end,
+          cancel_at_period_end: subscriptionData.cancel_at_period_end || false,
+          price: {
+            unit_amount: subscriptionData.prices?.unit_amount || 0,
+            currency: subscriptionData.prices?.currency || 'usd',
+            interval: subscriptionData.prices?.interval || 'month',
+            product: {
+              name: subscriptionData.prices?.products?.name || 'Unknown Product'
+            }
+          }
+        } : null
+      });
+    }
+  }
 
   // Apply search filter
   let searchFilteredCustomers = transformedCustomers;
@@ -98,8 +145,8 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
   // Filter by subscription status
   const filteredCustomers = searchFilteredCustomers.filter(customer => {
     if (status === 'all') return true;
-    if (status === 'no_subscription') return !customer.subscription_id;
-    return customer.subscription_status === status;
+    if (status === 'no_subscription') return !customer.subscription;
+    return customer.subscription?.status === status;
   });
 
   return {

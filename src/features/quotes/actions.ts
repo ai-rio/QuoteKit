@@ -258,7 +258,7 @@ export async function updateQuoteStatus(
     // Update the quotes
     const { data, error } = await supabase
       .from('quotes')
-      .update({ status })
+      .update({ status: status as 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted' })
       .in('id', quoteIds)
       .eq('user_id', user.id)
       .select('id');

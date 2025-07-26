@@ -35,7 +35,17 @@ export async function getGlobalCategories(): Promise<ActionResponse<GlobalCatego
       return { data: null, error };
     }
 
-    return { data: data || [], error: null };
+    // Transform data to handle null values
+    const transformedData = (data || []).map(item => ({
+      ...item,
+      access_tier: item.access_tier || 'free' as ItemAccessTier,
+      sort_order: item.sort_order || 0,
+      is_active: item.is_active ?? true,
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
+    }));
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Error getting global categories:', error);
     return { data: null, error: { message: 'Failed to get global categories' } };
@@ -88,7 +98,26 @@ export async function getGlobalItems(filters?: {
       return { data: null, error };
     }
 
-    return { data: data || [], error: null };
+    // Transform data to handle null values
+    const transformedData = (data || []).map(item => ({
+      ...item,
+      category_id: item.category_id || '',
+      access_tier: item.access_tier || 'free' as ItemAccessTier,
+      sort_order: item.sort_order || 0,
+      is_active: item.is_active ?? true,
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
+      category: item.category ? {
+        ...item.category,
+        access_tier: item.category.access_tier || 'free' as ItemAccessTier,
+        sort_order: item.category.sort_order || 0,
+        is_active: item.category.is_active ?? true,
+        created_at: item.category.created_at || new Date().toISOString(),
+        updated_at: item.category.updated_at || new Date().toISOString(),
+      } : undefined,
+    }));
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Error getting global items:', error);
     return { data: null, error: { message: 'Failed to get global items' } };
@@ -152,7 +181,7 @@ export async function copyGlobalItemToPersonal(
     // Call the database function to copy the item
     const { data, error } = await supabase.rpc('copy_global_item_to_personal', {
       global_item_id: globalItemId,
-      custom_cost: customCost || null
+      custom_cost: customCost || undefined
     });
 
     console.log('Database function result:', { data, error });
@@ -226,7 +255,34 @@ export async function getUserGlobalItemUsage(): Promise<ActionResponse<UserGloba
       return { data: null, error };
     }
 
-    return { data: data || [], error: null };
+    // Transform data to handle null values
+    const transformedData = (data || []).map(item => ({
+      ...item,
+      is_favorite: item.is_favorite ?? false,
+      usage_count: item.usage_count || 0,
+      last_used_at: item.last_used_at || new Date().toISOString(),
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString(),
+      global_item: item.global_item ? {
+        ...item.global_item,
+        category_id: item.global_item.category_id || '',
+        access_tier: item.global_item.access_tier || 'free' as ItemAccessTier,
+        sort_order: item.global_item.sort_order || 0,
+        is_active: item.global_item.is_active ?? true,
+        created_at: item.global_item.created_at || new Date().toISOString(),
+        updated_at: item.global_item.updated_at || new Date().toISOString(),
+        category: item.global_item.category ? {
+          ...item.global_item.category,
+          access_tier: item.global_item.category.access_tier || 'free' as ItemAccessTier,
+          sort_order: item.global_item.category.sort_order || 0,
+          is_active: item.global_item.category.is_active ?? true,
+          created_at: item.global_item.category.created_at || new Date().toISOString(),
+          updated_at: item.global_item.category.updated_at || new Date().toISOString(),
+        } : undefined,
+      } : item.global_item,
+    }));
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Error getting user global item usage:', error);
     return { data: null, error: { message: 'Failed to get user usage data' } };
@@ -280,7 +336,17 @@ export async function createGlobalCategory(formData: FormData): Promise<ActionRe
       return { data: null, error };
     }
 
-    return { data, error: null };
+    // Transform data to handle null values
+    const transformedData = data ? {
+      ...data,
+      access_tier: data.access_tier || 'free' as ItemAccessTier,
+      sort_order: data.sort_order || 0,
+      is_active: data.is_active ?? true,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+    } : null;
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Error creating global category:', error);
     return { data: null, error: { message: 'Failed to create global category' } };
@@ -346,7 +412,18 @@ export async function createGlobalItem(formData: FormData): Promise<ActionRespon
       return { data: null, error };
     }
 
-    return { data, error: null };
+    // Transform data to handle null values
+    const transformedData = data ? {
+      ...data,
+      category_id: data.category_id || '',
+      access_tier: data.access_tier || 'free' as ItemAccessTier,
+      sort_order: data.sort_order || 0,
+      is_active: data.is_active ?? true,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+    } : null;
+
+    return { data: transformedData, error: null };
   } catch (error) {
     console.error('Error creating global item:', error);
     return { data: null, error: { message: 'Failed to create global item' } };
