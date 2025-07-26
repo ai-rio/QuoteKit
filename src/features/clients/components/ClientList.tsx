@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { 
   DollarSign,
   Edit, 
@@ -72,7 +72,7 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
   });
 
   // Load clients data
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     setLoading(true);
     try {
       const result = await getClientsWithAnalytics(filters);
@@ -85,11 +85,11 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     loadClients();
-  }, [filters.sortBy, filters.sortOrder, filters.hasQuotes]); // loadClients is async and changes on every render, so we don't include it
+  }, [loadClients]);
 
   // Apply search filter
   useEffect(() => {
