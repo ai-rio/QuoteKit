@@ -11,14 +11,24 @@ export async function getStripePublishableKey() {
       .single();
 
     if (error) {
-      console.error('Error fetching Stripe config:', error);
-      return null;
+      console.warn('Database query failed for Stripe config, falling back to environment variables:', error);
+      // Fall back to environment variable
+      return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
     }
 
     const stripeConfig = stripeConfigRecord?.value as any;
-    return stripeConfig?.publishable_key || null;
+    const publishableKey = stripeConfig?.publishable_key;
+    
+    if (publishableKey) {
+      return publishableKey;
+    }
+    
+    // If no config in database, fall back to environment variable
+    console.warn('No stripe_config found in database, falling back to environment variables');
+    return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
   } catch (error) {
-    console.error('Error getting Stripe publishable key:', error);
-    return null;
+    console.error('Error getting Stripe publishable key, falling back to environment variables:', error);
+    // Fall back to environment variable as last resort
+    return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
   }
 }

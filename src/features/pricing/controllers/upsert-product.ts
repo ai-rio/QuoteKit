@@ -3,19 +3,19 @@ import Stripe from 'stripe';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import type { Database } from '@/libs/supabase/types';
 
-type Product = Database['public']['Tables']['products']['Row'];
+type StripeProduct = Database['public']['Tables']['stripe_products']['Row'];
 
 export async function upsertProduct(product: Stripe.Product) {
-  const productData: Product = {
-    id: product.id,
-    active: product.active,
+  const productData = {
+    stripe_product_id: product.id,
     name: product.name,
     description: product.description ?? null,
-    image: product.images?.[0] ?? null,
-    metadata: product.metadata,
+    active: product.active,
   };
 
-  const { error } = await supabaseAdminClient.from('products').upsert([productData]);
+  const { error } = await supabaseAdminClient.from('stripe_products').upsert([productData], {
+    onConflict: 'stripe_product_id'
+  });
 
   if (error) {
     throw error;

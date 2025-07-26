@@ -3,28 +3,74 @@ import Stripe from 'stripe';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import type { Database } from '@/libs/supabase/types';
 
-type Price = Database['public']['Tables']['prices']['Row'];
+type StripePrice = Database['public']['Tables']['stripe_prices']['Row'];
 
 export async function upsertPrice(price: Stripe.Price) {
-  const priceData: Price = {
-    id: price.id,
-    product_id: typeof price.product === 'string' ? price.product : '',
-    active: price.active,
+  const priceData = {
+    stripe_price_id: price.id,
+    stripe_product_id: typeof price.product === 'string' ? price.product : '',
+    unit_amount: price.unit_amount ?? 0,
     currency: price.currency,
-    description: price.nickname ?? null,
-    type: price.type,
-    unit_amount: price.unit_amount ?? null,
-    interval: price.recurring?.interval ?? null,
-    interval_count: price.recurring?.interval_count ?? null,
-    trial_period_days: price.recurring?.trial_period_days ?? null,
-    metadata: price.metadata,
+    recurring_interval: price.recurring?.interval ?? null,
+    active: price.active,
   };
 
-  const { error } = await supabaseAdminClient.from('prices').upsert([priceData]);
+  const { error } = await supabaseAdminClient.from('stripe_prices').upsert([priceData], {
+    onConflict: 'stripe_price_id'
+  });
 
   if (error) {
     throw error;
   } else {
     console.info(`Price inserted/updated: ${price.id}`);
+  }
+}
+
+/**
+ * Sync all products and prices from Stripe to local database
+ * Useful for local development setup
+ */
+export async function syncStripeProductsAndPrices() {
+  const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+  
+  try {
+    const stripe = await createStripeAdminClient();
+    
+    console.log('Fetching products from Stripe...');
+    
+    // Fetch all active products from Stripe
+    const products = await stripe.products.list({
+      active: true,
+      limit: 100
+    });
+    
+    console.log(`Found ${products.data.length} products`);
+    
+    // Sync each product
+    for (const product of products.data) {
+      await upsertProduct(product);
+    }
+    
+    console.log('Fetching prices from Stripe...');
+    
+    // Fetch all active prices from Stripe
+    const prices = await stripe.prices.list({
+      active: true,
+      limit: 100
+    });
+    
+    console.log(`Found ${prices.data.length} prices`);
+    
+    // Sync each price
+    for (const price of prices.data) {
+      await upsertPrice(price);
+    }
+    
+    console.log('✅ Stripe sync completed successfully!');
+    return { success: true, productsCount: products.data.length, pricesCount: prices.data.length };
+    
+  } catch (error) {
+    console.error('❌ Stripe sync failed:', error);
+    throw error;
   }
 }

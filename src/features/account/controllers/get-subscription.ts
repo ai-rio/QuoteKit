@@ -4,18 +4,40 @@ export async function getSubscription() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    const { data, error } = await supabase
+    // Since we have a custom foreign key relationship, we need to do a manual join
+    const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
-      .select('*, prices(*, products(*))')
+      .select('*')
       .in('status', ['trialing', 'active'])
       .maybeSingle();
 
-    if (error) {
-      console.error('Subscription query error:', error);
+    if (subError) {
+      console.error('Subscription query error:', subError);
       return null;
     }
 
-    return data;
+    if (!subscription) {
+      return null;
+    }
+
+    // Manually fetch the price and product data
+    const { data: priceData, error: priceError } = await supabase
+      .from('stripe_prices')
+      .select('*, stripe_products(*)')
+      .eq('stripe_price_id', subscription.price_id)
+      .maybeSingle();
+
+    if (priceError) {
+      console.error('Price query error:', priceError);
+      // Return subscription without price data if price lookup fails
+      return subscription;
+    }
+
+    // Combine the data
+    return {
+      ...subscription,
+      prices: priceData
+    };
   } catch (error) {
     console.error('getSubscription function error:', error);
     return null;
