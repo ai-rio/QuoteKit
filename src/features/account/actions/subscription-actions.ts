@@ -273,10 +273,10 @@ export async function getAvailablePlans() {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: products, error } = await supabase
-      .from('products')
+      .from('stripe_products')
       .select(`
         *,
-        prices (*)
+        stripe_prices (*)
       `)
       .eq('active', true)
       .order('created_at');

@@ -5,12 +5,12 @@ export async function getProducts() {
     const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase
-      .from('products')
-      .select('*, prices(*)')
+      .from('stripe_products')
+      .select('*, stripe_prices:stripe_prices!stripe_product_id(*)')
       .eq('active', true)
-      .eq('prices.active', true)
-      .order('metadata->index')
-      .order('unit_amount', { referencedTable: 'prices' });
+      .eq('stripe_prices.active', true)
+      .order('created_at')
+      .order('unit_amount', { referencedTable: 'stripe_prices' });
 
     if (error) {
       console.error('Products query error:', error);
