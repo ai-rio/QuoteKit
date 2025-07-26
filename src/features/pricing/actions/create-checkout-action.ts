@@ -36,7 +36,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     },
     line_items: [
       {
-        price: price.id,
+        price: price.stripe_price_id,
         quantity: 1,
       },
     ],

@@ -4,20 +4,43 @@ export async function getProducts() {
   try {
     const supabase = await createSupabaseServerClient();
 
-    const { data, error } = await supabase
+    // Get products and prices separately, then join them manually
+    const { data: products, error: productsError } = await supabase
       .from('stripe_products')
-      .select('*, stripe_prices:stripe_prices!stripe_product_id(*)')
+      .select('*')
       .eq('active', true)
-      .eq('stripe_prices.active', true)
-      .order('created_at')
-      .order('unit_amount', { referencedTable: 'stripe_prices' });
+      .order('created_at');
 
-    if (error) {
-      console.error('Products query error:', error);
+    if (productsError) {
+      console.error('Products query error:', productsError);
       return [];
     }
 
-    return data ?? [];
+    const { data: prices, error: pricesError } = await supabase
+      .from('stripe_prices')
+      .select('*')
+      .eq('active', true)
+      .order('unit_amount');
+
+    if (pricesError) {
+      console.error('Prices query error:', pricesError);
+      return [];
+    }
+
+    // Manually join products with their prices
+    // Transform stripe_prices to match expected Price type with interval and type fields
+    const productsWithPrices = products.map(product => ({
+      ...product,
+      prices: prices
+        .filter(price => price.stripe_product_id === product.stripe_product_id)
+        .map(price => ({
+          ...price,
+          interval: price.recurring_interval, // Map recurring_interval to interval for compatibility
+          type: price.recurring_interval ? 'recurring' : 'one_time' // Add type field based on recurring_interval
+        })) || []
+    }));
+
+    return productsWithPrices;
   } catch (error) {
     console.error('getProducts function error:', error);
     return [];

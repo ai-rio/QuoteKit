@@ -32,22 +32,35 @@ export function PricingCard({
     // If price is passed in we use that one. This is used on the account page when showing the user their current subscription.
     if (price) return price;
 
+    // Safety check: ensure prices array exists and is valid
+    const pricesArray = product.prices || [];
+
     // If no price provided we need to find the right one to render for the product.
     // First check if the product has a price - in the case of our enterprise product, no price is included.
     // We'll return null and handle that case when rendering.
-    if (product.prices.length === 0) return null;
+    if (pricesArray.length === 0) return null;
 
     // Next determine if the product is a one time purchase - in these cases it will only have a single price.
-    if (product.prices.length === 1) return product.prices[0];
+    if (pricesArray.length === 1) return pricesArray[0];
 
     // Lastly we can assume the product is a subscription one with a month and year price, so we get the price according to the select billingInterval
-    return product.prices.find((price) => price.interval === billingInterval);
+    return pricesArray.find((price) => price.interval === billingInterval);
   }, [billingInterval, price, product.prices]);
 
-  const monthPrice = product.prices.find((price) => price.interval === 'month')?.unit_amount;
-  const yearPrice = product.prices.find((price) => price.interval === 'year')?.unit_amount;
+  const pricesArray = product.prices || [];
+  const monthPrice = pricesArray.find((price) => price.interval === 'month')?.unit_amount;
+  const yearPrice = pricesArray.find((price) => price.interval === 'year')?.unit_amount;
   const isBillingIntervalYearly = billingInterval === 'year';
-  const metadata = productMetadataSchema.parse(product.metadata);
+  // Handle missing or invalid metadata with safe parsing and defaults
+  const metadataResult = productMetadataSchema.safeParse(product.metadata || {});
+  const metadata = metadataResult.success 
+    ? metadataResult.data 
+    : {
+        priceCardVariant: 'basic' as const,
+        generatedImages: 'enterprise' as const,
+        imageEditor: 'basic' as const,
+        supportLevel: 'email' as const
+      };
 
   function handleBillingIntervalChange(billingInterval: BillingInterval) {
     setBillingInterval(billingInterval);
@@ -141,7 +154,7 @@ export function PricingCard({
             }`}
             asChild
           >
-            <a href={`/pricing?price=${currentPrice.id}`}>Get Started</a>
+            <a href={`/pricing?price=${currentPrice.stripe_price_id}`}>Get Started</a>
           </Button>
         ) : (
           <Button
