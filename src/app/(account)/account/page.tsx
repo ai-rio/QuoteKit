@@ -1,80 +1,365 @@
-import { PropsWithChildren, ReactNode } from 'react';
-import Link from 'next/link';
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { Calendar, CreditCard, DollarSign,Download } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getSession } from '@/features/account/controllers/get-session';
-import { getSubscription } from '@/features/account/controllers/get-subscription';
-import { PricingCard } from '@/features/pricing/components/price-card';
-import { getProducts } from '@/features/pricing/controllers/get-products';
-import { Price, ProductWithPrices } from '@/features/pricing/types';
+import { getBillingHistory, getPaymentMethods,getSubscription } from '@/features/account/controllers/get-subscription';
+import { SubscriptionWithProduct } from '@/features/pricing/types';
+
+interface BillingHistoryItem {
+  id: string;
+  date: string;
+  amount: number;
+  status: string;
+  invoice_url: string;
+  description: string;
+}
+
+interface PaymentMethod {
+  id: string;
+  type: string;
+  card: {
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+  };
+  is_default: boolean;
+}
 
 export default async function AccountPage() {
-  const [session, subscription, products] = await Promise.all([getSession(), getSubscription(), getProducts()]);
+  const session = await getSession();
 
   if (!session) {
     redirect('/login');
   }
 
-  let userProduct: ProductWithPrices | undefined;
-  let userPrice: Price | undefined;
-
-  if (subscription) {
-    for (const product of products) {
-      for (const price of product.prices) {
-        if (price.id === subscription.price_id) {
-          userProduct = product;
-          userPrice = price;
-        }
-      }
-    }
-  }
+  const [subscription, billingHistory, paymentMethods] = await Promise.all([
+    getSubscription(),
+    getBillingHistory(),
+    getPaymentMethods(),
+  ]);
 
   return (
-    <section className='rounded-lg bg-black px-4 py-16'>
-      <h1 className='mb-8 text-center'>Account</h1>
+    <div className="min-h-screen bg-light-concrete">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-charcoal">Account Dashboard</h1>
+          <p className="text-charcoal/70 mt-2">Manage your subscription and billing information</p>
+        </div>
 
-      <div className='flex flex-col gap-4'>
-        <Card
-          title='Your Plan'
-          footer={
-            subscription ? (
-              <Button size='sm' variant='secondary' asChild>
-                <Link href='/manage-subscription'>Manage your subscription</Link>
-              </Button>
-            ) : (
-              <Button size='sm' variant='secondary' asChild>
-                <Link href='/pricing'>Start a subscription</Link>
-              </Button>
-            )
-          }
-        >
-          {userProduct && userPrice ? (
-            <PricingCard product={userProduct} price={userPrice} />
-          ) : (
-            <p>You don&apos;t have an active subscription</p>
-          )}
-        </Card>
+        {/* Current Plan Section */}
+        <Suspense fallback={<CardSkeleton />}>
+          <CurrentPlanCard subscription={subscription} />
+        </Suspense>
+
+        {/* Billing History Section */}
+        <Suspense fallback={<CardSkeleton />}>
+          <BillingHistoryCard billingHistory={billingHistory} />
+        </Suspense>
+
+        {/* Payment Methods Section */}
+        <Suspense fallback={<CardSkeleton />}>
+          <PaymentMethodsCard paymentMethods={paymentMethods} />
+        </Suspense>
       </div>
-    </section>
+    </div>
   );
 }
 
-function Card({
-  title,
-  footer,
-  children,
-}: PropsWithChildren<{
-  title: string;
-  footer?: ReactNode;
-}>) {
+function CurrentPlanCard({ subscription }: { subscription: SubscriptionWithProduct | null }) {
+  const getStatusBadge = (status: string) => {
+    const statusColors = {
+      active: 'bg-forest-green text-paper-white',
+      trialing: 'bg-equipment-yellow text-charcoal',
+      past_due: 'bg-red-500 text-paper-white',
+      canceled: 'bg-stone-gray text-charcoal',
+    };
+
+    return (
+      <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-stone-gray text-charcoal'}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
+  };
+
   return (
-    <div className='m-auto w-full max-w-3xl rounded-md bg-zinc-900'>
-      <div className='p-4'>
-        <h2 className='mb-1 text-xl font-semibold'>{title}</h2>
-        <div className='py-4'>{children}</div>
-      </div>
-      <div className='flex justify-end rounded-b-md border-t border-zinc-800 p-4'>{footer}</div>
-    </div>
+    <Card className="bg-paper-white border-stone-gray">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl text-charcoal">Current Plan</CardTitle>
+            <CardDescription className="text-charcoal/70">Your subscription details</CardDescription>
+          </div>
+          <DollarSign className="h-6 w-6 text-charcoal/60" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        {subscription ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-charcoal">
+                  {subscription.prices?.products?.name || 'Unknown Plan'}
+                </h3>
+                <p className="text-sm text-charcoal/70">
+                  ${((subscription.prices?.unit_amount || 0) / 100).toFixed(0)}/
+                  {subscription.prices?.interval || 'month'}
+                </p>
+              </div>
+              {getStatusBadge(subscription.status || 'unknown')}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-gray">
+              <div>
+                <p className="text-sm font-medium text-charcoal">Next billing date</p>
+                <p className="text-sm text-charcoal/70">
+                  {new Date(subscription.current_period_end).toLocaleDateString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-charcoal">Billing period</p>
+                <p className="text-sm text-charcoal/70">
+                  {new Date(subscription.current_period_start).toLocaleDateString()} - {' '}
+                  {new Date(subscription.current_period_end).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button 
+                className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
+                asChild
+              >
+                <a href="/manage-subscription">Manage Subscription</a>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-stone-gray text-charcoal hover:bg-light-concrete h-10"
+                asChild
+              >
+                <a href="/pricing">Upgrade Plan</a>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-charcoal/70 mb-4">You don&apos;t have an active subscription</p>
+            <Button 
+              className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
+              asChild
+            >
+              <a href="/pricing">Start Subscription</a>
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function BillingHistoryCard({ billingHistory }: { billingHistory: BillingHistoryItem[] }) {
+  return (
+    <Card className="bg-paper-white border-stone-gray">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl text-charcoal">Billing History</CardTitle>
+            <CardDescription className="text-charcoal/70">Download your invoices and receipts</CardDescription>
+          </div>
+          <Calendar className="h-6 w-6 text-charcoal/60" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        {billingHistory.length > 0 ? (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-stone-gray">
+                    <TableHead className="text-charcoal">Date</TableHead>
+                    <TableHead className="text-charcoal">Description</TableHead>
+                    <TableHead className="text-charcoal">Amount</TableHead>
+                    <TableHead className="text-charcoal">Status</TableHead>
+                    <TableHead className="text-charcoal">Invoice</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {billingHistory.map((item) => (
+                    <TableRow key={item.id} className="border-stone-gray">
+                      <TableCell className="text-charcoal">
+                        {new Date(item.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-charcoal">{item.description}</TableCell>
+                      <TableCell className="text-charcoal">
+                        ${(item.amount / 100).toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={
+                          item.status === 'paid' 
+                            ? 'bg-forest-green text-paper-white' 
+                            : 'bg-equipment-yellow text-charcoal'
+                        }>
+                          {item.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="border-stone-gray text-charcoal hover:bg-light-concrete w-10 h-10"
+                          asChild
+                        >
+                          <a href={item.invoice_url} target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {billingHistory.map((item) => (
+                <Card key={item.id} className="bg-light-concrete border-stone-gray">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-medium text-charcoal">{item.description}</p>
+                        <p className="text-sm text-charcoal/70">
+                          {new Date(item.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge className={
+                        item.status === 'paid' 
+                          ? 'bg-forest-green text-paper-white' 
+                          : 'bg-equipment-yellow text-charcoal'
+                      }>
+                        {item.status}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-charcoal">
+                        ${(item.amount / 100).toFixed(2)}
+                      </span>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="border-stone-gray text-charcoal hover:bg-paper-white w-10 h-10"
+                        asChild
+                      >
+                        <a href={item.invoice_url} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-charcoal/70">No billing history available</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PaymentMethodsCard({ paymentMethods }: { paymentMethods: PaymentMethod[] }) {
+  return (
+    <Card className="bg-paper-white border-stone-gray">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl text-charcoal">Payment Methods</CardTitle>
+            <CardDescription className="text-charcoal/70">Manage your payment information</CardDescription>
+          </div>
+          <CreditCard className="h-6 w-6 text-charcoal/60" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        {paymentMethods.length > 0 ? (
+          <div className="space-y-4">
+            {paymentMethods.map((method) => (
+              <Card key={method.id} className="bg-light-concrete border-stone-gray">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-8 bg-stone-gray rounded flex items-center justify-center">
+                        <CreditCard className="h-4 w-4 text-charcoal/60" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-charcoal capitalize">
+                          {method.card.brand} •••• {method.card.last4}
+                        </p>
+                        <p className="text-sm text-charcoal/70">
+                          Expires {method.card.exp_month}/{method.card.exp_year}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {method.is_default && (
+                        <Badge className="bg-forest-green text-paper-white">Default</Badge>
+                      )}
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="border-stone-gray text-charcoal hover:bg-paper-white h-10"
+                      >
+                        Update
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            <Button 
+              variant="outline"
+              className="w-full border-stone-gray text-charcoal hover:bg-light-concrete h-12"
+            >
+              Add Payment Method
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-charcoal/70 mb-4">No payment methods on file</p>
+            <Button 
+              className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
+            >
+              Add Payment Method
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CardSkeleton() {
+  return (
+    <Card className="bg-paper-white border-stone-gray">
+      <CardHeader>
+        <div className="h-6 w-48 bg-light-concrete animate-pulse rounded"></div>
+        <div className="h-4 w-32 bg-light-concrete animate-pulse rounded"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="h-4 w-full bg-light-concrete animate-pulse rounded"></div>
+          <div className="h-4 w-3/4 bg-light-concrete animate-pulse rounded"></div>
+          <div className="h-4 w-1/2 bg-light-concrete animate-pulse rounded"></div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

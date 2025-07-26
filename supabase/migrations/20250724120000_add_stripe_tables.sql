@@ -82,3 +82,19 @@ CREATE TRIGGER update_stripe_products_updated_at BEFORE UPDATE ON public.stripe_
 
 CREATE TRIGGER update_stripe_prices_updated_at BEFORE UPDATE ON public.stripe_prices
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enhanced webhook processing features for US-009
+-- Add error tracking and retry logic to webhook events table
+ALTER TABLE public.stripe_webhook_events 
+ADD COLUMN IF NOT EXISTS error_message text,
+ADD COLUMN IF NOT EXISTS retry_count integer DEFAULT 0,
+ADD COLUMN IF NOT EXISTS last_retry_at timestamptz;
+
+-- Add indexes for error tracking and monitoring
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_error ON public.stripe_webhook_events(error_message) WHERE error_message IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_retry ON public.stripe_webhook_events(retry_count);
+CREATE INDEX IF NOT EXISTS idx_stripe_webhook_events_last_retry ON public.stripe_webhook_events(last_retry_at);
+
+-- Create webhook events trigger
+CREATE TRIGGER update_stripe_webhook_events_updated_at BEFORE UPDATE ON public.stripe_webhook_events
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

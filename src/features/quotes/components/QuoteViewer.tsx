@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { CompanySettings } from '@/features/settings/types';
 
 import { deleteQuotes } from '../actions';
 import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
@@ -35,12 +36,7 @@ import { SendEmailDialog } from './SendEmailDialog';
 
 interface QuoteViewerProps {
   quote: Quote;
-  company: {
-    company_name: string | null;
-    company_address: string | null;
-    company_phone: string | null;
-    logo_url: string | null;
-  } | null;
+  company: CompanySettings | null;
 }
 
 const getStatusColor = (status: string) => {
@@ -384,7 +380,7 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
       )}
 
       {/* PDF Viewer */}
-      <QuotePDFViewer quote={quote} company={company as any} />
+      <QuotePDFViewer quote={quote} company={company} />
 
       {/* Quick Actions */}
       <Card className="bg-paper-white border-stone-gray">

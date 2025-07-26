@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   Activity,
   AlertTriangle,
@@ -14,7 +15,6 @@ import {
 import { SystemMetricsCard } from "@/components/admin/system-metrics-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
 import {
   Card,
   CardContent,

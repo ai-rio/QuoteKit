@@ -3,8 +3,6 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-
-import { useMobileSidebar } from "@/hooks/use-mobile"
 import { FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users } from "lucide-react"
 
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
@@ -26,6 +24,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useMobileSidebar } from "@/hooks/use-mobile"
 
 // Navigation items organized into groups
 interface NavItem {

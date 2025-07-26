@@ -1,15 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { IoCheckmark } from 'react-icons/io5';
 
-import { SexyBoarder } from '@/components/sexy-boarder';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { PriceCardVariant, productMetadataSchema } from '../models/product-metadata';
 import { BillingInterval, Price, ProductWithPrices } from '../types';
+
+const WithSexyBorder = ({ children, variant, className }: { children: React.ReactNode; variant: PriceCardVariant; className?: string }) => {
+  return <div className={className}>{children}</div>;
+};
 
 export function PricingCard({
   product,
@@ -45,103 +48,122 @@ export function PricingCard({
   const yearPrice = product.prices.find((price) => price.interval === 'year')?.unit_amount;
   const isBillingIntervalYearly = billingInterval === 'year';
   const metadata = productMetadataSchema.parse(product.metadata);
-  const buttonVariantMap = {
-    basic: 'default',
-    pro: 'sexy',
-    enterprise: 'orange',
-  } as const;
 
   function handleBillingIntervalChange(billingInterval: BillingInterval) {
     setBillingInterval(billingInterval);
   }
 
+  const isPopular = metadata.priceCardVariant === 'pro';
+
   return (
-    <WithSexyBorder variant={metadata.priceCardVariant} className='w-full flex-1'>
-      <div className='flex w-full flex-col rounded-md border border-zinc-800 bg-black p-4 lg:p-8'>
-        <div className='p-4'>
-          <div className='mb-1 text-center font-alt text-xl font-bold'>{product.name}</div>
-          <div className='flex justify-center gap-0.5 text-zinc-400'>
-            <span className='font-semibold'>
-              {yearPrice && isBillingIntervalYearly
-                ? '$' + yearPrice / 100
-                : monthPrice
-                ? '$' + monthPrice / 100
-                : 'Custom'}
-            </span>
-            <span>{yearPrice && isBillingIntervalYearly ? '/year' : monthPrice ? '/month' : null}</span>
+    <Card className={`relative w-full bg-paper-white border-stone-gray ${isPopular ? 'ring-2 ring-forest-green' : ''}`}>
+      {isPopular && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className="bg-forest-green text-paper-white px-3 py-1 text-sm font-medium rounded-full">
+            Most Popular
+          </span>
+        </div>
+      )}
+      
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="text-xl font-bold text-charcoal">{product.name}</CardTitle>
+        {product.description && (
+          <CardDescription className="text-charcoal/70">{product.description}</CardDescription>
+        )}
+      </CardHeader>
+
+      <CardContent className="text-center pb-6">
+        {/* Price Display */}
+        {currentPrice ? (
+          <div className="mb-6">
+            <div className="text-4xl font-bold text-charcoal">
+              ${(currentPrice.unit_amount / 100).toFixed(0)}
+              <span className="text-base font-normal text-charcoal/60">
+                /{currentPrice.interval === 'year' ? 'year' : 'month'}
+              </span>
+            </div>
+            {isBillingIntervalYearly && monthPrice && (
+              <div className="text-sm text-charcoal/60 mt-1">
+                ${((monthPrice * 12 - currentPrice.unit_amount) / 100).toFixed(0)} saved annually
+              </div>
+            )}
           </div>
-        </div>
-
-        {!Boolean(price) && product.prices.length > 1 && <PricingSwitch onChange={handleBillingIntervalChange} />}
-
-        <div className='m-auto flex w-fit flex-1 flex-col gap-2 px-8 py-4'>
-          {metadata.generatedImages === 'enterprise' && <CheckItem text={`Unlimited banner images`} />}
-          {metadata.generatedImages !== 'enterprise' && (
-            <CheckItem text={`Generate ${metadata.generatedImages} banner images`} />
-          )}
-          {<CheckItem text={`${metadata.imageEditor} image editing features`} />}
-          {<CheckItem text={`${metadata.supportLevel} support`} />}
-        </div>
-
-        {createCheckoutAction && (
-          <div className='py-4'>
-            {currentPrice && (
-              <Button
-                variant={buttonVariantMap[metadata.priceCardVariant]}
-                className='w-full'
-                onClick={() => createCheckoutAction({ price: currentPrice })}
-              >
-                Get Started
-              </Button>
-            )}
-            {!currentPrice && (
-              <Button variant={buttonVariantMap[metadata.priceCardVariant]} className='w-full' asChild>
-                <Link href='/contact'>Contact Us</Link>
-              </Button>
-            )}
+        ) : (
+          <div className="mb-6">
+            <div className="text-4xl font-bold text-charcoal">Contact Us</div>
+            <div className="text-sm text-charcoal/60 mt-1">Custom pricing available</div>
           </div>
         )}
-      </div>
-    </WithSexyBorder>
-  );
-}
 
-function CheckItem({ text }: { text: string }) {
-  return (
-    <div className='flex items-center gap-2'>
-      <IoCheckmark className='my-auto flex-shrink-0 text-slate-500' />
-      <p className='text-sm font-medium text-white first-letter:capitalize'>{text}</p>
-    </div>
-  );
-}
+        {/* Billing Interval Toggle - Only show if both monthly and yearly prices exist and no specific price is provided */}
+        {!price && monthPrice && yearPrice && (
+          <div className="mb-6">
+            <Tabs value={billingInterval} onValueChange={(value) => handleBillingIntervalChange(value as BillingInterval)}>
+              <TabsList className="grid grid-cols-2 bg-light-concrete w-full">
+                <TabsTrigger 
+                  value="month" 
+                  className="data-[state=active]:bg-paper-white data-[state=active]:text-charcoal text-charcoal/70"
+                >
+                  Monthly
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="year" 
+                  className="data-[state=active]:bg-paper-white data-[state=active]:text-charcoal text-charcoal/70"
+                >
+                  Yearly
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        )}
 
-export function WithSexyBorder({
-  variant,
-  className,
-  children,
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant: PriceCardVariant }) {
-  if (variant === 'pro') {
-    return (
-      <SexyBoarder className={className} offset={100}>
-        {children}
-      </SexyBoarder>
-    );
-  } else {
-    return <div className={className}>{children}</div>;
-  }
-}
+        {/* Features List */}
+        {metadata.features && metadata.features.length > 0 && (
+          <div className="space-y-3 mb-6 text-left">
+            {metadata.features.map((feature, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-5 h-5 bg-forest-green rounded-full flex items-center justify-center mt-0.5">
+                  <IoCheckmark className="w-3 h-3 text-paper-white" />
+                </div>
+                <span className="text-sm text-charcoal">{feature}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
 
-function PricingSwitch({ onChange }: { onChange: (value: BillingInterval) => void }) {
-  return (
-    <Tabs
-      defaultValue='month'
-      className='flex items-center'
-      onValueChange={(newBillingInterval) => onChange(newBillingInterval as BillingInterval)}
-    >
-      <TabsList className='m-auto'>
-        <TabsTrigger value='month'>Monthly</TabsTrigger>
-        <TabsTrigger value='year'>Yearly</TabsTrigger>
-      </TabsList>
-    </Tabs>
+      <CardFooter className="pt-0">
+        {currentPrice && createCheckoutAction ? (
+          <Button
+            className={`w-full h-12 font-semibold ${
+              isPopular 
+                ? 'bg-forest-green text-paper-white hover:bg-forest-green/90' 
+                : 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90'
+            }`}
+            onClick={() => createCheckoutAction({ price: currentPrice })}
+          >
+            Get Started
+          </Button>
+        ) : currentPrice ? (
+          <Button
+            className={`w-full h-12 font-semibold ${
+              isPopular 
+                ? 'bg-forest-green text-paper-white hover:bg-forest-green/90' 
+                : 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90'
+            }`}
+            asChild
+          >
+            <a href={`/pricing?price=${currentPrice.id}`}>Get Started</a>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full h-12 font-semibold border-stone-gray text-charcoal hover:bg-light-concrete"
+          >
+            Contact Sales
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   );
 }

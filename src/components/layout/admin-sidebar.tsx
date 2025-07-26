@@ -3,8 +3,6 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-
-import { useMobileSidebar } from "@/hooks/use-mobile"
 import { 
   ArrowLeft,
   BarChart3, 
@@ -40,6 +38,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useMobileSidebar } from "@/hooks/use-mobile"
 
 // Admin navigation items following the planned structure
 interface NavItem {
