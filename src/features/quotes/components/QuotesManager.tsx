@@ -147,7 +147,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
       try {
         const result = await deleteQuotes(quoteIds);
         
-        if (result.error) {
+        if (result?.error) {
           alert(`Failed to delete quotes: ${result.error.message || 'Unknown error'}`);
           return;
         }
@@ -158,7 +158,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
         // Clear selection after successful deletion
         setSelectedQuotes([]);
         
-        const deletedCount = result.data?.deleted || quoteIds.length;
+        const deletedCount = result?.data?.deleted || quoteIds.length;
         alert(`Successfully deleted ${deletedCount} quote${deletedCount === 1 ? '' : 's'}.`);
       } catch (error) {
         console.error('Error deleting quotes:', error);
@@ -376,7 +376,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     try {
       const result = await deleteQuotes([quoteToDelete.id]);
       
-      if (result.error) {
+      if (result?.error) {
         alert(`Failed to delete quote: ${result.error.message || 'Unknown error'}`);
       } else {
         // Remove the quote from the local state
@@ -408,12 +408,12 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     try {
       const result = await createTemplate(templateName, baseQuote.id);
       
-      if (result.error) {
+      if (result?.error) {
         alert(`Failed to create template: ${result.error.message || 'Unknown error'}`);
         return;
       }
       
-      if (result.data) {
+      if (result?.data) {
         // Add the new template to the local state
         setQuotes(prev => [result.data!, ...prev]);
         alert(`Template "${templateName}" created successfully!`);
@@ -433,12 +433,12 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     try {
       const result = await deleteTemplate(templateId);
       
-      if (result.error) {
+      if (result?.error) {
         alert(`Failed to delete template: ${result.error.message || 'Unknown error'}`);
         return;
       }
       
-      if (result.data?.deleted) {
+      if (result?.data?.deleted) {
         // Remove the template from the local state
         setQuotes(prev => prev.filter(quote => quote.id !== templateId));
         alert('Template deleted successfully!');
@@ -455,12 +455,12 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     try {
       const result = await updateTemplate(templateId, templateName);
       
-      if (result.error) {
+      if (result?.error) {
         alert(`Failed to update template: ${result.error.message || 'Unknown error'}`);
         return;
       }
       
-      if (result.data) {
+      if (result?.data) {
         // Update the template in the local state
         setQuotes(prev => 
           prev.map(quote => 

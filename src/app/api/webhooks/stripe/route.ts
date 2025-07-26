@@ -365,7 +365,7 @@ async function handleProductEvent(event: Stripe.Event): Promise<void> {
         onConflict: 'stripe_product_id'
       })
 
-    if (result.error) {
+    if (result?.error) {
       throw new Error(`Database error: ${result.error.message}`)
     }
 
@@ -385,7 +385,7 @@ async function handleProductDeleted(event: Stripe.Event): Promise<void> {
       .update({ active: false, updated_at: new Date().toISOString() })
       .eq('stripe_product_id', product.id)
 
-    if (result.error) {
+    if (result?.error) {
       throw new Error(`Database error: ${result.error.message}`)
     }
 
@@ -414,7 +414,7 @@ async function handlePriceEvent(event: Stripe.Event): Promise<void> {
         onConflict: 'stripe_price_id'
       })
 
-    if (result.error) {
+    if (result?.error) {
       throw new Error(`Database error: ${result.error.message}`)
     }
 
@@ -434,7 +434,7 @@ async function handlePriceDeleted(event: Stripe.Event): Promise<void> {
       .update({ active: false, updated_at: new Date().toISOString() })
       .eq('stripe_price_id', price.id)
 
-    if (result.error) {
+    if (result?.error) {
       throw new Error(`Database error: ${result.error.message}`)
     }
 

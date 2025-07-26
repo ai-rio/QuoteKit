@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid action or role' }, { status: 400 })
     }
 
-    if (result.error) {
+    if (result?.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
     }
 
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
         target_user_id: newUser.user.id 
       })
       
-      if (result.error) {
+      if (result?.error) {
         console.error('Error granting admin role:', result.error)
         // Continue anyway, user was created successfully
       }

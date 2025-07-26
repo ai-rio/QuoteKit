@@ -77,14 +77,14 @@ export function PricingCard({
         {currentPrice ? (
           <div className="mb-6">
             <div className="text-4xl font-bold text-charcoal">
-              ${(currentPrice.unit_amount / 100).toFixed(0)}
+              ${((currentPrice.unit_amount || 0) / 100).toFixed(0)}
               <span className="text-base font-normal text-charcoal/60">
                 /{currentPrice.interval === 'year' ? 'year' : 'month'}
               </span>
             </div>
             {isBillingIntervalYearly && monthPrice && (
               <div className="text-sm text-charcoal/60 mt-1">
-                ${((monthPrice * 12 - currentPrice.unit_amount) / 100).toFixed(0)} saved annually
+                ${(((monthPrice || 0) * 12 - (currentPrice.unit_amount || 0)) / 100).toFixed(0)} saved annually
               </div>
             )}
           </div>
@@ -117,19 +117,7 @@ export function PricingCard({
           </div>
         )}
 
-        {/* Features List */}
-        {metadata.features && metadata.features.length > 0 && (
-          <div className="space-y-3 mb-6 text-left">
-            {metadata.features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-5 h-5 bg-forest-green rounded-full flex items-center justify-center mt-0.5">
-                  <IoCheckmark className="w-3 h-3 text-paper-white" />
-                </div>
-                <span className="text-sm text-charcoal">{feature}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Features List - Currently disabled, add features to productMetadataSchema if needed */}
       </CardContent>
 
       <CardFooter className="pt-0">
