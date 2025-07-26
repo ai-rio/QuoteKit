@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getAvailablePlans } from '@/features/account/actions/subscription-actions';
 import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedCurrentPlanCard';
+import { PaymentMethodsManager } from '@/features/account/components/PaymentMethodsManager';
 import { getSession } from '@/features/account/controllers/get-session';
+import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
 import { getBillingHistory, getPaymentMethods,getSubscription } from '@/features/account/controllers/get-subscription';
 import { SubscriptionWithProduct } from '@/features/pricing/types';
 
@@ -40,11 +42,12 @@ export default async function AccountPage() {
     redirect('/login');
   }
 
-  const [subscription, billingHistory, paymentMethods, availablePlans] = await Promise.all([
+  const [subscription, billingHistory, paymentMethods, availablePlans, stripePublishableKey] = await Promise.all([
     getSubscription(),
     getBillingHistory(),
     getPaymentMethods(),
     getAvailablePlans(),
+    getStripePublishableKey(),
   ]);
 
   return (
@@ -67,7 +70,19 @@ export default async function AccountPage() {
 
         {/* Payment Methods Section */}
         <Suspense fallback={<CardSkeleton />}>
-          <PaymentMethodsCard paymentMethods={paymentMethods} />
+          {stripePublishableKey ? (
+            <PaymentMethodsManager stripePublishableKey={stripePublishableKey} />
+          ) : (
+            <Card className="bg-paper-white border-stone-gray">
+              <CardHeader>
+                <CardTitle className="text-xl text-charcoal">Payment Methods</CardTitle>
+                <CardDescription className="text-charcoal/70">Stripe is not configured</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-charcoal/60">Payment method management is not available.</p>
+              </CardContent>
+            </Card>
+          )}
         </Suspense>
       </div>
     </div>
@@ -188,75 +203,7 @@ function BillingHistoryCard({ billingHistory }: { billingHistory: BillingHistory
   );
 }
 
-function PaymentMethodsCard({ paymentMethods }: { paymentMethods: PaymentMethod[] }) {
-  return (
-    <Card className="bg-paper-white border-stone-gray">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl text-charcoal">Payment Methods</CardTitle>
-            <CardDescription className="text-charcoal/70">Manage your payment information</CardDescription>
-          </div>
-          <CreditCard className="h-6 w-6 text-charcoal/60" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        {paymentMethods.length > 0 ? (
-          <div className="space-y-4">
-            {paymentMethods.map((method) => (
-              <Card key={method.id} className="bg-light-concrete border-stone-gray">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-8 bg-stone-gray rounded flex items-center justify-center">
-                        <CreditCard className="h-4 w-4 text-charcoal/60" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-charcoal capitalize">
-                          {method.card.brand} •••• {method.card.last4}
-                        </p>
-                        <p className="text-sm text-charcoal/70">
-                          Expires {method.card.exp_month}/{method.card.exp_year}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {method.is_default && (
-                        <Badge className="bg-forest-green text-paper-white">Default</Badge>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="border-stone-gray text-charcoal hover:bg-paper-white h-10"
-                      >
-                        Update
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button 
-              variant="outline"
-              className="w-full border-stone-gray text-charcoal hover:bg-light-concrete h-12"
-            >
-              Add Payment Method
-            </Button>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-charcoal/70 mb-4">No payment methods on file</p>
-            <Button 
-              className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
-            >
-              Add Payment Method
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+
 
 function CardSkeleton() {
   return (

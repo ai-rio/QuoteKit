@@ -159,6 +159,101 @@ export type Database = {
         }
         Relationships: []
       }
+      global_categories: {
+        Row: {
+          access_tier: Database["public"]["Enums"]["item_access_tier"] | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_tier?: Database["public"]["Enums"]["item_access_tier"] | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_tier?: Database["public"]["Enums"]["item_access_tier"] | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      global_items: {
+        Row: {
+          access_tier: Database["public"]["Enums"]["item_access_tier"] | null
+          category_id: string | null
+          cost: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          sort_order: number | null
+          subcategory: string | null
+          tags: string[] | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_tier?: Database["public"]["Enums"]["item_access_tier"] | null
+          category_id?: string | null
+          cost?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          sort_order?: number | null
+          subcategory?: string | null
+          tags?: string[] | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_tier?: Database["public"]["Enums"]["item_access_tier"] | null
+          category_id?: string | null
+          cost?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          sort_order?: number | null
+          subcategory?: string | null
+          tags?: string[] | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "global_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "global_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_categories: {
         Row: {
           color: string | null
@@ -308,6 +403,7 @@ export type Database = {
       quotes: {
         Row: {
           client_contact: string | null
+          client_id: string | null
           client_name: string
           created_at: string | null
           expires_at: string | null
@@ -329,6 +425,7 @@ export type Database = {
         }
         Insert: {
           client_contact?: string | null
+          client_id?: string | null
           client_name: string
           created_at?: string | null
           expires_at?: string | null
@@ -350,6 +447,7 @@ export type Database = {
         }
         Update: {
           client_contact?: string | null
+          client_id?: string | null
           client_name?: string
           created_at?: string | null
           expires_at?: string | null
@@ -369,7 +467,22 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_analytics"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stripe_prices: {
         Row: {
@@ -529,6 +642,47 @@ export type Database = {
           },
         ]
       }
+      user_global_item_usage: {
+        Row: {
+          created_at: string | null
+          global_item_id: string
+          id: string
+          is_favorite: boolean | null
+          last_used_at: string | null
+          updated_at: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          global_item_id: string
+          id?: string
+          is_favorite?: boolean | null
+          last_used_at?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          global_item_id?: string
+          id?: string
+          is_favorite?: boolean | null
+          last_used_at?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_global_item_usage_global_item_id_fkey"
+            columns: ["global_item_id"]
+            isOneToOne: false
+            referencedRelation: "global_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -555,6 +709,25 @@ export type Database = {
       }
     }
     Views: {
+      client_analytics: {
+        Row: {
+          acceptance_rate_percent: number | null
+          accepted_quotes: number | null
+          accepted_value: number | null
+          average_quote_value: number | null
+          client_id: string | null
+          client_name: string | null
+          client_since: string | null
+          declined_quotes: number | null
+          email: string | null
+          last_quote_date: string | null
+          phone: string | null
+          total_quote_value: number | null
+          total_quotes: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       quote_analytics: {
         Row: {
           acceptance_rate_percent: number | null
@@ -569,15 +742,36 @@ export type Database = {
           template_count: number | null
           total_quote_value: number | null
           total_quotes: number | null
+          unique_clients_count: number | null
           user_id: string | null
         }
         Relationships: []
       }
     }
     Functions: {
+      can_access_tier: {
+        Args: {
+          required_tier: Database["public"]["Enums"]["item_access_tier"]
+          user_id?: string
+        }
+        Returns: boolean
+      }
+      copy_global_item_to_personal: {
+        Args: {
+          global_item_id: string
+          custom_cost?: number
+        }
+        Returns: string
+      }
       generate_quote_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_tier: {
+        Args: {
+          user_id?: string
+        }
+        Returns: Database["public"]["Enums"]["item_access_tier"]
       }
       get_users_with_roles: {
         Args: Record<PropertyKey, never>
@@ -608,6 +802,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      toggle_global_item_favorite: {
+        Args: {
+          global_item_id: string
+        }
+        Returns: boolean
+      }
       update_item_last_used: {
         Args: {
           item_id: string
@@ -616,6 +816,7 @@ export type Database = {
       }
     }
     Enums: {
+      item_access_tier: "free" | "paid" | "premium"
       pricing_plan_interval: "day" | "week" | "month" | "year"
       pricing_type: "one_time" | "recurring"
       quote_status:

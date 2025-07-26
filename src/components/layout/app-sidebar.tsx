@@ -158,7 +158,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                     {group.items.map((item) => {
                       const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                       const Icon = item.icon
-                      const isHighlight = item.highlight
+                      const isHighlight = 'highlight' in item ? item.highlight : false
                       
                       return (
                         <SidebarMenuItem key={item.title}>

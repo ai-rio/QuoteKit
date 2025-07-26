@@ -44,9 +44,9 @@ export default function CustomersPage() {
       
       // Calculate stats
       const total = result.total;
-      const active = result.customers.filter(c => c.subscription?.status === 'active').length;
-      const pastDue = result.customers.filter(c => c.subscription?.status === 'past_due').length;
-      const canceled = result.customers.filter(c => c.subscription?.cancel_at_period_end).length;
+      const active = result.customers.filter(c => c.subscription_status === 'active').length;
+      const pastDue = result.customers.filter(c => c.subscription_status === 'past_due').length;
+      const canceled = result.customers.filter(c => c.subscription_cancel_at_period_end).length;
       
       setStats({ total, active, pastDue, canceled });
     } catch (error) {
@@ -98,8 +98,12 @@ export default function CustomersPage() {
     }
   };
 
-  const getStatusBadge = (status: string, cancelAtPeriodEnd: boolean) => {
-    if (cancelAtPeriodEnd) {
+  const getStatusBadge = (customer: AdminCustomer) => {
+    if (!customer.subscription_id) {
+      return <Badge className="bg-stone-gray text-charcoal">No Subscription</Badge>;
+    }
+
+    if (customer.subscription_cancel_at_period_end) {
       return <Badge className="bg-equipment-yellow text-charcoal">Canceling</Badge>;
     }
     
@@ -112,8 +116,8 @@ export default function CustomersPage() {
     };
 
     return (
-      <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-stone-gray text-charcoal'}>
-        {status.replace('_', ' ').toUpperCase()}
+      <Badge className={statusColors[customer.subscription_status as keyof typeof statusColors] || 'bg-stone-gray text-charcoal'}>
+        {customer.subscription_status?.replace('_', ' ').toUpperCase()}
       </Badge>
     );
   };
@@ -308,14 +312,14 @@ export default function CustomersPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {customer.subscription ? (
+                            {customer.product_name ? (
                               <div>
                                 <p className="font-medium text-charcoal">
-                                  {customer.subscription.price.product.name}
+                                  {customer.product_name}
                                 </p>
                                 <p className="text-sm text-charcoal/70">
-                                  {formatCurrency(customer.subscription.price.unit_amount)}/
-                                  {customer.subscription.price.interval}
+                                  {formatCurrency(customer.price_unit_amount || 0)}/
+                                  {customer.price_interval}
                                 </p>
                               </div>
                             ) : (
@@ -323,35 +327,28 @@ export default function CustomersPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            {customer.subscription ? (
-                              getStatusBadge(
-                                customer.subscription.status, 
-                                customer.subscription.cancel_at_period_end
-                              )
-                            ) : (
-                              <Badge className="bg-stone-gray text-charcoal">No Subscription</Badge>
-                            )}
+                            {getStatusBadge(customer)}
                           </TableCell>
                           <TableCell>
-                            {customer.subscription ? (
+                            {customer.subscription_current_period_end ? (
                               <span className="text-charcoal">
-                                {new Date(customer.subscription.current_period_end).toLocaleDateString()}
+                                {new Date(customer.subscription_current_period_end).toLocaleDateString()}
                               </span>
                             ) : (
                               <span className="text-charcoal/70">-</span>
                             )}
                           </TableCell>
                           <TableCell>
-                            {customer.subscription ? (
+                            {customer.price_unit_amount ? (
                               <span className="font-medium text-charcoal">
-                                {formatCurrency(customer.subscription.price.unit_amount)}
+                                {formatCurrency(customer.price_unit_amount)}
                               </span>
                             ) : (
                               <span className="text-charcoal/70">$0</span>
                             )}
                           </TableCell>
                           <TableCell>
-                            {customer.subscription && (
+                            {customer.subscription_id && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" className="h-8 w-8 p-0">
@@ -359,15 +356,15 @@ export default function CustomersPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  {customer.subscription.cancel_at_period_end ? (
+                                  {customer.subscription_cancel_at_period_end ? (
                                     <DropdownMenuItem 
-                                      onClick={() => handleReactivateSubscription(customer.subscription!.id)}
+                                      onClick={() => handleReactivateSubscription(customer.subscription_id!)}
                                     >
                                       Reactivate Subscription
                                     </DropdownMenuItem>
                                   ) : (
                                     <DropdownMenuItem 
-                                      onClick={() => handleCancelSubscription(customer.subscription!.id)}
+                                      onClick={() => handleCancelSubscription(customer.subscription_id!)}
                                     >
                                       Cancel Subscription
                                     </DropdownMenuItem>
@@ -394,33 +391,28 @@ export default function CustomersPage() {
                             <p className="font-medium text-charcoal">{customer.email}</p>
                             <p className="text-sm text-charcoal/70">{customer.name || 'No name'}</p>
                           </div>
-                          {customer.subscription && (
-                            getStatusBadge(
-                              customer.subscription.status,
-                              customer.subscription.cancel_at_period_end
-                            )
-                          )}
+                          {getStatusBadge(customer)}
                         </div>
                         
-                        {customer.subscription ? (
+                        {customer.subscription_id ? (
                           <div className="space-y-2">
                             <div className="flex justify-between">
                               <span className="text-sm text-charcoal/70">Plan:</span>
                               <span className="text-sm font-medium text-charcoal">
-                                {customer.subscription.price.product.name}
+                                {customer.product_name}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-sm text-charcoal/70">Revenue:</span>
                               <span className="text-sm font-medium text-charcoal">
-                                {formatCurrency(customer.subscription.price.unit_amount)}/
-                                {customer.subscription.price.interval}
+                                {formatCurrency(customer.price_unit_amount || 0)}/
+                                {customer.price_interval}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-sm text-charcoal/70">Next billing:</span>
                               <span className="text-sm text-charcoal">
-                                {new Date(customer.subscription.current_period_end).toLocaleDateString()}
+                                {new Date(customer.subscription_current_period_end!).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
@@ -428,12 +420,12 @@ export default function CustomersPage() {
                           <p className="text-sm text-charcoal/70">No active subscription</p>
                         )}
                         
-                        {customer.subscription && (
+                        {customer.subscription_id && (
                           <div className="flex gap-2 mt-4">
-                            {customer.subscription.cancel_at_period_end ? (
+                            {customer.subscription_cancel_at_period_end ? (
                               <Button
                                 size="sm"
-                                onClick={() => handleReactivateSubscription(customer.subscription!.id)}
+                                onClick={() => handleReactivateSubscription(customer.subscription_id!)}
                                 className="bg-forest-green text-paper-white hover:bg-forest-green/90"
                               >
                                 Reactivate
@@ -442,7 +434,7 @@ export default function CustomersPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleCancelSubscription(customer.subscription!.id)}
+                                onClick={() => handleCancelSubscription(customer.subscription_id!)}
                                 className="border-stone-gray text-charcoal hover:bg-light-concrete"
                               >
                                 Cancel

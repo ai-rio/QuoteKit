@@ -8,6 +8,7 @@ import {
   BarChart3, 
   CreditCard,
   Database,
+  DollarSign,
   Home, 
   LogOut, 
   Mail, 
@@ -121,6 +122,11 @@ const navGroups = [
   {
     title: "Analytics",
     items: [
+      {
+        title: "Subscription Analytics",
+        url: "/analytics/subscriptions",
+        icon: DollarSign,
+      },
       {
         title: "Custom Queries",
         url: "/analytics/custom-queries",
