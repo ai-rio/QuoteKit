@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getSubscription, getBillingHistory, getPaymentMethods } from '@/features/account/controllers/get-subscription';
-import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
+
 import { getSession } from '@/features/account/controllers/get-session';
+import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
+import { getBillingHistory, getPaymentMethods,getSubscription } from '@/features/account/controllers/get-subscription';
 
 export async function GET() {
   try {
