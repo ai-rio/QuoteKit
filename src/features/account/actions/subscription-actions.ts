@@ -65,20 +65,31 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       throw new Error('Invalid or inactive price');
     }
 
-    // Get Stripe configuration using service role
+    // Get Stripe configuration - try database first, fallback to environment
     const { data: stripeConfigRecord, error: configError } = await supabase
       .from('admin_settings')
       .select('value')
       .eq('key', 'stripe_config')
       .single();
 
-    if (configError || !stripeConfigRecord?.value) {
-      console.error('Stripe configuration error:', configError);
-      throw new Error('Stripe not configured');
+    let stripeConfig: any = null;
+
+    // Check if we got valid config from database
+    if (!configError && stripeConfigRecord?.value) {
+      stripeConfig = stripeConfigRecord.value as any;
+    } else {
+      // Fallback to environment variables
+      const secretKey = process.env.STRIPE_SECRET_KEY;
+      if (secretKey) {
+        stripeConfig = {
+          secret_key: secretKey,
+          mode: process.env.STRIPE_MODE || 'test'
+        };
+      }
     }
 
-    const stripeConfig = stripeConfigRecord.value as any;
     if (!stripeConfig?.secret_key) {
+      console.error('Stripe configuration error:', configError);
       throw new Error('Stripe not configured');
     }
 
@@ -94,6 +105,33 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
     
     if (!subscriptionItemId) {
       throw new Error('Unable to find subscription item');
+    }
+
+    // Ensure customer has a default payment method for billing
+    const customer = await stripeAdmin.customers.retrieve(currentStripeSubscription.customer as string);
+    
+    if (typeof customer === 'string' || customer.deleted) {
+      throw new Error('Customer not found');
+    }
+
+    // Check if customer has a default payment method
+    if (!customer.invoice_settings?.default_payment_method && !customer.default_source) {
+      // Get customer's payment methods and set the first one as default
+      const paymentMethods = await stripeAdmin.paymentMethods.list({
+        customer: customer.id,
+        type: 'card',
+      });
+
+      if (paymentMethods.data.length === 0) {
+        throw new Error('No payment methods found. Please add a payment method before changing plans.');
+      }
+
+      // Set the first payment method as default
+      await stripeAdmin.customers.update(customer.id, {
+        invoice_settings: {
+          default_payment_method: paymentMethods.data[0].id,
+        },
+      });
     }
 
     // Update subscription in Stripe
@@ -113,6 +151,8 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
     );
 
     // Update subscription in database
+    // Note: Stripe is the source of truth. If this fails, the subscription change was still successful in Stripe
+    // and will be synced via webhooks. We log the error but don't fail the entire operation.
     const { error: updateError } = await supabase
       .from('subscriptions')
       .update({
@@ -120,13 +160,12 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
         status: updatedSubscription.status,
         current_period_start: new Date(updatedSubscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
       })
       .eq('id', subscription.id);
 
     if (updateError) {
-      console.error('Database update error:', updateError);
-      throw new Error('Failed to update subscription in database');
+      console.error('Database update error (non-critical - will be synced via webhook):', updateError);
+      // Don't throw here - Stripe subscription was successfully updated and webhooks will eventually sync
     }
 
     // Optional: Log the plan change for audit trail
@@ -185,20 +224,31 @@ export async function cancelSubscription(cancelAtPeriodEnd: boolean = true, reas
       throw new Error('No active subscription found');
     }
 
-    // Get Stripe configuration using service role
+    // Get Stripe configuration - try database first, fallback to environment
     const { data: stripeConfigRecord, error: configError } = await supabase
       .from('admin_settings')
       .select('value')
       .eq('key', 'stripe_config')
       .single();
 
-    if (configError || !stripeConfigRecord?.value) {
-      console.error('Stripe configuration error:', configError);
-      throw new Error('Stripe not configured');
+    let stripeConfig: any = null;
+
+    // Check if we got valid config from database
+    if (!configError && stripeConfigRecord?.value) {
+      stripeConfig = stripeConfigRecord.value as any;
+    } else {
+      // Fallback to environment variables
+      const secretKey = process.env.STRIPE_SECRET_KEY;
+      if (secretKey) {
+        stripeConfig = {
+          secret_key: secretKey,
+          mode: process.env.STRIPE_MODE || 'test'
+        };
+      }
     }
 
-    const stripeConfig = stripeConfigRecord.value as any;
     if (!stripeConfig?.secret_key) {
+      console.error('Stripe configuration error:', configError);
       throw new Error('Stripe not configured');
     }
 
@@ -279,18 +329,33 @@ export async function reactivateSubscription() {
     // Create Supabase client
     const supabase = await createSupabaseServerClient();
 
-    // Reactivate subscription in Stripe
-    // Get Stripe configuration
-      const { data: stripeConfigRecord } = await supabase
-        .from('admin_settings')
-        .select('value')
-        .eq('key', 'stripe_config')
-        .single();
+    // Get Stripe configuration - try database first, fallback to environment
+    const { data: stripeConfigRecord, error: configError } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
 
-      const stripeConfig = stripeConfigRecord?.value as any;
-      if (!stripeConfig?.secret_key) {
-        throw new Error('Stripe not configured');
+    let stripeConfig: any = null;
+
+    // Check if we got valid config from database
+    if (!configError && stripeConfigRecord?.value) {
+      stripeConfig = stripeConfigRecord.value as any;
+    } else {
+      // Fallback to environment variables
+      const secretKey = process.env.STRIPE_SECRET_KEY;
+      if (secretKey) {
+        stripeConfig = {
+          secret_key: secretKey,
+          mode: process.env.STRIPE_MODE || 'test'
+        };
       }
+    }
+
+    if (!stripeConfig?.secret_key) {
+      console.error('Stripe configuration error:', configError);
+      throw new Error('Stripe not configured');
+    }
 
       const stripeAdmin = createStripeAdminClient({
         secret_key: stripeConfig.secret_key,
