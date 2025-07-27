@@ -145,6 +145,70 @@ export async function getSubscription() {
   }
 }
 
+/**
+ * Get the free plan information for users without active subscriptions
+ * This provides a consistent interface for displaying free tier users
+ */
+export async function getFreePlanInfo() {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    // Get the free plan product
+    const { data: freeProduct, error: productError } = await supabase
+      .from('stripe_products')
+      .select('*')
+      .eq('name', 'Free Plan')
+      .eq('active', true)
+      .maybeSingle();
+
+    if (productError) {
+      console.error('Error fetching free plan product:', productError);
+      return null;
+    }
+
+    if (!freeProduct) {
+      console.warn('Free plan product not found in database');
+      return null;
+    }
+
+    // Get the free plan price
+    const { data: freePrice, error: priceError } = await supabase
+      .from('stripe_prices')
+      .select('*')
+      .eq('stripe_product_id', freeProduct.stripe_product_id)
+      .eq('active', true)
+      .maybeSingle();
+
+    if (priceError) {
+      console.error('Error fetching free plan price:', priceError);
+      return null;
+    }
+
+    if (!freePrice) {
+      console.warn('Free plan price not found in database');
+      return null;
+    }
+
+    // Transform the data to match the expected format
+    const transformedPriceData = {
+      ...freePrice,
+      interval: freePrice.recurring_interval || null,
+      type: freePrice.recurring_interval ? 'recurring' as const : 'one_time' as const,
+      products: freeProduct
+    };
+
+    console.debug('getFreePlanInfo: Successfully retrieved free plan data', {
+      productName: freeProduct.name,
+      priceAmount: freePrice.unit_amount
+    });
+
+    return transformedPriceData;
+  } catch (error) {
+    console.error('getFreePlanInfo function error:', error);
+    return null;
+  }
+}
+
 export async function getBillingHistory() {
   try {
     const supabase = await createSupabaseServerClient();

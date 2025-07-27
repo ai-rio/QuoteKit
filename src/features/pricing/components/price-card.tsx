@@ -40,16 +40,43 @@ export function PricingCard({
     // We'll return null and handle that case when rendering.
     if (pricesArray.length === 0) return null;
 
+    // For freemium: Include free prices regardless of active status, filter paid prices by active status
+    const availablePrices = pricesArray.filter(price => 
+      price.unit_amount === 0 || price.active !== false
+    );
+    
+    if (availablePrices.length === 0) {
+      console.warn(`No available prices found for product ${product.name}`, { 
+        productId: product.stripe_product_id,
+        totalPrices: pricesArray.length,
+        freePrices: pricesArray.filter(p => p.unit_amount === 0).length,
+        inactivePaidPrices: pricesArray.filter(p => p.unit_amount > 0 && p.active === false).map(p => p.stripe_price_id)
+      });
+      return null;
+    }
+
     // Next determine if the product is a one time purchase - in these cases it will only have a single price.
-    if (pricesArray.length === 1) return pricesArray[0];
+    if (availablePrices.length === 1) return availablePrices[0];
 
     // Lastly we can assume the product is a subscription one with a month and year price, so we get the price according to the select billingInterval
-    return pricesArray.find((price) => price.interval === billingInterval);
+    const selectedPrice = availablePrices.find((price) => price.interval === billingInterval);
+    
+    if (!selectedPrice) {
+      console.warn(`No available price found for interval ${billingInterval} on product ${product.name}`);
+      // Fallback to first available price if selected interval not available
+      return availablePrices[0];
+    }
+    
+    return selectedPrice;
   }, [billingInterval, price, product.prices]);
 
   const pricesArray = product.prices || [];
-  const monthPrice = pricesArray.find((price) => price.interval === 'month')?.unit_amount;
-  const yearPrice = pricesArray.find((price) => price.interval === 'year')?.unit_amount;
+  // Use available prices (free + active paid) for month/year calculations
+  const availablePrices = pricesArray.filter(price => 
+    price.unit_amount === 0 || price.active !== false
+  );
+  const monthPrice = availablePrices.find((price) => price.interval === 'month')?.unit_amount;
+  const yearPrice = availablePrices.find((price) => price.interval === 'year')?.unit_amount;
   const isBillingIntervalYearly = billingInterval === 'year';
   // Handle missing or invalid metadata with safe parsing and defaults
   // Note: stripe_products table doesn't have metadata field, so we use fallback defaults
