@@ -24,7 +24,7 @@ export async function getSubscription() {
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
-      .in('status', ['trialing', 'active'])
+      .in('status', ['trialing', 'active', 'past_due'])
       .order('created', { ascending: false })
       .limit(1);
 
