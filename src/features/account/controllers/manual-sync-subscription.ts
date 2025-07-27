@@ -117,7 +117,7 @@ export async function manualSyncAllSubscriptions() {
   try {
     console.log('🚀 Starting manual sync for all customers...');
     
-    const supabaseAdminClient = supabaseAdminClient();
+    // Use the imported supabaseAdminClient
     
     // Get all customers from database
     const { data: customers, error } = await supabaseAdminClient
