@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { syncStripeProductsAndPrices } from '@/features/pricing/controllers/upsert-price';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
