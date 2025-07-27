@@ -143,7 +143,7 @@ export function PricingCard({
             }`}
             onClick={() => createCheckoutAction({ price: currentPrice })}
           >
-            Get Started
+            {currentPrice.unit_amount === 0 ? 'Start Free Trial' : 'Get Started'}
           </Button>
         ) : currentPrice ? (
           <Button

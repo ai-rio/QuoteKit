@@ -47,7 +47,43 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     email: session.user.email,
   });
 
-  // DEBUG: Log the mode being determined - use recurring_interval directly instead of type field
+  // Check if this is a free plan (unit_amount = 0)
+  if (price.unit_amount === 0) {
+    console.error('🔍 DEBUG: Creating free subscription directly (no payment method required)');
+    console.error('🔍 DEBUG: Customer ID:', customer);
+    console.error('🔍 DEBUG: Price ID:', price.stripe_price_id);
+    
+    try {
+      // Create subscription directly for free plans
+      const subscription = await stripeAdmin.subscriptions.create({
+        customer,
+        items: [
+          {
+            price: price.stripe_price_id,
+          },
+        ],
+        metadata: {
+          priceId: price.id.toString(),
+        },
+      });
+
+      console.error('🔍 DEBUG: Free subscription created successfully:', subscription.id);
+    } catch (error) {
+      console.error('🔍 DEBUG: Detailed error creating free subscription:', {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        customer,
+        priceId: price.stripe_price_id,
+      });
+      throw Error(`Failed to create free subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+    
+    // Redirect to success page (outside try-catch to avoid catching NEXT_REDIRECT)
+    return redirect(`${getURL()}/account?subscription=created`);
+  }
+
+  // For paid plans, use Stripe Checkout
   const checkoutMode = price.recurring_interval ? 'subscription' : 'payment';
   console.error(`🔍 DEBUG: Checkout mode determined: ${checkoutMode} (recurring_interval: ${price.recurring_interval})`);
   console.error(`🔍 DEBUG: About to create Stripe checkout with mode: ${checkoutMode}`);
