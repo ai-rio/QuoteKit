@@ -4,31 +4,44 @@ export async function getStripePublishableKey() {
   try {
     const supabase = await createSupabaseServerClient();
     
+    // First try to get from database (admin settings)
     const { data: stripeConfigRecord, error } = await supabase
       .from('admin_settings')
       .select('value')
       .eq('key', 'stripe_config')
       .single();
 
-    if (error) {
-      console.warn('Database query failed for Stripe config, falling back to environment variables:', error);
-      // Fall back to environment variable
-      return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
+    if (!error && stripeConfigRecord?.value) {
+      const stripeConfig = stripeConfigRecord.value as any;
+      const publishableKey = stripeConfig?.publishable_key;
+      
+      if (publishableKey) {
+        console.log('Using Stripe publishable key from database');
+        return publishableKey;
+      }
     }
 
-    const stripeConfig = stripeConfigRecord?.value as any;
-    const publishableKey = stripeConfig?.publishable_key;
+    // Fall back to environment variable
+    const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (envKey) {
+      console.log('Using Stripe publishable key from environment variables');
+      return envKey;
+    }
+
+    // No configuration found anywhere
+    console.warn('No Stripe publishable key found in database or environment variables');
+    console.warn('Please configure Stripe in admin settings or set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable');
+    return null;
+  } catch (error) {
+    console.error('Error getting Stripe publishable key:', error);
     
-    if (publishableKey) {
-      return publishableKey;
+    // Last resort: try environment variable
+    const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    if (envKey) {
+      console.log('Using Stripe publishable key from environment variables as fallback');
+      return envKey;
     }
     
-    // If no config in database, fall back to environment variable
-    console.warn('No stripe_config found in database, falling back to environment variables');
-    return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
-  } catch (error) {
-    console.error('Error getting Stripe publishable key, falling back to environment variables:', error);
-    // Fall back to environment variable as last resort
-    return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || null;
+    return null;
   }
 }
