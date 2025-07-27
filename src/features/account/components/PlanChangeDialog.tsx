@@ -46,7 +46,7 @@ export function PlanChangeDialog({
 
     const selectedPrice = availablePlans
       .flatMap(p => p.prices)
-      .find(price => price?.id === selectedPriceId);
+      .find(price => price?.stripe_price_id === selectedPriceId);
 
     if (!selectedPrice) return;
 
@@ -113,13 +113,13 @@ export function PlanChangeDialog({
               {availablePlans.map((product) =>
                 product.prices?.map((price) => {
                   const changeInfo = getChangeType(price.unit_amount || 0);
-                  const isSelected = selectedPriceId === price.id;
+                  const isSelected = selectedPriceId === price.stripe_price_id;
                   const isCurrent = price.unit_amount === currentPlan.price * 100;
                   const Icon = changeInfo.icon;
 
                   return (
                     <Card
-                      key={price.id}
+                      key={price.stripe_price_id}
                       className={`cursor-pointer transition-all ${
                         isSelected
                           ? 'bg-forest-green/10 border-forest-green'
@@ -127,7 +127,7 @@ export function PlanChangeDialog({
                           ? 'bg-light-concrete border-stone-gray opacity-50'
                           : 'bg-paper-white border-stone-gray hover:bg-light-concrete/50'
                       }`}
-                      onClick={() => !isCurrent && setSelectedPriceId(price.id)}
+                      onClick={() => !isCurrent && setSelectedPriceId(price.stripe_price_id)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -180,7 +180,7 @@ export function PlanChangeDialog({
                   {getChangeType(
                     availablePlans
                       .flatMap(p => p.prices)
-                      .find(p => p?.id === selectedPriceId)?.unit_amount || 0
+                      .find(p => p?.stripe_price_id === selectedPriceId)?.unit_amount || 0
                   ).type === 'upgrade' ? (
                     <>
                       <p>• Your plan will be upgraded immediately</p>

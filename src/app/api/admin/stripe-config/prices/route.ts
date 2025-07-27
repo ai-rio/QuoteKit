@@ -20,11 +20,51 @@ export async function GET(request: NextRequest) {
       .eq('key', 'stripe_config')
       .single()
 
+    // If no Stripe config, fallback to database-only mode
     if (!configData?.value) {
-      return NextResponse.json(
-        { error: 'Stripe not configured. Please configure Stripe first.' },
-        { status: 400 }
-      )
+      console.log('No Stripe config found, using database-only mode for prices')
+      
+      // Get prices from database only with product relationship
+      const { data: dbPrices, error: dbError } = await supabaseAdminClient
+        .from('stripe_prices')
+        .select(`
+          *,
+          stripe_products!fk_stripe_prices_product_id(name)
+        `)
+        .order('created_at')
+
+      if (dbError) {
+        console.error('Database prices fetch error:', dbError)
+        return NextResponse.json(
+          { error: `Failed to fetch prices from database: ${dbError.message}` },
+          { status: 500 }
+        )
+      }
+
+      const databasePrices = (dbPrices || []).map(price => ({
+        id: price.id,
+        stripe_price_id: price.stripe_price_id,
+        stripe_product_id: price.stripe_product_id,
+        product_name: price.stripe_products?.name || null,
+        unit_amount: price.unit_amount,
+        currency: price.currency,
+        recurring_interval: price.recurring_interval,
+        active: price.active,
+        created: null,
+        metadata: {},
+        // Database fields
+        created_at: price.created_at,
+        updated_at: price.updated_at,
+        database_only: true
+      }))
+
+      return NextResponse.json({
+        success: true,
+        prices: databasePrices,
+        total: databasePrices.length,
+        database_only: true,
+        message: 'Stripe not configured. Showing database-only data. Configure Stripe for full functionality.'
+      })
     }
 
     const stripeConfig = configData.value as unknown as StripeConfig
@@ -72,7 +112,12 @@ export async function GET(request: NextRequest) {
     } catch (stripeError: any) {
       console.error('Stripe prices fetch error:', stripeError)
       return NextResponse.json(
-        { error: `Failed to fetch prices: ${stripeError.message}` },
+        { 
+          error: `Failed to fetch prices: ${stripeError.message}`,
+          stripe_config_exists: !!stripeConfig,
+          config_mode: stripeConfig?.mode,
+          details: stripeError
+        },
         { status: 400 }
       )
     }

@@ -20,11 +20,48 @@ export async function GET(request: NextRequest) {
       .eq('key', 'stripe_config')
       .single()
 
+    // If no Stripe config, fallback to database-only mode
     if (!configData?.value) {
-      return NextResponse.json(
-        { error: 'Stripe not configured. Please configure Stripe first.' },
-        { status: 400 }
-      )
+      console.log('No Stripe config found, using database-only mode for products')
+      
+      // Get products from database only
+      const { data: dbProducts, error: dbError } = await supabaseAdminClient
+        .from('stripe_products')
+        .select('*')
+        .order('created_at')
+
+      if (dbError) {
+        console.error('Database products fetch error:', dbError)
+        return NextResponse.json(
+          { error: `Failed to fetch products from database: ${dbError.message}` },
+          { status: 500 }
+        )
+      }
+
+      const databaseProducts = (dbProducts || []).map(product => ({
+        id: product.id,
+        stripe_product_id: product.stripe_product_id,
+        name: product.name,
+        description: product.description,
+        active: product.active,
+        default_price: null, // Not available in database-only mode
+        created: null,
+        updated: null,
+        images: [],
+        metadata: {},
+        // Database fields
+        created_at: product.created_at,
+        updated_at: product.updated_at,
+        database_only: true
+      }))
+
+      return NextResponse.json({
+        success: true,
+        products: databaseProducts,
+        total: databaseProducts.length,
+        database_only: true,
+        message: 'Stripe not configured. Showing database-only data. Configure Stripe for full functionality.'
+      })
     }
 
     const stripeConfig = configData.value as unknown as StripeConfig
@@ -72,7 +109,12 @@ export async function GET(request: NextRequest) {
     } catch (stripeError: any) {
       console.error('Stripe products fetch error:', stripeError)
       return NextResponse.json(
-        { error: `Failed to fetch products: ${stripeError.message}` },
+        { 
+          error: `Failed to fetch products: ${stripeError.message}`,
+          stripe_config_exists: !!stripeConfig,
+          config_mode: stripeConfig?.mode,
+          details: stripeError
+        },
         { status: 400 }
       )
     }

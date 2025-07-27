@@ -6,6 +6,7 @@ import {
   CheckCircle, 
   CreditCard, 
   DollarSign,
+  Download,
   Edit3, 
   Package,
   Plus, 
@@ -136,6 +137,35 @@ export default function PricingManagementPage() {
       setMessage({ type: 'error', text: 'Failed to fetch prices' })
     } finally {
       setLoading(prev => ({ ...prev, prices: false }))
+    }
+  }
+
+  const syncStripeData = async () => {
+    setLoading(prev => ({ ...prev, products: true, prices: true }))
+    setMessage({ type: 'info', text: 'Syncing data from Stripe...' })
+    
+    try {
+      const response = await fetch('/api/admin/sync-stripe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        setMessage({ 
+          type: 'success', 
+          text: `Sync completed! ${data.productsCount} products and ${data.pricesCount} prices imported from Stripe.` 
+        })
+        // Refresh both lists after sync
+        await Promise.all([fetchProducts(), fetchPrices()])
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to sync with Stripe' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to sync with Stripe' })
+    } finally {
+      setLoading(prev => ({ ...prev, products: false, prices: false }))
     }
   }
 
@@ -373,19 +403,43 @@ export default function PricingManagementPage() {
   return (
     <div className="space-y-8 bg-light-concrete min-h-screen p-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-quote-header text-charcoal font-bold">
-          Pricing Management
-        </h1>
-        <p className="text-charcoal/70">
-          Manage your Stripe products and pricing plans
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-quote-header text-charcoal font-bold">
+            Pricing Management
+          </h1>
+          <p className="text-charcoal/70">
+            Manage your Stripe products and pricing plans
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={syncStripeData}
+            disabled={loading.products || loading.prices}
+            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold transition-all duration-200"
+          >
+            {(loading.products || loading.prices) ? (
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Sync from Stripe
+          </Button>
+        </div>
       </div>
 
       {/* Global Alert Messages */}
       {message && (
-        <Alert className={message.type === 'error' ? 'border-error-red bg-error-red/10' : 'border-success-green bg-success-green/10'}>
-          <AlertDescription className={message.type === 'error' ? 'text-error-red' : 'text-success-green'}>
+        <Alert className={
+          message.type === 'error' ? 'border-error-red bg-error-red/10' : 
+          message.type === 'info' ? 'border-equipment-yellow bg-equipment-yellow/10' :
+          'border-success-green bg-success-green/10'
+        }>
+          <AlertDescription className={
+            message.type === 'error' ? 'text-error-red' : 
+            message.type === 'info' ? 'text-equipment-yellow' :
+            'text-success-green'
+          }>
             {message.text}
           </AlertDescription>
         </Alert>

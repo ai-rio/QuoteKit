@@ -50,10 +50,23 @@ export async function upsertProduct(product: Stripe.Product) {
 }
 
 export async function syncStripeProductsAndPrices() {
-  const { stripeAdmin } = await import('@/libs/stripe/stripe-admin');
-  
   try {
-    const stripe = stripeAdmin;
+    // Get Stripe configuration from admin settings (same as API endpoints)
+    const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+    const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+    
+    const { data: configData } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    if (!configData?.value) {
+      throw new Error('Stripe not configured. Please configure Stripe first in admin settings.');
+    }
+
+    const stripeConfig = configData.value as { secret_key: string; mode: 'test' | 'live' };
+    const stripe = createStripeAdminClient(stripeConfig);
     
     console.log('Fetching products from Stripe...');
     
