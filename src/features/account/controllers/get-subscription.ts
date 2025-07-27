@@ -19,13 +19,14 @@ export async function getSubscription() {
 
     console.debug('getSubscription: Querying for user:', { userId: user.id });
 
-    // Query subscriptions filtered by the current user
-    const { data: subscription, error: subError } = await supabase
+    // Query subscriptions filtered by the current user - get the most recent active subscription
+    const { data: subscriptions, error: subError } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['trialing', 'active'])
-      .maybeSingle();
+      .order('created', { ascending: false })
+      .limit(1);
 
     if (subError) {
       console.error('Subscription query error:', subError);
@@ -37,6 +38,9 @@ export async function getSubscription() {
       return null;
     }
 
+    // Get the first (most recent) subscription
+    const subscription = subscriptions?.[0];
+    
     if (!subscription) {
       console.log('No active subscription found for user:', user.id);
       console.debug('getSubscription: No subscription found', {
