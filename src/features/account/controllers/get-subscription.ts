@@ -19,14 +19,16 @@ export async function getSubscription() {
 
     console.debug('getSubscription: Querying for user:', { userId: user.id });
 
-    // Query subscriptions filtered by the current user - get the most recent active subscription
+    // CRITICAL FIX: Query subscriptions with proper priority logic
+    // 1. Get all active/trialing subscriptions for the user
+    // 2. Order by subscription type (paid first) then by creation date
     const { data: subscriptions, error: subError } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['trialing', 'active', 'past_due'])
-      .order('created', { ascending: false })
-      .limit(1);
+      .order('stripe_subscription_id', { ascending: false, nullsLast: true }) // Paid subscriptions first (non-null stripe_subscription_id)
+      .order('created', { ascending: false }); // Then by creation date as tiebreaker
 
     if (subError) {
       console.error('Subscription query error:', subError);
@@ -38,23 +40,43 @@ export async function getSubscription() {
       return null;
     }
 
-    // Get the first (most recent) subscription
-    const subscription = subscriptions?.[0];
-    
-    if (!subscription) {
+    if (!subscriptions || subscriptions.length === 0) {
       console.log('No active subscription found for user:', user.id);
       console.debug('getSubscription: No subscription found', {
         userId: user.id,
-        searchStatuses: ['trialing', 'active']
+        searchStatuses: ['trialing', 'active', 'past_due']
       });
       return null;
     }
 
+    // Get the first subscription (highest priority due to our ordering)
+    const subscription = subscriptions[0];
+    
     console.debug('getSubscription: Found subscription', {
       subscriptionId: subscription.id,
       status: subscription.status,
-      priceId: subscription.price_id
+      priceId: subscription.price_id,
+      stripeSubscriptionId: subscription.stripe_subscription_id,
+      subscriptionType: subscription.stripe_subscription_id ? 'paid' : 'free',
+      totalSubscriptions: subscriptions.length
     });
+
+    // Log warning if user has multiple subscriptions (should be cleaned up)
+    if (subscriptions.length > 1) {
+      const paidCount = subscriptions.filter(s => s.stripe_subscription_id).length;
+      const freeCount = subscriptions.filter(s => !s.stripe_subscription_id).length;
+      
+      console.warn('User has multiple active subscriptions - cleanup needed:', {
+        userId: user.id,
+        totalSubscriptions: subscriptions.length,
+        paidSubscriptions: paidCount,
+        freeSubscriptions: freeCount,
+        selectedSubscription: {
+          id: subscription.id,
+          type: subscription.stripe_subscription_id ? 'paid' : 'free'
+        }
+      });
+    }
 
     // Check if price_id exists
     if (!subscription.price_id) {
@@ -127,7 +149,8 @@ export async function getSubscription() {
     console.debug('getSubscription: Successfully retrieved subscription data', {
       subscriptionId: subscription.id,
       priceId: subscription.price_id,
-      hasProductData: !!productData
+      hasProductData: !!productData,
+      subscriptionType: subscription.stripe_subscription_id ? 'paid' : 'free'
     });
 
     // Combine the data
@@ -206,6 +229,120 @@ export async function getFreePlanInfo() {
   } catch (error) {
     console.error('getFreePlanInfo function error:', error);
     return null;
+  }
+}
+
+/**
+ * Clean up duplicate subscriptions for a user
+ * This function handles the case where a user has both free and paid subscriptions
+ * It deactivates free subscriptions when paid ones exist
+ */
+export async function cleanupDuplicateSubscriptions(userId: string) {
+  try {
+    const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+
+    // Get all active subscriptions for the user
+    const { data: subscriptions, error: fetchError } = await supabaseAdminClient
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .in('status', ['trialing', 'active', 'past_due']);
+
+    if (fetchError) {
+      console.error('Error fetching subscriptions for cleanup:', fetchError);
+      return { success: false, error: fetchError.message };
+    }
+
+    if (!subscriptions || subscriptions.length <= 1) {
+      console.log('No duplicate subscriptions found for user:', userId);
+      return { success: true, message: 'No duplicates found' };
+    }
+
+    // Separate paid and free subscriptions
+    const paidSubscriptions = subscriptions.filter(s => s.stripe_subscription_id);
+    const freeSubscriptions = subscriptions.filter(s => !s.stripe_subscription_id);
+
+    console.log('Found subscriptions for cleanup:', {
+      userId,
+      totalSubscriptions: subscriptions.length,
+      paidSubscriptions: paidSubscriptions.length,
+      freeSubscriptions: freeSubscriptions.length
+    });
+
+    // If user has both paid and free subscriptions, deactivate the free ones
+    if (paidSubscriptions.length > 0 && freeSubscriptions.length > 0) {
+      const freeSubscriptionIds = freeSubscriptions.map(s => s.id);
+      
+      const { error: updateError } = await supabaseAdminClient
+        .from('subscriptions')
+        .update({ 
+          status: 'canceled',
+          canceled_at: new Date().toISOString(),
+          ended_at: new Date().toISOString()
+        })
+        .in('id', freeSubscriptionIds);
+
+      if (updateError) {
+        console.error('Error updating free subscriptions:', updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      console.log('Successfully deactivated free subscriptions:', {
+        userId,
+        deactivatedSubscriptions: freeSubscriptionIds
+      });
+
+      return { 
+        success: true, 
+        message: `Deactivated ${freeSubscriptionIds.length} free subscription(s)`,
+        deactivatedCount: freeSubscriptionIds.length
+      };
+    }
+
+    // If user has multiple paid subscriptions, keep the most recent one
+    if (paidSubscriptions.length > 1) {
+      const sortedPaid = paidSubscriptions.sort((a, b) => 
+        new Date(b.created).getTime() - new Date(a.created).getTime()
+      );
+      
+      const subscriptionsToDeactivate = sortedPaid.slice(1); // Keep the first (most recent)
+      const idsToDeactivate = subscriptionsToDeactivate.map(s => s.id);
+
+      const { error: updateError } = await supabaseAdminClient
+        .from('subscriptions')
+        .update({ 
+          status: 'canceled',
+          canceled_at: new Date().toISOString(),
+          ended_at: new Date().toISOString()
+        })
+        .in('id', idsToDeactivate);
+
+      if (updateError) {
+        console.error('Error updating duplicate paid subscriptions:', updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      console.log('Successfully deactivated duplicate paid subscriptions:', {
+        userId,
+        deactivatedSubscriptions: idsToDeactivate,
+        keptSubscription: sortedPaid[0].id
+      });
+
+      return { 
+        success: true, 
+        message: `Deactivated ${idsToDeactivate.length} duplicate paid subscription(s)`,
+        deactivatedCount: idsToDeactivate.length
+      };
+    }
+
+    return { success: true, message: 'No cleanup needed' };
+
+  } catch (error) {
+    console.error('Error in cleanupDuplicateSubscriptions:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 }
 
