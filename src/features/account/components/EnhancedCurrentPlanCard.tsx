@@ -6,7 +6,7 @@ import { AlertCircle, DollarSign, Settings, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProductWithPrices,SubscriptionWithProduct } from '@/features/pricing/types';
+import { PriceWithProduct, ProductWithPrices, SubscriptionWithProduct } from '@/features/pricing/types';
 
 import { cancelSubscription, changePlan, reactivateSubscription } from '../actions/subscription-actions';
 
@@ -16,9 +16,10 @@ import { PlanChangeDialog } from './PlanChangeDialog';
 interface EnhancedCurrentPlanCardProps {
   subscription: SubscriptionWithProduct | null;
   availablePlans: ProductWithPrices[];
+  freePlanInfo: PriceWithProduct | null;
 }
 
-export function EnhancedCurrentPlanCard({ subscription, availablePlans }: EnhancedCurrentPlanCardProps) {
+export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlanInfo }: EnhancedCurrentPlanCardProps) {
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -207,29 +208,82 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans }: Enhanc
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-charcoal/70 mb-4">You don&apos;t have an active subscription</p>
-              <Button 
-                className="bg-forest-green text-paper-white hover:bg-forest-green/90"
-                asChild
-              >
-                <a href="/pricing">Start Subscription</a>
-              </Button>
+            <div className="space-y-4">
+              {freePlanInfo ? (
+                // Display free plan information
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-charcoal">
+                        {freePlanInfo.products?.name || 'Free Plan'}
+                      </h3>
+                      <p className="text-sm text-charcoal/70">
+                        {formatPrice(freePlanInfo.unit_amount || 0)}
+                        {freePlanInfo.interval ? `/${freePlanInfo.interval}` : ''}
+                      </p>
+                    </div>
+                    <Badge className="bg-forest-green text-paper-white">
+                      Active
+                    </Badge>
+                  </div>
+                  
+                  <div className="p-4 bg-light-concrete rounded-lg border border-stone-gray">
+                    <div className="flex items-start space-x-3">
+                      <DollarSign className="h-5 w-5 text-forest-green mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium text-charcoal">Free Plan Benefits</p>
+                        <p className="text-sm text-charcoal/70 mt-1">
+                          You&apos;re currently on our free plan. Upgrade to unlock additional features and remove limitations.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <Button 
+                      className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                      asChild
+                    >
+                      <a href="/pricing">Upgrade Plan</a>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="border-stone-gray text-charcoal hover:bg-light-concrete"
+                      onClick={() => setShowPlanDialog(true)}
+                      disabled={isLoading}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      {isLoading ? 'Loading...' : 'View Plans'}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                // Fallback if no free plan info is available
+                <div className="text-center py-8">
+                  <p className="text-charcoal/70 mb-4">You don&apos;t have an active subscription</p>
+                  <Button 
+                    className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                    asChild
+                  >
+                    <a href="/pricing">Start Subscription</a>
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Plan Change Dialog */}
-      {subscription && (
+      {(subscription || freePlanInfo) && (
         <PlanChangeDialog
           isOpen={showPlanDialog}
           onClose={() => setShowPlanDialog(false)}
           currentPlan={{
-            id: subscription.prices?.id || '',
-            name: subscription.prices?.products?.name || '',
-            price: (subscription.prices?.unit_amount || 0) / 100,
-            interval: subscription.prices?.interval || 'month',
+            id: subscription?.prices?.id || freePlanInfo?.id || '',
+            name: subscription?.prices?.products?.name || freePlanInfo?.products?.name || 'Free Plan',
+            price: (subscription?.prices?.unit_amount || freePlanInfo?.unit_amount || 0) / 100,
+            interval: subscription?.prices?.interval || freePlanInfo?.interval || 'month',
           }}
           availablePlans={availablePlans}
           onPlanChange={handlePlanChange}

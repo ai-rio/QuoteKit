@@ -11,7 +11,7 @@ import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedC
 import { PaymentMethodsManager } from '@/features/account/components/PaymentMethodsManager';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
-import { getBillingHistory, getPaymentMethods,getSubscription } from '@/features/account/controllers/get-subscription';
+import { getBillingHistory, getFreePlanInfo, getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
 import { SubscriptionWithProduct } from '@/features/pricing/types';
 
 interface BillingHistoryItem {
@@ -50,6 +50,9 @@ export default async function AccountPage() {
     getStripePublishableKey(),
   ]);
 
+  // If no subscription exists, get free plan information for display
+  const freePlanInfo = !subscription ? await getFreePlanInfo() : null;
+
   return (
     <div className="min-h-screen bg-light-concrete">
       <div className="container mx-auto px-4 py-8 space-y-8">
@@ -61,7 +64,7 @@ export default async function AccountPage() {
 
         {/* Current Plan Section */}
         <Suspense fallback={<CardSkeleton />}>
-          <EnhancedCurrentPlanCard subscription={subscription} availablePlans={availablePlans} />
+          <EnhancedCurrentPlanCard subscription={subscription} availablePlans={availablePlans} freePlanInfo={freePlanInfo} />
         </Suspense>
 
         {/* Billing History Section */}
