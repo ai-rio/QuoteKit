@@ -8,8 +8,8 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     .eq('id', userId)
     .single();
 
-  if (error || !data?.stripe_customer_id) {
-    // No customer record found, let's create one.
+  // If customer record doesn't exist at all, create both Stripe customer and database record
+  if (error) {
     const customerData = {
       email,
       metadata: {
@@ -31,5 +31,30 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     return customer.id;
   }
 
+  // If customer record exists but no Stripe customer ID, create Stripe customer and update record
+  if (!data?.stripe_customer_id) {
+    const customerData = {
+      email,
+      metadata: {
+        userId,
+      },
+    } as const;
+
+    const customer = await stripeAdmin.customers.create(customerData);
+
+    // Update the existing customer record with the new Stripe customer ID
+    const { error: updateError } = await supabaseAdminClient
+      .from('customers')
+      .update({ stripe_customer_id: customer.id })
+      .eq('id', userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return customer.id;
+  }
+
+  // Customer record exists with Stripe customer ID
   return data.stripe_customer_id;
 }
