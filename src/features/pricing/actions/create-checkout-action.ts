@@ -31,16 +31,30 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     full_price_object: price
   });
 
-  // 1. Get the user from session
+  // 1. FIRST: Check if user is authenticated - redirect to signup if not
   const session = await getSession();
 
   if (!session?.user) {
-    return redirect(`${getURL()}/signup`);
+    console.log('🔐 User not authenticated, redirecting to signup with plan info');
+    
+    // Create search params to preserve plan selection during signup
+    const searchParams = new URLSearchParams();
+    searchParams.set('plan', price.stripe_price_id);
+    searchParams.set('amount', price.unit_amount.toString());
+    searchParams.set('interval', price.interval || 'one_time');
+    searchParams.set('type', price.type || 'one_time');
+    
+    const signupUrl = `${getURL()}/signup?${searchParams.toString()}`;
+    console.log('🔗 Redirecting to:', signupUrl);
+    
+    return redirect(signupUrl);
   }
 
   if (!session.user.email) {
     throw Error('Could not get email');
   }
+
+  console.log('✅ User is authenticated, proceeding with subscription creation');
 
   // 2. Check if this is a free plan (unit_amount = 0)
   if (price.unit_amount === 0) {
@@ -63,12 +77,12 @@ export async function createCheckoutAction({ price }: { price: Price }) {
         return redirect(`${getURL()}/account?message=already_subscribed`);
       }
 
-      // Create a local subscription record for the free plan
+      // Create a local subscription record for the free plan (using updated schema)
       const subscriptionData = {
         user_id: session.user.id,
         status: 'active',
         price_id: price.id,
-        // For free plans, we don't need Stripe IDs
+        // For free plans, we don't need Stripe IDs (now these columns exist)
         stripe_subscription_id: null,
         stripe_customer_id: null,
         current_period_start: new Date().toISOString(),
@@ -172,7 +186,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
       mode: checkoutMode,
       allow_promotion_codes: true,
       success_url: `${getURL()}/account`,
-      cancel_url: `${getURL()}/`,
+      cancel_url: `${getURL()}/pricing`,
     });
 
     if (!checkoutSession || !checkoutSession.url) {

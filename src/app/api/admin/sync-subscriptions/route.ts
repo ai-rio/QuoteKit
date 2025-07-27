@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/server';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { manualSyncSubscription, manualSyncAllSubscriptions } from '@/features/account/controllers/manual-sync-subscription';
 
 export async function POST(request: NextRequest) {

@@ -73,11 +73,33 @@ export async function signUpWithEmail(formData: FormData): Promise<ActionRespons
 
   const supabase = await createSupabaseServerClient();
 
+  // Get current URL to preserve plan parameters
+  const headers = await import('next/headers');
+  const headersList = headers.headers();
+  const referer = headersList.get('referer') || '';
+  const refererUrl = new URL(referer);
+  const planParams = new URLSearchParams();
+  
+  // Preserve plan selection parameters
+  if (refererUrl.searchParams.get('plan')) {
+    planParams.set('plan', refererUrl.searchParams.get('plan')!);
+  }
+  if (refererUrl.searchParams.get('amount')) {
+    planParams.set('amount', refererUrl.searchParams.get('amount')!);
+  }
+  if (refererUrl.searchParams.get('interval')) {
+    planParams.set('interval', refererUrl.searchParams.get('interval')!);
+  }
+
+  const redirectUrl = planParams.toString() 
+    ? `${getURL('/auth/callback')}?${planParams.toString()}`
+    : getURL('/auth/callback');
+
   const { error } = await supabase.auth.signUp({
     email: email.trim(),
     password: password.trim(),
     options: {
-      emailRedirectTo: getURL('/auth/callback'),
+      emailRedirectTo: redirectUrl,
     },
   });
 

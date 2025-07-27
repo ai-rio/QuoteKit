@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { syncPriceStatus, batchSyncPriceStatuses } from '@/features/pricing/controllers/upsert-price';
 
 /**

@@ -11,6 +11,11 @@ const siteUrl = getURL();
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  
+  // Preserve plan selection parameters from the original request
+  const planParam = requestUrl.searchParams.get('plan');
+  const amountParam = requestUrl.searchParams.get('amount');
+  const intervalParam = requestUrl.searchParams.get('interval');
 
   if (code) {
     const supabase = await createSupabaseServerClient();
@@ -33,6 +38,14 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (!userSubscription) {
+      // If user has plan parameters, redirect to complete the plan selection
+      if (planParam) {
+        const redirectParams = new URLSearchParams();
+        redirectParams.set('plan', planParam);
+        if (amountParam) redirectParams.set('amount', amountParam);
+        if (intervalParam) redirectParams.set('interval', intervalParam);
+        return NextResponse.redirect(`${siteUrl}/pricing/complete?${redirectParams.toString()}`);
+      }
       return NextResponse.redirect(`${siteUrl}/pricing`);
     } else {
       return NextResponse.redirect(`${siteUrl}`);
