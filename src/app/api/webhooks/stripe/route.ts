@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-import { createStripeAdminClient } from '@/libs/stripe/stripe-admin'
+import { upsertUserSubscription } from '@/features/account/controllers/upsert-user-subscription'
+import { createStripeAdminClient, stripeAdmin } from '@/libs/stripe/stripe-admin'
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
 
 export async function POST(request: NextRequest) {
@@ -252,53 +253,84 @@ async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
   const subscription = event.data.object as Stripe.Subscription
   
   try {
-    // Get customer from Stripe to find user
-    const { data: customer } = await supabaseAdminClient
-      .from('customers')
-      .select('id')
-      .eq('stripe_customer_id', subscription.customer as string)
-      .single()
-    
-    if (!customer) {
-      throw new Error(`Customer not found for subscription ${subscription.id}`)
-    }
-    
     if (event.type === 'customer.subscription.deleted') {
-      // Handle subscription cancellation
-      await supabaseAdminClient
+      // Handle subscription cancellation - delete from database
+      const { error } = await supabaseAdminClient
         .from('subscriptions')
         .delete()
         .eq('id', subscription.id)
+      
+      if (error) {
+        throw new Error(`Failed to delete subscription: ${error.message}`)
+      }
+      
+      console.log(`Subscription deleted: ${subscription.id} for customer ${subscription.customer}`)
     } else {
-      // Handle subscription creation/update
-      await supabaseAdminClient
-        .from('subscriptions')
-        .upsert({
-          id: subscription.id,
-          user_id: customer.id,
-          status: subscription.status as any,
-          metadata: subscription.metadata,
-          price_id: subscription.items.data[0]?.price.id,
-          quantity: subscription.items.data[0]?.quantity || 1,
-          cancel_at_period_end: subscription.cancel_at_period_end,
-          created: new Date(subscription.created * 1000).toISOString(),
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000).toISOString() : null,
-          cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
-          canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-          trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-          trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-        }, {
-          onConflict: 'id'
-        })
+      // Handle subscription creation/update using centralized function
+      await upsertUserSubscription({
+        subscriptionId: subscription.id,
+        customerId: subscription.customer as string,
+        isCreateAction: event.type === 'customer.subscription.created'
+      })
+      
+      console.log(`Subscription ${event.type}: ${subscription.id} for customer ${subscription.customer}`)
     }
-    
-    console.log(`Subscription ${event.type}: ${subscription.id} for customer ${subscription.customer}`)
   } catch (error) {
     console.error('Failed to sync subscription:', error)
     throw error // Re-throw to trigger retry
   }
+}
+
+// Helper function to ensure customer mapping exists
+async function ensureCustomerMapping(session: Stripe.Checkout.Session): Promise<string> {
+  const customerId = session.customer as string
+  const customerEmail = session.customer_details?.email
+  
+  if (!customerId || !customerEmail) {
+    throw new Error('Missing customer ID or email in checkout session')
+  }
+  
+  // Check if customer mapping already exists
+  const { data: existingCustomer } = await supabaseAdminClient
+    .from('customers')
+    .select('id')
+    .eq('stripe_customer_id', customerId)
+    .single()
+  
+  if (existingCustomer) {
+    return existingCustomer.id
+  }
+  
+  // Find user by email
+  const { data: userData, error: userError } = await supabaseAdminClient
+    .from('users')
+    .select('id')
+    .eq('email', customerEmail)
+    .single()
+  
+  if (userError || !userData) {
+    throw new Error(`User not found for email: ${customerEmail}`)
+  }
+  
+  // Create customer mapping
+  const { data: newCustomer, error: customerError } = await supabaseAdminClient
+    .from('customers')
+    .insert({
+      id: userData.id,
+      stripe_customer_id: customerId,
+      email: customerEmail,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .select('id')
+    .single()
+  
+  if (customerError || !newCustomer) {
+    throw new Error(`Failed to create customer mapping: ${customerError?.message}`)
+  }
+  
+  console.log(`Created customer mapping: user ${userData.id} -> customer ${customerId}`)
+  return newCustomer.id
 }
 
 // Handle successful checkout sessions
@@ -308,8 +340,31 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<void
   try {
     console.log(`Checkout session completed: ${session.id} for customer ${session.customer}`)
     
-    // Additional logic for successful checkouts
-    // e.g., send confirmation email, update user status, etc.
+    // Retrieve full checkout session with subscription expansion
+    const fullSession = await stripeAdmin.checkout.sessions.retrieve(session.id, {
+      expand: ['subscription', 'customer']
+    })
+    
+    if (!fullSession.subscription) {
+      console.log(`No subscription found for checkout session ${session.id}, skipping subscription handling`)
+      return
+    }
+    
+    // Ensure customer mapping exists
+    await ensureCustomerMapping(fullSession)
+    
+    // Create/update subscription using the centralized function
+    await upsertUserSubscription({
+      subscriptionId: typeof fullSession.subscription === 'string' 
+        ? fullSession.subscription 
+        : fullSession.subscription.id,
+      customerId: typeof fullSession.customer === 'string' 
+        ? fullSession.customer 
+        : fullSession.customer!.id,
+      isCreateAction: true
+    })
+    
+    console.log(`Successfully processed checkout session ${session.id} and created subscription`)
     
   } catch (error) {
     console.error('Failed to handle checkout session completion:', error)
