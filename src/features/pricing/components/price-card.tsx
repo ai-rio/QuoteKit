@@ -52,7 +52,8 @@ export function PricingCard({
   const yearPrice = pricesArray.find((price) => price.interval === 'year')?.unit_amount;
   const isBillingIntervalYearly = billingInterval === 'year';
   // Handle missing or invalid metadata with safe parsing and defaults
-  const metadataResult = productMetadataSchema.safeParse(product.metadata || {});
+  // Note: stripe_products table doesn't have metadata field, so we use fallback defaults
+  const metadataResult = productMetadataSchema.safeParse({});
   const metadata = metadataResult.success 
     ? metadataResult.data 
     : {

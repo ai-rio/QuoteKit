@@ -46,7 +46,7 @@ export function PlanChangeDialog({
 
     const selectedPrice = availablePlans
       .flatMap(p => p.prices)
-      .find(price => price.id === selectedPriceId);
+      .find(price => price?.id === selectedPriceId);
 
     if (!selectedPrice) return;
 
@@ -111,7 +111,7 @@ export function PlanChangeDialog({
             <h3 className="text-lg font-bold text-charcoal">Available Plans</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {availablePlans.map((product) =>
-                product.prices.map((price) => {
+                product.prices?.map((price) => {
                   const changeInfo = getChangeType(price.unit_amount || 0);
                   const isSelected = selectedPriceId === price.id;
                   const isCurrent = price.unit_amount === currentPlan.price * 100;
@@ -180,7 +180,7 @@ export function PlanChangeDialog({
                   {getChangeType(
                     availablePlans
                       .flatMap(p => p.prices)
-                      .find(p => p.id === selectedPriceId)?.unit_amount || 0
+                      .find(p => p?.id === selectedPriceId)?.unit_amount || 0
                   ).type === 'upgrade' ? (
                     <>
                       <p>• Your plan will be upgraded immediately</p>

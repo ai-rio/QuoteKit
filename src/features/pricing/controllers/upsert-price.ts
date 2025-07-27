@@ -30,11 +30,30 @@ export async function upsertPrice(price: Stripe.Price) {
  * Sync all products and prices from Stripe to local database
  * Useful for local development setup
  */
+export async function upsertProduct(product: Stripe.Product) {
+  const productData = {
+    stripe_product_id: product.id,
+    name: product.name,
+    description: product.description ?? null,
+    active: product.active,
+  };
+
+  const { error } = await supabaseAdminClient.from('stripe_products').upsert([productData], {
+    onConflict: 'stripe_product_id'
+  });
+
+  if (error) {
+    throw error;
+  } else {
+    console.info(`Product inserted/updated: ${product.id}`);
+  }
+}
+
 export async function syncStripeProductsAndPrices() {
-  const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+  const { stripeAdmin } = await import('@/libs/stripe/stripe-admin');
   
   try {
-    const stripe = await createStripeAdminClient();
+    const stripe = stripeAdmin;
     
     console.log('Fetching products from Stripe...');
     

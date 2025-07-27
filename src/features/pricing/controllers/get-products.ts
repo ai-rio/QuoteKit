@@ -44,7 +44,7 @@ export async function getProducts() {
           const transformedPrice = {
             ...price,
             interval: price.recurring_interval, // Map recurring_interval to interval for compatibility
-            type: price.recurring_interval ? 'recurring' : 'one_time' // Add type field based on recurring_interval
+            type: price.recurring_interval ? 'recurring' as const : 'one_time' as const // Add type field based on recurring_interval
           };
           
           // DEBUG: Log each price transformation
