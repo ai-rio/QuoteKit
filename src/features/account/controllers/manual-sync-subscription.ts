@@ -1,6 +1,7 @@
 import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import { upsertUserSubscription } from './upsert-user-subscription';
+import { cleanupDuplicateSubscriptions } from './get-subscription';
 
 /**
  * Manual sync function to retrieve and sync subscription data from Stripe
@@ -11,7 +12,6 @@ export async function manualSyncSubscription(customerStripeId: string) {
     console.log(`🔄 Starting manual sync for customer: ${customerStripeId}`);
     
     // Get Stripe configuration
-    const supabaseAdminClient = supabaseAdminClient();
     const { data: configData } = await supabaseAdminClient
       .from('admin_settings')
       .select('value')
@@ -74,6 +74,28 @@ export async function manualSyncSubscription(customerStripeId: string) {
     }
 
     console.log(`🎉 Manual sync completed: ${syncedCount}/${subscriptions.data.length} subscriptions synced`);
+
+    // After syncing, cleanup any duplicate subscriptions for this customer
+    try {
+      // Get the user ID for this customer
+      const { data: customerData } = await supabaseAdminClient
+        .from('customers')
+        .select('id')
+        .eq('stripe_customer_id', customerStripeId)
+        .single();
+
+      if (customerData?.id) {
+        console.log(`🧹 Cleaning up duplicate subscriptions for user ${customerData.id}`);
+        const cleanupResult = await cleanupDuplicateSubscriptions(customerData.id);
+        
+        if (cleanupResult.success && cleanupResult.deactivatedCount) {
+          console.log(`✨ Cleanup completed: ${cleanupResult.message}`);
+        }
+      }
+    } catch (cleanupError) {
+      console.warn('⚠️ Cleanup failed (non-critical):', cleanupError);
+      // Don't fail the sync operation if cleanup fails
+    }
 
     return {
       synced: syncedCount,
