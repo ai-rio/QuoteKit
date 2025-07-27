@@ -42,11 +42,6 @@ export default async function AccountPage() {
     redirect('/login');
   }
 
-  console.log('🔍 ACCOUNT PAGE DEBUG: Session info:', {
-    userId: session.user.id,
-    email: session.user.email
-  });
-
   const [subscription, billingHistory, paymentMethods, availablePlans, stripePublishableKey] = await Promise.all([
     getSubscription(),
     getBillingHistory(),
@@ -55,30 +50,13 @@ export default async function AccountPage() {
     getStripePublishableKey(),
   ]);
 
-  console.log('🔍 ACCOUNT PAGE DEBUG: Data results:', {
-    hasSubscription: !!subscription,
-    subscriptionId: subscription?.id,
-    subscriptionStatus: subscription?.status,
-    billingHistoryCount: billingHistory?.length || 0,
-    paymentMethodsCount: paymentMethods?.length || 0,
-    hasStripeKey: !!stripePublishableKey
-  });
-
   return (
     <div className="min-h-screen bg-light-concrete">
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-charcoal">Account Dashboard</h1>
           <p className="text-charcoal/70 mt-2">Manage your subscription and billing information</p>
-          {/* Temporary debug info */}
-          <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded text-sm">
-            <strong>DEBUG INFO:</strong><br/>
-            User: {session.user.email} ({session.user.id})<br/>
-            Subscription: {subscription ? `${subscription.id} (${subscription.status})` : 'None found'}<br/>
-            Billing History: {billingHistory?.length || 0} records<br/>
-            Payment Methods: {paymentMethods?.length || 0} methods<br/>
-            Stripe Key: {stripePublishableKey ? 'Available' : 'Not configured'}
-          </div>
+          
         </div>
 
         {/* Current Plan Section */}

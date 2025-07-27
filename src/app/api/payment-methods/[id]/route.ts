@@ -16,7 +16,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get Stripe configuration
+    // Get Stripe configuration - try database first, then environment variables
     const { data: stripeConfigRecord } = await supabase
       .from('admin_settings')
       .select('value')
@@ -24,15 +24,23 @@ export async function DELETE(
       .single();
 
     const stripeConfig = stripeConfigRecord?.value as any;
-
-    if (!stripeConfig?.secret_key) {
+    
+    let stripe;
+    if (stripeConfig?.secret_key) {
+      // Use database configuration
+      stripe = createStripeAdminClient({
+        secret_key: stripeConfig.secret_key,
+        mode: stripeConfig.mode || 'test'
+      });
+    } else if (process.env.STRIPE_SECRET_KEY) {
+      // Fallback to environment variables
+      stripe = createStripeAdminClient({
+        secret_key: process.env.STRIPE_SECRET_KEY,
+        mode: 'test' // Default to test mode for env vars
+      });
+    } else {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 400 });
     }
-
-    const stripe = createStripeAdminClient({
-      secret_key: stripeConfig.secret_key,
-      mode: stripeConfig.mode || 'test'
-    });
 
     // Get customer ID from database
     const { data: customer } = await supabase
@@ -102,7 +110,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get Stripe configuration
+    // Get Stripe configuration - try database first, then environment variables
     const { data: stripeConfigRecord } = await supabase
       .from('admin_settings')
       .select('value')
@@ -110,15 +118,23 @@ export async function PATCH(
       .single();
 
     const stripeConfig = stripeConfigRecord?.value as any;
-
-    if (!stripeConfig?.secret_key) {
+    
+    let stripe;
+    if (stripeConfig?.secret_key) {
+      // Use database configuration
+      stripe = createStripeAdminClient({
+        secret_key: stripeConfig.secret_key,
+        mode: stripeConfig.mode || 'test'
+      });
+    } else if (process.env.STRIPE_SECRET_KEY) {
+      // Fallback to environment variables
+      stripe = createStripeAdminClient({
+        secret_key: process.env.STRIPE_SECRET_KEY,
+        mode: 'test' // Default to test mode for env vars
+      });
+    } else {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 400 });
     }
-
-    const stripe = createStripeAdminClient({
-      secret_key: stripeConfig.secret_key,
-      mode: stripeConfig.mode || 'test'
-    });
 
     // Get customer ID from database
     const { data: customer } = await supabase
