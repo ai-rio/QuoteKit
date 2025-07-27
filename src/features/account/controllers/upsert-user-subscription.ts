@@ -36,6 +36,9 @@ export async function upsertUserSubscription({
     metadata: subscription.metadata,
     status: subscription.status,
     price_id: subscription.items.data[0].price.id,
+    // Add the new Stripe-specific fields
+    stripe_subscription_id: subscription.id,
+    stripe_customer_id: customerId,
     cancel_at_period_end: subscription.cancel_at_period_end,
     cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
     canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,

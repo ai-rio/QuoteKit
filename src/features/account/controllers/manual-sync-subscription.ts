@@ -1,5 +1,5 @@
 import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
-import { createSupabaseAdminClient } from '@/libs/supabase/admin';
+import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import { upsertUserSubscription } from './upsert-user-subscription';
 
 /**
@@ -11,7 +11,7 @@ export async function manualSyncSubscription(customerStripeId: string) {
     console.log(`🔄 Starting manual sync for customer: ${customerStripeId}`);
     
     // Get Stripe configuration
-    const supabaseAdminClient = createSupabaseAdminClient();
+    const supabaseAdminClient = supabaseAdminClient();
     const { data: configData } = await supabaseAdminClient
       .from('admin_settings')
       .select('value')
@@ -95,7 +95,7 @@ export async function manualSyncAllSubscriptions() {
   try {
     console.log('🚀 Starting manual sync for all customers...');
     
-    const supabaseAdminClient = createSupabaseAdminClient();
+    const supabaseAdminClient = supabaseAdminClient();
     
     // Get all customers from database
     const { data: customers, error } = await supabaseAdminClient

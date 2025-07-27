@@ -94,10 +94,26 @@ export function PricingCard({
     setBillingInterval(billingInterval);
   }
 
+  // Function to handle pricing button clicks with authentication check
+  function handlePricingAction(price: Price) {
+    // Check if user is authenticated by trying to call the server action
+    // If user is not authenticated, it will redirect to signup with plan parameter
+    if (createCheckoutAction) {
+      createCheckoutAction({ price });
+    } else {
+      // Fallback to client-side redirect with plan information
+      const searchParams = new URLSearchParams();
+      searchParams.set('plan', price.stripe_price_id);
+      searchParams.set('amount', price.unit_amount.toString());
+      searchParams.set('interval', price.interval || 'one_time');
+      window.location.href = `/signup?${searchParams.toString()}`;
+    }
+  }
+
   const isPopular = metadata.priceCardVariant === 'pro';
 
   return (
-    <Card className={`relative w-full bg-paper-white border-stone-gray ${isPopular ? 'ring-2 ring-forest-green' : ''}`}>
+    <Card className={`relative w-full bg-paper-white border-stone-gray ${isPopular ? 'ring-2 ring-forest-green' : ''}`}>>
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-forest-green text-paper-white px-3 py-1 text-sm font-medium rounded-full">
@@ -162,27 +178,16 @@ export function PricingCard({
       </CardContent>
 
       <CardFooter className="pt-0">
-        {currentPrice && createCheckoutAction ? (
+        {currentPrice ? (
           <Button
             className={`w-full h-12 font-semibold ${
               isPopular 
                 ? 'bg-forest-green text-paper-white hover:bg-forest-green/90' 
                 : 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90'
             }`}
-            onClick={() => createCheckoutAction({ price: currentPrice })}
+            onClick={() => handlePricingAction(currentPrice)}
           >
             {currentPrice.unit_amount === 0 ? 'Start Free Trial' : 'Get Started'}
-          </Button>
-        ) : currentPrice ? (
-          <Button
-            className={`w-full h-12 font-semibold ${
-              isPopular 
-                ? 'bg-forest-green text-paper-white hover:bg-forest-green/90' 
-                : 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90'
-            }`}
-            asChild
-          >
-            <a href={`/pricing?price=${currentPrice.stripe_price_id}`}>Get Started</a>
           </Button>
         ) : (
           <Button
