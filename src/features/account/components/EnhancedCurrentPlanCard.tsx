@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertCircle, DollarSign, Settings, X } from 'lucide-react';
+import { AlertCircle, DollarSign, RefreshCw, Settings, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,9 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -81,6 +83,40 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
     }
   };
 
+  const handleSyncSubscription = async () => {
+    try {
+      setIsSyncing(true);
+      setError(null);
+      setSyncSuccess(null);
+      
+      const response = await fetch('/api/sync-my-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to sync subscription');
+      }
+      
+      setSyncSuccess(result.message);
+      
+      // Refresh the page after successful sync to show updated subscription
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
+    } catch (err) {
+      console.error('Sync error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sync subscription');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const formatPrice = (amount: number) => {
     return `$${(amount / 100).toFixed(0)}`;
   };
@@ -98,6 +134,30 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
           </div>
         </CardHeader>
         <CardContent>
+          {/* Success Banner */}
+          {syncSuccess && (
+            <Card className="bg-green-50 border-green-200 mb-4">
+              <CardContent className="p-4">
+                <div className="flex items-start space-x-3">
+                  <RefreshCw className="h-5 w-5 text-green-500 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-800">Sync Successful</p>
+                    <p className="text-sm text-green-600 mt-1">{syncSuccess}</p>
+                    <p className="text-xs text-green-600 mt-1">Page will refresh in 2 seconds...</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 border-green-300 text-green-600 hover:bg-green-50"
+                      onClick={() => setSyncSuccess(null)}
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Error Banner */}
           {error && (
             <Card className="bg-red-50 border-red-200 mb-4">
@@ -235,6 +295,9 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                         <p className="text-sm text-charcoal/70 mt-1">
                           You&apos;re currently on our free plan. Upgrade to unlock additional features and remove limitations.
                         </p>
+                        <p className="text-xs text-charcoal/60 mt-2">
+                          Recently upgraded but still seeing free plan? Try syncing your subscription data.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -255,18 +318,39 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                       <Settings className="mr-2 h-4 w-4" />
                       {isLoading ? 'Loading...' : 'View Plans'}
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      className="border-equipment-yellow text-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal"
+                      onClick={handleSyncSubscription}
+                      disabled={isSyncing || isLoading}
+                    >
+                      <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                      {isSyncing ? 'Syncing...' : 'Sync Subscription'}
+                    </Button>
                   </div>
                 </>
               ) : (
                 // Fallback if no free plan info is available
                 <div className="text-center py-8">
                   <p className="text-charcoal/70 mb-4">You don&apos;t have an active subscription</p>
-                  <Button 
-                    className="bg-forest-green text-paper-white hover:bg-forest-green/90"
-                    asChild
-                  >
-                    <a href="/pricing">Start Subscription</a>
-                  </Button>
+                  <p className="text-xs text-charcoal/60 mb-4">Recently made a payment? Try syncing your subscription data.</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                      asChild
+                    >
+                      <a href="/pricing">Start Subscription</a>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="border-equipment-yellow text-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal"
+                      onClick={handleSyncSubscription}
+                      disabled={isSyncing || isLoading}
+                    >
+                      <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                      {isSyncing ? 'Syncing...' : 'Sync Subscription'}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

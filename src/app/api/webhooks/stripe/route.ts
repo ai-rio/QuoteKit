@@ -286,8 +286,16 @@ async function ensureCustomerMapping(session: Stripe.Checkout.Session): Promise<
   const customerId = session.customer as string
   const customerEmail = session.customer_details?.email
   
+  console.log(`🔍 [DEBUG] Ensuring customer mapping:`, {
+    customerId,
+    customerEmail,
+    sessionId: session.id
+  })
+  
   if (!customerId || !customerEmail) {
-    throw new Error('Missing customer ID or email in checkout session')
+    const error = 'Missing customer ID or email in checkout session'
+    console.error(`❌ [ERROR] ${error}:`, { customerId, customerEmail })
+    throw new Error(error)
   }
   
   // Check if customer mapping already exists
@@ -298,8 +306,11 @@ async function ensureCustomerMapping(session: Stripe.Checkout.Session): Promise<
     .single()
   
   if (existingCustomer) {
+    console.log(`✅ [SUCCESS] Found existing customer mapping: user ${existingCustomer.id} -> customer ${customerId}`)
     return existingCustomer.id
   }
+  
+  console.log(`🔍 [DEBUG] No existing customer mapping found, creating new mapping for ${customerEmail}`)
   
   // Find user by email
   const { data: userData, error: userError } = await supabaseAdminClient
@@ -309,8 +320,12 @@ async function ensureCustomerMapping(session: Stripe.Checkout.Session): Promise<
     .single()
   
   if (userError || !userData) {
-    throw new Error(`User not found for email: ${customerEmail}`)
+    const error = `User not found for email: ${customerEmail}`
+    console.error(`❌ [ERROR] ${error}:`, { userError: userError?.message, hasUserData: !!userData })
+    throw new Error(error)
   }
+  
+  console.log(`✅ [SUCCESS] Found user ${userData.id} for email ${customerEmail}`)
   
   // Create customer mapping
   const { data: newCustomer, error: customerError } = await supabaseAdminClient
@@ -338,7 +353,15 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<void
   const session = event.data.object as Stripe.Checkout.Session
   
   try {
-    console.log(`Checkout session completed: ${session.id} for customer ${session.customer}`)
+    console.log(`🛒 [WEBHOOK] Checkout session completed: ${session.id} for customer ${session.customer}`)
+    console.log(`🔍 [DEBUG] Session details:`, {
+      sessionId: session.id,
+      customerId: session.customer,
+      customerEmail: session.customer_details?.email,
+      paymentStatus: session.payment_status,
+      mode: session.mode,
+      subscriptionId: session.subscription
+    })
     
     // Retrieve full checkout session with subscription expansion
     const fullSession = await stripeAdmin.checkout.sessions.retrieve(session.id, {
@@ -346,25 +369,47 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<void
     })
     
     if (!fullSession.subscription) {
-      console.log(`No subscription found for checkout session ${session.id}, skipping subscription handling`)
+      console.log(`⚠️ [WARNING] No subscription found for checkout session ${session.id}, skipping subscription handling`)
+      console.log(`🔍 [DEBUG] Full session data:`, {
+        id: fullSession.id,
+        mode: fullSession.mode,
+        paymentStatus: fullSession.payment_status,
+        hasSubscription: !!fullSession.subscription,
+        customer: fullSession.customer
+      })
       return
     }
     
     // Ensure customer mapping exists
-    await ensureCustomerMapping(fullSession)
+    console.log(`🔗 [DEBUG] Ensuring customer mapping for session ${fullSession.id}`)
+    const userId = await ensureCustomerMapping(fullSession)
+    console.log(`✅ [SUCCESS] Customer mapping confirmed for user ${userId}`)
     
-    // Create/update subscription using the centralized function
-    await upsertUserSubscription({
-      subscriptionId: typeof fullSession.subscription === 'string' 
-        ? fullSession.subscription 
-        : fullSession.subscription.id,
-      customerId: typeof fullSession.customer === 'string' 
-        ? fullSession.customer 
-        : fullSession.customer!.id,
+    // Extract subscription and customer IDs
+    const subscriptionId = typeof fullSession.subscription === 'string' 
+      ? fullSession.subscription 
+      : fullSession.subscription.id
+    const customerId = typeof fullSession.customer === 'string' 
+      ? fullSession.customer 
+      : fullSession.customer!.id
+    
+    console.log(`📝 [DEBUG] About to upsert subscription:`, {
+      subscriptionId,
+      customerId,
+      userId,
       isCreateAction: true
     })
     
-    console.log(`Successfully processed checkout session ${session.id} and created subscription`)
+    // Create/update subscription using the centralized function
+    await upsertUserSubscription({
+      subscriptionId,
+      customerId,
+      isCreateAction: true
+    })
+    
+    console.log(`✅ [SUCCESS] Subscription upserted successfully for user ${userId}`)
+    
+    console.log(`🎉 [SUCCESS] Successfully processed checkout session ${session.id} and created subscription for user ${userId}`)
     
   } catch (error) {
     console.error('Failed to handle checkout session completion:', error)
