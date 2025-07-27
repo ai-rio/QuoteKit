@@ -50,8 +50,21 @@ export default async function AccountPage() {
     getStripePublishableKey(),
   ]);
 
-  // If no subscription exists, get free plan information for display
-  const freePlanInfo = !subscription ? await getFreePlanInfo() : null;
+  // Get free plan information for users without paid subscriptions
+  let freePlanInfo = null;
+  if (!subscription) {
+    // Look for free plan (unit_amount = 0) in available plans
+    for (const product of availablePlans) {
+      const freePrice = product.prices?.find(price => price.unit_amount === 0 && price.active);
+      if (freePrice) {
+        freePlanInfo = {
+          ...freePrice,
+          products: product
+        };
+        break;
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-light-concrete">
