@@ -11,18 +11,37 @@ export async function manualSyncSubscription(customerStripeId: string) {
   try {
     console.log(`🔄 Starting manual sync for customer: ${customerStripeId}`);
     
-    // Get Stripe configuration
-    const { data: configData } = await supabaseAdminClient
-      .from('admin_settings')
-      .select('value')
-      .eq('key', 'stripe_config')
-      .single();
+    // Get Stripe configuration with environment fallback
+    let stripeConfig = {
+      secret_key: '',
+      mode: 'test' as 'test' | 'live'
+    };
 
-    if (!configData?.value) {
-      throw new Error('Stripe configuration not found');
+    try {
+      const { data: configData } = await supabaseAdminClient
+        .from('admin_settings')
+        .select('value')
+        .eq('key', 'stripe_config')
+        .single();
+
+      if (configData?.value && typeof configData.value === 'object') {
+        stripeConfig = { ...stripeConfig, ...configData.value };
+      }
+    } catch (dbError) {
+      console.log('No database config found, using environment variables');
     }
 
-    const stripeConfig = configData.value as { secret_key: string; mode: 'test' | 'live' };
+    // Fallback to environment variables if no database config
+    if (!stripeConfig.secret_key) {
+      stripeConfig = {
+        secret_key: process.env.STRIPE_SECRET_KEY || '',
+        mode: (process.env.STRIPE_MODE as 'test' | 'live') || 'test'
+      };
+    }
+
+    if (!stripeConfig.secret_key) {
+      throw new Error('Stripe configuration not found in database or environment variables');
+    }
     const stripe = createStripeAdminClient(stripeConfig);
 
     // Fetch all subscriptions for this customer from Stripe

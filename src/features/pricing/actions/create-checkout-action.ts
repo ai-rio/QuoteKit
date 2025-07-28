@@ -77,17 +77,21 @@ export async function createCheckoutAction({ price }: { price: Price }) {
         return redirect(`${getURL()}/account?message=already_subscribed`);
       }
 
-      // Create a local subscription record for the free plan (using updated schema)
+      // Create a local subscription record for the free plan (with proper period end)
+      const now = new Date();
+      const farFuture = new Date(now);
+      farFuture.setFullYear(farFuture.getFullYear() + 100); // Set to 100 years in the future for free plans
+      
       const subscriptionData = {
         user_id: session.user.id,
         status: 'active',
-        price_id: price.id,
-        // For free plans, we don't need Stripe IDs (now these columns exist)
+        price_id: price.stripe_price_id, // Use stripe_price_id instead of internal UUID
+        // For free plans, we don't need Stripe IDs
         stripe_subscription_id: null,
         stripe_customer_id: null,
-        current_period_start: new Date().toISOString(),
-        current_period_end: null, // Free plans don't expire
-        created: new Date().toISOString(),
+        current_period_start: now.toISOString(),
+        current_period_end: farFuture.toISOString(), // Required field - set far future for free plans
+        created: now.toISOString(),
         trial_start: null,
         trial_end: null,
         cancel_at: null,
@@ -106,7 +110,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
       }
 
       console.log('✅ Free plan subscription created successfully');
-      return redirect(`${getURL()}/account?subscription=created&plan=free`);
+      redirect(`${getURL()}/account?subscription=created&plan=free`);
       
     } catch (error) {
       console.error('❌ Free plan signup failed:', error);
@@ -157,11 +161,64 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     console.warn('⚠️ Could not validate price in Stripe (proceeding anyway):', error);
   }
 
-  // 4. Retrieve or create the customer in Stripe for paid plans
+  // 4. Check if user already has an active subscription for paid plans
+  const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+  const { data: existingSubscription } = await supabaseAdminClient
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .in('status', ['active', 'trialing'])
+    .single();
+
+  if (existingSubscription) {
+    console.log('ℹ️ User already has active subscription, checking if this is a plan change');
+    
+    // If trying to select the same plan, redirect to account
+    if (existingSubscription.price_id === price.stripe_price_id) {
+      console.log('ℹ️ User trying to select same plan, redirecting to account');
+      return redirect(`${getURL()}/account?message=same_plan`);
+    }
+    
+    // If different plan, this should be handled by the plan change functionality
+    console.log('ℹ️ User trying to change plan, redirecting to account for plan change');
+    return redirect(`${getURL()}/account?message=use_plan_change&target_price=${price.stripe_price_id}`);
+  }
+
+  // 5. Retrieve or create the customer in Stripe for paid plans
   const customer = await getOrCreateCustomer({
     userId: session.user.id,
     email: session.user.email,
   });
+
+  // Also check if user has active subscriptions in Stripe that aren't synced to database
+  try {
+    // Check for active subscriptions in Stripe
+    const stripeSubscriptions = await stripeAdmin.subscriptions.list({
+      customer,
+      status: 'active',
+      limit: 10
+    });
+    
+    if (stripeSubscriptions.data.length > 0) {
+      console.log(`⚠️ Found ${stripeSubscriptions.data.length} active Stripe subscription(s) not synced to database. Triggering sync.`);
+      
+      // Import and trigger manual sync
+      const { manualSyncSubscription } = await import('@/features/account/controllers/manual-sync-subscription');
+      
+      try {
+        const syncResult = await manualSyncSubscription(customer);
+        console.log('✅ Subscription sync completed:', syncResult);
+        
+        // After sync, redirect to account page
+        return redirect(`${getURL()}/account?message=subscription_synced`);
+      } catch (syncError) {
+        console.error('❌ Failed to sync subscription:', syncError);
+        // Continue with checkout creation despite sync failure
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not check Stripe subscriptions (proceeding with checkout):', error);
+  }
 
   // For paid plans, use Stripe Checkout
   const checkoutMode = price.recurring_interval ? 'subscription' : 'payment';
@@ -169,7 +226,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   console.log(`🔍 DEBUG: About to create Stripe checkout with mode: ${checkoutMode}`);
 
   try {
-    // 5. Create a checkout session in Stripe
+    // 6. Create a checkout session in Stripe
     const checkoutSession = await stripeAdmin.checkout.sessions.create({
       payment_method_types: ['card'],
       billing_address_collection: 'required',
@@ -193,9 +250,14 @@ export async function createCheckoutAction({ price }: { price: Price }) {
       throw Error('checkoutSession is not defined');
     }
 
-    // 6. Redirect to checkout url
+    // 7. Redirect to checkout url
     redirect(checkoutSession.url);
   } catch (error) {
+    // Don't log NEXT_REDIRECT as an error - it's expected behavior in Next.js Server Actions
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error; // Re-throw to let Next.js handle the redirect
+    }
+    
     console.error('❌ Checkout session creation failed:', {
       error: error,
       message: error instanceof Error ? error.message : 'Unknown error',
