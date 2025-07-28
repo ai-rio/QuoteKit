@@ -131,10 +131,14 @@ export async function reactivatePrice(oldPriceId: string) {
     
     // Create a new active price with the same configuration
     const newPrice = await stripe.prices.create({
-      unit_amount: oldPrice.unit_amount,
+      unit_amount: oldPrice.unit_amount ?? 0,
       currency: oldPrice.currency,
       product: typeof oldPrice.product === 'string' ? oldPrice.product : oldPrice.product.id,
-      recurring: oldPrice.recurring,
+      recurring: oldPrice.recurring ? {
+        interval: oldPrice.recurring.interval,
+        interval_count: oldPrice.recurring.interval_count,
+        usage_type: oldPrice.recurring.usage_type
+      } : undefined,
       active: true,
       nickname: oldPrice.nickname ? `${oldPrice.nickname} (reactivated)` : undefined,
       metadata: {

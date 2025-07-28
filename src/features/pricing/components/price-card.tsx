@@ -113,7 +113,7 @@ export function PricingCard({
   const isPopular = metadata.priceCardVariant === 'pro';
 
   return (
-    <Card className={`relative w-full bg-paper-white border-stone-gray ${isPopular ? 'ring-2 ring-forest-green' : ''}`}>>
+    <Card className={`relative w-full bg-paper-white border-stone-gray ${isPopular ? 'ring-2 ring-forest-green' : ''}`}>
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-forest-green text-paper-white px-3 py-1 text-sm font-medium rounded-full">

@@ -28,11 +28,6 @@ export default async function SignUp({ searchParams }: { searchParams: { plan?: 
         signInWithOAuth={signInWithOAuth} 
         signInWithEmail={signInWithEmail} 
         signUpWithEmail={signUpWithEmail}
-        planInfo={searchParams.plan ? {
-          plan: searchParams.plan,
-          amount: searchParams.amount,
-          interval: searchParams.interval
-        } : undefined}
       />
     </section>
   );

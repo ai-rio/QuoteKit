@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PriceWithProduct, ProductWithPrices, SubscriptionWithProduct } from '@/features/pricing/types';
+import { formatDate } from '@/utils/to-date-time';
 
 import { cancelSubscription, changePlan, reactivateSubscription } from '../actions/subscription-actions';
 
@@ -49,9 +50,18 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
       await changePlan(priceId, isUpgrade);
       setShowPlanDialog(false);
     } catch (err) {
+      // Don't log NEXT_REDIRECT as an error - it's expected behavior for free plan upgrades
+      if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
+        // Let Next.js handle the redirect, don't show error or reset loading state
+        // The redirect will navigate away from this page anyway
+        return;
+      }
+      
       console.error('Plan change error:', err);
       setError(err instanceof Error ? err.message : 'Failed to change plan');
     } finally {
+      // Only reset loading state if we're not redirecting
+      // This prevents UI flicker before redirect
       setIsLoading(false);
     }
   };
@@ -205,7 +215,7 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                       <div className="flex-1">
                         <p className="font-medium text-charcoal">Subscription scheduled for cancellation</p>
                         <p className="text-sm text-charcoal/70 mt-1">
-                          Your subscription will end on {new Date(subscription.current_period_end).toLocaleDateString()}.
+                          Your subscription will end on {formatDate(subscription.current_period_end)}.
                           You&apos;ll retain access to all features until then.
                         </p>
                         <Button
@@ -226,14 +236,14 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                 <div>
                   <p className="text-sm font-medium text-charcoal">Next billing date</p>
                   <p className="text-sm text-charcoal/70">
-                    {new Date(subscription.current_period_end).toLocaleDateString()}
+                    {formatDate(subscription.current_period_end)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-charcoal">Billing period</p>
                   <p className="text-sm text-charcoal/70">
-                    {new Date(subscription.current_period_start).toLocaleDateString()} - {' '}
-                    {new Date(subscription.current_period_end).toLocaleDateString()}
+                    {formatDate(subscription.current_period_start)} - {' '}
+                    {formatDate(subscription.current_period_end)}
                   </p>
                 </div>
               </div>
@@ -384,7 +394,7 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
             name: subscription.prices?.products?.name || '',
             price: (subscription.prices?.unit_amount || 0) / 100,
             interval: subscription.prices?.interval || 'month',
-            nextBillingDate: new Date(subscription.current_period_end).toLocaleDateString(),
+            nextBillingDate: formatDate(subscription.current_period_end),
           }}
           onCancel={handleCancellation}
           isLoading={isLoading}

@@ -75,7 +75,7 @@ export async function signUpWithEmail(formData: FormData): Promise<ActionRespons
 
   // Get current URL to preserve plan parameters
   const headers = await import('next/headers');
-  const headersList = headers.headers();
+  const headersList = await headers.headers();
   const referer = headersList.get('referer') || '';
   const refererUrl = new URL(referer);
   const planParams = new URLSearchParams();

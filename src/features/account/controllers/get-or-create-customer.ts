@@ -1,15 +1,71 @@
-import { stripeAdmin } from '@/libs/stripe/stripe-admin';
+import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 
 export async function getOrCreateCustomer({ userId, email }: { userId: string; email: string }) {
+  // Get Stripe configuration - try database first, fallback to environment
+  const { data: stripeConfigRecord, error: configError } = await supabaseAdminClient
+    .from('admin_settings')
+    .select('value')
+    .eq('key', 'stripe_config')
+    .single();
+
+  let stripeConfig: any = null;
+
+  // Check if we got valid config from database
+  if (!configError && stripeConfigRecord?.value) {
+    stripeConfig = stripeConfigRecord.value as any;
+  } else {
+    // Fallback to environment variables
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (secretKey) {
+      stripeConfig = {
+        secret_key: secretKey,
+        mode: process.env.STRIPE_MODE || 'test'
+      };
+    }
+  }
+
+  if (!stripeConfig?.secret_key) {
+    console.error('getOrCreateCustomer: Stripe configuration error', {
+      configError: configError?.message,
+      hasConfigRecord: !!stripeConfigRecord?.value,
+      hasEnvKey: !!process.env.STRIPE_SECRET_KEY
+    });
+    throw new Error('Stripe not configured - cannot create customer');
+  }
+
+  // Initialize Stripe admin client
+  const stripeAdmin = createStripeAdminClient({
+    secret_key: stripeConfig.secret_key,
+    mode: stripeConfig.mode || 'test'
+  });
+
+  // Check if customer record exists
   const { data, error } = await supabaseAdminClient
     .from('customers')
     .select('stripe_customer_id')
     .eq('id', userId)
     .single();
 
-  // If customer record doesn't exist at all, create both Stripe customer and database record
-  if (error) {
+  // If customer exists and has a valid Stripe customer ID, return it
+  if (!error && data?.stripe_customer_id) {
+    try {
+      // Verify the customer still exists in Stripe
+      const stripeCustomer = await stripeAdmin.customers.retrieve(data.stripe_customer_id);
+      if (typeof stripeCustomer !== 'string' && !stripeCustomer.deleted) {
+        return data.stripe_customer_id;
+      } else {
+        console.warn(`Stripe customer ${data.stripe_customer_id} was deleted, creating new one`);
+        // Continue to create new customer
+      }
+    } catch (stripeError) {
+      console.warn(`Failed to verify Stripe customer ${data.stripe_customer_id}, creating new one:`, stripeError);
+      // Continue to create new customer
+    }
+  }
+
+  // Customer doesn't exist or needs to be recreated - create new Stripe customer
+  try {
     const customerData = {
       email,
       metadata: {
@@ -19,44 +75,67 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
 
     const customer = await stripeAdmin.customers.create(customerData);
 
-    // Insert the customer ID into our Supabase mapping table.
-    const { error: supabaseError } = await supabaseAdminClient
-      .from('customers')
-      .insert([{ id: userId, stripe_customer_id: customer.id }]);
+    // If customer database record doesn't exist, create it
+    if (error) {
+      const { error: insertError } = await supabaseAdminClient
+        .from('customers')
+        .insert([{ id: userId, stripe_customer_id: customer.id }]);
 
-    if (supabaseError) {
-      throw supabaseError;
+      if (insertError) {
+        // If there's a unique constraint violation, another request might have created the record
+        // Try to get the existing record
+        if (insertError.code === '23505') { // Unique violation
+          const { data: existingData, error: fetchError } = await supabaseAdminClient
+            .from('customers')
+            .select('stripe_customer_id')
+            .eq('id', userId)
+            .single();
+
+          if (!fetchError && existingData?.stripe_customer_id) {
+            console.log(`Customer record was created concurrently, using existing: ${existingData.stripe_customer_id}`);
+            // We created a new Stripe customer but found an existing DB record
+            // We should use the existing Stripe customer and delete the one we just created
+            try {
+              await stripeAdmin.customers.del(customer.id);
+              return existingData.stripe_customer_id;
+            } catch (deleteError) {
+              console.warn('Failed to delete duplicate Stripe customer:', deleteError);
+              // Use the new customer we created
+              return customer.id;
+            }
+          }
+        }
+        
+        console.error('Failed to insert customer record:', insertError);
+        throw insertError;
+      }
+    } else {
+      // Customer record exists but needs Stripe customer ID - update it
+      const { error: updateError } = await supabaseAdminClient
+        .from('customers')
+        .update({ stripe_customer_id: customer.id })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Failed to update customer record with Stripe ID:', updateError);
+        throw updateError;
+      }
     }
 
+    console.log(`Created new Stripe customer ${customer.id} for user ${userId}`);
     return customer.id;
-  }
 
-  // If customer record exists but no Stripe customer ID, create Stripe customer and update record
-  if (!data?.stripe_customer_id) {
-    const customerData = {
+  } catch (stripeError) {
+    console.error('getOrCreateCustomer: Failed to create Stripe customer', {
+      userId,
       email,
-      metadata: {
-        userId,
-      },
-    } as const;
-
-    const customer = await stripeAdmin.customers.create(customerData);
-
-    // Update the existing customer record with the new Stripe customer ID
-    const { error: updateError } = await supabaseAdminClient
-      .from('customers')
-      .update({ stripe_customer_id: customer.id })
-      .eq('id', userId);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    return customer.id;
+      error: stripeError instanceof Error ? stripeError.message : 'Unknown error',
+      stack: stripeError instanceof Error ? stripeError.stack : undefined,
+      stripeConfigMode: stripeConfig?.mode,
+      hasStripeSecretKey: !!stripeConfig?.secret_key
+    });
+    throw stripeError;
   }
-
-  // Customer record exists with Stripe customer ID
-  return data.stripe_customer_id;
 }
 
 /**
@@ -98,9 +177,47 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
   // Customer record doesn't exist or exists without Stripe customer ID
   // We need admin client to create/update customer records
   const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
-  const { stripeAdmin } = await import('@/libs/stripe/stripe-admin');
+  const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
 
   console.debug('getOrCreateCustomerForUser: Creating new Stripe customer', { userId, email });
+
+  // Get Stripe configuration - try database first, fallback to environment
+  const { data: stripeConfigRecord, error: configError } = await supabaseAdminClient
+    .from('admin_settings')
+    .select('value')
+    .eq('key', 'stripe_config')
+    .single();
+
+  let stripeConfig: any = null;
+
+  // Check if we got valid config from database
+  if (!configError && stripeConfigRecord?.value) {
+    stripeConfig = stripeConfigRecord.value as any;
+  } else {
+    // Fallback to environment variables
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (secretKey) {
+      stripeConfig = {
+        secret_key: secretKey,
+        mode: process.env.STRIPE_MODE || 'test'
+      };
+    }
+  }
+
+  if (!stripeConfig?.secret_key) {
+    console.error('getOrCreateCustomerForUser: Stripe configuration error', {
+      configError: configError?.message,
+      hasConfigRecord: !!stripeConfigRecord?.value,
+      hasEnvKey: !!process.env.STRIPE_SECRET_KEY
+    });
+    throw new Error('Stripe not configured - cannot create customer');
+  }
+
+  // Initialize Stripe admin client
+  const stripeAdmin = createStripeAdminClient({
+    secret_key: stripeConfig.secret_key,
+    mode: stripeConfig.mode || 'test'
+  });
 
   try {
     // Create Stripe customer
@@ -164,7 +281,10 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
     console.error('getOrCreateCustomerForUser: Stripe customer creation failed', {
       userId,
       email,
-      error: stripeError instanceof Error ? stripeError.message : 'Unknown error'
+      error: stripeError instanceof Error ? stripeError.message : 'Unknown error',
+      stack: stripeError instanceof Error ? stripeError.stack : undefined,
+      stripeConfigMode: stripeConfig?.mode,
+      hasStripeSecretKey: !!stripeConfig?.secret_key
     });
     throw stripeError;
   }

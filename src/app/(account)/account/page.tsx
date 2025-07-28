@@ -13,6 +13,7 @@ import { getSession } from '@/features/account/controllers/get-session';
 import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
 import { getBillingHistory, getFreePlanInfo, getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
 import { SubscriptionWithProduct } from '@/features/pricing/types';
+import { formatDate } from '@/utils/to-date-time';
 
 interface BillingHistoryItem {
   id: string;
@@ -137,7 +138,7 @@ function BillingHistoryCard({ billingHistory }: { billingHistory: BillingHistory
                   {billingHistory.map((item) => (
                     <TableRow key={item.id} className="border-stone-gray">
                       <TableCell className="text-charcoal">
-                        {new Date(item.date).toLocaleDateString()}
+                        {formatDate(item.date)}
                       </TableCell>
                       <TableCell className="text-charcoal">{item.description}</TableCell>
                       <TableCell className="text-charcoal">
@@ -179,7 +180,7 @@ function BillingHistoryCard({ billingHistory }: { billingHistory: BillingHistory
                       <div>
                         <p className="font-medium text-charcoal">{item.description}</p>
                         <p className="text-sm text-charcoal/70">
-                          {new Date(item.date).toLocaleDateString()}
+                          {formatDate(item.date)}
                         </p>
                       </div>
                       <Badge className={
