@@ -99,6 +99,11 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       mode: stripeConfig.mode || 'test'
     });
 
+    // Validate subscription ID before making Stripe API call
+    if (!subscription.id || typeof subscription.id !== 'string') {
+      throw new Error('Invalid subscription ID - cannot update subscription');
+    }
+
     // First, get the current subscription from Stripe to get the subscription item ID
     const currentStripeSubscription = await stripeAdmin.subscriptions.retrieve(subscription.id);
     const subscriptionItemId = currentStripeSubscription.items.data[0]?.id;
@@ -258,6 +263,11 @@ export async function cancelSubscription(cancelAtPeriodEnd: boolean = true, reas
       mode: stripeConfig.mode || 'test'
     });
 
+    // Validate subscription ID before making Stripe API call
+    if (!subscription.id || typeof subscription.id !== 'string') {
+      throw new Error('Invalid subscription ID - cannot cancel subscription');
+    }
+
     // Cancel subscription in Stripe
     let updatedSubscription;
     if (cancelAtPeriodEnd) {
@@ -361,6 +371,12 @@ export async function reactivateSubscription() {
         secret_key: stripeConfig.secret_key,
         mode: stripeConfig.mode || 'test'
       });
+
+    // Validate subscription ID before making Stripe API call
+    if (!subscription.id || typeof subscription.id !== 'string') {
+      throw new Error('Invalid subscription ID - cannot reactivate subscription');
+    }
+
     const updatedSubscription = await stripeAdmin.subscriptions.update(
       subscription.id,
       {

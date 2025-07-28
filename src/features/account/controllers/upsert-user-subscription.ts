@@ -17,6 +17,15 @@ export async function upsertUserSubscription({
 }) {
   console.log(`🔄 Starting upsertUserSubscription for subscription ${subscriptionId}, customer ${customerId}, isCreate: ${isCreateAction}`);
   
+  // Validate required parameters
+  if (!subscriptionId || typeof subscriptionId !== 'string') {
+    throw new Error('Invalid subscription ID provided to upsertUserSubscription');
+  }
+  
+  if (!customerId || typeof customerId !== 'string') {
+    throw new Error('Invalid customer ID provided to upsertUserSubscription');
+  }
+  
   try {
     // Get customer's userId from mapping table.
     console.log(`📋 Looking up user ID for Stripe customer: ${customerId}`);

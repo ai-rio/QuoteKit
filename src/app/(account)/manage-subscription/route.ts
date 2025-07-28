@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 
-import { getCustomerId } from '@/features/account/controllers/get-customer-id';
 import { getSession } from '@/features/account/controllers/get-session';
 import { stripeAdmin } from '@/libs/stripe/stripe-admin';
 import { getURL } from '@/utils/get-url';
@@ -15,13 +14,26 @@ export async function GET() {
     throw Error('Could not get userId');
   }
 
-  // 2. Retrieve or create the customer in Stripe
-  const customer = await getCustomerId({
-    userId: session.user.id,
-  });
-
-  if (!customer) {
-    throw Error('Could not get customer');
+  // 2. Retrieve or create the customer in Stripe using enhanced helper
+  const { getOrCreateCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+  
+  let customer;
+  try {
+    customer = await getOrCreateCustomer({
+      userId: session.user.id,
+      email: session.user.email!
+    });
+    
+    console.debug('manage-subscription: Got/created customer for billing portal', {
+      userId: session.user.id,
+      stripeCustomerId: customer
+    });
+  } catch (customerError) {
+    console.error('manage-subscription: Failed to get/create customer', {
+      userId: session.user.id,
+      error: customerError instanceof Error ? customerError.message : 'Unknown error'
+    });
+    throw Error('Could not create or retrieve customer record');
   }
 
   // 3. Create portal link and redirect user

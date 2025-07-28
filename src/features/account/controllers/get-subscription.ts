@@ -365,29 +365,33 @@ export async function getBillingHistory() {
 
     console.debug('getBillingHistory: Looking up customer for user:', { userId: user.id });
 
-    // Get the user's customer record to find their Stripe customer ID
-    const { data: customerData, error: customerError } = await supabase
-      .from('customers')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (customerError || !customerData?.stripe_customer_id) {
-      console.warn('No customer record found for user:', user.id);
-      console.debug('getBillingHistory: Customer lookup failed', {
-        userId: user.id,
-        hasCustomerError: !!customerError,
-        hasCustomerData: !!customerData,
-        hasStripeCustomerId: !!customerData?.stripe_customer_id,
-        errorCode: customerError?.code,
-        errorMessage: customerError?.message
+    // Get or create customer using the enhanced helper that avoids PGRST116 errors
+    const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+    
+    let stripeCustomerId;
+    try {
+      stripeCustomerId = await getOrCreateCustomerForUser({ 
+        userId: user.id, 
+        email: user.email!, 
+        supabaseClient: supabase 
       });
+      
+      console.debug('getBillingHistory: Got/created customer', {
+        userId: user.id,
+        stripeCustomerId
+      });
+    } catch (customerError) {
+      console.error('getBillingHistory: Failed to get/create customer', {
+        userId: user.id,
+        error: customerError instanceof Error ? customerError.message : 'Unknown error'
+      });
+      // Return empty array instead of failing completely
       return [];
     }
 
     console.debug('getBillingHistory: Found customer, fetching invoices', {
       userId: user.id,
-      stripeCustomerId: customerData.stripe_customer_id
+      stripeCustomerId
     });
 
     // Import stripeAdmin to fetch real invoice data
@@ -395,13 +399,13 @@ export async function getBillingHistory() {
     
     // Fetch invoices from Stripe
     const invoices = await stripeAdmin.invoices.list({
-      customer: customerData.stripe_customer_id,
+      customer: stripeCustomerId,
       limit: 10, // Last 10 invoices
     });
 
     console.debug('getBillingHistory: Retrieved invoices from Stripe', {
       userId: user.id,
-      stripeCustomerId: customerData.stripe_customer_id,
+      stripeCustomerId,
       invoiceCount: invoices.data.length
     });
 
@@ -450,29 +454,33 @@ export async function getPaymentMethods() {
 
     console.debug('getPaymentMethods: Looking up customer for user:', { userId: user.id });
 
-    // Get the user's customer record to find their Stripe customer ID
-    const { data: customerData, error: customerError } = await supabase
-      .from('customers')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (customerError || !customerData?.stripe_customer_id) {
-      console.warn('No customer record found for user:', user.id);
-      console.debug('getPaymentMethods: Customer lookup failed', {
-        userId: user.id,
-        hasCustomerError: !!customerError,
-        hasCustomerData: !!customerData,
-        hasStripeCustomerId: !!customerData?.stripe_customer_id,
-        errorCode: customerError?.code,
-        errorMessage: customerError?.message
+    // Get or create customer using the enhanced helper that avoids PGRST116 errors
+    const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+    
+    let stripeCustomerId;
+    try {
+      stripeCustomerId = await getOrCreateCustomerForUser({ 
+        userId: user.id, 
+        email: user.email!, 
+        supabaseClient: supabase 
       });
+      
+      console.debug('getPaymentMethods: Got/created customer', {
+        userId: user.id,
+        stripeCustomerId
+      });
+    } catch (customerError) {
+      console.error('getPaymentMethods: Failed to get/create customer', {
+        userId: user.id,
+        error: customerError instanceof Error ? customerError.message : 'Unknown error'
+      });
+      // Return empty array instead of failing completely
       return [];
     }
 
     console.debug('getPaymentMethods: Found customer, fetching payment methods', {
       userId: user.id,
-      stripeCustomerId: customerData.stripe_customer_id
+      stripeCustomerId
     });
 
     // Import stripeAdmin to fetch real payment method data
@@ -480,23 +488,23 @@ export async function getPaymentMethods() {
     
     // Fetch payment methods from Stripe
     const paymentMethods = await stripeAdmin.paymentMethods.list({
-      customer: customerData.stripe_customer_id,
+      customer: stripeCustomerId,
       type: 'card',
     });
 
     console.debug('getPaymentMethods: Retrieved payment methods from Stripe', {
       userId: user.id,
-      stripeCustomerId: customerData.stripe_customer_id,
+      stripeCustomerId,
       paymentMethodCount: paymentMethods.data.length
     });
 
     // Get the customer's default payment method
-    const customer = await stripeAdmin.customers.retrieve(customerData.stripe_customer_id);
+    const customer = await stripeAdmin.customers.retrieve(stripeCustomerId);
     const defaultPaymentMethodId = !customer.deleted ? customer.invoice_settings?.default_payment_method : null;
 
     console.debug('getPaymentMethods: Retrieved customer default payment method', {
       userId: user.id,
-      stripeCustomerId: customerData.stripe_customer_id,
+      stripeCustomerId,
       defaultPaymentMethodId,
       customerDeleted: customer.deleted
     });

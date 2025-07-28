@@ -18,22 +18,28 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 User ${user.id} requesting subscription sync`);
 
-    // Get user's customer record
-    const { data: customerData, error: customerError } = await supabase
-      .from('customers')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (customerError || !customerData?.stripe_customer_id) {
+    // Get or create customer using the enhanced helper that avoids PGRST116 errors
+    const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+    
+    let stripe_customer_id;
+    try {
+      stripe_customer_id = await getOrCreateCustomerForUser({ 
+        userId: user.id, 
+        email: user.email!, 
+        supabaseClient: supabase 
+      });
+      
+      console.log(`🔗 Got/created customer ID: ${stripe_customer_id} for user ${user.id}`);
+    } catch (customerError) {
+      console.error('Failed to get/create customer for sync:', {
+        userId: user.id,
+        error: customerError instanceof Error ? customerError.message : 'Unknown error'
+      });
       return NextResponse.json({
-        error: 'No Stripe customer found',
-        message: 'You don\'t have a Stripe customer record. Please contact support.'
-      }, { status: 404 });
+        error: 'Failed to create customer record',
+        message: 'Unable to create or retrieve Stripe customer. Please try again or contact support.'
+      }, { status: 500 });
     }
-
-    const { stripe_customer_id } = customerData;
-    console.log(`🔗 Found customer ID: ${stripe_customer_id} for user ${user.id}`);
 
     // Sync subscriptions for this customer
     const result = await manualSyncSubscription(stripe_customer_id);
