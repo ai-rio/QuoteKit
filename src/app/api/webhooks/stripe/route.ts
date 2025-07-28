@@ -254,26 +254,34 @@ async function handleSubscriptionEvent(event: Stripe.Event): Promise<void> {
   
   try {
     if (event.type === 'customer.subscription.deleted') {
-      // Handle subscription cancellation - delete from database
+      // Handle subscription cancellation - update status instead of deleting
+      console.log(`🗑️ Processing subscription deletion: ${subscription.id} for customer ${subscription.customer}`)
+      
       const { error } = await supabaseAdminClient
         .from('subscriptions')
-        .delete()
-        .eq('id', subscription.id)
+        .update({ 
+          status: 'canceled',
+          ended_at: new Date().toISOString(),
+          canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : new Date().toISOString()
+        })
+        .eq('stripe_subscription_id', subscription.id)
       
       if (error) {
-        throw new Error(`Failed to delete subscription: ${error.message}`)
+        console.error('Failed to update subscription status on deletion:', error)
+        throw new Error(`Failed to update subscription on deletion: ${error.message}`)
       }
       
-      console.log(`Subscription deleted: ${subscription.id} for customer ${subscription.customer}`)
+      console.log(`✅ Subscription marked as canceled: ${subscription.id} for customer ${subscription.customer}`)
     } else {
       // Handle subscription creation/update using centralized function
+      console.log(`🔄 Processing subscription ${event.type}: ${subscription.id} for customer ${subscription.customer}`)
       await upsertUserSubscription({
         subscriptionId: subscription.id,
         customerId: subscription.customer as string,
         isCreateAction: event.type === 'customer.subscription.created'
       })
       
-      console.log(`Subscription ${event.type}: ${subscription.id} for customer ${subscription.customer}`)
+      console.log(`✅ Subscription ${event.type}: ${subscription.id} for customer ${subscription.customer}`)
     }
   } catch (error) {
     console.error('Failed to sync subscription:', error)

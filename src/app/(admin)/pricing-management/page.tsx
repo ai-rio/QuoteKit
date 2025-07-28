@@ -62,7 +62,7 @@ export default function PricingManagementPage() {
   const [products, setProducts] = useState<StripeProduct[]>([])
   const [prices, setPrices] = useState<StripePrice[]>([])
   const [loading, setLoading] = useState({ products: false, prices: false })
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   
   // Product creation state
   const [showProductDialog, setShowProductDialog] = useState(false)

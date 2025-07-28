@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { getOrCreateCustomer } from '@/features/account/controllers/get-or-create-customer';
 import { getSession } from '@/features/account/controllers/get-session';
+import { createFreePlanSubscription } from '@/features/account/controllers/subscription-helpers';
 import { Price } from '@/features/pricing/types';
 import { stripeAdmin } from '@/libs/stripe/stripe-admin';
 import { getURL } from '@/utils/get-url';
@@ -47,7 +48,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     const signupUrl = `${getURL()}/signup?${searchParams.toString()}`;
     console.log('🔗 Redirecting to:', signupUrl);
     
-    return redirect(signupUrl);
+    redirect(signupUrl);
   }
 
   if (!session.user.email) {
@@ -60,62 +61,31 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   if (price.unit_amount === 0) {
     console.log('🆓 Processing free plan signup - bypassing Stripe payment collection');
     
-    try {
-      // For free plans, create a database-only subscription without going through Stripe
-      const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
-      
-      // Check if user already has an active subscription
-      const { data: existingSubscription } = await supabaseAdminClient
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .in('status', ['active', 'trialing'])
-        .single();
+    // For free plans, create a database-only subscription without going through Stripe
+    const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+    
+    // Check if user already has an active subscription
+    const { data: existingSubscription } = await supabaseAdminClient
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .in('status', ['active', 'trialing'])
+      .single();
 
-      if (existingSubscription) {
-        console.log('ℹ️ User already has active subscription, redirecting to account');
-        return redirect(`${getURL()}/account?message=already_subscribed`);
-      }
-
-      // Create a local subscription record for the free plan (with proper period end)
-      const now = new Date();
-      const farFuture = new Date(now);
-      farFuture.setFullYear(farFuture.getFullYear() + 100); // Set to 100 years in the future for free plans
-      
-      const subscriptionData = {
-        user_id: session.user.id,
-        status: 'active',
-        price_id: price.stripe_price_id, // Use stripe_price_id instead of internal UUID
-        // For free plans, we don't need Stripe IDs
-        stripe_subscription_id: null,
-        stripe_customer_id: null,
-        current_period_start: now.toISOString(),
-        current_period_end: farFuture.toISOString(), // Required field - set far future for free plans
-        created: now.toISOString(),
-        trial_start: null,
-        trial_end: null,
-        cancel_at: null,
-        cancel_at_period_end: false,
-        canceled_at: null,
-        ended_at: null
-      };
-
-      const { error: subscriptionError } = await supabaseAdminClient
-        .from('subscriptions')
-        .insert([subscriptionData]);
-
-      if (subscriptionError) {
-        console.error('❌ Failed to create free subscription:', subscriptionError);
-        throw new Error(`Failed to create free subscription: ${subscriptionError.message}`);
-      }
-
-      console.log('✅ Free plan subscription created successfully');
-      redirect(`${getURL()}/account?subscription=created&plan=free`);
-      
-    } catch (error) {
-      console.error('❌ Free plan signup failed:', error);
-      throw new Error(`Free plan signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (existingSubscription) {
+      console.log('ℹ️ User already has active subscription, redirecting to account');
+      redirect(`${getURL()}/account?message=already_subscribed`);
     }
+
+    // Create free plan subscription using robust helper function
+    try {
+      await createFreePlanSubscription(session.user.id, price.stripe_price_id);
+    } catch (error) {
+      console.error('❌ Failed to create free subscription:', error);
+      throw new Error(`Failed to create free subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    redirect(`${getURL()}/account?subscription=created&plan=free`);
   }
 
   // 3. For paid plans, validate price is active before proceeding
@@ -124,36 +94,53 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     throw new Error(`Price ${price.stripe_price_id} is inactive and cannot be used for checkout. Please contact support or try refreshing the page.`);
   }
 
+  // Get Stripe configuration and initialize admin client
+  const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+  const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+  
+  // Get Stripe config to validate price status
+  const { data: configData } = await supabaseAdminClient
+    .from('admin_settings')
+    .select('value')
+    .eq('key', 'stripe_config')
+    .single();
+
+  let stripeConfig: any = null;
+
+  if (configData?.value) {
+    stripeConfig = configData.value as { secret_key: string; mode: 'test' | 'live' };
+  } else {
+    // Fallback to environment variables
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (secretKey) {
+      stripeConfig = {
+        secret_key: secretKey,
+        mode: process.env.STRIPE_MODE || 'test'
+      };
+    }
+  }
+
+  if (!stripeConfig?.secret_key) {
+    throw new Error('Stripe not configured - cannot create checkout session');
+  }
+
+  const stripeAdmin = createStripeAdminClient(stripeConfig);
+
   // Additional validation: Verify price exists in Stripe before creating checkout
   try {
-    const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
-    const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+    // Verify price is still active in Stripe
+    const stripePrice = await stripeAdmin.prices.retrieve(price.stripe_price_id);
     
-    // Get Stripe config to validate price status
-    const { data: configData } = await supabaseAdminClient
-      .from('admin_settings')
-      .select('value')
-      .eq('key', 'stripe_config')
-      .single();
-
-    if (configData?.value) {
-      const stripeConfig = configData.value as { secret_key: string; mode: 'test' | 'live' };
-      const stripe = createStripeAdminClient(stripeConfig);
-      
-      // Verify price is still active in Stripe
-      const stripePrice = await stripe.prices.retrieve(price.stripe_price_id);
-      
-      if (!stripePrice.active) {
-        console.error('❌ ERROR: Price is inactive in Stripe:', {
-          price_id: price.stripe_price_id,
-          stripe_active: stripePrice.active,
-          db_active: price.active
-        });
-        throw new Error(`Price ${price.stripe_price_id} is no longer active in Stripe. Please try a different plan or contact support.`);
-      }
-      
-      console.log('✅ Price validation passed - price is active in both database and Stripe');
+    if (!stripePrice.active) {
+      console.error('❌ ERROR: Price is inactive in Stripe:', {
+        price_id: price.stripe_price_id,
+        stripe_active: stripePrice.active,
+        db_active: price.active
+      });
+      throw new Error(`Price ${price.stripe_price_id} is no longer active in Stripe. Please try a different plan or contact support.`);
     }
+    
+    console.log('✅ Price validation passed - price is active in both database and Stripe');
   } catch (error) {
     if (error instanceof Error && error.message.includes('inactive')) {
       throw error; // Re-throw our custom validation errors
@@ -162,7 +149,6 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   }
 
   // 4. Check if user already has an active subscription for paid plans
-  const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
   const { data: existingSubscription } = await supabaseAdminClient
     .from('subscriptions')
     .select('*')
@@ -176,12 +162,12 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     // If trying to select the same plan, redirect to account
     if (existingSubscription.price_id === price.stripe_price_id) {
       console.log('ℹ️ User trying to select same plan, redirecting to account');
-      return redirect(`${getURL()}/account?message=same_plan`);
+      redirect(`${getURL()}/account?message=same_plan`);
     }
     
     // If different plan, this should be handled by the plan change functionality
     console.log('ℹ️ User trying to change plan, redirecting to account for plan change');
-    return redirect(`${getURL()}/account?message=use_plan_change&target_price=${price.stripe_price_id}`);
+    redirect(`${getURL()}/account?message=use_plan_change&target_price=${price.stripe_price_id}`);
   }
 
   // 5. Retrieve or create the customer in Stripe for paid plans
@@ -210,7 +196,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
         console.log('✅ Subscription sync completed:', syncResult);
         
         // After sync, redirect to account page
-        return redirect(`${getURL()}/account?message=subscription_synced`);
+        redirect(`${getURL()}/account?message=subscription_synced`);
       } catch (syncError) {
         console.error('❌ Failed to sync subscription:', syncError);
         // Continue with checkout creation despite sync failure
@@ -225,52 +211,30 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   console.log(`🔍 DEBUG: Checkout mode determined: ${checkoutMode} (recurring_interval: ${price.recurring_interval})`);
   console.log(`🔍 DEBUG: About to create Stripe checkout with mode: ${checkoutMode}`);
 
-  try {
-    // 6. Create a checkout session in Stripe
-    const checkoutSession = await stripeAdmin.checkout.sessions.create({
-      payment_method_types: ['card'],
-      billing_address_collection: 'required',
-      customer,
-      customer_update: {
-        address: 'auto',
+  // 6. Create a checkout session in Stripe
+  const checkoutSession = await stripeAdmin.checkout.sessions.create({
+    payment_method_types: ['card'],
+    billing_address_collection: 'required',
+    customer,
+    customer_update: {
+      address: 'auto',
+    },
+    line_items: [
+      {
+        price: price.stripe_price_id,
+        quantity: 1,
       },
-      line_items: [
-        {
-          price: price.stripe_price_id,
-          quantity: 1,
-        },
-      ],
-      mode: checkoutMode,
-      allow_promotion_codes: true,
-      success_url: `${getURL()}/account`,
-      cancel_url: `${getURL()}/pricing`,
-    });
+    ],
+    mode: checkoutMode,
+    allow_promotion_codes: true,
+    success_url: `${getURL()}/account`,
+    cancel_url: `${getURL()}/pricing`,
+  });
 
-    if (!checkoutSession || !checkoutSession.url) {
-      throw Error('checkoutSession is not defined');
-    }
-
-    // 7. Redirect to checkout url
-    redirect(checkoutSession.url);
-  } catch (error) {
-    // Don't log NEXT_REDIRECT as an error - it's expected behavior in Next.js Server Actions
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error; // Re-throw to let Next.js handle the redirect
-    }
-    
-    console.error('❌ Checkout session creation failed:', {
-      error: error,
-      message: error instanceof Error ? error.message : 'Unknown error',
-      priceId: price.stripe_price_id,
-      customer,
-      checkoutMode
-    });
-    
-    // Enhanced error message for inactive price
-    if (error instanceof Error && error.message.includes('inactive')) {
-      throw new Error(`This pricing plan is currently unavailable (${price.stripe_price_id}). Please try a different plan or contact support.`);
-    }
-    
-    throw error;
+  if (!checkoutSession || !checkoutSession.url) {
+    throw Error('checkoutSession is not defined');
   }
+
+  // 7. Redirect to checkout url
+  redirect(checkoutSession.url);
 }

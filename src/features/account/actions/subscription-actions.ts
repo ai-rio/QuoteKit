@@ -8,49 +8,52 @@ import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 export async function changePlan(priceId: string, isUpgrade: boolean) {
-  try {
-    // Check authentication
-    const session = await getSession();
-    if (!session?.user) {
-      throw new Error('Unauthorized');
-    }
+  // Check authentication first (outside try-catch)
+  const session = await getSession();
+  if (!session?.user) {
+    throw new Error('Unauthorized');
+  }
 
-    if (!priceId) {
-      throw new Error('Price ID is required');
-    }
+  if (!priceId) {
+    throw new Error('Price ID is required');
+  }
 
-    // Get user's subscription - use same pattern as getSubscription()
-    const supabase = await createSupabaseServerClient();
-    const { data: subscriptions, error: subscriptionError } = await supabase
-      .from('subscriptions')
-      .select(`
-        *,
-        stripe_prices (
-          stripe_price_id,
-          unit_amount,
-          currency,
-          recurring_interval,
-          stripe_products (
-            name,
-            stripe_product_id
-          )
+  // Get user's subscription to check if it's a free plan (outside try-catch)
+  const supabase = await createSupabaseServerClient();
+  const { data: subscriptions, error: subscriptionError } = await supabase
+    .from('subscriptions')
+    .select(`
+      *,
+      stripe_prices (
+        stripe_price_id,
+        unit_amount,
+        currency,
+        recurring_interval,
+        stripe_products (
+          name,
+          stripe_product_id
         )
-      `)
-      .eq('user_id', session.user.id)
-      .in('status', ['trialing', 'active', 'past_due'])
-      .order('created', { ascending: false })
-      .limit(1);
+      )
+    `)
+    .eq('user_id', session.user.id)
+    .in('status', ['trialing', 'active', 'past_due'])
+    .order('created', { ascending: false })
+    .limit(1);
 
-    if (subscriptionError) {
-      throw new Error('Failed to query subscription');
-    }
+  if (subscriptionError) {
+    throw new Error('Failed to query subscription');
+  }
 
-    const subscription = subscriptions?.[0];
-    if (!subscription) {
-      throw new Error('No active subscription found');
-    }
+  const subscription = subscriptions?.[0];
+  if (!subscription) {
+    throw new Error('No active subscription found');
+  }
 
-    // Validate the new price exists and is active
+  // Check if this is a free plan user (no Stripe subscription ID) - Handle as new paid subscription
+  if (!subscription.stripe_subscription_id) {
+    console.log('User has free plan, creating new paid subscription');
+    
+    // First, validate the new price exists and is active
     const { data: newPrice, error: priceError } = await supabase
       .from('stripe_prices')
       .select(`
@@ -65,8 +68,11 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       throw new Error('Invalid or inactive price');
     }
 
-    // Get Stripe configuration - try database first, fallback to environment
-    const { data: stripeConfigRecord, error: configError } = await supabase
+    // Get Stripe configuration
+    const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+    const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+    
+    const { data: stripeConfigRecord, error: configError } = await supabaseAdminClient
       .from('admin_settings')
       .select('value')
       .eq('key', 'stripe_config')
@@ -74,7 +80,6 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
 
     let stripeConfig: any = null;
 
-    // Check if we got valid config from database
     if (!configError && stripeConfigRecord?.value) {
       stripeConfig = stripeConfigRecord.value as any;
     } else {
@@ -99,13 +104,113 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       mode: stripeConfig.mode || 'test'
     });
 
-    // Validate subscription ID before making Stripe API call
-    if (!subscription.id || typeof subscription.id !== 'string') {
-      throw new Error('Invalid subscription ID - cannot update subscription');
+    // Get or create customer in Stripe
+    const { getOrCreateCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+    const customerId = await getOrCreateCustomer({
+      userId: session.user.id,
+      email: session.user.email!,
+    });
+
+    // Create checkout session for the upgrade
+    const checkoutMode = newPrice.recurring_interval ? 'subscription' : 'payment';
+    
+    const checkoutSession = await stripeAdmin.checkout.sessions.create({
+      payment_method_types: ['card'],
+      billing_address_collection: 'required',
+      customer: customerId,
+      customer_update: {
+        address: 'auto',
+      },
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: checkoutMode,
+      allow_promotion_codes: true,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/account?upgrade=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/account?upgrade=cancelled`,
+    });
+
+    if (!checkoutSession || !checkoutSession.url) {
+      throw new Error('Failed to create checkout session');
+    }
+
+    // Cancel the existing free subscription before redirecting
+    await supabaseAdminClient
+      .from('subscriptions')
+      .update({
+        status: 'canceled',
+        canceled_at: new Date().toISOString(),
+        ended_at: new Date().toISOString()
+      })
+      .eq('id', subscription.id);
+
+    console.log(`Free plan cancelled for user ${session.user.id}, redirecting to checkout`);
+    
+    // Use Next.js redirect
+    const { redirect } = await import('next/navigation');
+    redirect(checkoutSession.url);
+  }
+
+  // Handle existing paid subscription changes
+  try {
+    // Validate the new price exists and is active
+    const { data: newPrice, error: priceError } = await supabase
+      .from('stripe_prices')
+      .select(`
+        *,
+        stripe_products (*)
+      `)
+      .eq('stripe_price_id', priceId)
+      .eq('active', true)
+      .single();
+
+    if (priceError || !newPrice) {
+      throw new Error('Invalid or inactive price');
+    }
+
+    // Get Stripe configuration
+    const { data: stripeConfigRecord, error: configError } = await supabase
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    let stripeConfig: any = null;
+
+    if (!configError && stripeConfigRecord?.value) {
+      stripeConfig = stripeConfigRecord.value as any;
+    } else {
+      // Fallback to environment variables
+      const secretKey = process.env.STRIPE_SECRET_KEY;
+      if (secretKey) {
+        stripeConfig = {
+          secret_key: secretKey,
+          mode: process.env.STRIPE_MODE || 'test'
+        };
+      }
+    }
+
+    if (!stripeConfig?.secret_key) {
+      console.error('Stripe configuration error:', configError);
+      throw new Error('Stripe not configured');
+    }
+
+    // Initialize Stripe admin client
+    const stripeAdmin = createStripeAdminClient({
+      secret_key: stripeConfig.secret_key,
+      mode: stripeConfig.mode || 'test'
+    });
+
+    // Validate Stripe subscription ID before making Stripe API call
+    if (!subscription.stripe_subscription_id || typeof subscription.stripe_subscription_id !== 'string') {
+      throw new Error('Invalid Stripe subscription ID - cannot update subscription');
     }
 
     // First, get the current subscription from Stripe to get the subscription item ID
-    const currentStripeSubscription = await stripeAdmin.subscriptions.retrieve(subscription.id);
+    const currentStripeSubscription = await stripeAdmin.subscriptions.retrieve(subscription.stripe_subscription_id);
     const subscriptionItemId = currentStripeSubscription.items.data[0]?.id;
     
     if (!subscriptionItemId) {
@@ -141,7 +246,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
 
     // Update subscription in Stripe
     const updatedSubscription = await stripeAdmin.subscriptions.update(
-      subscription.id,
+      subscription.stripe_subscription_id,
       {
         items: [
           {
@@ -166,7 +271,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
         current_period_start: new Date(updatedSubscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
       })
-      .eq('id', subscription.id);
+      .eq('stripe_subscription_id', subscription.stripe_subscription_id);
 
     if (updateError) {
       console.error('Database update error (non-critical - will be synced via webhook):', updateError);
@@ -174,7 +279,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
     }
 
     // Optional: Log the plan change for audit trail
-    console.log(`Plan ${isUpgrade ? 'upgraded' : 'downgraded'}: ${subscription.id} from ${subscription.price_id} to ${priceId} for user ${session.user.id}`);
+    console.log(`Plan ${isUpgrade ? 'upgraded' : 'downgraded'}: ${subscription.stripe_subscription_id} from ${subscription.price_id} to ${priceId} for user ${session.user.id}`);
 
     // Revalidate the account page to refresh the UI
     revalidatePath('/account');
@@ -263,23 +368,54 @@ export async function cancelSubscription(cancelAtPeriodEnd: boolean = true, reas
       mode: stripeConfig.mode || 'test'
     });
 
-    // Validate subscription ID before making Stripe API call
-    if (!subscription.id || typeof subscription.id !== 'string') {
-      throw new Error('Invalid subscription ID - cannot cancel subscription');
+    // Check if this is a free plan user (no Stripe subscription ID)
+    if (!subscription.stripe_subscription_id) {
+      console.log('User has free plan, cancelling local subscription only');
+      
+      // For free plan users, just update the local database record
+      const { error: updateError } = await supabase
+        .from('subscriptions')
+        .update({
+          status: 'canceled',
+          canceled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', session.user.id);
+
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw new Error('Failed to cancel subscription in database');
+      }
+
+      // Revalidate and return
+      revalidatePath('/account');
+      return {
+        success: true,
+        subscription: {
+          ...subscription,
+          status: 'canceled',
+          canceled_at: new Date().toISOString()
+        }
+      };
+    }
+
+    // Validate Stripe subscription ID before making Stripe API call
+    if (typeof subscription.stripe_subscription_id !== 'string') {
+      throw new Error('Invalid Stripe subscription ID - cannot cancel subscription');
     }
 
     // Cancel subscription in Stripe
     let updatedSubscription;
     if (cancelAtPeriodEnd) {
       updatedSubscription = await stripeAdmin.subscriptions.update(
-        subscription.id,
+        subscription.stripe_subscription_id,
         {
           cancel_at_period_end: true,
         }
       );
     } else {
       updatedSubscription = await stripeAdmin.subscriptions.cancel(
-        subscription.id
+        subscription.stripe_subscription_id
       );
     }
 
@@ -294,7 +430,7 @@ export async function cancelSubscription(cancelAtPeriodEnd: boolean = true, reas
           : null,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', subscription.id);
+      .eq('stripe_subscription_id', subscription.stripe_subscription_id);
 
     if (updateError) {
       console.error('Database update error:', updateError);
@@ -372,13 +508,45 @@ export async function reactivateSubscription() {
         mode: stripeConfig.mode || 'test'
       });
 
-    // Validate subscription ID before making Stripe API call
-    if (!subscription.id || typeof subscription.id !== 'string') {
-      throw new Error('Invalid subscription ID - cannot reactivate subscription');
+    // Check if this is a free plan user (no Stripe subscription ID)
+    if (!subscription.stripe_subscription_id) {
+      console.log('User has free plan, reactivating local subscription only');
+      
+      // For free plan users, just update the local database record
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          status: 'active',
+          cancel_at_period_end: false,
+          canceled_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        console.error('Database update error:', error);
+        throw new Error('Failed to update subscription in database');
+      }
+
+      revalidatePath('/account');
+      return { 
+        success: true, 
+        subscription: {
+          ...subscription,
+          status: 'active',
+          cancel_at_period_end: false,
+          canceled_at: null
+        }
+      };
+    }
+
+    // Validate Stripe subscription ID before making Stripe API call
+    if (typeof subscription.stripe_subscription_id !== 'string') {
+      throw new Error('Invalid Stripe subscription ID - cannot reactivate subscription');
     }
 
     const updatedSubscription = await stripeAdmin.subscriptions.update(
-      subscription.id,
+      subscription.stripe_subscription_id,
       {
         cancel_at_period_end: false,
       }
@@ -393,7 +561,7 @@ export async function reactivateSubscription() {
         canceled_at: null,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', subscription.id);
+      .eq('stripe_subscription_id', subscription.stripe_subscription_id);
 
     if (error) {
       console.error('Database update error:', error);
@@ -448,10 +616,19 @@ export async function getAvailablePlans() {
       throw new Error('Failed to fetch plan prices');
     }
 
-    // Combine products with their prices
+    // Transform prices to match expected Price type
+    const transformedPrices = prices.map(price => ({
+      ...price,
+      // Transform recurring_interval to interval for compatibility
+      interval: price.recurring_interval,
+      // Add type field based on whether it's recurring or not
+      type: price.recurring_interval ? 'recurring' as const : 'one_time' as const
+    }));
+
+    // Combine products with their transformed prices
     const productsWithPrices = products.map(product => ({
       ...product,
-      prices: prices.filter(price => price.stripe_product_id === product.stripe_product_id)
+      prices: transformedPrices.filter(price => price.stripe_product_id === product.stripe_product_id)
     }));
 
     return productsWithPrices;
