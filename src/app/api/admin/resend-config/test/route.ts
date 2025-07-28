@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client'
 
 export async function POST(request: NextRequest) {
+  console.log('=== RESEND TEST ENDPOINT CALLED ===')
   try {
     // Check authentication
     const supabase = await createSupabaseServerClient()
@@ -12,10 +13,63 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { api_key, from_email, from_name } = body
+    let { api_key, from_email, from_name } = body
 
-    // Validate required fields
+    // Handle masked keys - if keys appear to be masked, get the full keys from environment or database
+    const isMaskedApiKey = api_key && api_key.includes('...')
+    
+    if (isMaskedApiKey || !api_key || !from_email) {
+      console.log('Detected masked or missing Resend keys, fetching full keys from config...')
+      
+      // Get the full config (same logic as GET endpoint)
+      let fullConfig = {
+        api_key: '',
+        from_email: '',
+        from_name: 'LawnQuote'
+      }
+
+      try {
+        const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin')
+        const { data: dbConfig } = await supabaseAdminClient
+          .from('admin_settings')
+          .select('value')
+          .eq('key', 'resend_config')
+          .single()
+
+        if (dbConfig?.value && typeof dbConfig.value === 'object') {
+          fullConfig = { ...fullConfig, ...dbConfig.value }
+        }
+      } catch (dbError) {
+        console.log('No database config found, using environment variables')
+      }
+
+      // Fallback to environment variables if no database config
+      if (!fullConfig.api_key) {
+        fullConfig = {
+          api_key: process.env.RESEND_API_KEY || '',
+          from_email: process.env.RESEND_FROM_EMAIL || '',
+          from_name: process.env.RESEND_FROM_NAME || 'LawnQuote'
+        }
+      }
+
+      // Use the full keys for testing
+      api_key = fullConfig.api_key
+      from_email = from_email || fullConfig.from_email
+      from_name = from_name || fullConfig.from_name
+    }
+
+    console.log('Testing Resend config with:', {
+      api_key: api_key ? `${api_key.substring(0, 8)}...` : 'MISSING',
+      from_email,
+      from_name
+    })
+
+    // Validate required fields after fetching full config
     if (!api_key || !from_email) {
+      console.error('Missing required fields after fetching full config:', { 
+        has_api_key: !!api_key, 
+        has_from_email: !!from_email 
+      })
       return NextResponse.json(
         { error: 'API Key and From Email are required' },
         { status: 400 }
@@ -23,7 +77,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Test the Resend API by sending a test email (we'll just validate the API key first)
+      console.log('Attempting Resend API call...')
+      
+      // Test the Resend API by getting domains first
       const testResponse = await fetch('https://api.resend.com/domains', {
         method: 'GET',
         headers: {
@@ -56,6 +112,10 @@ export async function POST(request: NextRequest) {
 
       const domainsData = await testResponse.json()
       
+      console.log('Resend API call successful:', {
+        domains_count: domainsData.data?.length || 0
+      })
+      
       // Check if the from_email domain is verified
       const emailDomain = from_email.split('@')[1]
       const verifiedDomains = domainsData.data || []
@@ -73,7 +133,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Optionally, send a test email to verify full functionality
+      // Send a test email to verify full functionality
       const testEmailResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {

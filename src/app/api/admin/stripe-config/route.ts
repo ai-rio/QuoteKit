@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     if (!config.secret_key) {
       config = {
         secret_key: process.env.STRIPE_SECRET_KEY || '',
-        publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || '',
+        publishable_key: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || '',
         webhook_secret: process.env.STRIPE_WEBHOOK_SECRET || '',
         mode: (process.env.STRIPE_MODE as 'test' | 'live') || 'test'
       }

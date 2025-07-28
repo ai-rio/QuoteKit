@@ -19,24 +19,12 @@ USING (auth.role() = 'service_role');
 -- 3. Admin users can view all subscription data  
 CREATE POLICY "Admin users can view all subscriptions" 
 ON public.subscriptions FOR SELECT 
-USING (
-  EXISTS (
-    SELECT 1 FROM public.admin_roles ar 
-    WHERE ar.user_id = auth.uid() 
-    AND ar.role = 'admin'
-  )
-);
+USING (public.is_admin());
 
 -- 4. Admin users can manage all subscription data
 CREATE POLICY "Admin users can manage subscriptions" 
 ON public.subscriptions FOR ALL 
-USING (
-  EXISTS (
-    SELECT 1 FROM public.admin_roles ar 
-    WHERE ar.user_id = auth.uid() 
-    AND ar.role = 'admin'
-  )
-);
+USING (public.is_admin());
 
 -- 5. Allow authenticated users to insert/update their own subscriptions 
 -- (This supports user-initiated subscription changes via server actions)
