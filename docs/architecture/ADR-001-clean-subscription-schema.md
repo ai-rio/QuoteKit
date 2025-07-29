@@ -1,7 +1,7 @@
 # ADR-001: Clean Subscription Schema Architecture
 
 **Date**: 2025-07-29
-**Status**: Proposed
+**Status**: Implemented
 **Decision Makers**: System Architecture Team
 **Stakeholders**: Engineering Team, Product Team, Operations Team
 
