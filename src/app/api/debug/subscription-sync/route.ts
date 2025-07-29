@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdminClient } from '@/lib/supabase/admin-client';
+import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import { getUser } from '@/features/account/controllers/get-user';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getSubscription } from '@/features/account/controllers/get-subscription';

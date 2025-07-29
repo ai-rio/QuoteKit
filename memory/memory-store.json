@@ -1,0 +1,22 @@
+{
+  "default": [
+    {
+      "key": "test-installation",
+      "value": "CloudFlow successfully installed for claudeflow user",
+      "namespace": "default",
+      "timestamp": 1753752823718
+    },
+    {
+      "key": "typescript-errors",
+      "value": "Database schema mismatches: missing stripe_subscription_id field, error_message property, admin_roles table access, parameter count issues in subscription functions",
+      "namespace": "default",
+      "timestamp": 1753755681921
+    },
+    {
+      "key": "project-context",
+      "value": "QuoteKit: Next.js 15 + Supabase + Stripe subscription management app for lawn care quotes. Has subscription database constraint violations and TypeScript compilation errors",
+      "namespace": "default",
+      "timestamp": 1753755699337
+    }
+  ]
+}

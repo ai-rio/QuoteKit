@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       subscriptions: subscriptions?.map(s => ({
         id: s.id,
         status: s.status,
-        type: s.stripe_subscription_id ? 'paid' : 'free',
+        type: (s as any).stripe_subscription_id ? 'paid' : 'free',
         created: s.created
       }))
     });
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['trialing', 'active', 'past_due'])
-      .order('stripe_subscription_id', { ascending: false, nullsLast: true })
+      .order('stripe_subscription_id', { ascending: false, nullsFirst: false })
       .order('created', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
       subscription: currentSubscription ? {
         id: currentSubscription.id,
         status: currentSubscription.status,
-        type: currentSubscription.stripe_subscription_id ? 'paid' : 'free',
+        type: (currentSubscription as any).stripe_subscription_id ? 'paid' : 'free',
         price_id: currentSubscription.price_id,
-        stripe_subscription_id: currentSubscription.stripe_subscription_id
+        stripe_subscription_id: (currentSubscription as any).stripe_subscription_id
       } : null
     });
 

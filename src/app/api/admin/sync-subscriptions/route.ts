@@ -12,14 +12,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check if user is admin using the is_admin function
+    const { data: isAdmin, error: adminCheckError } = await supabase
+      .rpc('is_admin', { user_id: user.id });
 
-    if (profile?.role !== 'admin') {
+    if (adminCheckError || !isAdmin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -33,7 +30,7 @@ export async function POST(request: NextRequest) {
       const result = await manualSyncAllSubscriptions();
       return NextResponse.json({
         success: true,
-        message: 'Bulk subscription sync completed',
+        syncMessage: 'Bulk subscription sync completed',
         ...result
       });
     } else if (customerStripeId) {
@@ -41,7 +38,7 @@ export async function POST(request: NextRequest) {
       const result = await manualSyncSubscription(customerStripeId);
       return NextResponse.json({
         success: true,
-        message: `Subscription sync completed for customer ${customerStripeId}`,
+        syncMessage: `Subscription sync completed for customer ${customerStripeId}`,
         customerStripeId,
         ...result
       });

@@ -19,6 +19,7 @@ export async function createFreePlanSubscription(userId: string): Promise<string
     const { data, error } = await supabaseAdminClient
       .from('subscriptions')
       .insert({
+        id: `free_${userId}_${Date.now()}`, // Generate unique id for free subscription
         user_id: userId,
         status: 'active',
         price_id: null, // Free plan has no associated price
@@ -149,7 +150,7 @@ export async function ensureUserHasSubscription(userId: string, userEmail: strin
     }
 
     // Create free plan subscription
-    await createFreePlanSubscription(userId, freePrice.stripe_price_id);
+    await createFreePlanSubscription(userId);
     console.log('Successfully ensured user has subscription (created free plan)');
     
   } catch (error) {
@@ -216,7 +217,7 @@ export async function validateUserSubscriptionIntegrity(userId: string) {
     
     // Check for paid subscriptions without customer records
     const paidWithoutCustomer = activeSubscriptions.filter(
-      d => d.subscription_type === 'paid' && !d.customer_stripe_id
+      d => d.subscription_type === 'paid' && !(d as any).customer_stripe_id
     );
     if (paidWithoutCustomer.length > 0) {
       issues.push('Paid subscriptions found without customer records');
@@ -224,7 +225,7 @@ export async function validateUserSubscriptionIntegrity(userId: string) {
     
     // Check for free subscriptions with customer records (not necessarily an issue, but worth noting)
     const freeWithCustomer = activeSubscriptions.filter(
-      d => d.subscription_type === 'free' && d.customer_stripe_id
+      d => d.subscription_type === 'free' && (d as any).customer_stripe_id
     );
     if (freeWithCustomer.length > 0) {
       issues.push('Free subscriptions found with customer records (upgradeable)');

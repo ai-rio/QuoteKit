@@ -27,7 +27,7 @@ export async function getSubscription() {
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['trialing', 'active', 'past_due'])
-      .order('price_id', { ascending: false, nullsLast: true }) // Paid subscriptions first (non-null price_id)
+      .order('price_id', { ascending: false, nullsFirst: false }) // Paid subscriptions first (non-null price_id)
       .order('created', { ascending: false }); // Then by creation date as tiebreaker
 
     if (subError) {
