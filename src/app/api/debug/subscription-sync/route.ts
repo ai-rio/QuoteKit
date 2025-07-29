@@ -4,6 +4,7 @@ import { getUser } from '@/features/account/controllers/get-user';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getSubscription } from '@/features/account/controllers/get-subscription';
 import { manualSyncSubscription } from '@/features/account/controllers/manual-sync-subscription';
+import { getSubscriptionType, getStripeSubscriptionId } from '@/types/subscription-safe-types';
 
 /**
  * DEBUG ENDPOINT: Comprehensive subscription sync diagnostics
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
       activeSubscriptions: subscriptions?.filter(s => ['active', 'trialing', 'past_due'].includes(s.status)).length || 0,
       paidSubscriptions: subscriptions?.filter(s => s.stripe_subscription_id).length || 0,
       freeSubscriptions: subscriptions?.filter(s => !s.stripe_subscription_id).length || 0,
-      currentSubscriptionType: currentSubscription?.stripe_subscription_id ? 'paid' : 'free',
+      currentSubscriptionType: getSubscriptionType(currentSubscription),
       recentWebhookEvents: webhookEvents?.length || 0,
       failedWebhooks: webhookEvents?.filter(w => !w.processed || w.error_message).length || 0
     };
@@ -127,19 +128,19 @@ export async function GET(request: NextRequest) {
       subscriptions: subscriptions?.map(s => ({
         id: s.id,
         status: s.status,
-        stripe_subscription_id: s.stripe_subscription_id,
+        stripe_subscription_id: getStripeSubscriptionId(s),
         stripe_customer_id: s.stripe_customer_id,
         price_id: s.price_id,
         created: s.created,
         current_period_end: s.current_period_end,
-        type: s.stripe_subscription_id ? 'paid' : 'free'
+        type: getSubscriptionType(s)
       })),
       currentSubscription: currentSubscription ? {
         id: currentSubscription.id,
         status: currentSubscription.status,
-        stripe_subscription_id: currentSubscription.stripe_subscription_id,
+        stripe_subscription_id: getStripeSubscriptionId(currentSubscription),
         price_id: currentSubscription.price_id,
-        type: currentSubscription.stripe_subscription_id ? 'paid' : 'free',
+        type: getSubscriptionType(currentSubscription),
         hasPrice: !!currentSubscription.prices
       } : null,
       webhookEvents: webhookEvents?.map(w => ({

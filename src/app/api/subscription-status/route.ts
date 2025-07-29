@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
+import { getSubscriptionType, getStripeSubscriptionId } from '@/types/subscription-safe-types';
 
 /**
  * User-facing endpoint to check subscription status and recent webhook activity
@@ -49,9 +50,9 @@ export async function GET(request: NextRequest) {
           id: sub.id,
           status: sub.status,
           priceId: sub.price_id,
-          stripeSubscriptionId: sub.stripe_subscription_id,
+          stripeSubscriptionId: getStripeSubscriptionId(sub),
           created: sub.created,
-          isPaid: !!sub.stripe_subscription_id
+          isPaid: getSubscriptionType(sub) === 'paid'
         })) || []
       }
     };

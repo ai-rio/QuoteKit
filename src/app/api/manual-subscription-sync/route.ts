@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { cleanupDuplicateSubscriptions } from '@/features/account/controllers/get-subscription';
+import { getSubscriptionType, getStripeSubscriptionId } from '@/types/subscription-safe-types';
 
 /**
  * POST /api/manual-subscription-sync
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       subscriptions: subscriptions?.map(s => ({
         id: s.id,
         status: s.status,
-        type: (s as any).stripe_subscription_id ? 'paid' : 'free',
+        type: getSubscriptionType(s),
         created: s.created
       }))
     });
@@ -65,9 +66,9 @@ export async function POST(request: NextRequest) {
       subscription: currentSubscription ? {
         id: currentSubscription.id,
         status: currentSubscription.status,
-        type: (currentSubscription as any).stripe_subscription_id ? 'paid' : 'free',
+        type: getSubscriptionType(currentSubscription),
         price_id: currentSubscription.price_id,
-        stripe_subscription_id: (currentSubscription as any).stripe_subscription_id
+        stripe_subscription_id: getStripeSubscriptionId(currentSubscription)
       } : null
     });
 
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         currentSubscription: currentSubscription ? {
           id: currentSubscription.id,
           status: currentSubscription.status,
-          type: currentSubscription.stripe_subscription_id ? 'paid' : 'free',
+          type: getSubscriptionType(currentSubscription),
           price_id: currentSubscription.price_id
         } : null
       }
@@ -136,8 +137,8 @@ export async function GET() {
       details: subscriptions?.map(s => ({
         id: s.id,
         status: s.status,
-        type: s.stripe_subscription_id ? 'paid' : 'free',
-        stripe_subscription_id: s.stripe_subscription_id,
+        type: getSubscriptionType(s),
+        stripe_subscription_id: getStripeSubscriptionId(s),
         price_id: s.price_id,
         created: s.created
       })) || [],
