@@ -30,7 +30,7 @@ export async function upsertUserSubscription({
     // Get customer's userId from mapping table.
     console.log(`📋 Looking up user ID for Stripe customer: ${customerId}`);
     const { data: customerData, error: noCustomerError } = await supabaseAdminClient
-      .from('customers')
+      .from('stripe_customers')
       .select('id')
       .eq('stripe_customer_id', customerId)
       .single();
@@ -68,13 +68,12 @@ export async function upsertUserSubscription({
       user_id: userId,
       metadata: subscription.metadata,
       status: subscription.status,
-      price_id: subscription.items.data[0].price.id,
+      stripe_price_id: subscription.items.data[0].price.id,
       cancel_at_period_end: subscription.cancel_at_period_end,
       cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
       canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,
       current_period_start: toDateTime(subscription.current_period_start).toISOString(),
       current_period_end: toDateTime(subscription.current_period_end).toISOString(),
-      created: toDateTime(subscription.created).toISOString(),
       ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null,
       trial_start: subscription.trial_start ? toDateTime(subscription.trial_start).toISOString() : null,
       trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
@@ -84,7 +83,7 @@ export async function upsertUserSubscription({
       subscriptionId: subscriptionData.id,
       userId: subscriptionData.user_id,
       status: subscriptionData.status,
-      priceId: subscriptionData.price_id
+      priceId: subscriptionData.stripe_price_id
     });
 
     const { error } = await supabaseAdminClient.from('subscriptions').upsert([subscriptionData]);

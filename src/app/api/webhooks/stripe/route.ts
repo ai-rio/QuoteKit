@@ -308,7 +308,7 @@ async function ensureCustomerMapping(session: Stripe.Checkout.Session): Promise<
   
   // Check if customer mapping already exists
   const { data: existingCustomer } = await supabaseAdminClient
-    .from('customers')
+    .from('stripe_customers')
     .select('id')
     .eq('stripe_customer_id', customerId)
     .single()
@@ -337,7 +337,7 @@ async function ensureCustomerMapping(session: Stripe.Checkout.Session): Promise<
   
   // Create customer mapping
   const { data: newCustomer, error: customerError } = await supabaseAdminClient
-    .from('customers')
+    .from('stripe_customers')
     .insert({
       id: userData.id,
       stripe_customer_id: customerId,

@@ -22,7 +22,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   
   // DEBUG: Log the price object to understand the issue
   console.error('🔍 DEBUG: Price object passed to createCheckoutAction:', {
-    id: price.id,
+    id: price.stripe_price_id,
     stripe_price_id: price.stripe_price_id,
     recurring_interval: price.recurring_interval,
     interval: price.interval,
@@ -41,7 +41,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     // Create search params to preserve plan selection during signup
     const searchParams = new URLSearchParams();
     searchParams.set('plan', price.stripe_price_id);
-    searchParams.set('amount', price.unit_amount.toString());
+    searchParams.set('amount', (price.unit_amount ?? 0).toString());
     searchParams.set('interval', price.interval || 'one_time');
     searchParams.set('type', price.type || 'one_time');
     
@@ -160,7 +160,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     console.log('ℹ️ User already has active subscription, checking if this is a plan change');
     
     // If trying to select the same plan, redirect to account
-    if (existingSubscription.price_id === price.stripe_price_id) {
+    if (existingSubscription.stripe_price_id === price.stripe_price_id) {
       console.log('ℹ️ User trying to select same plan, redirecting to account');
       redirect(`${getURL()}/account?message=same_plan`);
     }

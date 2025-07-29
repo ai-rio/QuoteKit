@@ -58,7 +58,7 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
   } = filters;
 
   let query = supabase
-    .from('customers')
+    .from('stripe_customers')
     .select(`
       id,
       stripe_customer_id
@@ -120,11 +120,11 @@ export async function getAdminCustomers(filters: CustomerFilters = {}) {
           current_period_end: subscriptionData.current_period_end,
           cancel_at_period_end: subscriptionData.cancel_at_period_end || false,
           price: {
-            unit_amount: subscriptionData.prices?.unit_amount || 0,
-            currency: subscriptionData.prices?.currency || 'usd',
-            interval: subscriptionData.prices?.interval || 'month',
+            unit_amount: (subscriptionData.prices as any)?.unit_amount || 0,
+            currency: (subscriptionData.prices as any)?.currency || 'usd',
+            interval: (subscriptionData.prices as any)?.interval || 'month',
             product: {
-              name: subscriptionData.prices?.products?.name || 'Unknown Product'
+              name: (subscriptionData.prices as any)?.products?.name || 'Unknown Product'
             }
           }
         } : null
@@ -218,8 +218,8 @@ export async function adminCancelSubscription(subscriptionId: string, reason?: s
     // await supabase.from('subscription_changes').insert({
     //   user_id: subscription.user_id,
     //   subscription_id: subscriptionId,
-    //   old_price_id: subscription.price_id,
-    //   new_price_id: subscription.price_id,
+    //   old_price_id: subscription.stripe_price_id,
+    //   new_price_id: subscription.stripe_price_id,
     //   change_type: 'cancellation',
     //   effective_date: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
     //   stripe_subscription_id: subscriptionId,
@@ -294,8 +294,8 @@ export async function adminReactivateSubscription(subscriptionId: string) {
     // await supabase.from('subscription_changes').insert({
     //   user_id: subscription.user_id,
     //   subscription_id: subscriptionId,
-    //   old_price_id: subscription.price_id,
-    //   new_price_id: subscription.price_id,
+    //   old_price_id: subscription.stripe_price_id,
+    //   new_price_id: subscription.stripe_price_id,
     //   change_type: 'reactivation',
     //   effective_date: new Date().toISOString(),
     //   stripe_subscription_id: subscriptionId,
@@ -375,7 +375,7 @@ export async function adminChangePlan(subscriptionId: string, newPriceId: string
     // await supabase.from('subscription_changes').insert({
     //   user_id: subscription.user_id,
     //   subscription_id: subscriptionId,
-    //   old_price_id: subscription.price_id,
+    //   old_price_id: subscription.stripe_price_id,
     //   new_price_id: newPriceId,
     //   change_type: 'upgrade', // You might want to determine this based on price comparison
     //   effective_date: new Date().toISOString(),

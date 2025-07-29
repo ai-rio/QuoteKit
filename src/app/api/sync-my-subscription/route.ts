@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { manualSyncSubscription } from '@/features/account/controllers/manual-sync-subscription';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 /**
  * User-facing endpoint to sync their own subscription data

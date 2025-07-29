@@ -56,7 +56,7 @@ export default async function AccountPage() {
   if (!subscription) {
     // Look for free plan (unit_amount = 0) in available plans
     for (const product of availablePlans) {
-      const freePrice = product.prices?.find(price => price.unit_amount === 0 && price.active);
+      const freePrice = product.prices?.find((price: any) => price.unit_amount === 0 && price.active);
       if (freePrice) {
         freePlanInfo = {
           ...freePrice,

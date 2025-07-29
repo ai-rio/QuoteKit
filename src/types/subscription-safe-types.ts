@@ -11,8 +11,8 @@ type DatabaseSubscription = Database['public']['Tables']['subscriptions']['Row']
 
 // Extended subscription type that includes all possible fields referenced in codebase
 export interface SafeSubscription extends DatabaseSubscription {
-  stripe_subscription_id?: string | null;
-  stripe_customer_id?: string | null;
+  stripe_subscription_id: string | null;
+  stripe_customer_id: string | null;
   // Include all other fields that might be accessed through joins
   prices?: any;
   customer?: any;
@@ -146,11 +146,11 @@ export function validateSubscription(subscription: any): {
   }
 
   // Check for inconsistencies
-  if (subscription.stripe_subscription_id && !subscription.price_id) {
+  if (subscription.stripe_subscription_id && !subscription.stripe_price_id) {
     warnings.push('Paid subscription missing price_id');
   }
 
-  if (!subscription.stripe_subscription_id && subscription.price_id) {
+  if (!subscription.stripe_subscription_id && subscription.stripe_price_id) {
     warnings.push('Free subscription has price_id (might be inconsistent)');
   }
 
@@ -161,5 +161,4 @@ export function validateSubscription(subscription: any): {
   };
 }
 
-// Export type for external use
-export type { SafeSubscription };
+// SafeSubscription is already exported above via interface declaration

@@ -44,7 +44,7 @@ export async function DELETE(
 
     // Get customer ID from database
     const { data: customer } = await supabase
-      .from('customers')
+      .from('stripe_customers')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
@@ -138,7 +138,7 @@ export async function PATCH(
 
     // Get customer ID from database
     const { data: customer } = await supabase
-      .from('customers')
+      .from('stripe_customers')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();

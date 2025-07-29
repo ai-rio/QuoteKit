@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     // Get customer ID from database
     const { data: customer } = await supabase
-      .from('customers')
+      .from('stripe_customers')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
 
     // Get or create customer
     const { data: customer } = await supabase
-      .from('customers')
+      .from('stripe_customers')
       .select('stripe_customer_id')
       .eq('id', user.id)
       .single();
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
 
       // Save customer ID to database
       await supabase
-        .from('customers')
+        .from('stripe_customers')
         .insert([{ id: user.id, stripe_customer_id: newCustomer.id }]);
 
       customerId = newCustomer.id;

@@ -187,7 +187,7 @@ export async function getSubscriptionDiagnostics(userId: string) {
     const diagnostics = data.map(subscription => ({
       ...subscription,
       // Compute subscription_type: paid if has price_id, free otherwise
-      subscription_type: subscription.price_id ? 'paid' : 'free',
+      subscription_type: subscription.stripe_price_id ? 'paid' : 'free',
       // For customer_stripe_id, we would need to look it up from the users table
       // For now, set to null as it's not directly available in subscriptions
       customer_stripe_id: null

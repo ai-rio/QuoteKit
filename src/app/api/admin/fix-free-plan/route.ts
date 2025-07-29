@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { ensureFreePlanActive, reactivatePrice } from '@/features/pricing/controllers/upsert-price';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 /**
  * POST /api/admin/fix-free-plan

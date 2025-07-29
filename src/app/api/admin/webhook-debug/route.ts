@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 /**
  * Admin endpoint to debug webhook events and subscription sync issues
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     if (customerStripeId) {
       // Get customer mapping
       const { data: customer } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .select('*')
         .eq('stripe_customer_id', customerStripeId)
         .single();
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
 
       // Filter webhook events for this customer if provided
       const customerEvents = webhookEvents?.filter(event => {
-        const eventData = event.data;
+        const eventData = event.event_data;
         // Type guard for Json object access
         if (typeof eventData === 'object' && eventData !== null && !Array.isArray(eventData)) {
           const eventObject = eventData as { [key: string]: any };

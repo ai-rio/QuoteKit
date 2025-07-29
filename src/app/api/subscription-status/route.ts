@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
-import { getSubscriptionType, getStripeSubscriptionId } from '@/types/subscription-safe-types';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { getStripeSubscriptionId,getSubscriptionType } from '@/types/subscription-safe-types';
 
 /**
  * User-facing endpoint to check subscription status and recent webhook activity
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Get user's customer record
     const { data: customerData, error: customerError } = await supabase
-      .from('customers')
+      .from('stripe_customers')
       .select('stripe_customer_id, email')
       .eq('id', user.id)
       .single();
@@ -49,9 +50,9 @@ export async function GET(request: NextRequest) {
         all: subscriptions?.map(sub => ({
           id: sub.id,
           status: sub.status,
-          priceId: sub.price_id,
+          priceId: sub.stripe_price_id,
           stripeSubscriptionId: getStripeSubscriptionId(sub),
-          created: sub.created,
+          created: sub.created_at,
           isPaid: getSubscriptionType(sub) === 'paid'
         })) || []
       }
@@ -62,13 +63,13 @@ export async function GET(request: NextRequest) {
     if (customerData?.stripe_customer_id) {
       const { data: recentEvents } = await supabaseAdminClient
         .from('stripe_webhook_events')
-        .select('stripe_event_id, event_type, processed, created_at, error_message')
+        .select('stripe_event_id, event_type, processed, created_at, error_message, event_data')
         .order('created_at', { ascending: false })
         .limit(20);
 
       // Filter events related to this customer
       const customerEvents = recentEvents?.filter(event => {
-        const eventData = event.data;
+        const eventData = event.event_data;
         return eventData?.object?.customer === customerData.stripe_customer_id ||
                status.subscriptions.all.some(sub => 
                  sub.stripeSubscriptionId && 

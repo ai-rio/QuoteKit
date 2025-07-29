@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     ).length || 0;
 
     const previousPeriodActive = subscriptions?.filter((sub: any) => 
-      sub.created && new Date(sub.created) <= thirtyDaysAgo
+      sub.created_at && new Date(sub.created_at) <= thirtyDaysAgo
     ).length || 1; // Avoid division by zero
 
     const churnRate = (recentCancellations / previousPeriodActive) * 100;
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       status: sub.status,
       current_period_start: sub.current_period_start,
       current_period_end: sub.current_period_end,
-      price_id: sub.price_id,
+      price_id: sub.stripe_price_id,
       product_name: sub.prices?.products?.name || 'Unknown Product',
       amount: (sub.prices?.unit_amount || 0) / 100,
       currency: sub.prices?.currency || 'usd',
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
       
       const monthSubs = subscriptions?.filter((sub: any) => {
-        const createdDate = new Date(sub.created);
+        const createdDate = new Date(sub.created_at);
         return createdDate >= monthStart && createdDate <= monthEnd;
       }) || [];
 
