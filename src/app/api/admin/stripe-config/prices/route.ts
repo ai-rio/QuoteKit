@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         .from('stripe_prices')
         .select(`
           *,
-          stripe_products!fk_stripe_prices_product_id(name)
+          stripe_products!stripe_product_id(name)
         `)
         .order('created_at')
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         id: price.id,
         stripe_price_id: price.stripe_price_id,
         stripe_product_id: price.stripe_product_id,
-        product_name: price.stripe_products?.name || null,
+        product_name: (price.stripe_products && typeof price.stripe_products === 'object' && 'name' in price.stripe_products) ? price.stripe_products.name : null,
         unit_amount: price.unit_amount,
         currency: price.currency,
         recurring_interval: price.recurring_interval,

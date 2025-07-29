@@ -79,7 +79,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
 
     // Create free plan subscription using robust helper function
     try {
-      await createFreePlanSubscription(session.user.id, price.stripe_price_id);
+      await createFreePlanSubscription(session.user.id);
     } catch (error) {
       console.error('❌ Failed to create free subscription:', error);
       throw new Error(`Failed to create free subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);

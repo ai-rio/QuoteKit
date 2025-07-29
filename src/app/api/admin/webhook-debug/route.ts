@@ -15,14 +15,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check if user is admin using the is_admin function
+    const { data: isAdmin, error: adminCheckError } = await supabase
+      .rpc('is_admin', { user_id: user.id });
 
-    if (profile?.role !== 'admin') {
+    if (adminCheckError || !isAdmin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
@@ -53,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // If specific customer requested, get their subscription data too
     let customerData = null;
-    let subscriptionData = null;
+    let subscriptionData: any[] | null = null;
 
     if (customerStripeId) {
       // Get customer mapping
@@ -79,10 +76,14 @@ export async function GET(request: NextRequest) {
       // Filter webhook events for this customer if provided
       const customerEvents = webhookEvents?.filter(event => {
         const eventData = event.data;
-        if (eventData?.object?.customer === customerStripeId) return true;
-        if (eventData?.object?.subscription) {
-          // For subscription events, check if subscription belongs to customer
-          return subscriptionData?.some(sub => sub.stripe_subscription_id === eventData.object.subscription);
+        // Type guard for Json object access
+        if (typeof eventData === 'object' && eventData !== null && !Array.isArray(eventData)) {
+          const eventObject = eventData as { [key: string]: any };
+          if (eventObject.object?.customer === customerStripeId) return true;
+          if (eventObject.object?.subscription) {
+            // For subscription events, check if subscription belongs to customer
+            return subscriptionData?.some(sub => sub.stripe_subscription_id === eventObject.object.subscription);
+          }
         }
         return false;
       });
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
           type: event.event_type,
           processed: event.processed,
           created: event.created_at,
-          error: event.error_message
+          error: 'error_message' in event ? event.error_message : null
         }))
       },
       webhookEvents: webhookEvents
@@ -152,14 +153,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check if user is admin using the is_admin function
+    const { data: isAdmin, error: adminCheckError } = await supabase
+      .rpc('is_admin', { user_id: user.id });
 
-    if (profile?.role !== 'admin') {
+    if (adminCheckError || !isAdmin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
