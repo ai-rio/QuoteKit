@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { cleanupDuplicateSubscriptions } from '@/features/account/controllers/get-subscription';
-import { getSubscriptionType, getStripeSubscriptionId } from '@/types/subscription-safe-types';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { getStripeSubscriptionId,getSubscriptionType } from '@/types/subscription-safe-types';
 
 /**
  * POST /api/manual-subscription-sync
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
         id: s.id,
         status: s.status,
         type: getSubscriptionType(s),
-        created: s.created
+        created: s.created_at
       }))
     });
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
         id: currentSubscription.id,
         status: currentSubscription.status,
         type: getSubscriptionType(currentSubscription),
-        price_id: currentSubscription.price_id,
+        price_id: currentSubscription.stripe_price_id,
         stripe_subscription_id: getStripeSubscriptionId(currentSubscription)
       } : null
     });
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
           id: currentSubscription.id,
           status: currentSubscription.status,
           type: getSubscriptionType(currentSubscription),
-          price_id: currentSubscription.price_id
+          price_id: currentSubscription.stripe_price_id
         } : null
       }
     });
@@ -139,8 +140,8 @@ export async function GET() {
         status: s.status,
         type: getSubscriptionType(s),
         stripe_subscription_id: getStripeSubscriptionId(s),
-        price_id: s.price_id,
-        created: s.created
+        price_id: s.stripe_price_id,
+        created: s.created_at
       })) || [],
       needsCleanup: paidSubs.length > 0 && freeSubs.length > 0
     });

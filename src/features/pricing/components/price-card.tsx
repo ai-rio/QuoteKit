@@ -49,8 +49,8 @@ export function PricingCard({
       console.warn(`No available prices found for product ${product.name}`, { 
         productId: product.stripe_product_id,
         totalPrices: pricesArray.length,
-        freePrices: pricesArray.filter(p => p.unit_amount === 0).length,
-        inactivePaidPrices: pricesArray.filter(p => p.unit_amount > 0 && p.active === false).map(p => p.stripe_price_id)
+        freePrices: pricesArray.filter(p => (p.unit_amount ?? 0) === 0).length,
+        inactivePaidPrices: pricesArray.filter(p => (p.unit_amount ?? 0) > 0 && p.active === false).map(p => p.stripe_price_id)
       });
       return null;
     }
@@ -68,7 +68,7 @@ export function PricingCard({
     }
     
     return selectedPrice;
-  }, [billingInterval, price, product.prices]);
+  }, [billingInterval, price, product.prices, product.name, product.stripe_product_id]);
 
   const pricesArray = product.prices || [];
   // Use available prices (free + active paid) for month/year calculations
@@ -104,7 +104,7 @@ export function PricingCard({
       // Fallback to client-side redirect with plan information
       const searchParams = new URLSearchParams();
       searchParams.set('plan', price.stripe_price_id);
-      searchParams.set('amount', price.unit_amount.toString());
+      searchParams.set('amount', (price.unit_amount ?? 0).toString());
       searchParams.set('interval', price.interval || 'one_time');
       window.location.href = `/signup?${searchParams.toString()}`;
     }

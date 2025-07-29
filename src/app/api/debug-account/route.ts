@@ -40,7 +40,7 @@ export async function GET() {
         hasSubscription: !!subscription,
         subscriptionId: subscription?.id,
         status: subscription?.status,
-        priceId: subscription?.price_id
+        priceId: subscription?.stripe_price_id
       },
       billingHistory: {
         count: billingHistory?.length || 0,

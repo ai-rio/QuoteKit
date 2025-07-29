@@ -27,8 +27,8 @@ export async function getSubscription() {
       .select('*')
       .eq('user_id', user.id)
       .in('status', ['trialing', 'active', 'past_due'])
-      .order('price_id', { ascending: false, nullsFirst: false }) // Paid subscriptions first (non-null price_id)
-      .order('created', { ascending: false }); // Then by creation date as tiebreaker
+      .order('stripe_price_id', { ascending: false, nullsFirst: false }) // Paid subscriptions first (non-null stripe_price_id)
+      .order('created_at', { ascending: false }); // Then by creation date as tiebreaker
 
     if (subError) {
       console.error('Subscription query error:', subError);
@@ -55,16 +55,16 @@ export async function getSubscription() {
     console.debug('getSubscription: Found subscription', {
       subscriptionId: subscription.id,
       status: subscription.status,
-      priceId: subscription.price_id,
+      priceId: subscription.stripe_price_id,
       stripeSubscriptionId: subscription.id,
-      subscriptionType: subscription.price_id ? 'paid' : 'free',
+      subscriptionType: subscription.stripe_price_id ? 'paid' : 'free',
       totalSubscriptions: subscriptions.length
     });
 
     // Log warning if user has multiple subscriptions (should be cleaned up)
     if (subscriptions.length > 1) {
-      const paidCount = subscriptions.filter(s => s.price_id).length;
-      const freeCount = subscriptions.filter(s => !s.price_id).length;
+      const paidCount = subscriptions.filter(s => s.stripe_price_id).length;
+      const freeCount = subscriptions.filter(s => !s.stripe_price_id).length;
       
       console.warn('User has multiple active subscriptions - cleanup needed:', {
         userId: user.id,
@@ -73,15 +73,15 @@ export async function getSubscription() {
         freeSubscriptions: freeCount,
         selectedSubscription: {
           id: subscription.id,
-          type: subscription.price_id ? 'paid' : 'free'
+          type: subscription.stripe_price_id ? 'paid' : 'free'
         }
       });
     }
 
-    // Check if price_id exists
-    if (!subscription.price_id) {
-      console.warn('Subscription has no price_id:', subscription.id);
-      console.debug('getSubscription: Missing price_id', {
+    // Check if stripe_price_id exists
+    if (!subscription.stripe_price_id) {
+      console.warn('Subscription has no stripe_price_id:', subscription.id);
+      console.debug('getSubscription: Missing stripe_price_id', {
         subscriptionId: subscription.id,
         subscriptionData: subscription
       });
@@ -95,13 +95,13 @@ export async function getSubscription() {
     const { data: priceData, error: priceError } = await supabase
       .from('stripe_prices')
       .select('*')
-      .eq('stripe_price_id', subscription.price_id)
+      .eq('stripe_price_id', subscription.stripe_price_id)
       .maybeSingle();
 
     if (priceError) {
       console.error('Price query error:', priceError);
       console.debug('getSubscription: Price lookup failed', {
-        priceId: subscription.price_id,
+        priceId: subscription.stripe_price_id,
         error: priceError.message
       });
       // Return subscription with null price data if price lookup fails
@@ -112,9 +112,9 @@ export async function getSubscription() {
     }
 
     if (!priceData) {
-      console.warn('No price data found for price_id:', subscription.price_id);
+      console.warn('No price data found for stripe_price_id:', subscription.stripe_price_id);
       console.debug('getSubscription: Price not found in database', {
-        priceId: subscription.price_id,
+        priceId: subscription.stripe_price_id,
         subscriptionId: subscription.id
       });
       return {
@@ -148,9 +148,9 @@ export async function getSubscription() {
 
     console.debug('getSubscription: Successfully retrieved subscription data', {
       subscriptionId: subscription.id,
-      priceId: subscription.price_id,
+      priceId: subscription.stripe_price_id,
       hasProductData: !!productData,
-      subscriptionType: subscription.price_id ? 'paid' : 'free'
+      subscriptionType: subscription.stripe_price_id ? 'paid' : 'free'
     });
 
     // Combine the data
@@ -259,8 +259,8 @@ export async function cleanupDuplicateSubscriptions(userId: string) {
     }
 
     // Separate paid and free subscriptions
-    const paidSubscriptions = subscriptions.filter(s => s.price_id);
-    const freeSubscriptions = subscriptions.filter(s => !s.price_id);
+    const paidSubscriptions = subscriptions.filter(s => s.stripe_price_id);
+    const freeSubscriptions = subscriptions.filter(s => !s.stripe_price_id);
 
     console.log('Found subscriptions for cleanup:', {
       userId,
@@ -302,7 +302,7 @@ export async function cleanupDuplicateSubscriptions(userId: string) {
     // If user has multiple paid subscriptions, keep the most recent one
     if (paidSubscriptions.length > 1) {
       const sortedPaid = paidSubscriptions.sort((a, b) => 
-        new Date(b.created).getTime() - new Date(a.created).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       
       const subscriptionsToDeactivate = sortedPaid.slice(1); // Keep the first (most recent)

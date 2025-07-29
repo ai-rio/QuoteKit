@@ -42,7 +42,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
 
   // Check if customer record exists
   const { data, error } = await supabaseAdminClient
-    .from('customers')
+    .from('stripe_customers')
     .select('stripe_customer_id')
     .eq('id', userId)
     .single();
@@ -78,7 +78,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     // If customer database record doesn't exist, create it
     if (error) {
       const { error: insertError } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .insert([{ id: userId, stripe_customer_id: customer.id }]);
 
       if (insertError) {
@@ -86,7 +86,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
         // Try to get the existing record
         if (insertError.code === '23505') { // Unique violation
           const { data: existingData, error: fetchError } = await supabaseAdminClient
-            .from('customers')
+            .from('stripe_customers')
             .select('stripe_customer_id')
             .eq('id', userId)
             .single();
@@ -112,7 +112,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     } else {
       // Customer record exists but needs Stripe customer ID - update it
       const { error: updateError } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .update({ stripe_customer_id: customer.id })
         .eq('id', userId);
 
@@ -151,7 +151,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
 
   // First try to get existing customer record using maybeSingle to avoid PGRST116 errors
   const { data, error } = await supabaseClient
-    .from('customers')
+    .from('stripe_customers')
     .select('stripe_customer_id')
     .eq('id', userId)
     .maybeSingle();
@@ -238,7 +238,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
     // If customer record exists, update it with Stripe customer ID
     if (data) {
       const { error: updateError } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .update({ stripe_customer_id: customer.id })
         .eq('id', userId);
 
@@ -258,7 +258,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
     } else {
       // Create new customer record
       const { error: insertError } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .insert([{ id: userId, stripe_customer_id: customer.id }]);
 
       if (insertError) {

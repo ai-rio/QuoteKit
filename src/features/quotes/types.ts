@@ -1,5 +1,5 @@
 // src/features/quotes/types.ts
-import { Database } from '@/libs/supabase/types';
+import { Database } from '@/types/supabase';
 
 // Quote status enum matching Story 2.6 requirements
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted';

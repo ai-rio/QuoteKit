@@ -374,7 +374,7 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
           isOpen={showPlanDialog}
           onClose={() => setShowPlanDialog(false)}
           currentPlan={{
-            id: subscription?.prices?.id || freePlanInfo?.id || '',
+            id: subscription?.prices?.stripe_price_id || freePlanInfo?.stripe_price_id || '',
             name: subscription?.prices?.products?.name || freePlanInfo?.products?.name || 'Free Plan',
             price: (subscription?.prices?.unit_amount || freePlanInfo?.unit_amount || 0) / 100,
             interval: subscription?.prices?.interval || freePlanInfo?.interval || 'month',

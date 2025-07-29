@@ -184,6 +184,38 @@ export type Database = {
           is_active: boolean
         }
       }
+      quotes: {
+        Row: {
+          id: string
+          user_id: string
+          client_name: string
+          total: number
+          status: string
+          quote_number: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          client_name: string
+          total: number
+          status: string
+          quote_number: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          client_name?: string
+          total?: number
+          status?: string
+          quote_number?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Functions: {
       get_user_active_subscription: {

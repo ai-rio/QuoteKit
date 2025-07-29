@@ -1,7 +1,8 @@
 import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
-import { upsertUserSubscription } from './upsert-user-subscription';
+
 import { cleanupDuplicateSubscriptions } from './get-subscription';
+import { upsertUserSubscription } from './upsert-user-subscription';
 
 /**
  * Manual sync function to retrieve and sync subscription data from Stripe
@@ -98,7 +99,7 @@ export async function manualSyncSubscription(customerStripeId: string) {
     try {
       // Get the user ID for this customer
       const { data: customerData } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .select('id')
         .eq('stripe_customer_id', customerStripeId)
         .single();
@@ -140,7 +141,7 @@ export async function manualSyncAllSubscriptions() {
     
     // Get all customers from database
     const { data: customers, error } = await supabaseAdminClient
-      .from('customers')
+      .from('stripe_customers')
       .select('id, stripe_customer_id');
 
     if (error) {

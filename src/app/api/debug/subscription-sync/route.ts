@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
-import { getUser } from '@/features/account/controllers/get-user';
+
 import { getSession } from '@/features/account/controllers/get-session';
 import { getSubscription } from '@/features/account/controllers/get-subscription';
+import { getUser } from '@/features/account/controllers/get-user';
 import { manualSyncSubscription } from '@/features/account/controllers/manual-sync-subscription';
-import { getSubscriptionType, getStripeSubscriptionId } from '@/types/subscription-safe-types';
+import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
+import { getStripeSubscriptionId,getSubscriptionType } from '@/types/subscription-safe-types';
 
 /**
  * DEBUG ENDPOINT: Comprehensive subscription sync diagnostics
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     // 2. Get customer mapping
     const { data: customerData } = await supabaseAdminClient
-      .from('customers')
+      .from('stripe_customers')
       .select('*')
       .eq('id', targetUserId)
       .single();
@@ -130,8 +131,8 @@ export async function GET(request: NextRequest) {
         status: s.status,
         stripe_subscription_id: getStripeSubscriptionId(s),
         stripe_customer_id: s.stripe_customer_id,
-        price_id: s.price_id,
-        created: s.created,
+        price_id: s.stripe_price_id,
+        created: s.created_at,
         current_period_end: s.current_period_end,
         type: getSubscriptionType(s)
       })),
@@ -139,7 +140,7 @@ export async function GET(request: NextRequest) {
         id: currentSubscription.id,
         status: currentSubscription.status,
         stripe_subscription_id: getStripeSubscriptionId(currentSubscription),
-        price_id: currentSubscription.price_id,
+        price_id: currentSubscription.stripe_price_id,
         type: getSubscriptionType(currentSubscription),
         hasPrice: !!currentSubscription.prices
       } : null,
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
 
       // Get customer mapping
       const { data: customerData } = await supabaseAdminClient
-        .from('customers')
+        .from('stripe_customers')
         .select('stripe_customer_id')
         .eq('id', targetUserId)
         .single();

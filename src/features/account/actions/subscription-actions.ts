@@ -279,7 +279,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
     }
 
     // Optional: Log the plan change for audit trail
-    console.log(`Plan ${isUpgrade ? 'upgraded' : 'downgraded'}: ${subscription.stripe_subscription_id} from ${subscription.price_id} to ${priceId} for user ${session.user.id}`);
+    console.log(`Plan ${isUpgrade ? 'upgraded' : 'downgraded'}: ${subscription.stripe_subscription_id} from ${subscription.stripe_price_id} to ${priceId} for user ${session.user.id}`);
 
     // Revalidate the account page to refresh the UI
     revalidatePath('/account');
@@ -573,8 +573,8 @@ export async function reactivateSubscription() {
     // await supabase.from('subscription_changes').insert({
     //   user_id: session.user.id,
     //   subscription_id: subscription.id,
-    //   old_price_id: subscription.price_id,
-    //   new_price_id: subscription.price_id,
+    //   old_price_id: subscription.stripe_price_id,
+    //   new_price_id: subscription.stripe_price_id,
     //   change_type: 'reactivation',
     //   effective_date: new Date().toISOString(),
     //   stripe_subscription_id: subscription.id,
