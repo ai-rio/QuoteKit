@@ -5,6 +5,7 @@
 
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { getStripeSubscriptionId, getSubscriptionType } from '@/types/subscription-safe-types';
 
 /**
  * Creates a free plan subscription using the database function
@@ -118,7 +119,7 @@ export async function ensureUserHasSubscription(userId: string, userEmail: strin
     // Check if user already has an active subscription
     const { data: existingSubscription, error: checkError } = await supabase
       .from('subscriptions')
-      .select('internal_id, status, subscription_type:stripe_subscription_id')
+      .select('internal_id, status, stripe_subscription_id')
       .eq('user_id', userId)
       .in('status', ['active', 'trialing'])
       .single();
