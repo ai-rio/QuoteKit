@@ -11,7 +11,7 @@ export async function getStripePublishableKey() {
       .from('admin_settings')
       .select('value')
       .eq('key', 'stripe_config')
-      .single();
+      .maybeSingle();
 
     console.debug('getStripePublishableKey: Database query result', {
       hasData: !!stripeConfigRecord,
