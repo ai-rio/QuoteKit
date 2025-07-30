@@ -128,10 +128,18 @@ const PricingCard = ({
   const isPopular = tier.popular;
 
   const handleSelectPlan = () => {
-    onSelectPlan(
-      typeof stripePriceId === 'string' ? stripePriceId : stripePriceId[paymentFrequency],
-      tier.name
-    );
+    const finalPriceId = typeof stripePriceId === 'string' ? stripePriceId : stripePriceId[paymentFrequency];
+    
+    console.log('💳 FreemiumPricing: Plan selection triggered:', {
+      tier_name: tier.name,
+      tier_id: tier.id,
+      payment_frequency: paymentFrequency,
+      stripe_price_id: finalPriceId,
+      price: price,
+      is_free: tier.id === 'free'
+    });
+    
+    onSelectPlan(finalPriceId, tier.name);
   };
 
   return (

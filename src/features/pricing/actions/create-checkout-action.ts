@@ -11,25 +11,21 @@ import { getURL } from '@/utils/get-url';
 
 export async function createCheckoutAction({ price }: { price: Price }) {
   // DEBUG: Log immediately at function start
-  console.error('🚨 CHECKOUT ACTION CALLED!');
-  console.error('🚨 Price object type check:', {
-    hasType: 'type' in price,
-    typeValue: price.type,
-    hasInterval: 'interval' in price,
-    intervalValue: price.interval,
-    recurringInterval: price.recurring_interval
-  });
-  
-  // DEBUG: Log the price object to understand the issue
-  console.error('🔍 DEBUG: Price object passed to createCheckoutAction:', {
-    id: price.stripe_price_id,
+  console.log('🚨 CHECKOUT ACTION CALLED - Analyzing price object');
+  console.log('🔍 Price object analysis:', {
     stripe_price_id: price.stripe_price_id,
+    unit_amount: price.unit_amount,
+    currency: price.currency,
     recurring_interval: price.recurring_interval,
     interval: price.interval,
     type: price.type,
-    unit_amount: price.unit_amount,
     active: price.active,
-    full_price_object: price
+    // Validation checks
+    hasRecurringInterval: !!price.recurring_interval,
+    hasInterval: !!price.interval,
+    hasType: !!price.type,
+    isSubscription: !!(price.recurring_interval || price.interval),
+    isFree: (price.unit_amount ?? 0) === 0
   });
 
   // 1. FIRST: Check if user is authenticated - redirect to signup if not
@@ -206,12 +202,39 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     console.warn('⚠️ Could not check Stripe subscriptions (proceeding with checkout):', error);
   }
 
-  // For paid plans, use Stripe Checkout
-  const checkoutMode = price.recurring_interval ? 'subscription' : 'payment';
-  console.log(`🔍 DEBUG: Checkout mode determined: ${checkoutMode} (recurring_interval: ${price.recurring_interval})`);
-  console.log(`🔍 DEBUG: About to create Stripe checkout with mode: ${checkoutMode}`);
+  // CRITICAL FIX: Determine checkout mode more robustly
+  // Check both recurring_interval and interval fields for maximum compatibility
+  const isSubscription = !!(price.recurring_interval || price.interval);
+  const checkoutMode = isSubscription ? 'subscription' : 'payment';
+  
+  console.log('🔍 CHECKOUT MODE DETERMINATION:', {
+    recurring_interval: price.recurring_interval,
+    interval: price.interval,
+    type: price.type,
+    isSubscription,
+    checkoutMode,
+    decision_logic: 'Using recurring_interval OR interval presence to determine mode'
+  });
+  
+  // Additional validation for subscription mode
+  if (checkoutMode === 'subscription' && !(price.recurring_interval || price.interval)) {
+    console.error('❌ ERROR: Subscription mode selected but no interval found:', {
+      recurring_interval: price.recurring_interval,
+      interval: price.interval,
+      type: price.type
+    });
+    throw new Error('Invalid price configuration: subscription mode requires recurring_interval or interval');
+  }
 
   // 6. Create a checkout session in Stripe
+  console.log('🚀 Creating Stripe checkout session with:', {
+    mode: checkoutMode,
+    price_id: price.stripe_price_id,
+    customer,
+    success_url: `${getURL()}/account`,
+    cancel_url: `${getURL()}/pricing`
+  });
+  
   const checkoutSession = await stripeAdmin.checkout.sessions.create({
     payment_method_types: ['card'],
     billing_address_collection: 'required',
@@ -229,6 +252,13 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     allow_promotion_codes: true,
     success_url: `${getURL()}/account`,
     cancel_url: `${getURL()}/pricing`,
+  });
+  
+  console.log('✅ Stripe checkout session created successfully:', {
+    session_id: checkoutSession.id,
+    url: checkoutSession.url,
+    mode: checkoutSession.mode,
+    customer: checkoutSession.customer
   });
 
   if (!checkoutSession || !checkoutSession.url) {
