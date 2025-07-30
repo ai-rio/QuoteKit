@@ -203,6 +203,14 @@ async function processWebhookEvent(event: Stripe.Event): Promise<void> {
       await handleCheckoutSessionCompleted(event)
       break
 
+    case 'setup_intent.succeeded':
+      await handleSetupIntentSucceeded(event)
+      break
+
+    case 'payment_method.attached':
+      await handlePaymentMethodAttached(event)
+      break
+
     case 'invoice.payment_succeeded':
       await handlePaymentSucceeded(event)
       break
@@ -216,6 +224,18 @@ async function processWebhookEvent(event: Stripe.Event): Promise<void> {
     case 'customer.deleted':
       // Handle customer events if needed
       console.log(`Customer event processed: ${event.type}`)
+      break
+
+    case 'setup_intent.succeeded':
+      await handleSetupIntentSucceeded(event)
+      break
+
+    case 'payment_method.attached':
+      await handlePaymentMethodAttached(event)
+      break
+
+    case 'payment_method.detached':
+      await handlePaymentMethodDetached(event)
       break
 
     default:
@@ -416,7 +436,56 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event): Promise<void
     })
     
     console.log(`✅ [SUCCESS] Subscription upserted successfully for user ${userId}`)
+
+    // Also save payment method from the checkout session if available
+    try {
+      if (fullSession.mode === 'subscription' && fullSession.payment_intent) {
+        console.log(`💳 [DEBUG] Attempting to save payment method from checkout session`)
+        
+        // Get Stripe configuration for API calls
+        const { data: configData } = await supabaseAdminClient
+          .from('admin_settings')
+          .select('value')
+          .eq('key', 'stripe_config')
+          .single()
+
+        const stripeConfig = configData?.value as any
+        const stripe = createStripeAdminClient(stripeConfig)
+
+        // Get payment intent to find payment method
+        const paymentIntentId = typeof fullSession.payment_intent === 'string' 
+          ? fullSession.payment_intent 
+          : fullSession.payment_intent.id
+
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+        
+        if (paymentIntent.payment_method) {
+          const paymentMethodId = typeof paymentIntent.payment_method === 'string' 
+            ? paymentIntent.payment_method 
+            : paymentIntent.payment_method.id
+
+          // Retrieve payment method details
+          const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId)
+          
+          await savePaymentMethodToDatabase(paymentMethod, userId, customerId)
+          console.log(`💳 [SUCCESS] Payment method ${paymentMethodId} saved from checkout session`)
+        }
+      }
+    } catch (paymentMethodError) {
+      console.error('⚠️ [WARNING] Failed to save payment method from checkout session (subscription still created):', paymentMethodError)
+      // Don't throw error - subscription creation is more important
+    }
     
+    // Also save payment method if it exists
+    if (fullSession.payment_method_types?.includes('card')) {
+      try {
+        await saveCheckoutPaymentMethod(fullSession, userId)
+      } catch (pmError) {
+        console.error('Failed to save payment method from checkout, but continuing:', pmError)
+        // Don't fail the entire checkout process if payment method saving fails
+      }
+    }
+
     console.log(`🎉 [SUCCESS] Successfully processed checkout session ${session.id} and created subscription for user ${userId}`)
     
   } catch (error) {
@@ -550,5 +619,335 @@ async function handlePriceDeleted(event: Stripe.Event): Promise<void> {
   } catch (error) {
     console.error('Failed to mark price as deleted:', error)
     throw error // Re-throw to trigger retry logic
+  }
+}
+
+// Handle setup intent succeeded for payment method creation
+async function handleSetupIntentSucceeded(event: Stripe.Event): Promise<void> {
+  const setupIntent = event.data.object as Stripe.SetupIntent
+  
+  try {
+    console.log(`💳 [WEBHOOK] Setup intent succeeded: ${setupIntent.id} for customer ${setupIntent.customer}`)
+    
+    if (!setupIntent.payment_method || !setupIntent.customer) {
+      console.log(`⚠️ [WARNING] Setup intent ${setupIntent.id} missing payment method or customer`)
+      return
+    }
+    
+    // Get payment method details from Stripe
+    const paymentMethod = await stripeAdmin.paymentMethods.retrieve(
+      typeof setupIntent.payment_method === 'string' 
+        ? setupIntent.payment_method 
+        : setupIntent.payment_method.id
+    )
+    
+    await savePaymentMethodToDatabase(paymentMethod, setupIntent.customer as string)
+    
+    console.log(`✅ [SUCCESS] Payment method saved from setup intent: ${paymentMethod.id}`)
+    
+  } catch (error) {
+    console.error('Failed to handle setup intent succeeded:', error)
+    throw error
+  }
+}
+
+// Handle payment method attached event
+async function handlePaymentMethodAttached(event: Stripe.Event): Promise<void> {
+  const paymentMethod = event.data.object as Stripe.PaymentMethod
+  
+  try {
+    console.log(`💳 [WEBHOOK] Payment method attached: ${paymentMethod.id} to customer ${paymentMethod.customer}`)
+    
+    if (!paymentMethod.customer) {
+      console.log(`⚠️ [WARNING] Payment method ${paymentMethod.id} has no customer`)
+      return
+    }
+    
+    await savePaymentMethodToDatabase(paymentMethod, paymentMethod.customer as string)
+    
+    console.log(`✅ [SUCCESS] Payment method saved: ${paymentMethod.id}`)
+    
+  } catch (error) {
+    console.error('Failed to handle payment method attached:', error)
+    throw error
+  }
+}
+
+// Save payment method from checkout session
+async function saveCheckoutPaymentMethod(session: Stripe.Checkout.Session, userId: string): Promise<void> {
+  try {
+    // Get payment method from session
+    if (!session.payment_method && !session.setup_intent) {
+      console.log(`⚠️ No payment method or setup intent in checkout session ${session.id}`)
+      return
+    }
+    
+    let paymentMethodId: string | null = null
+    
+    if (session.payment_method) {
+      paymentMethodId = typeof session.payment_method === 'string' 
+        ? session.payment_method 
+        : session.payment_method.id
+    } else if (session.setup_intent) {
+      // Get payment method from setup intent
+      const setupIntent = await stripeAdmin.setupIntents.retrieve(
+        typeof session.setup_intent === 'string' 
+          ? session.setup_intent 
+          : session.setup_intent.id
+      )
+      
+      if (setupIntent.payment_method) {
+        paymentMethodId = typeof setupIntent.payment_method === 'string'
+          ? setupIntent.payment_method
+          : setupIntent.payment_method.id
+      }
+    }
+    
+    if (!paymentMethodId) {
+      console.log(`⚠️ No payment method found in checkout session ${session.id}`)
+      return
+    }
+    
+    // Get payment method details
+    const paymentMethod = await stripeAdmin.paymentMethods.retrieve(paymentMethodId)
+    
+    await savePaymentMethodToDatabase(paymentMethod, session.customer as string)
+    
+    console.log(`✅ Payment method saved from checkout: ${paymentMethod.id}`)
+    
+  } catch (error) {
+    console.error('Failed to save payment method from checkout:', error)
+    throw error
+  }
+}
+
+// Common function to save payment method to database
+async function savePaymentMethodToDatabase(paymentMethod: Stripe.PaymentMethod, stripeCustomerId: string): Promise<void> {
+  try {
+    // Find user by customer ID
+    const { data: customer, error: customerError } = await supabaseAdminClient
+      .from('stripe_customers')
+      .select('id')
+      .eq('stripe_customer_id', stripeCustomerId)
+      .single()
+    
+    if (customerError || !customer) {
+      console.error(`❌ Customer not found for stripe_customer_id: ${stripeCustomerId}`)
+      return
+    }
+    
+    // Prepare card data
+    const cardData = paymentMethod.card ? {
+      brand: paymentMethod.card.brand,
+      last4: paymentMethod.card.last4,
+      exp_month: paymentMethod.card.exp_month,
+      exp_year: paymentMethod.card.exp_year,
+      country: paymentMethod.card.country || '',
+      funding: paymentMethod.card.funding || 'unknown'
+    } : {}
+    
+    // Check if this is the user's first payment method (make it default)
+    const { data: existingPaymentMethods } = await supabaseAdminClient
+      .from('payment_methods')
+      .select('id')
+      .eq('user_id', customer.id)
+    
+    const isFirstPaymentMethod = !existingPaymentMethods || existingPaymentMethods.length === 0
+    
+    // Save to database
+    const { error: insertError } = await supabaseAdminClient
+      .from('payment_methods')
+      .upsert({
+        id: paymentMethod.id,
+        user_id: customer.id,
+        stripe_customer_id: stripeCustomerId,
+        type: paymentMethod.type,
+        card_data: cardData,
+        is_default: isFirstPaymentMethod, // First payment method becomes default
+        metadata: paymentMethod.metadata || {},
+        created_at: new Date(paymentMethod.created * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      })
+    
+    if (insertError) {
+      console.error('Failed to save payment method to database:', insertError)
+      throw new Error(`Database error: ${insertError.message}`)
+    }
+    
+    console.log(`💾 Payment method saved to database: ${paymentMethod.id} for user ${customer.id} (default: ${isFirstPaymentMethod})`)
+    
+  } catch (error) {
+    console.error('Failed to save payment method to database:', error)
+    throw error
+  }
+}
+
+// Helper function to get user ID from customer ID
+async function getUserIdFromCustomerId(customerId: string): Promise<string | null> {
+  try {
+    const { data: customer } = await supabaseAdminClient
+      .from('stripe_customers')
+      .select('user_id')
+      .eq('stripe_customer_id', customerId)
+      .single()
+    
+    return customer?.user_id || null
+  } catch (error) {
+    console.error('Failed to get user ID from customer ID:', error)
+    return null
+  }
+}
+
+// Handle setup intent succeeded - save payment method when user adds a new one
+async function handleSetupIntentSucceeded(event: Stripe.Event): Promise<void> {
+  const setupIntent = event.data.object as Stripe.SetupIntent
+
+  try {
+    console.log(`Setup intent succeeded: ${setupIntent.id} for customer ${setupIntent.customer}`)
+    
+    if (!setupIntent.payment_method || !setupIntent.customer) {
+      console.log('Setup intent missing payment method or customer, skipping')
+      return
+    }
+
+    const customerId = typeof setupIntent.customer === 'string' ? setupIntent.customer : setupIntent.customer.id
+    const paymentMethodId = typeof setupIntent.payment_method === 'string' ? setupIntent.payment_method : setupIntent.payment_method.id
+
+    // Get user ID from customer ID
+    const userId = await getUserIdFromCustomerId(customerId)
+    if (!userId) {
+      console.error(`Could not find user for customer ${customerId}`)
+      return
+    }
+
+    // Get Stripe configuration for API calls
+    const { data: configData } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single()
+
+    const stripeConfig = configData?.value as any
+    const stripe = createStripeAdminClient(stripeConfig)
+
+    // Retrieve payment method details from Stripe
+    const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId)
+
+    await savePaymentMethodToDatabase(paymentMethod, userId, customerId)
+    
+    console.log(`Successfully saved payment method ${paymentMethodId} for user ${userId}`)
+  } catch (error) {
+    console.error('Failed to handle setup intent succeeded:', error)
+    throw error
+  }
+}
+
+// Handle payment method attached - when payment method is attached to customer
+async function handlePaymentMethodAttached(event: Stripe.Event): Promise<void> {
+  const paymentMethod = event.data.object as Stripe.PaymentMethod
+
+  try {
+    console.log(`Payment method attached: ${paymentMethod.id} to customer ${paymentMethod.customer}`)
+    
+    if (!paymentMethod.customer) {
+      console.log('Payment method not attached to customer, skipping')
+      return
+    }
+
+    const customerId = typeof paymentMethod.customer === 'string' ? paymentMethod.customer : paymentMethod.customer.id
+    
+    // Get user ID from customer ID
+    const userId = await getUserIdFromCustomerId(customerId)
+    if (!userId) {
+      console.error(`Could not find user for customer ${customerId}`)
+      return
+    }
+
+    await savePaymentMethodToDatabase(paymentMethod, userId, customerId)
+    
+    console.log(`Successfully saved payment method ${paymentMethod.id} for user ${userId}`)
+  } catch (error) {
+    console.error('Failed to handle payment method attached:', error)
+    throw error
+  }
+}
+
+// Handle payment method detached - when payment method is removed from customer
+async function handlePaymentMethodDetached(event: Stripe.Event): Promise<void> {
+  const paymentMethod = event.data.object as Stripe.PaymentMethod
+
+  try {
+    console.log(`Payment method detached: ${paymentMethod.id}`)
+    
+    // Remove payment method from database
+    const { error } = await supabaseAdminClient
+      .from('payment_methods')
+      .delete()
+      .eq('id', paymentMethod.id)
+
+    if (error) {
+      console.error('Failed to delete payment method from database:', error)
+      throw new Error(`Failed to delete payment method: ${error.message}`)
+    }
+    
+    console.log(`Successfully removed payment method ${paymentMethod.id} from database`)
+  } catch (error) {
+    console.error('Failed to handle payment method detached:', error)
+    throw error
+  }
+}
+
+// Helper function to save payment method to database
+async function savePaymentMethodToDatabase(paymentMethod: Stripe.PaymentMethod, userId: string, customerId: string): Promise<void> {
+  try {
+    // Check if this is the first payment method for this customer (make it default)
+    const { data: existingMethods, error: countError } = await supabaseAdminClient
+      .from('payment_methods')
+      .select('id')
+      .eq('stripe_customer_id', customerId)
+
+    if (countError) {
+      console.error('Failed to count existing payment methods:', countError)
+    }
+
+    const isFirstPaymentMethod = !existingMethods || existingMethods.length === 0
+
+    // Prepare card data
+    const cardData = paymentMethod.card ? {
+      brand: paymentMethod.card.brand,
+      last4: paymentMethod.card.last4,
+      exp_month: paymentMethod.card.exp_month,
+      exp_year: paymentMethod.card.exp_year,
+      country: paymentMethod.card.country || '',
+      funding: paymentMethod.card.funding || 'unknown'
+    } : {}
+
+    // Save payment method to database
+    const { error } = await supabaseAdminClient
+      .from('payment_methods')
+      .upsert({
+        id: paymentMethod.id,
+        user_id: userId,
+        stripe_customer_id: customerId,
+        type: paymentMethod.type,
+        card_data: cardData,
+        is_default: isFirstPaymentMethod, // First payment method becomes default
+        metadata: paymentMethod.metadata || {},
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      })
+
+    if (error) {
+      console.error('Failed to save payment method to database:', error)
+      throw new Error(`Failed to save payment method: ${error.message}`)
+    }
+
+    console.log(`Payment method ${paymentMethod.id} saved to database${isFirstPaymentMethod ? ' as default' : ''}`)
+  } catch (error) {
+    console.error('Failed to save payment method to database:', error)
+    throw error
   }
 }

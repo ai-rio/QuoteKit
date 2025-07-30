@@ -79,6 +79,19 @@ export async function DELETE(
     // Detach payment method from customer
     await stripe.paymentMethods.detach(id);
 
+    // Also remove from database
+    try {
+      await supabase
+        .from('payment_methods')
+        .delete()
+        .eq('id', id);
+
+      console.log(`✅ Removed payment method ${id} from database`);
+    } catch (dbError) {
+      console.error('Failed to remove payment method from database:', dbError);
+      // Don't fail the request - Stripe deletion succeeded
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Payment method deleted successfully'
@@ -171,6 +184,26 @@ export async function PATCH(
       await stripe.subscriptions.update(subscription.id, {
         default_payment_method: id,
       });
+    }
+
+    // Also update the database to reflect the new default payment method
+    try {
+      // First, unset all other payment methods as default for this customer
+      await supabase
+        .from('payment_methods')
+        .update({ is_default: false, updated_at: new Date().toISOString() })
+        .eq('stripe_customer_id', customer.stripe_customer_id);
+
+      // Then set this payment method as default
+      await supabase
+        .from('payment_methods')
+        .update({ is_default: true, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      console.log(`✅ Updated database: payment method ${id} set as default`);
+    } catch (dbError) {
+      console.error('Failed to update payment method default status in database:', dbError);
+      // Don't fail the request - Stripe update succeeded
     }
 
     return NextResponse.json({

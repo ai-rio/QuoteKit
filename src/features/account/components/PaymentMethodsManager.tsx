@@ -25,6 +25,7 @@ interface PaymentMethod {
   };
   created: number;
   customer: string;
+  is_default?: boolean;
 }
 
 interface PaymentMethodsManagerProps {
@@ -211,14 +212,14 @@ function PaymentMethodsContent() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      {/* For now, we'll assume the first method is default - this should be enhanced */}
-                      {paymentMethods.indexOf(method) === 0 && (
+                      {/* Show default badge based on is_default property */}
+                      {method.is_default && (
                         <Badge className="bg-forest-green text-paper-white">Default</Badge>
                       )}
                       
                       {/* Mobile-friendly button layout */}
                       <div className="flex space-x-1">
-                        {paymentMethods.indexOf(method) !== 0 && (
+                        {!method.is_default && (
                           <Button
                             size="sm"
                             variant="outline"

@@ -114,10 +114,19 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
       
       setSyncSuccess(result.message);
       
-      // Refresh the page after successful sync to show updated subscription
+      // Use Next.js router.refresh() instead of hard reload for better UX
+      const { useRouter } = await import('next/navigation');
+      const router = useRouter();
+      
+      // Immediate refresh using Next.js revalidation
+      router.refresh();
+      
+      // Also trigger page revalidation after a short delay as fallback
       setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      }, 3000);
       
     } catch (err) {
       console.error('Sync error:', err);

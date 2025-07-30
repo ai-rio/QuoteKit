@@ -21,7 +21,7 @@ export async function PricingSection({ isPricingPage }: { isPricingPage?: boolea
         </p>
         <div className='grid w-full gap-4 grid-cols-2 md:grid-cols-4 lg:gap-8'>
           {products.map((product) => {
-            return <PricingCard key={product.id} product={product} createCheckoutAction={createCheckoutAction} />;
+            return <PricingCard key={product.stripe_product_id} product={product} createCheckoutAction={createCheckoutAction} />;
           })}
         </div>
       </div>
