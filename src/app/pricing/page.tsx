@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import FreemiumPricing from '@/components/pricing/FreemiumPricing';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { createFreeSubscription } from '@/features/pricing/actions/create-free-subscription';
 
 export const metadata: Metadata = {
   title: 'Pricing - QuoteKit',
@@ -13,30 +14,90 @@ export const metadata: Metadata = {
 async function handlePlanSelection(stripePriceId: string, planName: string) {
   'use server';
   
+  console.log('🎩 PRICING PAGE: Plan selection initiated:', {
+    plan_name: planName,
+    stripe_price_id: stripePriceId,
+    is_free: stripePriceId === 'price_free' || planName === 'Free',
+    timestamp: new Date().toISOString()
+  });
+  
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
+    console.log('🔐 User not authenticated, redirecting to signup');
     // Redirect to signup with pricing context
     redirect(`/auth/sign-up?plan=${encodeURIComponent(planName)}&price_id=${stripePriceId}`);
   }
 
-  if (stripePriceId === 'price_free') {
-    // Create free subscription and redirect to dashboard
+  // Import getSubscription to check for existing subscription
+  const { getSubscription } = await import('@/features/account/controllers/get-subscription');
+  const existingSubscription = await getSubscription();
+
+  if (stripePriceId === 'price_free' || planName === 'Free') {
+    // Check if user already has an active subscription
+    if (existingSubscription) {
+      console.log('User already has active subscription, redirecting to dashboard:', {
+        userId: user.id,
+        subscriptionType: existingSubscription.stripe_price_id ? 'paid' : 'free',
+        subscriptionStatus: existingSubscription.status
+      });
+      
+      // If they have a free subscription, just redirect to dashboard
+      // If they have a paid subscription, still redirect (they're already upgraded)
+      redirect('/dashboard');
+    }
+
+    // Only create free subscription if user doesn't have one
+    const result = await createFreeSubscription(user.id);
+    
+    if (!result.success) {
+      console.error('Failed to create free subscription:', result.error);
+      // Still redirect to dashboard, but log the error
+    }
+    
     redirect('/dashboard?welcome=free');
   } else {
-    // Redirect to checkout for paid plans
+    // For paid plans, redirect to checkout regardless of existing subscription
+    // Stripe checkout will handle upgrading/changing plans
+    console.log('💳 Redirecting to checkout for paid plan:', {
+      plan_name: planName,
+      stripe_price_id: stripePriceId,
+      redirect_url: `/checkout?price_id=${stripePriceId}`
+    });
     redirect(`/checkout?price_id=${stripePriceId}`);
   }
 }
 
 export default async function PricingPage() {
+  // Get actual prices from database for better UX
+  const supabase = await createSupabaseServerClient();
+  
+  // Get available prices from database
+  const { data: prices } = await supabase
+    .from('stripe_prices')
+    .select(`
+      stripe_price_id,
+      unit_amount,
+      currency,
+      recurring_interval,
+      active,
+      stripe_products (
+        stripe_product_id,
+        name,
+        description,
+        active
+      )
+    `)
+    .eq('active', true)
+    .order('unit_amount', { ascending: true });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto px-4">
-          <FreemiumPricing onSelectPlan={handlePlanSelection} />
+          <FreemiumPricing onSelectPlan={handlePlanSelection} prices={prices || []} />
         </div>
       </div>
 
@@ -120,14 +181,16 @@ export default async function PricingPage() {
                 Start Free
               </button>
             </form>
-            <form action={handlePlanSelection.bind(null, 'price_monthly_1200', 'Pro')}>
-              <button 
-                type="submit"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Try Pro Free
-              </button>
-            </form>
+            {prices && prices.length > 0 && (
+              <form action={handlePlanSelection.bind(null, prices[0].stripe_price_id, 'Pro')}>
+                <button 
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Try Pro Free
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

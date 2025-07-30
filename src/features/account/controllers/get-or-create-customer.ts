@@ -7,7 +7,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     .from('admin_settings')
     .select('value')
     .eq('key', 'stripe_config')
-    .single();
+    .maybeSingle();
 
   let stripeConfig: any = null;
 
@@ -44,8 +44,8 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
   const { data, error } = await supabaseAdminClient
     .from('stripe_customers')
     .select('stripe_customer_id')
-    .eq('id', userId)
-    .single();
+    .eq('user_id', userId)
+    .maybeSingle();
 
   // If customer exists and has a valid Stripe customer ID, return it
   if (!error && data?.stripe_customer_id) {
@@ -79,7 +79,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     if (error) {
       const { error: insertError } = await supabaseAdminClient
         .from('stripe_customers')
-        .insert([{ id: userId, stripe_customer_id: customer.id }]);
+        .insert([{ user_id: userId, stripe_customer_id: customer.id }]);
 
       if (insertError) {
         // If there's a unique constraint violation, another request might have created the record
@@ -88,8 +88,8 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
           const { data: existingData, error: fetchError } = await supabaseAdminClient
             .from('stripe_customers')
             .select('stripe_customer_id')
-            .eq('id', userId)
-            .single();
+            .eq('user_id', userId)
+            .maybeSingle();
 
           if (!fetchError && existingData?.stripe_customer_id) {
             console.log(`Customer record was created concurrently, using existing: ${existingData.stripe_customer_id}`);
@@ -114,7 +114,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
       const { error: updateError } = await supabaseAdminClient
         .from('stripe_customers')
         .update({ stripe_customer_id: customer.id })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (updateError) {
         console.error('Failed to update customer record with Stripe ID:', updateError);
@@ -153,7 +153,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
   const { data, error } = await supabaseClient
     .from('stripe_customers')
     .select('stripe_customer_id')
-    .eq('id', userId)
+    .eq('user_id', userId)
     .maybeSingle();
 
   if (error) {
@@ -186,7 +186,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
     .from('admin_settings')
     .select('value')
     .eq('key', 'stripe_config')
-    .single();
+    .maybeSingle();
 
   let stripeConfig: any = null;
 
@@ -240,7 +240,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
       const { error: updateError } = await supabaseAdminClient
         .from('stripe_customers')
         .update({ stripe_customer_id: customer.id })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (updateError) {
         console.error('getOrCreateCustomerForUser: Failed to update existing customer record', {
@@ -259,7 +259,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
       // Create new customer record
       const { error: insertError } = await supabaseAdminClient
         .from('stripe_customers')
-        .insert([{ id: userId, stripe_customer_id: customer.id }]);
+        .insert([{ user_id: userId, stripe_customer_id: customer.id }]);
 
       if (insertError) {
         console.error('getOrCreateCustomerForUser: Failed to create customer record', {

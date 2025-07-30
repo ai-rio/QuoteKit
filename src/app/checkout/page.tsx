@@ -38,6 +38,7 @@ export default async function CheckoutPage({
   }
 
   // Transform the price data to match the expected format
+  // CRITICAL: Ensure both recurring_interval and interval are properly set
   const price = {
     stripe_price_id: priceData.stripe_price_id,
     stripe_product_id: priceData.stripe_product_id,
@@ -49,10 +50,23 @@ export default async function CheckoutPage({
     metadata: priceData.metadata || {},
     created_at: priceData.created_at,
     updated_at: priceData.updated_at,
+    // CRITICAL FIX: Set interval field for compatibility
     interval: priceData.recurring_interval,
+    // CRITICAL FIX: Determine type based on recurring_interval presence
     type: priceData.recurring_interval ? 'recurring' as const : 'one_time' as const,
     products: priceData.stripe_products
   };
+
+  // DEBUG: Log the transformed price object for troubleshooting
+  console.log('🔍 CHECKOUT PAGE: Transformed price object:', {
+    stripe_price_id: price.stripe_price_id,
+    unit_amount: price.unit_amount,
+    recurring_interval: price.recurring_interval,
+    interval: price.interval,
+    type: price.type,
+    has_recurring_interval: !!price.recurring_interval,
+    is_subscription: price.type === 'recurring'
+  });
 
   // Immediately trigger the checkout action
   await createCheckoutAction({ price });
