@@ -28,7 +28,7 @@ export async function getSubscription() {
       .eq('user_id', user.id)
       .in('status', ['trialing', 'active', 'past_due'])
       .order('stripe_price_id', { ascending: false, nullsFirst: false }) // Paid subscriptions first (non-null stripe_price_id)
-      .order('created_at', { ascending: false }); // Then by creation date as tiebreaker
+      .order('created', { ascending: false }); // Then by creation date as tiebreaker
 
     if (subError) {
       console.error('Subscription query error:', subError);
@@ -302,7 +302,7 @@ export async function cleanupDuplicateSubscriptions(userId: string) {
     // If user has multiple paid subscriptions, keep the most recent one
     if (paidSubscriptions.length > 1) {
       const sortedPaid = paidSubscriptions.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created).getTime() - new Date(a.created).getTime()
       );
       
       const subscriptionsToDeactivate = sortedPaid.slice(1); // Keep the first (most recent)
