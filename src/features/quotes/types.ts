@@ -1,11 +1,34 @@
 // src/features/quotes/types.ts
-import { Database } from '@/types/supabase';
-
 // Quote status enum matching Story 2.6 requirements
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted';
 
-// Database quote type from Supabase
-export type DatabaseQuote = Database['public']['Tables']['quotes']['Row'];
+// Database quote type - define locally since quotes table is not in clean subscription schema
+export interface DatabaseQuote {
+  id: string;
+  user_id: string;
+  quote_number: string;
+  status: QuoteStatus;
+  client_id: string;
+  client_name: string;
+  client_contact: string;
+  title: string;
+  description?: string;
+  quote_data: any; // JSON data containing line items
+  subtotal: number;
+  tax_amount: number;
+  tax_rate: number;
+  markup_rate: number;
+  total: number;
+  valid_until?: string;
+  sent_at?: string;
+  expires_at?: string;
+  follow_up_date?: string;
+  notes?: string;
+  is_template?: boolean;
+  template_name?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface QuoteLineItem {
   id: string;
