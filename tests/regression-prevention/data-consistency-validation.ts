@@ -42,7 +42,7 @@ export class DataConsistencyValidator {
     );
 
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2024-06-20'
+      apiVersion: '2023-10-16'
     });
   }
 
@@ -321,9 +321,9 @@ export class DataConsistencyValidator {
       if (!validStatuses.includes(subscription.status || '')) {
         issues.push({
           type: 'invalid_subscription_status',
-          description: `Subscription ${subscription.stripe_subscription_id || subscription.internal_id} has invalid status: ${subscription.status}`,
+          description: `Subscription ${subscription.stripe_subscription_id || subscription.id} has invalid status: ${subscription.status}`,
           severity: 'critical',
-          affectedRecords: [subscription.stripe_subscription_id || subscription.internal_id || ''],
+          affectedRecords: [subscription.stripe_subscription_id || subscription.id || ''],
           suggestedFix: 'Update to valid status or investigate data corruption',
           autoFixable: false
         });
@@ -336,7 +336,7 @@ export class DataConsistencyValidator {
           .select('*')
           .eq('user_id', subscription.user_id)
           .eq('status', 'active')
-          .neq('internal_id', subscription.internal_id);
+          .neq('id', subscription.id);
 
         if (otherActiveSubscriptions && otherActiveSubscriptions.length > 0) {
           // Determine which subscription should be active (prefer paid over free)
@@ -347,7 +347,7 @@ export class DataConsistencyValidator {
               type: 'multiple_active_paid_subscriptions',
               description: `User ${subscription.user_id} has multiple active paid subscriptions`,
               severity: 'critical',
-              affectedRecords: paidSubscriptions.map(sub => sub.stripe_subscription_id || sub.internal_id || ''),
+              affectedRecords: paidSubscriptions.map(sub => sub.stripe_subscription_id || sub.id || ''),
               suggestedFix: 'Cancel all but the most recent paid subscription',
               autoFixable: true
             });
@@ -362,9 +362,9 @@ export class DataConsistencyValidator {
         if (periodEnd > new Date()) {
           issues.push({
             type: 'inconsistent_cancellation_state',
-            description: `Subscription ${subscription.stripe_subscription_id || subscription.internal_id} is canceled but period hasn't ended and cancel_at_period_end is true`,
+            description: `Subscription ${subscription.stripe_subscription_id || subscription.id} is canceled but period hasn't ended and cancel_at_period_end is true`,
             severity: 'warning',
-            affectedRecords: [subscription.stripe_subscription_id || subscription.internal_id || ''],
+            affectedRecords: [subscription.stripe_subscription_id || subscription.id || ''],
             suggestedFix: 'Update cancellation state to be consistent',
             autoFixable: true
           });
@@ -401,9 +401,9 @@ export class DataConsistencyValidator {
     for (const orphan of orphanedSubs || []) {
       issues.push({
         type: 'orphaned_subscription',
-        description: `Subscription ${orphan.stripe_subscription_id || orphan.internal_id} belongs to non-existent user ${orphan.user_id}`,
+        description: `Subscription ${orphan.stripe_subscription_id || orphan.id} belongs to non-existent user ${orphan.user_id}`,
         severity: 'error',
-        affectedRecords: [orphan.stripe_subscription_id || orphan.internal_id || ''],
+        affectedRecords: [orphan.stripe_subscription_id || orphan.id || ''],
         suggestedFix: 'Archive or delete orphaned subscription',
         autoFixable: true
       });
@@ -491,7 +491,7 @@ export class DataConsistencyValidator {
             type: 'customer_subscription_mismatch',
             description: `Subscription ${subscription.stripe_subscription_id} customer mismatch: Subscription customer(${subscription.stripe_customer_id}) vs Customer record(${subscription.customers.stripe_customer_id})`,
             severity: 'critical',
-            affectedRecords: [subscription.stripe_subscription_id || subscription.internal_id || ''],
+            affectedRecords: [subscription.stripe_subscription_id || subscription.id || ''],
             suggestedFix: 'Fix customer-subscription relationship consistency',
             autoFixable: true
           });

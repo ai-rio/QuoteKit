@@ -16,11 +16,11 @@ import { PlanChangeDialog } from './PlanChangeDialog';
 
 interface EnhancedCurrentPlanCardProps {
   subscription: SubscriptionWithProduct | null;
+  freePlanInfo?: PriceWithProduct | null; // Proper type from getFreePlanInfo
   availablePlans: ProductWithPrices[];
-  freePlanInfo: PriceWithProduct | null;
 }
 
-export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlanInfo }: EnhancedCurrentPlanCardProps) {
+export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availablePlans }: EnhancedCurrentPlanCardProps) {
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +34,7 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
       trialing: 'bg-equipment-yellow text-charcoal',
       past_due: 'bg-error-red text-paper-white',
       canceled: 'bg-stone-gray text-charcoal',
+      free: 'bg-equipment-yellow text-charcoal', // Add free status for fallback
     };
 
     return (
@@ -47,10 +48,20 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Show different loading messages based on upgrade type
+      const loadingMessage = isUpgrade ? 'Upgrading your plan...' : 'Changing your plan...';
+      
       await changePlan(priceId, isUpgrade);
       setShowPlanDialog(false);
+      
+      // If we reach here, it means the plan change was successful (no redirect)
+      // Show success message for immediate plan changes (paid to paid)
+      setSyncSuccess('Plan changed successfully!');
+      setTimeout(() => setSyncSuccess(null), 3000);
+      
     } catch (err) {
-      // Don't log NEXT_REDIRECT as an error - it's expected behavior for free plan upgrades
+      // Don't log NEXT_REDIRECT as an error - it's expected behavior for free plan upgrades  
       if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
         // Let Next.js handle the redirect, don't show error or reset loading state
         // The redirect will navigate away from this page anyway
@@ -146,6 +157,23 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
     return `$${(amount / 100).toFixed(0)}`;
   };
 
+  // Determine if we're showing subscription data or free plan fallback
+  const hasSubscription = !!subscription;
+  const hasFallbackPlan = !hasSubscription && !!freePlanInfo;
+  
+  // Extract plan data for display (either from subscription or fallback)
+  const planData = hasSubscription ? {
+    name: subscription.prices?.products?.name || (subscription.prices ? 'Premium Plan' : 'Unknown Plan'),
+    price: subscription.prices?.unit_amount || 0,
+    interval: subscription.prices?.interval || 'month',
+    status: subscription.status || 'unknown'
+  } : hasFallbackPlan ? {
+    name: freePlanInfo.products?.name || 'Free Plan',
+    price: freePlanInfo.unit_amount || 0,
+    interval: freePlanInfo.interval || 'month',
+    status: 'free'
+  } : null;
+
   return (
     <>
       <Card className="bg-paper-white border-stone-gray">
@@ -206,35 +234,62 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
             </Card>
           )}
 
-          {subscription ? (
+          {planData ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-charcoal">
-                    {subscription.prices?.products?.name || (subscription.prices ? 'Premium Plan' : 'Unknown Plan')}
+                    {planData.name}
                   </h3>
                   <p className="text-sm text-charcoal/70">
-                    {formatPrice(subscription.prices?.unit_amount || 0)}/
-                    {subscription.prices?.interval || 'month'}
+                    {formatPrice(planData.price)}/{planData.interval}
                   </p>
                 </div>
-                {getStatusBadge(subscription.status || 'unknown')}
+                {getStatusBadge(planData.status)}
               </div>
+
+              {/* Free Plan Information Banner */}
+              {hasFallbackPlan && (
+                <Card className="bg-blue-50 border-blue-200 mb-4">
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium text-blue-800">Using Free Plan</p>
+                        <p className="text-sm text-blue-600 mt-1">
+                          You&apos;re currently on the free plan. Upgrade to unlock premium features.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Plan Details Debug Info (only in development) */}
               {process.env.NODE_ENV === 'development' && (
                 <div className="p-2 bg-gray-100 text-xs text-gray-600 rounded border">
                   <p><strong>Debug Info:</strong></p>
-                  <p>Subscription ID: {subscription.id}</p>
-                  <p>Price ID: {subscription.stripe_price_id || 'None'}</p>
-                  <p>Has Price Data: {subscription.prices ? 'Yes' : 'No'}</p>
-                  <p>Has Product Data: {subscription.prices?.products ? 'Yes' : 'No'}</p>
-                  <p>Product Name: {subscription.prices?.products?.name || 'None'}</p>
+                  <p>Has Subscription: {hasSubscription ? 'Yes' : 'No'}</p>
+                  <p>Has Fallback Plan: {hasFallbackPlan ? 'Yes' : 'No'}</p>
+                  {hasSubscription ? (
+                    <>
+                      <p>Subscription ID: {subscription.id}</p>
+                      <p>Price ID: {subscription.stripe_price_id || 'None'}</p>
+                      <p>Has Price Data: {subscription.prices ? 'Yes' : 'No'}</p>
+                      <p>Has Product Data: {subscription.prices?.products ? 'Yes' : 'No'}</p>
+                      <p>Product Name: {subscription.prices?.products?.name || 'None'}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>Free Plan Data: {freePlanInfo ? 'Available' : 'Not available'}</p>
+                      <p>Free Plan Name: {freePlanInfo?.products?.name || 'None'}</p>
+                    </>
+                  )}
                 </div>
               )}
 
-              {/* Cancellation Notice */}
-              {subscription.cancel_at_period_end && (
+              {/* Cancellation Notice - only for real subscriptions */}
+              {hasSubscription && subscription.cancel_at_period_end && (
                 <Card className="bg-equipment-yellow/10 border-equipment-yellow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
@@ -259,21 +314,24 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                 </Card>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-gray">
-                <div>
-                  <p className="text-sm font-medium text-charcoal">Next billing date</p>
-                  <p className="text-sm text-charcoal/70">
-                    {formatDate(subscription.current_period_end)}
-                  </p>
+              {/* Billing details - only for real subscriptions */}
+              {hasSubscription && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-gray">
+                  <div>
+                    <p className="text-sm font-medium text-charcoal">Next billing date</p>
+                    <p className="text-sm text-charcoal/70">
+                      {formatDate(subscription.current_period_end)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-charcoal">Billing period</p>
+                    <p className="text-sm text-charcoal/70">
+                      {formatDate(subscription.current_period_start)} - {' '}
+                      {formatDate(subscription.current_period_end)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-charcoal">Billing period</p>
-                  <p className="text-sm text-charcoal/70">
-                    {formatDate(subscription.current_period_start)} - {' '}
-                    {formatDate(subscription.current_period_end)}
-                  </p>
-                </div>
-              </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button 
@@ -282,16 +340,23 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                   disabled={isLoading}
                 >
                   <Settings className="mr-2 h-4 w-4" />
-                  {isLoading ? 'Loading...' : 'Change Plan'}
+                  {isLoading ? 'Loading...' : 
+                    (planData.price === 0 ? 'Upgrade Plan' : 'Change Plan')}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="border-stone-gray text-charcoal hover:bg-light-concrete"
-                  asChild
-                >
-                  <a href="/manage-subscription">Manage in Stripe</a>
-                </Button>
-                {!subscription.cancel_at_period_end && (
+                
+                {/* Only show Stripe management for real subscriptions */}
+                {hasSubscription && (
+                  <Button 
+                    variant="outline" 
+                    className="border-stone-gray text-charcoal hover:bg-light-concrete"
+                    asChild
+                  >
+                    <a href="/manage-subscription">Manage in Stripe</a>
+                  </Button>
+                )}
+                
+                {/* Only show cancel for real subscriptions */}
+                {hasSubscription && !subscription.cancel_at_period_end && (
                   <Button 
                     variant="outline" 
                     className="border-error-red text-error-red hover:bg-error-red hover:text-paper-white"
@@ -305,106 +370,50 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              {freePlanInfo ? (
-                // Display free plan information
-                <>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-charcoal">
-                        {freePlanInfo.products?.name || 'Free Plan'}
-                      </h3>
-                      <p className="text-sm text-charcoal/70">
-                        {formatPrice(freePlanInfo.unit_amount || 0)}
-                        {freePlanInfo.interval ? `/${freePlanInfo.interval}` : ''}
-                      </p>
-                    </div>
-                    <Badge className="bg-forest-green text-paper-white">
-                      Active
-                    </Badge>
-                  </div>
-                  
-                  <div className="p-4 bg-light-concrete rounded-lg border border-stone-gray">
-                    <div className="flex items-start space-x-3">
-                      <DollarSign className="h-5 w-5 text-forest-green mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-medium text-charcoal">Free Plan Benefits</p>
-                        <p className="text-sm text-charcoal/70 mt-1">
-                          You&apos;re currently on our free plan. Upgrade to unlock additional features and remove limitations.
-                        </p>
-                        <p className="text-xs text-charcoal/60 mt-2">
-                          Recently upgraded but still seeing free plan? Try syncing your subscription data.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                    <Button 
-                      className="bg-forest-green text-paper-white hover:bg-forest-green/90"
-                      asChild
-                    >
-                      <a href="/pricing">Upgrade Plan</a>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="border-stone-gray text-charcoal hover:bg-light-concrete"
-                      onClick={() => setShowPlanDialog(true)}
-                      disabled={isLoading}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      {isLoading ? 'Loading...' : 'View Plans'}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="border-equipment-yellow text-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal"
-                      onClick={handleSyncSubscription}
-                      disabled={isSyncing || isLoading}
-                    >
-                      <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      {isSyncing ? 'Syncing...' : 'Sync Subscription'}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                // Fallback if no free plan info is available
-                <div className="text-center py-8">
-                  <p className="text-charcoal/70 mb-4">You don&apos;t have an active subscription</p>
-                  <p className="text-xs text-charcoal/60 mb-4">Recently made a payment? Try syncing your subscription data.</p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
-                      className="bg-forest-green text-paper-white hover:bg-forest-green/90"
-                      asChild
-                    >
-                      <a href="/pricing">Start Subscription</a>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="border-equipment-yellow text-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal"
-                      onClick={handleSyncSubscription}
-                      disabled={isSyncing || isLoading}
-                    >
-                      <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      {isSyncing ? 'Syncing...' : 'Sync Subscription'}
-                    </Button>
+            <div className="text-center py-8">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-red-800">Plan Configuration Error</p>
+                    <p className="text-sm text-red-600 mt-1">
+                      Unable to load subscription or free plan information. Please try syncing or contact support.
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                  asChild
+                >
+                  <a href="/pricing">View Plans</a>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-equipment-yellow text-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal"
+                  onClick={handleSyncSubscription}
+                  disabled={isSyncing || isLoading}
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? 'Syncing...' : 'Sync Subscription'}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Plan Change Dialog */}
-      {(subscription || freePlanInfo) && (
+      {/* Plan Change Dialog - works with both subscription and free plan fallback */}
+      {planData && (
         <PlanChangeDialog
           isOpen={showPlanDialog}
           onClose={() => setShowPlanDialog(false)}
           currentPlan={{
-            id: subscription?.prices?.stripe_price_id || freePlanInfo?.stripe_price_id || '',
-            name: subscription?.prices?.products?.name || freePlanInfo?.products?.name || 'Free Plan',
-            price: (subscription?.prices?.unit_amount || freePlanInfo?.unit_amount || 0) / 100,
-            interval: subscription?.prices?.interval || freePlanInfo?.interval || 'month',
+            id: hasSubscription ? (subscription.prices?.stripe_price_id || '') : (freePlanInfo?.stripe_price_id || ''),
+            name: planData.name,
+            price: planData.price / 100,
+            interval: planData.interval,
           }}
           availablePlans={availablePlans}
           onPlanChange={handlePlanChange}
@@ -412,8 +421,8 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
         />
       )}
 
-      {/* Cancellation Dialog */}
-      {subscription && (
+      {/* Cancellation Dialog - only for real subscriptions */}
+      {hasSubscription && subscription && (
         <CancellationDialog
           isOpen={showCancelDialog}
           onClose={() => setShowCancelDialog(false)}

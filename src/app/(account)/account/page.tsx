@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getAvailablePlans } from '@/features/account/actions/subscription-actions';
 import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedCurrentPlanCard';
 import { PaymentMethodsManager } from '@/features/account/components/PaymentMethodsManager';
+import { SuccessHandler } from '@/features/account/components/SuccessHandler';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
-import { getBillingHistory, getFreePlanInfo, getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
+import { getBillingHistory, getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
 import { SubscriptionWithProduct } from '@/features/pricing/types';
 import { formatDate } from '@/utils/to-date-time';
 
@@ -51,24 +52,23 @@ export default async function AccountPage() {
     getStripePublishableKey(),
   ]);
 
-  // Get free plan information for users without paid subscriptions
+  // Bridge solution: If user has no subscription record, get free plan info as fallback
+  // This handles the edge case where authenticated users don't have subscription records yet
   let freePlanInfo = null;
   if (!subscription) {
-    // Look for free plan (unit_amount = 0) in available plans
-    for (const product of availablePlans) {
-      const freePrice = product.prices?.find((price: any) => price.unit_amount === 0 && price.active);
-      if (freePrice) {
-        freePlanInfo = {
-          ...freePrice,
-          products: product
-        };
-        break;
-      }
+    try {
+      const { getFreePlanInfo } = await import('@/features/account/controllers/get-subscription');
+      freePlanInfo = await getFreePlanInfo();
+    } catch (error) {
+      console.error('Failed to get free plan info:', error);
     }
   }
 
   return (
     <div className="min-h-screen bg-light-concrete">
+      {/* Handle success/error states from URL parameters */}
+      <SuccessHandler />
+      
       <div className="container mx-auto px-4 py-8 space-y-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-charcoal">Account Dashboard</h1>
@@ -78,7 +78,11 @@ export default async function AccountPage() {
 
         {/* Current Plan Section */}
         <Suspense fallback={<CardSkeleton />}>
-          <EnhancedCurrentPlanCard subscription={subscription} availablePlans={availablePlans} freePlanInfo={freePlanInfo} />
+          <EnhancedCurrentPlanCard 
+            subscription={subscription} 
+            freePlanInfo={freePlanInfo}
+            availablePlans={availablePlans} 
+          />
         </Suspense>
 
         {/* Billing History Section */}

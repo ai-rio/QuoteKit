@@ -36,8 +36,106 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
   }
 
   const subscription = subscriptions?.[0];
+  
+  // Handle case where user has no subscription record
   if (!subscription) {
-    throw new Error('No active subscription found');
+    console.log('No active subscription found, creating new subscription for user:', session.user.id);
+    
+    // Validate the new price exists and is active
+    const { data: newPrice, error: priceError } = await supabase
+      .from('stripe_prices')
+      .select(`
+        *,
+        stripe_products!stripe_prices_stripe_product_id_fkey (*)
+      `)
+      .eq('stripe_price_id', priceId)
+      .eq('active', true)
+      .single();
+
+    if (priceError || !newPrice) {
+      console.error('Price validation failed (no subscription):', {
+        priceId,
+        priceError: priceError?.message,
+        foundPrice: !!newPrice,
+        userId: session.user.id
+      });
+      throw new Error(`Invalid or inactive price: ${priceId}. Error: ${priceError?.message || 'Price not found'}`);
+    }
+
+    // Get Stripe configuration
+    const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
+    const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+    
+    const { data: stripeConfigRecord, error: configError } = await supabaseAdminClient
+      .from('admin_settings')
+      .select('value')
+      .eq('key', 'stripe_config')
+      .single();
+
+    let stripeConfig: any = null;
+
+    if (!configError && stripeConfigRecord?.value) {
+      stripeConfig = stripeConfigRecord.value as any;
+    } else {
+      // Fallback to environment variables
+      const secretKey = process.env.STRIPE_SECRET_KEY;
+      if (secretKey) {
+        stripeConfig = {
+          secret_key: secretKey,
+          mode: process.env.STRIPE_MODE || 'test'
+        };
+      }
+    }
+
+    if (!stripeConfig?.secret_key) {
+      console.error('Stripe configuration error:', configError);
+      throw new Error('Stripe not configured');
+    }
+
+    // Initialize Stripe admin client
+    const stripeAdmin = createStripeAdminClient({
+      secret_key: stripeConfig.secret_key,
+      mode: stripeConfig.mode || 'test'
+    });
+
+    // Get or create customer in Stripe
+    const { getOrCreateCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+    const customerId = await getOrCreateCustomer({
+      userId: session.user.id,
+      email: session.user.email!,
+    });
+
+    // Create checkout session for the new subscription
+    const checkoutMode = newPrice.recurring_interval ? 'subscription' : 'payment';
+    
+    const checkoutSession = await stripeAdmin.checkout.sessions.create({
+      payment_method_types: ['card'],
+      billing_address_collection: 'required',
+      customer: customerId,
+      customer_update: {
+        address: 'auto',
+      },
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: checkoutMode,
+      allow_promotion_codes: true,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/account?upgrade=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/account?upgrade=cancelled`,
+    });
+
+    if (!checkoutSession || !checkoutSession.url) {
+      throw new Error('Failed to create checkout session');
+    }
+
+    console.log(`No subscription found for user ${session.user.id}, redirecting to checkout`);
+    
+    // Use Next.js redirect
+    const { redirect } = await import('next/navigation');
+    redirect(checkoutSession.url);
   }
 
   // Get price data separately if subscription has a price ID

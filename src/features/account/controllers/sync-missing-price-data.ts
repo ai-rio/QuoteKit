@@ -54,24 +54,30 @@ export async function syncMissingPriceData(priceId: string) {
     let productData = null;
     if (price.product && typeof price.product === 'object') {
       const product = price.product;
-      console.log(`📦 Syncing product ${product.id}: ${product.name}`);
       
-      const { data: syncedProduct } = await supabaseAdminClient
-        .from('stripe_products')
-        .upsert({
-          stripe_product_id: product.id,
-          name: product.name,
-          description: product.description || null,
-          active: product.active,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'stripe_product_id'
-        })
-        .select()
-        .single();
-      
-      productData = syncedProduct;
-      console.log(`✅ Product synced: ${product.name}`);
+      // Check if product is not deleted and has required properties
+      if (product.object === 'product' && 'name' in product && 'active' in product) {
+        console.log(`📦 Syncing product ${product.id}: ${product.name}`);
+        
+        const { data: syncedProduct } = await supabaseAdminClient
+          .from('stripe_products')
+          .upsert({
+            stripe_product_id: product.id,
+            name: product.name,
+            description: product.description || null,
+            active: product.active,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'stripe_product_id'
+          })
+          .select()
+          .single();
+        
+        productData = syncedProduct;
+        console.log(`✅ Product synced: ${product.name}`);
+      } else {
+        console.log(`⚠️ Product ${product.id} is deleted or missing required properties, skipping sync`);
+      }
     }
     
     // Sync price data

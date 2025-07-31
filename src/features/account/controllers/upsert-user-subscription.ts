@@ -126,7 +126,7 @@ export async function upsertUserSubscription({
         ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null,
         trial_start: subscription.trial_start ? toDateTime(subscription.trial_start).toISOString() : null,
         trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
-        created: new Date().toISOString()
+        created_at: new Date().toISOString()
       };
 
       const { error: fallbackError } = await supabaseAdminClient.from('subscriptions').upsert([subscriptionData]);
