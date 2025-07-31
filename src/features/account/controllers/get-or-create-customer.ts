@@ -141,13 +141,20 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
 /**
  * Get or create a Stripe customer using regular server client (for user-facing functions)
  * This version handles cases where existing users don't have customer records
+ * Only creates Stripe customers when actually needed for payment processing
  */
-export async function getOrCreateCustomerForUser({ userId, email, supabaseClient }: { 
+export async function getOrCreateCustomerForUser({
+  userId, 
+  email, 
+  supabaseClient, 
+  forceCreate = false 
+}: { 
   userId: string; 
   email: string;
   supabaseClient: any; // Supabase client (server or admin)
+  forceCreate?: boolean; // Only create customer if this is true
 }) {
-  console.debug('getOrCreateCustomerForUser: Starting customer lookup/creation', { userId, email });
+  console.debug('getOrCreateCustomerForUser: Starting customer lookup/creation', { userId, email, forceCreate });
 
   // First try to get existing customer record using maybeSingle to avoid PGRST116 errors
   const { data, error } = await supabaseClient
@@ -175,6 +182,12 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
   }
 
   // Customer record doesn't exist or exists without Stripe customer ID
+  // Only create if explicitly requested (forceCreate = true)
+  if (!forceCreate) {
+    console.debug('getOrCreateCustomerForUser: No existing customer and forceCreate=false, returning null', { userId });
+    return null;
+  }
+
   // We need admin client to create/update customer records
   const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
   const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
@@ -286,6 +299,47 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
       stripeConfigMode: stripeConfig?.mode,
       hasStripeSecretKey: !!stripeConfig?.secret_key
     });
+    // If creation fails and forceCreate is false, return null instead of throwing
+    if (!forceCreate) {
+      console.warn('getOrCreateCustomerForUser: Stripe customer creation failed, returning null since forceCreate=false', {
+        userId,
+        error: stripeError instanceof Error ? stripeError.message : 'Unknown error'
+      });
+      return null;
+    }
     throw stripeError;
+  }
+}
+
+/**
+ * Helper function to check if a user has a paid subscription that requires Stripe customer
+ */
+export async function userNeedsStripeCustomer(userId: string, supabaseClient: any): Promise<boolean> {
+  try {
+    // Check if user has any paid subscriptions (non-null stripe_subscription_id)
+    const { data: paidSubscriptions, error } = await supabaseClient
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing', 'past_due'])
+      .not('stripe_subscription_id', 'is', null)
+      .limit(1);
+
+    if (error) {
+      console.error('userNeedsStripeCustomer: Error checking for paid subscriptions', { userId, error });
+      return false;
+    }
+
+    const needsCustomer = (paidSubscriptions && paidSubscriptions.length > 0);
+    console.debug('userNeedsStripeCustomer: Checked subscription status', {
+      userId,
+      hasPaidSubscription: needsCustomer,
+      subscriptionCount: paidSubscriptions?.length || 0
+    });
+
+    return needsCustomer;
+  } catch (error) {
+    console.error('userNeedsStripeCustomer: Unexpected error', { userId, error });
+    return false;
   }
 }

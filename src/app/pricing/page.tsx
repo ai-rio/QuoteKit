@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import FreemiumPricing from '@/components/pricing/FreemiumPricing';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { createFreeSubscription } from '@/features/pricing/actions/create-free-subscription';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 export const metadata: Metadata = {
   title: 'Pricing - QuoteKit',

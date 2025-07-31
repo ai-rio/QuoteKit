@@ -64,39 +64,101 @@ export async function upsertUserSubscription({
 
     // Upsert the latest status of the subscription object.
     const priceId = subscription.items.data[0].price.id;
-    const subscriptionData: Database['public']['Tables']['subscriptions']['Insert'] = {
-      id: subscription.id,
-      user_id: userId,
-      metadata: subscription.metadata,
+    console.log(`💾 Preparing subscription data for database upsert:`, {
+      subscriptionId: subscription.id,
+      userId: userId,
       status: subscription.status,
-      stripe_price_id: priceId, // Primary field for queries
-      price_id: priceId, // Legacy field - kept in sync for compatibility
-      stripe_subscription_id: subscription.id, // Explicit subscription ID
-      stripe_customer_id: customerId, // Customer reference
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
-      canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,
-      current_period_start: toDateTime(subscription.current_period_start).toISOString(),
-      current_period_end: toDateTime(subscription.current_period_end).toISOString(),
-      ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null,
-      trial_start: subscription.trial_start ? toDateTime(subscription.trial_start).toISOString() : null,
-      trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
-    };
-
-    console.log(`💾 Upserting subscription data to database:`, {
-      subscriptionId: subscriptionData.id,
-      userId: subscriptionData.user_id,
-      status: subscriptionData.status,
-      priceId: subscriptionData.stripe_price_id,
-      customerId: subscriptionData.stripe_customer_id
+      priceId: priceId,
+      customerId: customerId
     });
 
-    const { error } = await supabaseAdminClient.from('subscriptions').upsert([subscriptionData]);
-    if (error) {
-      console.error(`❌ Database upsert failed for subscription ${subscription.id}:`, error);
-      throw error;
+    // CRITICAL FIX: Use the safe upsert function based on stripe_subscription_id
+    const { data: upsertResult, error: upsertError } = await supabaseAdminClient.rpc('upsert_subscription_by_stripe_id', {
+      p_stripe_subscription_id: subscription.id,
+      p_user_id: userId,
+      p_stripe_customer_id: customerId,
+      p_stripe_price_id: priceId,
+      p_status: subscription.status,
+      p_metadata: subscription.metadata || {},
+      p_cancel_at_period_end: subscription.cancel_at_period_end,
+      p_current_period_start: toDateTime(subscription.current_period_start).toISOString(),
+      p_current_period_end: toDateTime(subscription.current_period_end).toISOString(),
+      p_trial_start: subscription.trial_start ? toDateTime(subscription.trial_start).toISOString() : null,
+      p_trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
+      p_cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
+      p_canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,
+      p_ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null
+    });
+
+    if (upsertError) {
+      console.error(`❌ CRITICAL: Database upsert failed for subscription ${subscription.id}:`, {
+        error: upsertError,
+        userId,
+        customerId,
+        priceId,
+        subscriptionStatus: subscription.status
+      });
+      
+      // Log additional diagnostic info
+      console.error(`💥 Upsert Error Details:`, {
+        message: upsertError.message,
+        code: upsertError.code,
+        details: upsertError.details,
+        hint: upsertError.hint
+      });
+      
+      // Try fallback direct insert/update
+      console.log(`🔄 Attempting fallback direct upsert for subscription ${subscription.id}`);
+      
+      const subscriptionData: Database['public']['Tables']['subscriptions']['Insert'] = {
+        id: subscription.id,
+        user_id: userId,
+        metadata: subscription.metadata || {},
+        status: subscription.status,
+        stripe_price_id: priceId,
+        stripe_subscription_id: subscription.id,
+        stripe_customer_id: customerId,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
+        canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,
+        current_period_start: toDateTime(subscription.current_period_start).toISOString(),
+        current_period_end: toDateTime(subscription.current_period_end).toISOString(),
+        ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null,
+        trial_start: subscription.trial_start ? toDateTime(subscription.trial_start).toISOString() : null,
+        trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
+        created: new Date().toISOString()
+      };
+
+      const { error: fallbackError } = await supabaseAdminClient.from('subscriptions').upsert([subscriptionData]);
+      if (fallbackError) {
+        console.error(`❌ FALLBACK FAILED: Direct upsert also failed for subscription ${subscription.id}:`, fallbackError);
+        throw new Error(`Both safe_upsert_subscription and direct upsert failed: ${fallbackError.message}`);
+      }
+      
+      console.log(`✅ Fallback successful: Direct upsert worked for subscription [${subscription.id}]`);
+    } else {
+      console.log(`✅ Safe upsert successful: subscription [${subscription.id}] upserted with result: ${upsertResult}`);
     }
-    console.log(`✅ Successfully upserted subscription [${subscription.id}] for user [${userId}] in database`);
+    
+    // Verify the subscription was actually created/updated
+    const { data: verifyData, error: verifyError } = await supabaseAdminClient
+      .from('subscriptions')
+      .select('id, user_id, status, stripe_price_id, stripe_subscription_id')
+      .eq('stripe_subscription_id', subscription.id)
+      .single();
+    
+    if (verifyError || !verifyData) {
+      console.error(`❌ VERIFICATION FAILED: Could not find subscription ${subscription.id} after upsert:`, verifyError);
+      throw new Error(`Subscription upsert verification failed: ${verifyError?.message || 'Record not found'}`);
+    }
+    
+    console.log(`✅ VERIFICATION SUCCESS: Subscription [${subscription.id}] confirmed in database:`, {
+      id: verifyData.id,
+      stripeSubscriptionId: verifyData.stripe_subscription_id,
+      userId: verifyData.user_id,
+      status: verifyData.status,
+      priceId: verifyData.stripe_price_id
+    });
 
     // For a new subscription copy the billing details to the customer object.
     // NOTE: This is a costly operation and should happen at the very end.

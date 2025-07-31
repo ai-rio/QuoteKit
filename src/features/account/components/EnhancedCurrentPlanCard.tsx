@@ -99,34 +99,40 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
       setError(null);
       setSyncSuccess(null);
       
-      const response = await fetch('/api/sync-my-subscription', {
+      // Try regular sync first
+      let response = await fetch('/api/sync-my-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
       
-      const result = await response.json();
+      let result = await response.json();
       
+      // If regular sync fails, try debug sync for missing subscriptions
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to sync subscription');
+        console.log('Regular sync failed, trying debug sync...');
+        response = await fetch('/api/debug-subscription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Both sync methods failed');
+        }
       }
       
       setSyncSuccess(result.message);
       
-      // Use Next.js router.refresh() instead of hard reload for better UX
-      const { useRouter } = await import('next/navigation');
-      const router = useRouter();
-      
-      // Immediate refresh using Next.js revalidation
-      router.refresh();
-      
-      // Also trigger page revalidation after a short delay as fallback
+      // Refresh the page after successful sync
       setTimeout(() => {
         if (typeof window !== 'undefined') {
           window.location.reload();
         }
-      }, 3000);
+      }, 2000);
       
     } catch (err) {
       console.error('Sync error:', err);
@@ -220,7 +226,7 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                 <div className="p-2 bg-gray-100 text-xs text-gray-600 rounded border">
                   <p><strong>Debug Info:</strong></p>
                   <p>Subscription ID: {subscription.id}</p>
-                  <p>Price ID: {subscription.stripe_price_id || subscription.price_id || 'None'}</p>
+                  <p>Price ID: {subscription.stripe_price_id || 'None'}</p>
                   <p>Has Price Data: {subscription.prices ? 'Yes' : 'No'}</p>
                   <p>Has Product Data: {subscription.prices?.products ? 'Yes' : 'No'}</p>
                   <p>Product Name: {subscription.prices?.products?.name || 'None'}</p>
