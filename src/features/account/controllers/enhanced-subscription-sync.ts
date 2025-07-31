@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { manualSyncSubscription } from './manual-sync-subscription';
 
 /**
@@ -28,7 +29,7 @@ export async function enhancedSubscriptionSync(userId: string, userEmail: string
       .single();
     
     // Step 2: If subscription exists but missing plan data, sync from Stripe
-    if (currentSubscription && (!currentSubscription.stripe_prices?.stripe_products?.name)) {
+    if (currentSubscription && (!currentSubscription.stripe_prices?.[0]?.stripe_products?.[0]?.name)) {
       console.log(`🔄 Subscription exists but missing plan data, syncing from Stripe...`);
       
       // Get customer ID for sync
@@ -52,13 +53,13 @@ export async function enhancedSubscriptionSync(userId: string, userEmail: string
     }
     
     // Step 3: If subscription has complete data, return success
-    if (currentSubscription?.stripe_prices?.stripe_products?.name) {
-      console.log(`✅ Subscription already has complete plan data: ${currentSubscription.stripe_prices.stripe_products.name}`);
+    if (currentSubscription?.stripe_prices?.[0]?.stripe_products?.[0]?.name) {
+      console.log(`✅ Subscription already has complete plan data: ${currentSubscription.stripe_prices[0].stripe_products[0].name}`);
       return {
         success: true,
         action: 'already_complete',
         message: 'Subscription data is complete',
-        planName: currentSubscription.stripe_prices.stripe_products.name
+        planName: currentSubscription.stripe_prices[0].stripe_products[0].name
       };
     }
     
@@ -142,15 +143,15 @@ export async function verifySubscriptionPlanData(userId: string) {
     }
     
     const hasPriceData = !!subscription.stripe_prices;
-    const hasProductData = !!subscription.stripe_prices?.stripe_products;
-    const isComplete = hasProductData && !!subscription.stripe_prices?.stripe_products?.name;
+    const hasProductData = !!subscription.stripe_prices?.[0]?.stripe_products;
+    const isComplete = hasProductData && !!subscription.stripe_prices?.[0]?.stripe_products?.[0]?.name;
     
     return {
       hasSubscription: true,
       hasPriceData,
       hasProductData,
       isComplete,
-      planName: subscription.stripe_prices?.stripe_products?.name,
+      planName: subscription.stripe_prices?.[0]?.stripe_products?.[0]?.name,
       priceId: subscription.stripe_price_id,
       subscriptionId: subscription.id
     };

@@ -19,9 +19,11 @@ export async function getSubscription() {
 
     console.debug('getSubscription: Querying for user:', { userId: user.id });
 
-    // CRITICAL FIX: Query subscriptions with proper priority logic
+    // CRITICAL FIX: Query subscriptions with corrected schema after sync fix
     // 1. Get all active/trialing subscriptions for the user
     // 2. Order by subscription type (paid first) then by creation date
+    console.debug('getSubscription: Querying database with corrected schema');
+    
     const { data: subscriptions, error: subError } = await supabase
       .from('subscriptions')
       .select('*')
@@ -56,7 +58,7 @@ export async function getSubscription() {
       subscriptionId: subscription.id,
       status: subscription.status,
       priceId: subscription.stripe_price_id,
-      stripeSubscriptionId: subscription.id,
+      stripeSubscriptionId: subscription.stripe_subscription_id,
       subscriptionType: subscription.stripe_price_id ? 'paid' : 'free',
       totalSubscriptions: subscriptions.length
     });
@@ -408,23 +410,38 @@ export async function getBillingHistory() {
 
     console.debug('getBillingHistory: Looking up customer for user:', { userId: user.id });
 
-    // Get or create customer using the enhanced helper that avoids PGRST116 errors
-    const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+    // Import helper functions
+    const { getOrCreateCustomerForUser, userNeedsStripeCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+    
+    // Check if user actually needs a Stripe customer (has paid subscriptions)
+    const needsCustomer = await userNeedsStripeCustomer(user.id, supabase);
+    
+    if (!needsCustomer) {
+      console.debug('getBillingHistory: User is on free plan, no billing history needed', { userId: user.id });
+      return [];
+    }
     
     let stripeCustomerId;
     try {
+      // Only try to get existing customer, don't force creation for billing history lookup
       stripeCustomerId = await getOrCreateCustomerForUser({ 
         userId: user.id, 
         email: user.email!, 
-        supabaseClient: supabase 
+        supabaseClient: supabase,
+        forceCreate: false // Don't create customer just to check billing history
       });
       
-      console.debug('getBillingHistory: Got/created customer', {
+      if (!stripeCustomerId) {
+        console.debug('getBillingHistory: No existing Stripe customer, returning empty array', { userId: user.id });
+        return [];
+      }
+      
+      console.debug('getBillingHistory: Found existing customer', {
         userId: user.id,
         stripeCustomerId
       });
     } catch (customerError) {
-      console.error('getBillingHistory: Failed to get/create customer', {
+      console.error('getBillingHistory: Failed to get customer', {
         userId: user.id,
         error: customerError instanceof Error ? customerError.message : 'Unknown error'
       });
@@ -497,23 +514,38 @@ export async function getPaymentMethods() {
 
     console.debug('getPaymentMethods: Looking up customer for user:', { userId: user.id });
 
-    // Get or create customer using the enhanced helper that avoids PGRST116 errors
-    const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+    // Import helper functions
+    const { getOrCreateCustomerForUser, userNeedsStripeCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+    
+    // Check if user actually needs a Stripe customer (has paid subscriptions)
+    const needsCustomer = await userNeedsStripeCustomer(user.id, supabase);
+    
+    if (!needsCustomer) {
+      console.debug('getPaymentMethods: User is on free plan, no payment methods needed', { userId: user.id });
+      return [];
+    }
     
     let stripeCustomerId;
     try {
+      // Only try to get existing customer, don't force creation for payment methods lookup
       stripeCustomerId = await getOrCreateCustomerForUser({ 
         userId: user.id, 
         email: user.email!, 
-        supabaseClient: supabase 
+        supabaseClient: supabase,
+        forceCreate: false // Don't create customer just to check payment methods
       });
       
-      console.debug('getPaymentMethods: Got/created customer', {
+      if (!stripeCustomerId) {
+        console.debug('getPaymentMethods: No existing Stripe customer, returning empty array', { userId: user.id });
+        return [];
+      }
+      
+      console.debug('getPaymentMethods: Found existing customer', {
         userId: user.id,
         stripeCustomerId
       });
     } catch (customerError) {
-      console.error('getPaymentMethods: Failed to get/create customer', {
+      console.error('getPaymentMethods: Failed to get customer', {
         userId: user.id,
         error: customerError instanceof Error ? customerError.message : 'Unknown error'
       });

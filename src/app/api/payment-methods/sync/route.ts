@@ -62,7 +62,9 @@ export async function POST(request: NextRequest) {
 
     // Get customer's default payment method from Stripe
     const stripeCustomer = await stripe.customers.retrieve(customer.stripe_customer_id);
-    const defaultPaymentMethodId = stripeCustomer.invoice_settings?.default_payment_method as string || null;
+    const defaultPaymentMethodId = (!stripeCustomer.deleted && stripeCustomer.invoice_settings?.default_payment_method) 
+      ? stripeCustomer.invoice_settings.default_payment_method as string 
+      : null;
 
     // Save each payment method to database
     for (const pm of paymentMethods.data) {

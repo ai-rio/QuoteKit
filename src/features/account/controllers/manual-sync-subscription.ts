@@ -137,8 +137,8 @@ export async function manualSyncSubscription(customerStripeId: string) {
             .eq('stripe_price_id', priceId)
             .single();
           
-          if (verifyPrice?.stripe_products?.name) {
-            console.log(`✅ Verified product data synced: ${verifyPrice.stripe_products.name}`);
+          if (verifyPrice?.stripe_products?.[0]?.name) {
+            console.log(`✅ Verified product data synced: ${verifyPrice.stripe_products[0].name}`);
           } else {
             console.warn(`⚠️ Product data verification failed for price ${priceId}`);
           }
@@ -205,8 +205,8 @@ export async function manualSyncSubscription(customerStripeId: string) {
           .in('status', ['active', 'trialing'])
           .single();
         
-        if (activeSubscription?.stripe_prices?.stripe_products?.name) {
-          console.log(`✅ Active subscription has product name: ${activeSubscription.stripe_prices.stripe_products.name}`);
+        if (activeSubscription?.stripe_prices?.[0]?.stripe_products?.[0]?.name) {
+          console.log(`✅ Active subscription has product name: ${activeSubscription.stripe_prices[0].stripe_products[0].name}`);
         } else {
           console.warn(`⚠️ Active subscription missing product name - may still show "Unknown Plan"`);
         }
