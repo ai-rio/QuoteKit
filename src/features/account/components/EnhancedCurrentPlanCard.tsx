@@ -205,7 +205,7 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-charcoal">
-                    {subscription.prices?.products?.name || 'Unknown Plan'}
+                    {subscription.prices?.products?.name || (subscription.prices ? 'Premium Plan' : 'Unknown Plan')}
                   </h3>
                   <p className="text-sm text-charcoal/70">
                     {formatPrice(subscription.prices?.unit_amount || 0)}/
@@ -214,6 +214,18 @@ export function EnhancedCurrentPlanCard({ subscription, availablePlans, freePlan
                 </div>
                 {getStatusBadge(subscription.status || 'unknown')}
               </div>
+
+              {/* Plan Details Debug Info (only in development) */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="p-2 bg-gray-100 text-xs text-gray-600 rounded border">
+                  <p><strong>Debug Info:</strong></p>
+                  <p>Subscription ID: {subscription.id}</p>
+                  <p>Price ID: {subscription.stripe_price_id || subscription.price_id || 'None'}</p>
+                  <p>Has Price Data: {subscription.prices ? 'Yes' : 'No'}</p>
+                  <p>Has Product Data: {subscription.prices?.products ? 'Yes' : 'No'}</p>
+                  <p>Product Name: {subscription.prices?.products?.name || 'None'}</p>
+                </div>
+              )}
 
               {/* Cancellation Notice */}
               {subscription.cancel_at_period_end && (

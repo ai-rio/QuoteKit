@@ -79,7 +79,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
     if (error) {
       const { error: insertError } = await supabaseAdminClient
         .from('stripe_customers')
-        .insert([{ user_id: userId, stripe_customer_id: customer.id }]);
+        .insert([{ user_id: userId, stripe_customer_id: customer.id, email }]);
 
       if (insertError) {
         // If there's a unique constraint violation, another request might have created the record
@@ -113,7 +113,7 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
       // Customer record exists but needs Stripe customer ID - update it
       const { error: updateError } = await supabaseAdminClient
         .from('stripe_customers')
-        .update({ stripe_customer_id: customer.id })
+        .update({ stripe_customer_id: customer.id, email })
         .eq('user_id', userId);
 
       if (updateError) {
@@ -239,7 +239,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
     if (data) {
       const { error: updateError } = await supabaseAdminClient
         .from('stripe_customers')
-        .update({ stripe_customer_id: customer.id })
+        .update({ stripe_customer_id: customer.id, email })
         .eq('user_id', userId);
 
       if (updateError) {
@@ -259,7 +259,7 @@ export async function getOrCreateCustomerForUser({ userId, email, supabaseClient
       // Create new customer record
       const { error: insertError } = await supabaseAdminClient
         .from('stripe_customers')
-        .insert([{ user_id: userId, stripe_customer_id: customer.id }]);
+        .insert([{ user_id: userId, stripe_customer_id: customer.id, email }]);
 
       if (insertError) {
         console.error('getOrCreateCustomerForUser: Failed to create customer record', {

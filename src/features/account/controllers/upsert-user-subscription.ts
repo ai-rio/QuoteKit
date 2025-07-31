@@ -63,12 +63,16 @@ export async function upsertUserSubscription({
     });
 
     // Upsert the latest status of the subscription object.
+    const priceId = subscription.items.data[0].price.id;
     const subscriptionData: Database['public']['Tables']['subscriptions']['Insert'] = {
       id: subscription.id,
       user_id: userId,
       metadata: subscription.metadata,
       status: subscription.status,
-      stripe_price_id: subscription.items.data[0].price.id,
+      stripe_price_id: priceId, // Primary field for queries
+      price_id: priceId, // Legacy field - kept in sync for compatibility
+      stripe_subscription_id: subscription.id, // Explicit subscription ID
+      stripe_customer_id: customerId, // Customer reference
       cancel_at_period_end: subscription.cancel_at_period_end,
       cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
       canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,
@@ -83,7 +87,8 @@ export async function upsertUserSubscription({
       subscriptionId: subscriptionData.id,
       userId: subscriptionData.user_id,
       status: subscriptionData.status,
-      priceId: subscriptionData.stripe_price_id
+      priceId: subscriptionData.stripe_price_id,
+      customerId: subscriptionData.stripe_customer_id
     });
 
     const { error } = await supabaseAdminClient.from('subscriptions').upsert([subscriptionData]);
