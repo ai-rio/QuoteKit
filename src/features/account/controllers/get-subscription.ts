@@ -78,11 +78,15 @@ export async function getSubscription() {
       });
     }
 
-    // Check if stripe_price_id exists
-    if (!subscription.stripe_price_id) {
-      console.warn('Subscription has no stripe_price_id:', subscription.id);
-      console.debug('getSubscription: Missing stripe_price_id', {
+    // Get the price ID - handle both price_id and stripe_price_id fields
+    const priceId = subscription.stripe_price_id || subscription.price_id;
+    
+    if (!priceId) {
+      console.warn('Subscription has no price ID (stripe_price_id or price_id):', subscription.id);
+      console.debug('getSubscription: Missing price ID', {
         subscriptionId: subscription.id,
+        stripePrice: subscription.stripe_price_id,
+        legacyPrice: subscription.price_id,
         subscriptionData: subscription
       });
       return {
@@ -91,11 +95,14 @@ export async function getSubscription() {
       };
     }
 
-    // Fetch the price data separately (same pattern as getProducts)
+    // Fetch the price data with product relationship in a single query
     const { data: priceData, error: priceError } = await supabase
       .from('stripe_prices')
-      .select('*')
-      .eq('stripe_price_id', subscription.stripe_price_id)
+      .select(`
+        *,
+        stripe_products!stripe_prices_stripe_product_id_fkey(*)
+      `)
+      .eq('stripe_price_id', priceId)
       .maybeSingle();
 
     if (priceError) {
@@ -112,30 +119,65 @@ export async function getSubscription() {
     }
 
     if (!priceData) {
-      console.warn('No price data found for stripe_price_id:', subscription.stripe_price_id);
+      console.warn('No price data found for price ID:', priceId);
       console.debug('getSubscription: Price not found in database', {
-        priceId: subscription.stripe_price_id,
+        priceId,
         subscriptionId: subscription.id
       });
+      
+      // Try to sync the missing price data from Stripe
+      try {
+        console.log('🔄 Attempting to sync missing price data for:', priceId);
+        const { syncMissingPriceData } = await import('./sync-missing-price-data');
+        const syncedPriceData = await syncMissingPriceData(priceId);
+        
+        if (syncedPriceData) {
+          console.log('✅ Successfully synced missing price data');
+          // Continue with the newly synced data
+          const transformedPriceData = {
+            ...syncedPriceData,
+            interval: syncedPriceData.recurring_interval,
+            type: syncedPriceData.recurring_interval ? 'recurring' as const : 'one_time' as const,
+            products: syncedPriceData.product_data || null
+          };
+          
+          return {
+            ...subscription,
+            prices: transformedPriceData
+          };
+        }
+      } catch (syncError) {
+        console.warn('Failed to sync missing price data:', syncError);
+      }
+      
       return {
         ...subscription,
         prices: null
       };
     }
 
-    // Fetch the product data separately
-    const { data: productData, error: productError } = await supabase
-      .from('stripe_products')
-      .select('*')
-      .eq('stripe_product_id', priceData.stripe_product_id)
-      .maybeSingle();
+    // Get the product data from the joined query
+    const productData = priceData.stripe_products;
+    
+    // If no product data from join, try to fetch separately as fallback
+    let finalProductData = productData;
+    if (!finalProductData && priceData.stripe_product_id) {
+      console.log('🔄 Product not found in join, fetching separately for:', priceData.stripe_product_id);
+      const { data: separateProductData, error: productError } = await supabase
+        .from('stripe_products')
+        .select('*')
+        .eq('stripe_product_id', priceData.stripe_product_id)
+        .maybeSingle();
 
-    if (productError) {
-      console.error('Product query error:', productError);
-      console.debug('getSubscription: Product lookup failed', {
-        productId: priceData.stripe_product_id,
-        error: productError.message
-      });
+      if (productError) {
+        console.error('Product query error:', productError);
+        console.debug('getSubscription: Product lookup failed', {
+          productId: priceData.stripe_product_id,
+          error: productError.message
+        });
+      } else {
+        finalProductData = separateProductData;
+      }
     }
 
     // Transform price data to match the expected type (same as in get-products.ts)
@@ -143,14 +185,15 @@ export async function getSubscription() {
       ...priceData,
       interval: priceData.recurring_interval, // Map recurring_interval to interval for compatibility
       type: priceData.recurring_interval ? 'recurring' as const : 'one_time' as const, // Add type field based on recurring_interval
-      products: productData || null // Add the product data
+      products: finalProductData || null // Add the product data
     };
 
     console.debug('getSubscription: Successfully retrieved subscription data', {
       subscriptionId: subscription.id,
-      priceId: subscription.stripe_price_id,
-      hasProductData: !!productData,
-      subscriptionType: subscription.stripe_price_id ? 'paid' : 'free'
+      priceId,
+      hasProductData: !!finalProductData,
+      productName: finalProductData?.name || 'No product name',
+      subscriptionType: priceId ? 'paid' : 'free'
     });
 
     // Combine the data
