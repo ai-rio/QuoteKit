@@ -178,13 +178,25 @@ export function useBillingHistory(initialData: BillingHistoryItem[] = []): UseBi
       }
     };
 
-    // Listen for custom plan change events
+    const handlePaymentSuccess = () => {
+      // Refresh billing history after successful payments
+      if (!isLoading && !isRefetching) {
+        console.debug('useBillingHistory: Refreshing after payment success');
+        fetchBillingHistory(true);
+      }
+    };
+
+    // Listen for custom plan change and payment events
     window.addEventListener('plan-change-completed', handlePlanChange);
     window.addEventListener('billing-history-updated', handlePlanChange);
+    window.addEventListener('payment-success', handlePaymentSuccess);
+    window.addEventListener('subscription-updated', handlePlanChange);
     
     return () => {
       window.removeEventListener('plan-change-completed', handlePlanChange);
       window.removeEventListener('billing-history-updated', handlePlanChange);
+      window.removeEventListener('payment-success', handlePaymentSuccess);
+      window.removeEventListener('subscription-updated', handlePlanChange);
     };
   }, [fetchBillingHistory, isLoading, isRefetching]);
 

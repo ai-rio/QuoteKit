@@ -1,11 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertCircle, DollarSign, RefreshCw, Settings, X } from 'lucide-react';
+import { AlertCircle, DollarSign, Loader2, RefreshCw, Settings, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { PriceWithProduct, ProductWithPrices, SubscriptionWithProduct } from '@/features/pricing/types';
 import { formatDate } from '@/utils/to-date-time';
 
@@ -58,10 +65,31 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
     
     setIsLoadingPaymentMethods(true);
     try {
-      const response = await fetch('/api/payment-methods');
+      console.log('🔄 Loading payment methods...');
+      const response = await fetch('/api/payment-methods', {
+        cache: 'no-store', // Always fetch fresh data
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        setPaymentMethods(data.paymentMethods || []);
+        console.log('📊 Payment methods API response:', data);
+        
+        // Handle both possible response formats
+        const methods = data.success ? data.data : (data.paymentMethods || []);
+        setPaymentMethods(methods);
+        
+        console.log('✅ Payment methods loaded:', {
+          count: methods.length,
+          methods: methods.map((pm: PaymentMethod) => ({
+            id: pm.id,
+            isDefault: pm.is_default,
+            brand: pm.brand || pm.card?.brand,
+            last4: pm.last4 || pm.card?.last4
+          }))
+        });
       } else {
         console.error('Failed to load payment methods:', response.statusText);
         setPaymentMethods([]);
@@ -74,10 +102,14 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
     }
   };
 
-  // Load payment methods when plan dialog opens
+  // Load payment methods when plan dialog opens - with proper timing
   useEffect(() => {
     if (showPlanDialog) {
+      // Load payment methods immediately when dialog opens
       loadPaymentMethods();
+    } else {
+      // Clear payment methods when dialog closes to ensure fresh data next time
+      setPaymentMethods([]);
     }
   }, [showPlanDialog]);
 
@@ -118,30 +150,66 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       setIsLoading(true);
       setError(null);
       
-      // Show different loading messages based on upgrade type
-      const loadingMessage = isUpgrade ? 'Upgrading your plan...' : 'Changing your plan...';
+      console.log('💳 Plan change initiated from EnhancedCurrentPlanCard:', {
+        priceId,
+        isUpgrade,
+        paymentMethodId,
+        hasPaymentMethod: !!paymentMethodId
+      });
       
-      await changePlan(priceId, isUpgrade, paymentMethodId);
+      const result = await changePlan(priceId, isUpgrade, paymentMethodId);
+      
+      // Close dialog first
       setShowPlanDialog(false);
       
-      // Dispatch events to update billing history and other components
-      window.dispatchEvent(new CustomEvent('plan-change-completed'));
-      window.dispatchEvent(new CustomEvent('billing-history-updated'));
+      console.log('✅ Plan change completed, dispatching events:', {
+        result: result ? 'success' : 'unknown',
+        needsBillingRefresh: result && typeof result === 'object' && 'needsBillingRefresh' in result ? result.needsBillingRefresh : false
+      });
       
-      // If we reach here, it means the plan change was successful (no redirect)
-      // Show success message for immediate plan changes (paid to paid)
-      setSyncSuccess('Plan changed successfully!');
-      setTimeout(() => setSyncSuccess(null), 3000);
+      // Dispatch events for UI updates
+      window.dispatchEvent(new CustomEvent('plan-change-completed', {
+        detail: { priceId, isUpgrade, result }
+      }));
+      
+      // Immediate billing history refresh
+      window.dispatchEvent(new CustomEvent('billing-history-updated'));
+      window.dispatchEvent(new CustomEvent('invalidate-billing-history'));
+      
+      // Additional delayed refresh to catch server-side billing updates
+      // Stripe/payment processing might take a moment to create billing records
+      setTimeout(() => {
+        console.log('🔄 Delayed billing history refresh after plan change');
+        window.dispatchEvent(new CustomEvent('billing-history-updated'));
+        window.dispatchEvent(new CustomEvent('invalidate-billing-history'));
+      }, 2000); // 2 second delay
+      
+      // Another refresh after 5 seconds to ensure we catch any delayed billing records
+      setTimeout(() => {
+        console.log('🔄 Final billing history refresh after plan change');
+        window.dispatchEvent(new CustomEvent('billing-history-updated'));
+        window.dispatchEvent(new CustomEvent('invalidate-billing-history'));
+      }, 5000); // 5 second delay
+      
+      console.log('✅ Billing history refresh events dispatched (immediate + delayed)');
+      
+      // Show success message with billing update info
+      setSyncSuccess(`Plan ${isUpgrade ? 'upgraded' : 'changed'} successfully! Billing history will update shortly.`);
+      setTimeout(() => setSyncSuccess(null), 5000); // Show longer for billing info
+      
+      // Reload payment methods in case they were updated during the process
+      loadPaymentMethods();
       
     } catch (err) {
       // Don't log NEXT_REDIRECT as an error - it's expected behavior for free plan upgrades  
       if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
         // Let Next.js handle the redirect, don't show error or reset loading state
         // The redirect will navigate away from this page anyway
+        console.log('🔄 Redirecting for checkout flow...');
         return;
       }
       
-      console.error('Plan change error:', err);
+      console.error('❌ Plan change error:', err);
       setError(err instanceof Error ? err.message : 'Failed to change plan');
     } finally {
       // Only reset loading state if we're not redirecting
@@ -479,21 +547,57 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
       {/* Plan Change Dialog - works with both subscription and free plan fallback */}
       {planData && (
-        <PlanChangeDialog
-          isOpen={showPlanDialog}
-          onClose={() => setShowPlanDialog(false)}
-          currentPlan={{
-            id: hasSubscription ? (subscription.prices?.stripe_price_id || '') : (freePlanInfo?.stripe_price_id || ''),
-            name: planData.name,
-            price: planData.price / 100,
-            interval: planData.interval,
-          }}
-          availablePlans={availablePlans}
-          onPlanChange={handlePlanChange}
-          isLoading={isLoading}
-          paymentMethods={paymentMethods}
-          onPaymentMethodRequired={handlePaymentMethodRequired}
-        />
+        <>
+          {/* Debug logging for dialog state */}
+          {showPlanDialog && console.log('🔍 Rendering PlanChangeDialog with:', {
+            showPlanDialog,
+            isLoadingPaymentMethods,
+            paymentMethodsCount: paymentMethods.length,
+            paymentMethods: paymentMethods.map(pm => ({
+              id: pm.id,
+              brand: pm.brand || pm.card?.brand,
+              last4: pm.last4 || pm.card?.last4,
+              is_default: pm.is_default
+            }))
+          })}
+          
+          {/* Loading dialog while payment methods are being loaded */}
+          {showPlanDialog && isLoadingPaymentMethods && (
+            <Dialog open={true} onOpenChange={() => setShowPlanDialog(false)}>
+              <DialogContent className="bg-paper-white border-stone-gray">
+                <DialogHeader>
+                  <DialogTitle className="text-charcoal text-section-title">Loading Payment Methods</DialogTitle>
+                  <DialogDescription className="text-charcoal/70">
+                    Please wait while we load your payment methods...
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-forest-green" />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+          
+          {/* Main Plan Change Dialog */}
+          <PlanChangeDialog
+            isOpen={showPlanDialog}
+            onClose={() => setShowPlanDialog(false)}
+            currentPlan={{
+              id: hasSubscription ? (subscription.prices?.stripe_price_id || '') : (freePlanInfo?.stripe_price_id || ''),
+              name: planData.name,
+              price: planData.price / 100,
+              interval: planData.interval,
+            }}
+            availablePlans={availablePlans}
+            onPlanChange={handlePlanChange}
+            isLoading={isLoading}
+            paymentMethods={paymentMethods}
+            isLoadingPaymentMethods={isLoadingPaymentMethods}
+            onPaymentMethodRequired={handlePaymentMethodRequired}
+            stripeCustomerId={hasSubscription ? subscription.stripe_customer_id : undefined}
+            stripeSubscriptionId={hasSubscription ? subscription.stripe_subscription_id : undefined}
+          />
+        </>
       )}
 
       {/* Cancellation Dialog - only for real subscriptions */}

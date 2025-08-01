@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
       });
       
       return NextResponse.json({
+        success: true,
         data: [],
         pagination: {
           total: 0,
@@ -249,12 +250,41 @@ export async function GET(request: NextRequest) {
         };
       });
 
-      // In development mode or when no invoices exist, supplement with subscription changes
+      // In development mode or when no invoices exist, supplement with subscription changes and billing history
       const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1');
       if (isDevelopment || billingHistory.length === 0) {
-        console.debug('billing-history API: Adding development mode subscription history');
+        console.debug('billing-history API: Adding development mode subscription and billing history');
         
-        // Fetch subscription changes from local database
+        // First, fetch explicit billing history entries
+        const { data: explicitBilling, error: billingError } = await supabase
+          .from('billing_history')
+          .select(`
+            id,
+            created_at,
+            amount,
+            currency,
+            status,
+            description,
+            invoice_url
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(limit);
+
+        if (!billingError && explicitBilling && explicitBilling.length > 0) {
+          const explicitBillingHistory = explicitBilling.map((bill: any) => ({
+            id: bill.id,
+            date: bill.created_at,
+            amount: bill.amount,
+            status: bill.status,
+            invoice_url: bill.invoice_url || '#',
+            description: bill.description,
+          }));
+
+          billingHistory = [...billingHistory, ...explicitBillingHistory];
+        }
+
+        // Then, fetch subscription changes from local database as fallback
         const { data: subscriptions, error: subError } = await supabase
           .from('subscriptions')
           .select(`
@@ -295,11 +325,17 @@ export async function GET(request: NextRequest) {
             };
           });
 
-          // Merge and sort by date (newest first)
-          billingHistory = [...billingHistory, ...subscriptionHistory]
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, limit);
+          billingHistory = [...billingHistory, ...subscriptionHistory];
         }
+
+        // Merge, deduplicate, and sort by date (newest first)
+        const uniqueBillingHistory = billingHistory.filter((item, index, self) => 
+          index === self.findIndex(t => t.id === item.id)
+        );
+        
+        billingHistory = uniqueBillingHistory
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, limit);
       }
 
       console.debug('billing-history API: Successfully transformed billing data', {
@@ -310,6 +346,7 @@ export async function GET(request: NextRequest) {
 
       // Return successful response with pagination info
       return NextResponse.json({
+        success: true,
         data: billingHistory,
         pagination: {
           total: billingHistory.length, // Note: Stripe doesn't provide total count easily
@@ -382,6 +419,7 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({
+        success: true,
         data: billingHistory,
         pagination: {
           total: billingHistory.length,

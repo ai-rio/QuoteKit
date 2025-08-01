@@ -12,6 +12,15 @@ import { executeStripePlanChange, validatePaymentMethod } from '../controllers/s
 export async function changePlan(priceId: string, isUpgrade: boolean, paymentMethodId?: string) {
   console.log('🔄 changePlan called with:', { priceId, isUpgrade, paymentMethodId });
   
+  // Enhanced environment detection logging
+  console.log('🌍 Environment detection:', {
+    NODE_ENV: process.env.NODE_ENV,
+    SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1'),
+    isDevelopment: process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1'),
+    STRIPE_SECRET_KEY_EXISTS: !!process.env.STRIPE_SECRET_KEY,
+    STRIPE_PUBLISHABLE_KEY_EXISTS: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  });
+  
   try {
     // Check authentication
     const session = await getSession();
@@ -104,12 +113,26 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       }
 
       // Development mode: Create local subscription without Stripe
-      const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1');
+      // TEMPORARY DEBUG FLAG - Set to true to test production Stripe path
+      const FORCE_PRODUCTION_PATH = false; // Change this to true to test Stripe integration
+      const isDevelopment = !FORCE_PRODUCTION_PATH && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1'));
+      
+      console.log('🎯 Path Selection (New Subscription):', {
+        FORCE_PRODUCTION_PATH,
+        isDevelopment,
+        willUseStripe: !isDevelopment,
+        pathSelected: isDevelopment ? 'DEVELOPMENT (Database Only)' : 'PRODUCTION (Stripe Integration)'
+      });
       
       if (isDevelopment) {
         console.log('🧪 Development mode: Creating local subscription without Stripe');
         
-        // For upgrades in development, validate payment method if provided
+        // For upgrades in development, validate payment method is provided
+        if (isUpgrade && !paymentMethodId) {
+          console.error('❌ Payment method required for upgrades in development mode');
+          throw new Error('Payment method is required for plan upgrades. Please select a payment method.');
+        }
+        
         if (isUpgrade && paymentMethodId) {
           console.log('💳 Development mode: Payment method provided for upgrade:', paymentMethodId);
           // In production, this would validate the payment method with Stripe
@@ -163,12 +186,33 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           stripe_price_id: subscription.stripe_price_id
         });
         
-        // Billing history will be populated by subscription changes in the API
+        // Create billing history entry for new subscription
+        const billingEntry = {
+          id: `bill_${subscription.id}_${Date.now()}`,
+          user_id: session.user.id,
+          subscription_id: subscription.id,
+          amount: newPrice.unit_amount || 0,
+          currency: 'usd',
+          status: 'paid',
+          description: `New subscription to ${newPrice.stripe_products?.name || 'Plan'}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          invoice_url: null,
+          stripe_invoice_id: null
+        };
+
+        // Insert billing history (best effort - don't fail if this fails)
+        try {
+          await supabase.from('billing_history').insert(billingEntry);
+          console.log('✅ Billing history entry created');
+        } catch (billingError) {
+          console.warn('⚠️ Failed to create billing history entry:', billingError);
+        }
         
         // Note: Event dispatching moved to client-side component
         // Server actions cannot dispatch window events
         
-        return { success: true, subscription };
+        return { success: true, subscription, needsBillingRefresh: true };
       }
 
       // Production mode: Create new Stripe subscription
@@ -216,12 +260,30 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
     }
 
     // Development mode: Update existing subscription
-    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1');
+    // TEMPORARY DEBUG FLAG - Set to true to test production Stripe path
+    const FORCE_PRODUCTION_PATH = false; // Change this to true to test Stripe integration
+    const isDevelopment = !FORCE_PRODUCTION_PATH && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1'));
+    
+    console.log('🎯 Path Selection (Existing Subscription):', {
+      FORCE_PRODUCTION_PATH,
+      isDevelopment,
+      willUseStripe: !isDevelopment,
+      pathSelected: isDevelopment ? 'DEVELOPMENT (Database Only)' : 'PRODUCTION (Stripe Integration)',
+      hasStripeIds: {
+        customerId: !!enhancedSubscription.stripe_customer_id,
+        subscriptionId: !!enhancedSubscription.stripe_subscription_id
+      }
+    });
     
     if (isDevelopment) {
       console.log('🧪 Development mode: Updating existing subscription');
       
-      // For upgrades in development, validate payment method if provided
+      // For upgrades in development, validate payment method is provided
+      if (isUpgrade && !paymentMethodId) {
+        console.error('❌ Payment method required for upgrades in development mode');
+        throw new Error('Payment method is required for plan upgrades. Please select a payment method.');
+      }
+      
       if (isUpgrade && paymentMethodId) {
         console.log('💳 Development mode: Payment method provided for upgrade:', paymentMethodId);
         // In production, this would validate the payment method with Stripe
@@ -268,7 +330,28 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         status: updatedSubscription.status
       });
       
-      // Billing history will be populated by subscription changes in the API
+      // Create billing history entry for subscription change
+      const billingEntry = {
+        id: `bill_change_${updatedSubscription.id}_${Date.now()}`,
+        user_id: session.user.id,
+        subscription_id: updatedSubscription.id,
+        amount: newPrice.unit_amount || 0,
+        currency: 'usd',
+        status: 'paid',
+        description: `Plan change to ${newPrice.stripe_products?.name || 'Plan'}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        invoice_url: null,
+        stripe_invoice_id: null
+      };
+
+      // Insert billing history (best effort - don't fail if this fails)
+      try {
+        await supabase.from('billing_history').insert(billingEntry);
+        console.log('✅ Billing history entry created for plan change');
+      } catch (billingError) {
+        console.warn('⚠️ Failed to create billing history entry:', billingError);
+      }
       
       // Revalidate the account page to refresh the UI
       revalidatePath('/account');
@@ -281,7 +364,8 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         subscription: {
           ...updatedSubscription,
           stripe_prices: newPrice
-        }
+        },
+        needsBillingRefresh: true
       };
     }
 
@@ -330,7 +414,8 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
     return {
       success: true,
       subscription: result.subscription,
-      invoice: result.invoice
+      invoice: result.invoice,
+      needsBillingRefresh: true
     };
 
   } catch (error) {

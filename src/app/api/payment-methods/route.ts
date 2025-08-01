@@ -24,6 +24,14 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔄 GET /api/payment-methods - Starting...');
     
+    // Enhanced environment logging
+    console.log('🌍 Environment Check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      hasStripeSecretKey: !!process.env.STRIPE_SECRET_KEY,
+      stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 8) + '...',
+      timestamp: new Date().toISOString()
+    });
+    
     // Check authentication
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -32,7 +40,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('✅ User authenticated:', user.id);
+    console.log('✅ User authenticated:', { 
+      userId: user.id, 
+      email: user.email,
+      emailDomain: user.email?.split('@')[1] 
+    });
 
     // Use environment variable for Stripe (bypass database config)
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -114,12 +126,27 @@ export async function GET(request: NextRequest) {
       is_default: pm.id === defaultPaymentMethodId
     }));
 
-    console.log('✅ Formatted payment methods for frontend');
+    console.log('✅ Formatted payment methods for frontend:', {
+      totalMethods: formattedPaymentMethods.length,
+      defaultMethodId: defaultPaymentMethodId,
+      methodDetails: formattedPaymentMethods.map(pm => ({
+        id: pm.id.substring(0, 8) + '...',
+        brand: pm.card?.brand,
+        last4: pm.card?.last4,
+        isDefault: pm.is_default,
+        expired: pm.card ? new Date(pm.card.exp_year, pm.card.exp_month - 1) < new Date() : false
+      }))
+    });
 
     return NextResponse.json({
       success: true,
       data: formattedPaymentMethods,
-      source: 'stripe-direct'
+      source: 'stripe-direct',
+      debug: {
+        customerId: customerId.substring(0, 8) + '...',
+        defaultPaymentMethodId: defaultPaymentMethodId?.substring(0, 8) + '...',
+        timestamp: new Date().toISOString()
+      }
     });
 
   } catch (error) {
