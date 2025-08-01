@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect,useState } from 'react';
-import { AlertCircle, Check, CreditCard, Loader2,Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { CardElement,Elements, useElements, useStripe } from '@stripe/react-stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+
+import { AddPaymentMethodDialog } from './AddPaymentMethodDialog';
+import { PaymentMethodCard } from './PaymentMethodCard';
 
 interface PaymentMethod {
   id: string;
@@ -47,37 +48,65 @@ function PaymentMethodsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const fetchPaymentMethods = async () => {
+  const fetchPaymentMethods = useCallback(async (showRefreshIndicator = false) => {
     try {
-      setLoading(true);
+      if (showRefreshIndicator) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
-      const response = await fetch('/api/payment-methods');
+      const response = await fetch('/api/payment-methods', {
+        cache: 'no-store', // Always fetch fresh data
+      });
       const result = await response.json();
 
       if (result.success) {
-        setPaymentMethods(result.data);
+        setPaymentMethods(result.data || []);
       } else {
         setError(result.error || 'Failed to fetch payment methods');
       }
     } catch (error) {
       console.error('Error fetching payment methods:', error);
-      setError('Failed to fetch payment methods');
+      setError('Failed to fetch payment methods. Please check your connection and try again.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPaymentMethods();
-  }, []);
+  }, [fetchPaymentMethods]);
 
   const handleDeletePaymentMethod = async (paymentMethodId: string) => {
-    if (!confirm('Are you sure you want to delete this payment method?')) {
+    // Find the payment method to check if it's default
+    const paymentMethod = paymentMethods.find(pm => pm.id === paymentMethodId);
+    
+    if (paymentMethod?.is_default && paymentMethods.length > 1) {
+      toast({
+        title: 'Cannot Delete Default Payment Method',
+        description: 'Please set another payment method as default before deleting this one.',
+        variant: 'destructive',
+      });
       return;
     }
+
+    const confirmMessage = paymentMethod?.is_default 
+      ? 'Are you sure you want to delete your only payment method? This will affect your active subscriptions.'
+      : 'Are you sure you want to delete this payment method?';
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setDeletingId(paymentMethodId);
 
     try {
       const response = await fetch(`/api/payment-methods/${paymentMethodId}`, {
@@ -103,13 +132,17 @@ function PaymentMethodsContent() {
       console.error('Error deleting payment method:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete payment method',
+        description: 'Failed to delete payment method. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleSetDefaultPaymentMethod = async (paymentMethodId: string) => {
+    setSettingDefaultId(paymentMethodId);
+
     try {
       const response = await fetch(`/api/payment-methods/${paymentMethodId}`, {
         method: 'PATCH',
@@ -134,19 +167,25 @@ function PaymentMethodsContent() {
       console.error('Error updating default payment method:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update default payment method',
+        description: 'Failed to update default payment method. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setSettingDefaultId(null);
     }
   };
 
-  const getBrandIcon = (brand: string) => {
-    // You could replace this with actual brand icons
-    return <CreditCard className="h-4 w-4 text-charcoal/60" />;
+  const handleAddSuccess = () => {
+    setShowAddDialog(false);
+    fetchPaymentMethods();
+    toast({
+      title: 'Success',
+      description: 'Payment method added successfully',
+    });
   };
 
-  const formatExpiryDate = (month: number, year: number) => {
-    return `${month.toString().padStart(2, '0')}/${year.toString().slice(-2)}`;
+  const handleRefresh = () => {
+    fetchPaymentMethods(true);
   };
 
   if (loading) {
@@ -157,8 +196,11 @@ function PaymentMethodsContent() {
           <CardDescription className="text-charcoal/70">Manage your payment information</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-charcoal/50" />
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-charcoal/50 mx-auto mb-4" />
+              <p className="text-sm text-charcoal/60">Loading payment methods...</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -170,257 +212,94 @@ function PaymentMethodsContent() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl text-charcoal">Payment Methods</CardTitle>
+            <CardTitle className="text-xl text-charcoal flex items-center space-x-2">
+              <CreditCard className="h-5 w-5 text-forest-green" />
+              <span>Payment Methods</span>
+            </CardTitle>
             <CardDescription className="text-charcoal/70">
               Manage your payment information securely
             </CardDescription>
           </div>
-          <CreditCard className="h-6 w-6 text-charcoal/60" />
+          <div className="flex items-center space-x-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {error && (
-          <Alert className="mb-4 border-red-200 bg-red-50">
+          <Alert className="mb-6 border-red-200 bg-red-50">
             <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <AlertDescription className="text-red-800">
+              {error}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fetchPaymentMethods()}
+                className="ml-2 h-6 text-xs"
+              >
+                Try Again
+              </Button>
+            </AlertDescription>
           </Alert>
         )}
 
         {paymentMethods.length > 0 ? (
           <div className="space-y-4">
             {paymentMethods.map((method) => (
-              <Card key={method.id} className="bg-light-concrete border-stone-gray">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-8 bg-stone-gray/20 rounded flex items-center justify-center">
-                        {getBrandIcon(method.card?.brand || 'unknown')}
-                      </div>
-                      <div>
-                        <p className="font-medium text-charcoal capitalize">
-                          {method.card?.brand || 'Unknown'} •••• {method.card?.last4 || '****'}
-                        </p>
-                        <p className="text-sm text-charcoal/70">
-                          Expires {method.card ? formatExpiryDate(method.card.exp_month, method.card.exp_year) : 'Unknown'}
-                        </p>
-                        {method.card?.funding && (
-                          <p className="text-xs text-charcoal/60 capitalize">
-                            {method.card.funding} card
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      {/* Show default badge based on is_default property */}
-                      {method.is_default && (
-                        <Badge className="bg-forest-green text-paper-white">Default</Badge>
-                      )}
-                      
-                      {/* Mobile-friendly button layout */}
-                      <div className="flex space-x-1">
-                        {!method.is_default && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-stone-gray text-charcoal hover:bg-paper-white h-8 px-2 text-xs"
-                            onClick={() => handleSetDefaultPaymentMethod(method.id)}
-                          >
-                            <Check className="h-3 w-3 mr-1" />
-                            <span className="hidden sm:inline">Set Default</span>
-                          </Button>
-                        )}
-                        
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-200 text-red-600 hover:bg-red-50 h-8 px-2"
-                          onClick={() => handleDeletePaymentMethod(method.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <PaymentMethodCard
+                key={method.id}
+                paymentMethod={method}
+                onDelete={handleDeletePaymentMethod}
+                onSetDefault={handleSetDefaultPaymentMethod}
+                isDeleting={deletingId === method.id}
+                isSettingDefault={settingDefaultId === method.id}
+              />
             ))}
             
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full border-stone-gray text-charcoal hover:bg-light-concrete h-12"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Payment Method
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Payment Method</DialogTitle>
-                  <DialogDescription>
-                    Add a new payment method to your account securely.
-                  </DialogDescription>
-                </DialogHeader>
-                <AddPaymentMethodForm
-                  onSuccess={() => {
-                    setShowAddDialog(false);
-                    fetchPaymentMethods();
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+            <div className="pt-4 border-t border-stone-gray/30">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddDialog(true)}
+                className="w-full border-stone-gray text-charcoal hover:bg-stone-gray/10 h-12"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Payment Method
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="text-center py-8">
-            <p className="text-charcoal/70 mb-4">No payment methods on file</p>
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Payment Method
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Payment Method</DialogTitle>
-                  <DialogDescription>
-                    Add your first payment method to get started.
-                  </DialogDescription>
-                </DialogHeader>
-                <AddPaymentMethodForm
-                  onSuccess={() => {
-                    setShowAddDialog(false);
-                    fetchPaymentMethods();
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-stone-gray/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="h-8 w-8 text-charcoal/40" />
+            </div>
+            <h3 className="text-lg font-medium text-charcoal mb-2">No payment methods</h3>
+            <p className="text-charcoal/70 mb-6 max-w-sm mx-auto">
+              Add a payment method to manage your subscriptions and make payments.
+            </p>
+            <Button 
+              onClick={() => setShowAddDialog(true)}
+              className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Payment Method
+            </Button>
           </div>
         )}
+
+        <AddPaymentMethodDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          onSuccess={handleAddSuccess}
+        />
       </CardContent>
     </Card>
-  );
-}
-
-function AddPaymentMethodForm({ onSuccess }: { onSuccess: () => void }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Create setup intent
-      const response = await fetch('/api/payment-methods', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create setup intent');
-      }
-
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        throw new Error('Card element not found');
-      }
-
-      // Confirm setup intent
-      const { error: stripeError } = await stripe.confirmCardSetup(
-        result.data.client_secret,
-        {
-          payment_method: {
-            card: cardElement,
-          },
-        }
-      );
-
-      if (stripeError) {
-        throw new Error(stripeError.message || 'Payment method setup failed');
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Payment method added successfully',
-      });
-
-      onSuccess();
-    } catch (error) {
-      console.error('Error adding payment method:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add payment method';
-      setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#424242',
-        '::placeholder': {
-          color: '#9ca3af',
-        },
-      },
-    },
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-charcoal">Card Information</label>
-        <div className="p-3 border border-stone-gray rounded-md bg-paper-white">
-          <CardElement options={cardElementOptions} />
-        </div>
-      </div>
-
-      <div className="flex space-x-2">
-        <Button
-          type="submit"
-          disabled={!stripe || loading}
-          className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90"
-        >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Plus className="h-4 w-4 mr-2" />
-          )}
-          {loading ? 'Adding...' : 'Add Payment Method'}
-        </Button>
-      </div>
-
-      <p className="text-xs text-charcoal/60">
-        Your payment information is securely processed by Stripe and encrypted.
-      </p>
-    </form>
   );
 }
