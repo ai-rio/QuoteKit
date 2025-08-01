@@ -9,60 +9,53 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    console.log('🔄 DELETE /api/payment-methods/' + id + ' - Starting...');
+    
     // Check authentication
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
+      console.log('❌ Authentication failed:', error?.message);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get Stripe configuration - try database first, then environment variables
-    const { data: stripeConfigRecord } = await supabase
-      .from('admin_settings')
-      .select('value')
-      .eq('key', 'stripe_config')
-      .single();
-
-    const stripeConfig = stripeConfigRecord?.value as any;
-    
-    let stripe;
-    if (stripeConfig?.secret_key) {
-      // Use database configuration
-      stripe = createStripeAdminClient({
-        secret_key: stripeConfig.secret_key,
-        mode: stripeConfig.mode || 'test'
-      });
-    } else if (process.env.STRIPE_SECRET_KEY) {
-      // Fallback to environment variables
-      stripe = createStripeAdminClient({
-        secret_key: process.env.STRIPE_SECRET_KEY,
-        mode: 'test' // Default to test mode for env vars
-      });
-    } else {
+    // Use environment variable for Stripe
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      console.log('❌ STRIPE_SECRET_KEY not found in environment');
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 400 });
     }
 
-    // Get customer ID from database
-    const { data: customer } = await supabase
-      .from('stripe_customers')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
+    const stripe = createStripeAdminClient({
+      secret_key: stripeSecretKey,
+      mode: 'test'
+    });
 
-    if (!customer?.stripe_customer_id) {
+    // Get customer by email
+    const existingCustomers = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
+    });
+
+    if (existingCustomers.data.length === 0) {
+      console.log('❌ Customer not found');
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
+
+    const customerId = existingCustomers.data[0].id;
+    console.log('✅ Found customer:', customerId);
 
     // Verify that the payment method belongs to this customer
     const paymentMethod = await stripe.paymentMethods.retrieve(id);
     
-    if (paymentMethod.customer !== customer.stripe_customer_id) {
+    if (paymentMethod.customer !== customerId) {
+      console.log('❌ Payment method does not belong to customer');
       return NextResponse.json({ error: 'Payment method not found' }, { status: 404 });
     }
 
     // Check if this payment method is being used by any active subscriptions
     const subscriptions = await stripe.subscriptions.list({
-      customer: customer.stripe_customer_id,
+      customer: customerId,
       status: 'active',
     });
 
@@ -71,26 +64,17 @@ export async function DELETE(
     );
 
     if (isUsedByActiveSubscription) {
+      console.log('❌ Payment method is used by active subscription');
       return NextResponse.json({ 
         error: 'Cannot delete payment method that is used by an active subscription' 
       }, { status: 400 });
     }
 
     // Detach payment method from customer
+    console.log('🔄 Detaching payment method from customer...');
     await stripe.paymentMethods.detach(id);
 
-    // Also remove from database
-    try {
-      await supabase
-        .from('payment_methods')
-        .delete()
-        .eq('id', id);
-
-      console.log(`✅ Removed payment method ${id} from database`);
-    } catch (dbError) {
-      console.error('Failed to remove payment method from database:', dbError);
-      // Don't fail the request - Stripe deletion succeeded
-    }
+    console.log('✅ Payment method deleted successfully');
 
     return NextResponse.json({
       success: true,
@@ -98,7 +82,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Error deleting payment method:', error);
+    console.error('💥 Error deleting payment method:', error);
     return NextResponse.json(
       { 
         error: 'Internal server error',
@@ -116,59 +100,53 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    console.log('🔄 PATCH /api/payment-methods/' + id + ' - Starting...');
+    
     // Check authentication
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
+      console.log('❌ Authentication failed:', error?.message);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get Stripe configuration - try database first, then environment variables
-    const { data: stripeConfigRecord } = await supabase
-      .from('admin_settings')
-      .select('value')
-      .eq('key', 'stripe_config')
-      .single();
-
-    const stripeConfig = stripeConfigRecord?.value as any;
-    
-    let stripe;
-    if (stripeConfig?.secret_key) {
-      // Use database configuration
-      stripe = createStripeAdminClient({
-        secret_key: stripeConfig.secret_key,
-        mode: stripeConfig.mode || 'test'
-      });
-    } else if (process.env.STRIPE_SECRET_KEY) {
-      // Fallback to environment variables
-      stripe = createStripeAdminClient({
-        secret_key: process.env.STRIPE_SECRET_KEY,
-        mode: 'test' // Default to test mode for env vars
-      });
-    } else {
+    // Use environment variable for Stripe
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      console.log('❌ STRIPE_SECRET_KEY not found in environment');
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 400 });
     }
 
-    // Get customer ID from database
-    const { data: customer } = await supabase
-      .from('stripe_customers')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
+    const stripe = createStripeAdminClient({
+      secret_key: stripeSecretKey,
+      mode: 'test'
+    });
 
-    if (!customer?.stripe_customer_id) {
+    // Get customer by email
+    const existingCustomers = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
+    });
+
+    if (existingCustomers.data.length === 0) {
+      console.log('❌ Customer not found');
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
+
+    const customerId = existingCustomers.data[0].id;
+    console.log('✅ Found customer:', customerId);
 
     // Verify that the payment method belongs to this customer
     const paymentMethod = await stripe.paymentMethods.retrieve(id);
     
-    if (paymentMethod.customer !== customer.stripe_customer_id) {
+    if (paymentMethod.customer !== customerId) {
+      console.log('❌ Payment method does not belong to customer');
       return NextResponse.json({ error: 'Payment method not found' }, { status: 404 });
     }
 
     // Update customer's default payment method
-    await stripe.customers.update(customer.stripe_customer_id, {
+    console.log('🔄 Setting default payment method...');
+    await stripe.customers.update(customerId, {
       invoice_settings: {
         default_payment_method: id,
       },
@@ -176,35 +154,18 @@ export async function PATCH(
 
     // Update all active subscriptions to use this payment method
     const subscriptions = await stripe.subscriptions.list({
-      customer: customer.stripe_customer_id,
+      customer: customerId,
       status: 'active',
     });
 
+    console.log(`🔄 Updating ${subscriptions.data.length} active subscriptions...`);
     for (const subscription of subscriptions.data) {
       await stripe.subscriptions.update(subscription.id, {
         default_payment_method: id,
       });
     }
 
-    // Also update the database to reflect the new default payment method
-    try {
-      // First, unset all other payment methods as default for this customer
-      await supabase
-        .from('payment_methods')
-        .update({ is_default: false, updated_at: new Date().toISOString() })
-        .eq('stripe_customer_id', customer.stripe_customer_id);
-
-      // Then set this payment method as default
-      await supabase
-        .from('payment_methods')
-        .update({ is_default: true, updated_at: new Date().toISOString() })
-        .eq('id', id);
-
-      console.log(`✅ Updated database: payment method ${id} set as default`);
-    } catch (dbError) {
-      console.error('Failed to update payment method default status in database:', dbError);
-      // Don't fail the request - Stripe update succeeded
-    }
+    console.log('✅ Default payment method updated successfully');
 
     return NextResponse.json({
       success: true,
@@ -212,7 +173,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error('Error updating default payment method:', error);
+    console.error('💥 Error updating default payment method:', error);
     return NextResponse.json(
       { 
         error: 'Internal server error',
