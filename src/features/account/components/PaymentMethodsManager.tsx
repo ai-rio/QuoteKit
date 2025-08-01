@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw, Sync } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -62,18 +62,28 @@ function PaymentMethodsContent() {
       }
       setError(null);
 
+      console.log('🔄 Fetching payment methods...');
+      
       const response = await fetch('/api/payment-methods', {
         cache: 'no-store', // Always fetch fresh data
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
       });
+      
       const result = await response.json();
+      
+      console.log('📊 Payment methods API response:', result);
 
       if (result.success) {
+        console.log(`✅ Found ${result.data?.length || 0} payment methods`);
         setPaymentMethods(result.data || []);
       } else {
+        console.error('❌ API error:', result.error);
         setError(result.error || 'Failed to fetch payment methods');
       }
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
+      console.error('💥 Fetch error:', error);
       setError('Failed to fetch payment methods. Please check your connection and try again.');
     } finally {
       setLoading(false);
@@ -177,7 +187,12 @@ function PaymentMethodsContent() {
 
   const handleAddSuccess = () => {
     setShowAddDialog(false);
-    fetchPaymentMethods();
+    
+    // Add a small delay to allow Stripe webhook processing
+    setTimeout(() => {
+      fetchPaymentMethods();
+    }, 1000);
+    
     toast({
       title: 'Success',
       description: 'Payment method added successfully',
@@ -186,6 +201,48 @@ function PaymentMethodsContent() {
 
   const handleRefresh = () => {
     fetchPaymentMethods(true);
+  };
+
+  const handleForceSync = async () => {
+    try {
+      setRefreshing(true);
+      console.log('🔄 Force syncing payment methods from Stripe...');
+      
+      // Call the sync endpoint to force refresh from Stripe
+      const response = await fetch('/api/payment-methods/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      console.log('🔄 Sync result:', result);
+      
+      if (result.success) {
+        toast({
+          title: 'Sync Complete',
+          description: `Synced ${result.synced || 0} payment methods from Stripe`,
+        });
+        // Fetch fresh data after sync
+        await fetchPaymentMethods();
+      } else {
+        toast({
+          title: 'Sync Failed',
+          description: result.error || 'Failed to sync payment methods',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: 'Sync Error',
+        description: 'Failed to sync payment methods',
+        variant: 'destructive',
+      });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   if (loading) {
@@ -227,8 +284,19 @@ function PaymentMethodsContent() {
               onClick={handleRefresh}
               disabled={refreshing}
               className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+              title="Refresh payment methods"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleForceSync}
+              disabled={refreshing}
+              className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+              title="Force sync from Stripe"
+            >
+              <Sync className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>

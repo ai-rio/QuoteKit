@@ -215,7 +215,7 @@ export function AddPaymentMethodDialog({
 
       toast({
         title: 'Success',
-        description: 'Payment method added successfully',
+        description: 'Payment method added successfully. Refreshing list...',
       });
 
       // Reset form
