@@ -2,11 +2,32 @@
 
 **Epic**: Account-Stripe Integration - Phase 3 (Clean Integration)  
 **Epic ID**: STRIPE-CLEAN-P3  
-**Status**: 🚀 Planning  
+**Status**: 🚨 **CRITICAL GAPS IDENTIFIED**  
 **Created**: 2025-08-01  
 **Team**: Full Stack Development  
 **Sprint Duration**: 2 weeks  
 **Estimated Completion**: 4-6 weeks (2-3 sprints)
+
+## 🚨 **CRITICAL ALERT: Integration Gaps Discovered**
+
+**Date**: 2025-08-01  
+**Severity**: P0 - Critical  
+**Impact**: Plan change functionality is non-functional
+
+During the implementation of US-P3-002 (Billing History), **critical integration gaps** were identified in the PlanChangeDialog system. The current plan change functionality lacks actual payment processing integration.
+
+### Quick Summary
+- ✅ **Billing History**: Complete and functional
+- ✅ **Payment Methods**: Display functionality exists  
+- ❌ **Plan Changes**: UI exists but no payment processing
+- ❌ **Integration**: No connection between systems
+
+### Required Action
+**Emergency Sprint 1.5** required to address integration gaps before continuing with planned features.
+
+**Documentation**: 
+- [INTEGRATION-GAPS-ANALYSIS.md](./INTEGRATION-GAPS-ANALYSIS.md) - Detailed gap analysis
+- [INTEGRATION-USER-STORIES.md](./INTEGRATION-USER-STORIES.md) - New user stories (34 points)
 
 ---
 

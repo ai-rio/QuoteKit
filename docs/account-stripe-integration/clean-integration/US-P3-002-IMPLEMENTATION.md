@@ -4,7 +4,38 @@
 **Story Points**: 5/5  
 **Implementation Date**: 2025-08-01  
 
-## 📋 Overview
+## 🚨 Critical Integration Gap Discovered
+
+### PlanChangeDialog Integration Issues
+
+During the implementation of US-P3-002, a **critical integration gap** was identified in the existing PlanChangeDialog system. While the billing history functionality is complete and working, the plan change functionality is **non-functional for actual payment processing**.
+
+#### Gap Analysis Summary
+- ✅ **Billing History**: Complete with real-time updates and invoice downloads
+- ✅ **Payment Methods**: Display and management functionality exists
+- ❌ **Plan Changes**: UI exists but no actual payment processing occurs
+- ❌ **Integration**: No connection between plan changes, payment methods, and billing history
+
+#### Specific Issues Identified
+1. **No Payment Processing**: `changePlan` action only updates database, no Stripe integration
+2. **No Payment Method Validation**: Plan changes don't check for valid payment methods
+3. **No Billing History Updates**: Plan changes don't create billing records
+4. **No Proration Handling**: UI shows proration info but no actual calculation/charging
+5. **Missing Error Handling**: No payment failure handling or retry logic
+
+#### Business Impact
+- **User Experience**: Users see plan options but cannot complete changes
+- **Revenue Impact**: No actual plan upgrades/downgrades possible
+- **Support Risk**: Potential user confusion and support tickets
+
+#### Required Action
+This gap requires **immediate attention** and emergency sprint planning. See [INTEGRATION-GAPS-ANALYSIS.md](./INTEGRATION-GAPS-ANALYSIS.md) for detailed analysis and implementation requirements.
+
+**Estimated Work**: 34 story points across 4 new integration stories
+**Priority**: P0 - Critical
+**Timeline**: Emergency sprint recommended
+
+---
 
 US-P3-002 implements a comprehensive billing history system with invoice downloads, featuring advanced filtering, pagination, real-time updates, and responsive design. This implementation goes beyond the basic requirements to provide a production-ready solution.
 
@@ -256,6 +287,7 @@ Direct integration with Stripe's Invoice API:
 - [Quick Reference](./quick-reference.md) - Development quick reference
 - [Design System](../../design-system-specification.md) - UI/UX guidelines
 - [API Documentation](../api-specs.md) - API specifications
+- **[Integration Gaps Analysis](./INTEGRATION-GAPS-ANALYSIS.md)** - Critical PlanChangeDialog integration issues
 
 ## 👥 Team Notes
 
