@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertCircle, DollarSign, RefreshCw, Settings, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -11,8 +11,29 @@ import { formatDate } from '@/utils/to-date-time';
 
 import { cancelSubscription, changePlan, reactivateSubscription } from '../actions/subscription-actions';
 
+import { AddPaymentMethodDialog } from './AddPaymentMethodDialog';
 import { CancellationDialog } from './CancellationDialog';
 import { PlanChangeDialog } from './PlanChangeDialog';
+
+interface PaymentMethod {
+  id: string;
+  type: string;
+  card?: {
+    brand: string;
+    country: string;
+    exp_month: number;
+    exp_year: number;
+    last4: string;
+    funding: string;
+  };
+  created: number;
+  customer: string;
+  is_default?: boolean;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+}
 
 interface EnhancedCurrentPlanCardProps {
   subscription: SubscriptionWithProduct | null;
@@ -23,10 +44,58 @@ interface EnhancedCurrentPlanCardProps {
 export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availablePlans }: EnhancedCurrentPlanCardProps) {
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showAddPaymentDialog, setShowAddPaymentDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [isLoadingPaymentMethods, setIsLoadingPaymentMethods] = useState(false);
+
+  // Load payment methods when dialog opens
+  const loadPaymentMethods = async () => {
+    if (isLoadingPaymentMethods) return;
+    
+    setIsLoadingPaymentMethods(true);
+    try {
+      const response = await fetch('/api/payment-methods');
+      if (response.ok) {
+        const data = await response.json();
+        setPaymentMethods(data.paymentMethods || []);
+      } else {
+        console.error('Failed to load payment methods:', response.statusText);
+        setPaymentMethods([]);
+      }
+    } catch (error) {
+      console.error('Error loading payment methods:', error);
+      setPaymentMethods([]);
+    } finally {
+      setIsLoadingPaymentMethods(false);
+    }
+  };
+
+  // Load payment methods when plan dialog opens
+  useEffect(() => {
+    if (showPlanDialog) {
+      loadPaymentMethods();
+    }
+  }, [showPlanDialog]);
+
+  const handlePaymentMethodRequired = () => {
+    setShowPlanDialog(false);
+    setShowAddPaymentDialog(true);
+  };
+
+  const handlePaymentMethodAdded = () => {
+    setShowAddPaymentDialog(false);
+    // Reload payment methods and reopen plan dialog
+    loadPaymentMethods().then(() => {
+      // Give a small delay to ensure payment methods are loaded
+      setTimeout(() => {
+        setShowPlanDialog(true);
+      }, 500);
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -42,9 +111,9 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
-  };
+  };;
 
-  const handlePlanChange = async (priceId: string, isUpgrade: boolean) => {
+  const handlePlanChange = async (priceId: string, isUpgrade: boolean, paymentMethodId?: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -52,8 +121,12 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       // Show different loading messages based on upgrade type
       const loadingMessage = isUpgrade ? 'Upgrading your plan...' : 'Changing your plan...';
       
-      await changePlan(priceId, isUpgrade);
+      await changePlan(priceId, isUpgrade, paymentMethodId);
       setShowPlanDialog(false);
+      
+      // Dispatch events to update billing history and other components
+      window.dispatchEvent(new CustomEvent('plan-change-completed'));
+      window.dispatchEvent(new CustomEvent('billing-history-updated'));
       
       // If we reach here, it means the plan change was successful (no redirect)
       // Show success message for immediate plan changes (paid to paid)
@@ -418,6 +491,8 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
           availablePlans={availablePlans}
           onPlanChange={handlePlanChange}
           isLoading={isLoading}
+          paymentMethods={paymentMethods}
+          onPaymentMethodRequired={handlePaymentMethodRequired}
         />
       )}
 
@@ -436,6 +511,13 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
           isLoading={isLoading}
         />
       )}
+
+      {/* Add Payment Method Dialog */}
+      <AddPaymentMethodDialog
+        open={showAddPaymentDialog}
+        onOpenChange={setShowAddPaymentDialog}
+        onSuccess={handlePaymentMethodAdded}
+      />
     </>
   );
 }

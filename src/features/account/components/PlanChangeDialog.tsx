@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { CreditCard, Loader2, TrendingDown,TrendingUp } from 'lucide-react';
+import { AlertCircle, CheckCircle, CreditCard, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,27 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ProductWithPrices } from '@/features/pricing/types';
+import { useState, useEffect } from 'react';
+
+interface PaymentMethod {
+  id: string;
+  type: string;
+  card?: {
+    brand: string;
+    country: string;
+    exp_month: number;
+    exp_year: number;
+    last4: string;
+    funding: string;
+  };
+  created: number;
+  customer: string;
+  is_default?: boolean;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+}
 
 interface PlanChangeDialogProps {
   isOpen: boolean;
@@ -26,8 +46,10 @@ interface PlanChangeDialogProps {
     interval: string;
   };
   availablePlans: ProductWithPrices[];
-  onPlanChange: (priceId: string, isUpgrade: boolean) => Promise<void>;
+  onPlanChange: (priceId: string, isUpgrade: boolean, paymentMethodId?: string) => Promise<void>;
   isLoading?: boolean;
+  paymentMethods?: PaymentMethod[];
+  onPaymentMethodRequired?: () => void;
 }
 
 export function PlanChangeDialog({
@@ -37,8 +59,11 @@ export function PlanChangeDialog({
   availablePlans,
   onPlanChange,
   isLoading = false,
+  paymentMethods = [],
+  onPaymentMethodRequired,
 }: PlanChangeDialogProps) {
   const [selectedPriceId, setSelectedPriceId] = useState<string>('');
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string>('');
   const [isChanging, setIsChanging] = useState(false);
 
   // Debug logging
@@ -47,6 +72,7 @@ export function PlanChangeDialog({
       console.log('🔍 PlanChangeDialog opened with data:', {
         currentPlan,
         availablePlansCount: availablePlans?.length || 0,
+        paymentMethodsCount: paymentMethods?.length || 0,
         availablePlans: availablePlans?.map(p => ({
           name: p.name,
           pricesCount: p.prices?.length || 0,
@@ -58,7 +84,17 @@ export function PlanChangeDialog({
         }))
       });
     }
-  }, [isOpen, currentPlan, availablePlans]);
+  }, [isOpen, currentPlan, availablePlans, paymentMethods]);
+
+  // Set default payment method when dialog opens
+  useEffect(() => {
+    if (isOpen && paymentMethods.length > 0) {
+      const defaultMethod = paymentMethods.find(pm => pm.is_default) || paymentMethods[0];
+      if (defaultMethod) {
+        setSelectedPaymentMethodId(defaultMethod.id);
+      }
+    }
+  }, [isOpen, paymentMethods]);
 
   const handlePlanChange = async () => {
     if (!selectedPriceId) return;
@@ -74,8 +110,15 @@ export function PlanChangeDialog({
 
     const isUpgrade = (selectedPrice.unit_amount || 0) > currentPlan.price * 100;
 
+    // For upgrades, validate payment method is selected
+    if (isUpgrade && !selectedPaymentMethodId) {
+      console.error('Payment method required for upgrades');
+      return;
+    }
+
     console.log('💳 Plan change initiated:', {
       selectedPriceId,
+      selectedPaymentMethodId,
       selectedPrice: {
         amount: selectedPrice.unit_amount,
         interval: selectedPrice.interval
@@ -86,7 +129,7 @@ export function PlanChangeDialog({
 
     setIsChanging(true);
     try {
-      await onPlanChange(selectedPriceId, isUpgrade);
+      await onPlanChange(selectedPriceId, isUpgrade, selectedPaymentMethodId);
       onClose();
     } catch (error) {
       console.error('Plan change failed:', error);
@@ -108,6 +151,13 @@ export function PlanChangeDialog({
   const formatPrice = (amount: number) => {
     return `$${(amount / 100).toFixed(0)}`;
   };
+
+  // Check if user has valid payment methods for upgrades
+  const hasValidPaymentMethods = paymentMethods.length > 0;
+  const requiresPaymentMethod = selectedPriceId && availablePlans
+    .flatMap(p => p.prices || [])
+    .find(price => price?.stripe_price_id === selectedPriceId)
+    ?.unit_amount > currentPlan.price * 100;
 
   // Filter out current plan and ensure we have valid data
   const validPlans = availablePlans?.filter(product => 
@@ -143,6 +193,74 @@ export function PlanChangeDialog({
             </CardContent>
           </Card>
 
+          {/* Payment Method Selection for Upgrades */}
+          {requiresPaymentMethod && (
+            <Card className="bg-light-concrete border-stone-gray">
+              <CardHeader>
+                <CardTitle className="text-lg text-charcoal flex items-center space-x-2">
+                  <CreditCard className="h-5 w-5" />
+                  <span>Payment Method</span>
+                </CardTitle>
+                <CardDescription className="text-charcoal/70">
+                  Select a payment method for your plan upgrade
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!hasValidPaymentMethods ? (
+                  <div className="text-center py-4">
+                    <AlertCircle className="h-12 w-12 text-equipment-yellow mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-charcoal mb-2">Payment Method Required</h3>
+                    <p className="text-charcoal/70 mb-4">
+                      You need to add a payment method before upgrading your plan.
+                    </p>
+                    <Button
+                      onClick={onPaymentMethodRequired}
+                      className="bg-forest-green hover:bg-forest-green/90 text-paper-white"
+                    >
+                      Add Payment Method
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {paymentMethods.map((paymentMethod) => (
+                      <div
+                        key={paymentMethod.id}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                          selectedPaymentMethodId === paymentMethod.id
+                            ? 'border-forest-green bg-forest-green/5'
+                            : 'border-stone-gray hover:bg-light-concrete/50'
+                        }`}
+                        onClick={() => setSelectedPaymentMethodId(paymentMethod.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <CreditCard className="h-5 w-5 text-charcoal" />
+                            <div>
+                              <p className="font-medium text-charcoal">
+                                •••• •••• •••• {paymentMethod.last4}
+                              </p>
+                              <p className="text-sm text-charcoal/70">
+                                {paymentMethod.brand?.toUpperCase()} • Expires {paymentMethod.exp_month}/{paymentMethod.exp_year}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {paymentMethod.is_default && (
+                              <Badge className="bg-equipment-yellow text-charcoal">Default</Badge>
+                            )}
+                            {selectedPaymentMethodId === paymentMethod.id && (
+                              <CheckCircle className="h-5 w-5 text-forest-green" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Available Plans */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-charcoal">Available Plans</h3>
@@ -166,6 +284,7 @@ export function PlanChangeDialog({
                     const isSelected = selectedPriceId === price.stripe_price_id;
                     const isCurrent = price.stripe_price_id === currentPlan.id;
                     const Icon = changeInfo.icon;
+                    const isUpgrade = changeInfo.type === 'upgrade';
 
                     return (
                       <Card
@@ -218,6 +337,16 @@ export function PlanChangeDialog({
                               </span>
                             </div>
                           )}
+
+                          {/* Payment method requirement indicator */}
+                          {isUpgrade && isSelected && !hasValidPaymentMethods && (
+                            <div className="mt-3 p-2 bg-equipment-yellow/10 border border-equipment-yellow rounded">
+                              <div className="flex items-center space-x-2 text-sm">
+                                <AlertCircle className="h-4 w-4 text-equipment-yellow" />
+                                <span className="text-charcoal">Payment method required for upgrade</span>
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     );
@@ -226,57 +355,29 @@ export function PlanChangeDialog({
               </div>
             )}
           </div>
-
-          {/* Proration Information */}
-          {selectedPriceId && (
-            <Card className="bg-light-concrete border-stone-gray">
-              <CardContent className="p-4">
-                <h4 className="font-medium text-charcoal mb-2">Billing Information</h4>
-                <div className="text-sm text-charcoal/70 space-y-1">
-                  {getChangeType(
-                    validPlans
-                      .flatMap(p => p.prices || [])
-                      .find(p => p?.stripe_price_id === selectedPriceId)?.unit_amount || 0
-                  ).type === 'upgrade' ? (
-                    <>
-                      <p>• Your plan will be upgraded immediately</p>
-                      <p>• You&apos;ll be charged a prorated amount for the remaining billing period</p>
-                      <p>• Your next billing date remains the same</p>
-                    </>
-                  ) : (
-                    <>
-                      <p>• Your plan will be downgraded at the end of the current billing period</p>
-                      <p>• You&apos;ll retain access to current features until then</p>
-                      <p>• No immediate charges will apply</p>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex justify-between items-center">
           <Button
             variant="outline"
-            className="bg-paper-white text-charcoal border-stone-gray hover:bg-stone-gray/20"
             onClick={onClose}
             disabled={isChanging}
+            className="border-stone-gray text-charcoal hover:bg-light-concrete"
           >
             Cancel
           </Button>
           <Button
-            className="bg-forest-green text-paper-white hover:opacity-90"
             onClick={handlePlanChange}
-            disabled={!selectedPriceId || isChanging}
+            disabled={!selectedPriceId || isChanging || (requiresPaymentMethod && !hasValidPaymentMethods)}
+            className="bg-forest-green hover:bg-forest-green/90 text-paper-white"
           >
             {isChanging ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Changing Plan...
+                Processing...
               </>
             ) : (
-              'Confirm Plan Change'
+              'Confirm Change'
             )}
           </Button>
         </DialogFooter>

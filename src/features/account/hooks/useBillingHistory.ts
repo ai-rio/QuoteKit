@@ -168,6 +168,26 @@ export function useBillingHistory(initialData: BillingHistoryItem[] = []): UseBi
     return () => window.removeEventListener('online', handleOnline);
   }, [fetchBillingHistory, isLoading, isRefetching]);
 
+  // Listen for plan change events to refresh billing history immediately
+  useEffect(() => {
+    const handlePlanChange = () => {
+      // Refresh billing history immediately after plan changes
+      if (!isLoading && !isRefetching) {
+        console.debug('useBillingHistory: Refreshing after plan change');
+        fetchBillingHistory(true);
+      }
+    };
+
+    // Listen for custom plan change events
+    window.addEventListener('plan-change-completed', handlePlanChange);
+    window.addEventListener('billing-history-updated', handlePlanChange);
+    
+    return () => {
+      window.removeEventListener('plan-change-completed', handlePlanChange);
+      window.removeEventListener('billing-history-updated', handlePlanChange);
+    };
+  }, [fetchBillingHistory, isLoading, isRefetching]);
+
   return {
     data,
     isLoading,

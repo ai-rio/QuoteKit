@@ -6,9 +6,11 @@ import { getSession } from '@/features/account/controllers/get-session';
 import { getSubscription } from '@/features/account/controllers/get-subscription';
 import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { executeStripePlanChange, validatePaymentMethod } from '../controllers/stripe-plan-change';
 
-export async function changePlan(priceId: string, isUpgrade: boolean) {
-  console.log('🔄 changePlan called with:', { priceId, isUpgrade });
+
+export async function changePlan(priceId: string, isUpgrade: boolean, paymentMethodId?: string) {
+  console.log('🔄 changePlan called with:', { priceId, isUpgrade, paymentMethodId });
   
   try {
     // Check authentication
@@ -107,6 +109,12 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       if (isDevelopment) {
         console.log('🧪 Development mode: Creating local subscription without Stripe');
         
+        // For upgrades in development, validate payment method if provided
+        if (isUpgrade && paymentMethodId) {
+          console.log('💳 Development mode: Payment method provided for upgrade:', paymentMethodId);
+          // In production, this would validate the payment method with Stripe
+        }
+        
         // Create a development subscription record
         const devSubscription = {
           id: `sub_dev_${Date.now()}`,
@@ -155,11 +163,32 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
           stripe_price_id: subscription.stripe_price_id
         });
         
+        // Billing history will be populated by subscription changes in the API
+        
+        // Note: Event dispatching moved to client-side component
+        // Server actions cannot dispatch window events
+        
         return { success: true, subscription };
       }
 
-      // Production mode would go here (Stripe integration)
-      throw new Error('Production mode Stripe integration not implemented yet');
+      // Production mode: Create new Stripe subscription
+      console.log('🏭 Production mode: Creating new Stripe subscription');
+      
+      // For new subscriptions (free to paid), we need to create a Stripe subscription
+      // This requires customer creation and payment method setup
+      if (isUpgrade && !paymentMethodId) {
+        throw new Error('Payment method is required for new paid subscriptions');
+      }
+      
+      // TODO: Implement new subscription creation with Stripe
+      // This would involve:
+      // 1. Creating Stripe customer if doesn't exist
+      // 2. Attaching payment method to customer
+      // 3. Creating subscription with the new price
+      // 4. Handling payment confirmation
+      // 5. Updating local database
+      
+      throw new Error('New subscription creation not yet implemented. Please contact support.');
     }
 
     // Handle existing subscription changes
@@ -191,6 +220,12 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
     
     if (isDevelopment) {
       console.log('🧪 Development mode: Updating existing subscription');
+      
+      // For upgrades in development, validate payment method if provided
+      if (isUpgrade && paymentMethodId) {
+        console.log('💳 Development mode: Payment method provided for upgrade:', paymentMethodId);
+        // In production, this would validate the payment method with Stripe
+      }
       
       // Update the existing subscription with new price
       const subscriptionUpdate = {
@@ -233,8 +268,13 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
         status: updatedSubscription.status
       });
       
+      // Billing history will be populated by subscription changes in the API
+      
       // Revalidate the account page to refresh the UI
       revalidatePath('/account');
+      
+      // Note: Event dispatching moved to client-side component
+      // Server actions cannot dispatch window events
       
       return { 
         success: true, 
@@ -245,8 +285,53 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       };
     }
 
-    // Production mode would go here (Stripe integration)
-    throw new Error('Production mode Stripe integration not implemented yet');
+    // Production mode: Update existing Stripe subscription
+    console.log('🏭 Production mode: Updating existing Stripe subscription');
+    
+    // Get Stripe customer and subscription IDs
+    const stripeCustomerId = enhancedSubscription.stripe_customer_id;
+    const stripeSubscriptionId = enhancedSubscription.stripe_subscription_id;
+    
+    if (!stripeCustomerId || !stripeSubscriptionId) {
+      throw new Error('Missing Stripe customer or subscription ID. Please contact support.');
+    }
+    
+    // For upgrades, validate payment method if provided
+    if (isUpgrade && paymentMethodId) {
+      console.log('💳 Validating payment method for upgrade...');
+      const isValidPaymentMethod = await validatePaymentMethod(stripeCustomerId, paymentMethodId);
+      if (!isValidPaymentMethod) {
+        throw new Error('Invalid or expired payment method. Please add a valid payment method.');
+      }
+    }
+    
+    // Execute the plan change with Stripe
+    const result = await executeStripePlanChange(
+      session.user.id,
+      stripeCustomerId,
+      stripeSubscriptionId,
+      priceId,
+      paymentMethodId,
+      isUpgrade
+    );
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to update subscription with Stripe');
+    }
+    
+    console.log('✅ Stripe plan change completed successfully');
+    
+    // Revalidate the account page to refresh the UI
+    revalidatePath('/account');
+    
+    // Note: Event dispatching moved to client-side component
+    // Server actions cannot dispatch window events
+    
+    return {
+      success: true,
+      subscription: result.subscription,
+      invoice: result.invoice
+    };
 
   } catch (error) {
     console.error('❌ Plan change error:', {
@@ -254,6 +339,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean) {
       stack: error instanceof Error ? error.stack : undefined,
       priceId,
       isUpgrade,
+      paymentMethodId,
       timestamp: new Date().toISOString()
     });
     

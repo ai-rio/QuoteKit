@@ -7,6 +7,7 @@ import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedC
 import { PaymentMethodsManager } from '@/features/account/components/PaymentMethodsManager';
 import { BillingHistoryTable } from '@/features/account/components/BillingHistoryTable';
 import { SuccessHandler } from '@/features/account/components/SuccessHandler';
+import { StripeEnhancedCurrentPlanCard } from '@/features/account/components/StripeEnhancedCurrentPlanCard';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
 import { getBillingHistory, getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
@@ -53,11 +54,20 @@ export default async function AccountPage() {
 
         {/* Current Plan Section */}
         <Suspense fallback={<CardSkeleton />}>
-          <EnhancedCurrentPlanCard 
-            subscription={subscription} 
-            freePlanInfo={freePlanInfo}
-            availablePlans={availablePlans} 
-          />
+          {stripePublishableKey ? (
+            <StripeEnhancedCurrentPlanCard 
+              subscription={subscription} 
+              freePlanInfo={freePlanInfo}
+              availablePlans={availablePlans} 
+              stripePublishableKey={stripePublishableKey}
+            />
+          ) : (
+            <EnhancedCurrentPlanCard 
+              subscription={subscription} 
+              freePlanInfo={freePlanInfo}
+              availablePlans={availablePlans} 
+            />
+          )}
         </Suspense>
 
         {/* Billing History Section */}

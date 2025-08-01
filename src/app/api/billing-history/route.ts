@@ -104,16 +104,38 @@ export async function GET(request: NextRequest) {
           userId: user.id
         });
         
-        return NextResponse.json({
-          data: [],
-          pagination: {
-            total: 0,
-            limit,
-            offset,
-            hasMore: false
-          },
-          message: 'No billing history available'
-        });
+        // Try direct Stripe lookup before giving up
+        console.debug('billing-history API: Trying direct Stripe lookup');
+        
+        const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+        const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+        
+        if (stripeSecretKey) {
+          const stripe = createStripeAdminClient({
+            secret_key: stripeSecretKey,
+            mode: 'test'
+          });
+          
+          // Try to find existing customer by email
+          const existingCustomers = await stripe.customers.list({
+            email: user.email,
+            limit: 1,
+          });
+          
+          if (existingCustomers.data.length > 0) {
+            stripeCustomerId = existingCustomers.data[0].id;
+            console.debug('billing-history API: Found customer via direct Stripe lookup', {
+              userId: user.id,
+              stripeCustomerId
+            });
+          }
+        }
+        
+        if (!stripeCustomerId) {
+          // Still no customer found - don't return empty, continue to show subscription history
+          console.debug('billing-history API: No Stripe customer found, will show subscription history only');
+          stripeCustomerId = null;
+        }
       }
       
       console.debug('billing-history API: Found Stripe customer', {
@@ -135,21 +157,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch invoices from Stripe
-    const { stripeAdmin } = await import('@/libs/stripe/stripe-admin');
+    // Fetch invoices from Stripe (only if customer found)
+    let billingHistory: BillingHistoryItem[] = [];
     
-    try {
-      console.debug('billing-history API: Fetching invoices from Stripe', {
-        stripeCustomerId,
-        limit: limit + 1, // Fetch one extra to check if there are more
-        offset
-      });
+    if (stripeCustomerId) {
+      const { stripeAdmin } = await import('@/libs/stripe/stripe-admin');
+      
+      try {
+        console.debug('billing-history API: Fetching invoices from Stripe', {
+          stripeCustomerId,
+          limit: limit + 1, // Fetch one extra to check if there are more
+          offset
+        });
 
-      // Build Stripe query parameters
-      const stripeParams: any = {
-        customer: stripeCustomerId,
-        limit: limit + 1, // Fetch one extra to determine hasMore
-      };
+        // Build Stripe query parameters
+        const stripeParams: any = {
+          customer: stripeCustomerId,
+          limit: limit + 1, // Fetch one extra to determine hasMore
+        };
 
       // Add status filter if provided
       if (statusFilter) {
@@ -207,7 +232,7 @@ export async function GET(request: NextRequest) {
       });
 
       // Transform Stripe invoice data to match our interface
-      const billingHistory: BillingHistoryItem[] = invoices.map((invoice: any) => {
+      let billingHistory: BillingHistoryItem[] = invoices.map((invoice: any) => {
         // Get the first line item for description fallback
         const firstLineItem = invoice.lines.data[0];
         const description = invoice.description || 
@@ -223,6 +248,59 @@ export async function GET(request: NextRequest) {
           description: description,
         };
       });
+
+      // In development mode or when no invoices exist, supplement with subscription changes
+      const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1');
+      if (isDevelopment || billingHistory.length === 0) {
+        console.debug('billing-history API: Adding development mode subscription history');
+        
+        // Fetch subscription changes from local database
+        const { data: subscriptions, error: subError } = await supabase
+          .from('subscriptions')
+          .select(`
+            id,
+            created,
+            updated_at,
+            status,
+            stripe_price_id,
+            prices:stripe_prices(
+              unit_amount,
+              interval,
+              products:stripe_products(name)
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created', { ascending: false })
+          .limit(limit);
+
+        if (!subError && subscriptions && subscriptions.length > 0) {
+          const subscriptionHistory = subscriptions.map((sub: any, index: number) => {
+            const price = sub.prices;
+            const amount = price?.unit_amount || 0;
+            const planName = price?.products?.name || 'Unknown Plan';
+            
+            // Create a description based on whether this is the first subscription or a change
+            let description = `Subscription to ${planName}`;
+            if (index < subscriptions.length - 1) {
+              description = `Plan change to ${planName}`;
+            }
+
+            return {
+              id: `sub_${sub.id}`,
+              date: sub.updated_at || sub.created,
+              amount: amount,
+              status: sub.status === 'active' ? 'paid' : sub.status,
+              invoice_url: '#',
+              description: description,
+            };
+          });
+
+          // Merge and sort by date (newest first)
+          billingHistory = [...billingHistory, ...subscriptionHistory]
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, limit);
+        }
+      }
 
       console.debug('billing-history API: Successfully transformed billing data', {
         userId: user.id,
@@ -258,6 +336,61 @@ export async function GET(request: NextRequest) {
         },
         { status: 500 }
       );
+    }
+    } else {
+      // No Stripe customer found, return subscription history only
+      console.debug('billing-history API: No Stripe customer, showing subscription history only');
+      
+      const { data: subscriptions, error: subError } = await supabase
+        .from('subscriptions')
+        .select(`
+          id,
+          created,
+          updated_at,
+          status,
+          stripe_price_id,
+          prices:stripe_prices(
+            unit_amount,
+            interval,
+            products:stripe_products(name)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created', { ascending: false })
+        .limit(limit);
+
+      if (!subError && subscriptions && subscriptions.length > 0) {
+        billingHistory = subscriptions.map((sub: any, index: number) => {
+          const price = sub.prices;
+          const amount = price?.unit_amount || 0;
+          const planName = price?.products?.name || 'Unknown Plan';
+          
+          let description = `Subscription to ${planName}`;
+          if (index < subscriptions.length - 1) {
+            description = `Plan change to ${planName}`;
+          }
+
+          return {
+            id: `sub_${sub.id}`,
+            date: sub.updated_at || sub.created,
+            amount: amount,
+            status: sub.status === 'active' ? 'paid' : sub.status,
+            invoice_url: '#',
+            description: description,
+          };
+        });
+      }
+
+      return NextResponse.json({
+        data: billingHistory,
+        pagination: {
+          total: billingHistory.length,
+          limit,
+          offset,
+          hasMore: false
+        },
+        timestamp: new Date().toISOString()
+      });
     }
 
   } catch (error) {
