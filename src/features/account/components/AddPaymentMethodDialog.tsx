@@ -10,7 +10,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { 
+  CardNumberElement, 
+  CardExpiryElement, 
+  CardCvcElement, 
+  useElements, 
+  useStripe 
+} from '@stripe/react-stripe-js';
 
 interface AddPaymentMethodDialogProps {
   open: boolean;
@@ -19,8 +25,16 @@ interface AddPaymentMethodDialogProps {
 }
 
 interface CardErrors {
-  card?: string;
+  cardNumber?: string;
+  cardExpiry?: string;
+  cardCvc?: string;
   general?: string;
+}
+
+interface CardComplete {
+  cardNumber: boolean;
+  cardExpiry: boolean;
+  cardCvc: boolean;
 }
 
 export function AddPaymentMethodDialog({
@@ -32,53 +46,78 @@ export function AddPaymentMethodDialog({
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<CardErrors>({});
-  const [cardComplete, setCardComplete] = useState(false);
+  const [cardComplete, setCardComplete] = useState<CardComplete>({
+    cardNumber: false,
+    cardExpiry: false,
+    cardCvc: false,
+  });
   const [setAsDefault, setSetAsDefault] = useState(true);
   const [billingName, setBillingName] = useState('');
   const { toast } = useToast();
 
-  const cardElementOptions = {
+  const elementOptions = {
     style: {
       base: {
         fontSize: '15px',
-        color: '#1C1C1C', // High contrast dark text
+        color: '#1C1C1C',
         fontFamily: 'Inter, system-ui, sans-serif',
-        backgroundColor: '#FFFFFF', // Ensure white background
+        backgroundColor: '#FFFFFF',
         '::placeholder': {
-          color: '#6B7280', // Darker placeholder for better contrast
+          color: '#6B7280',
         },
-        iconColor: '#374151', // Darker icons for better visibility
+        iconColor: '#374151',
         lineHeight: '20px',
-        padding: '8px 0',
+        padding: '12px 0',
       },
       invalid: {
-        color: '#DC2626', // Darker red for better contrast
+        color: '#DC2626',
         iconColor: '#DC2626',
-        backgroundColor: '#FEF2F2', // Light red background for errors
+        backgroundColor: '#FEF2F2',
       },
       complete: {
-        color: '#059669', // Darker green for better contrast
+        color: '#059669',
         iconColor: '#059669',
-        backgroundColor: '#F0FDF4', // Light green background for success
+        backgroundColor: '#F0FDF4',
       },
       focus: {
         color: '#1C1C1C',
         backgroundColor: '#FFFFFF',
-        iconColor: '#2A3D2F', // Forest green on focus
+        iconColor: '#2A3D2F',
       },
     },
-    hidePostalCode: false,
   };
 
-  const handleCardChange = (event: any) => {
-    setCardComplete(event.complete);
+  const handleCardNumberChange = (event: any) => {
+    setCardComplete(prev => ({ ...prev, cardNumber: event.complete }));
     
     if (event.error) {
-      setErrors(prev => ({ ...prev, card: event.error.message }));
+      setErrors(prev => ({ ...prev, cardNumber: event.error.message }));
     } else {
-      setErrors(prev => ({ ...prev, card: undefined }));
+      setErrors(prev => ({ ...prev, cardNumber: undefined }));
     }
   };
+
+  const handleCardExpiryChange = (event: any) => {
+    setCardComplete(prev => ({ ...prev, cardExpiry: event.complete }));
+    
+    if (event.error) {
+      setErrors(prev => ({ ...prev, cardExpiry: event.error.message }));
+    } else {
+      setErrors(prev => ({ ...prev, cardExpiry: undefined }));
+    }
+  };
+
+  const handleCardCvcChange = (event: any) => {
+    setCardComplete(prev => ({ ...prev, cardCvc: event.complete }));
+    
+    if (event.error) {
+      setErrors(prev => ({ ...prev, cardCvc: event.error.message }));
+    } else {
+      setErrors(prev => ({ ...prev, cardCvc: undefined }));
+    }
+  };
+
+  const isCardComplete = cardComplete.cardNumber && cardComplete.cardExpiry && cardComplete.cardCvc;
 
   const validateForm = () => {
     const newErrors: CardErrors = {};
@@ -87,8 +126,16 @@ export function AddPaymentMethodDialog({
       newErrors.general = 'Billing name is required';
     }
 
-    if (!cardComplete) {
-      newErrors.card = 'Please complete your card information';
+    if (!isCardComplete) {
+      if (!cardComplete.cardNumber) {
+        newErrors.cardNumber = 'Please enter a valid card number';
+      }
+      if (!cardComplete.cardExpiry) {
+        newErrors.cardExpiry = 'Please enter a valid expiry date';
+      }
+      if (!cardComplete.cardCvc) {
+        newErrors.cardCvc = 'Please enter a valid CVC';
+      }
     }
 
     setErrors(newErrors);
@@ -129,8 +176,8 @@ export function AddPaymentMethodDialog({
         throw new Error(result.error || 'Failed to create setup intent');
       }
 
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
+      const cardNumberElement = elements.getElement(CardNumberElement);
+      if (!cardNumberElement) {
         throw new Error('Card element not found');
       }
 
@@ -139,7 +186,7 @@ export function AddPaymentMethodDialog({
         result.data.client_secret,
         {
           payment_method: {
-            card: cardElement,
+            card: cardNumberElement,
             billing_details: {
               name: billingName.trim(),
             },
@@ -175,6 +222,11 @@ export function AddPaymentMethodDialog({
       setBillingName('');
       setSetAsDefault(true);
       setErrors({});
+      setCardComplete({
+        cardNumber: false,
+        cardExpiry: false,
+        cardCvc: false,
+      });
       
       onSuccess();
       onOpenChange(false);
@@ -216,6 +268,11 @@ export function AddPaymentMethodDialog({
       setBillingName('');
       setSetAsDefault(true);
       setErrors({});
+      setCardComplete({
+        cardNumber: false,
+        cardExpiry: false,
+        cardCvc: false,
+      });
       onOpenChange(false);
     }
   };
@@ -263,49 +320,151 @@ export function AddPaymentMethodDialog({
             </div>
 
             {/* Card Information */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-sm font-medium text-charcoal">
                 Card Information *
               </Label>
-              <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
-                errors.card 
-                  ? 'border-red-500 bg-red-50 shadow-sm' 
-                  : cardComplete 
-                    ? 'border-green-500 bg-green-50 shadow-sm' 
-                    : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
-              }`}>
-                <div className="p-3">
-                  <CardElement 
-                    options={cardElementOptions} 
-                    onChange={handleCardChange}
-                  />
+              
+              {/* Card Number */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-charcoal/70">Card Number</Label>
+                <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                  errors.cardNumber 
+                    ? 'border-red-500 bg-red-50 shadow-sm' 
+                    : cardComplete.cardNumber 
+                      ? 'border-green-500 bg-green-50 shadow-sm' 
+                      : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+                }`}>
+                  <div className="p-3">
+                    <CardNumberElement 
+                      options={{
+                        ...elementOptions,
+                        placeholder: '1234 1234 1234 1234'
+                      }} 
+                      onChange={handleCardNumberChange}
+                    />
+                  </div>
+                  
+                  {/* Visual feedback indicator */}
+                  <div className="absolute top-2 right-2">
+                    {cardComplete.cardNumber && (
+                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    {errors.cardNumber && (
+                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                {/* Visual feedback indicators */}
-                <div className="absolute top-2 right-2 flex items-center space-x-1">
-                  {cardComplete && (
-                    <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                {errors.cardNumber && (
+                  <p className="text-xs text-red-600 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{errors.cardNumber}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Expiry Date and CVC */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Expiry Date */}
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-charcoal/70">Expiry Date</Label>
+                  <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                    errors.cardExpiry 
+                      ? 'border-red-500 bg-red-50 shadow-sm' 
+                      : cardComplete.cardExpiry 
+                        ? 'border-green-500 bg-green-50 shadow-sm' 
+                        : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+                  }`}>
+                    <div className="p-3">
+                      <CardExpiryElement 
+                        options={{
+                          ...elementOptions,
+                          placeholder: 'MM/YY'
+                        }} 
+                        onChange={handleCardExpiryChange}
+                      />
                     </div>
+                    
+                    {/* Visual feedback indicator */}
+                    <div className="absolute top-2 right-2">
+                      {cardComplete.cardExpiry && (
+                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      {errors.cardExpiry && (
+                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {errors.cardExpiry && (
+                    <p className="text-xs text-red-600 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.cardExpiry}</span>
+                    </p>
                   )}
-                  {errors.card && (
-                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                </div>
+
+                {/* CVC */}
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-charcoal/70">CVC</Label>
+                  <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                    errors.cardCvc 
+                      ? 'border-red-500 bg-red-50 shadow-sm' 
+                      : cardComplete.cardCvc 
+                        ? 'border-green-500 bg-green-50 shadow-sm' 
+                        : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+                  }`}>
+                    <div className="p-3">
+                      <CardCvcElement 
+                        options={{
+                          ...elementOptions,
+                          placeholder: 'CVC'
+                        }} 
+                        onChange={handleCardCvcChange}
+                      />
                     </div>
+                    
+                    {/* Visual feedback indicator */}
+                    <div className="absolute top-2 right-2">
+                      {cardComplete.cardCvc && (
+                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      {errors.cardCvc && (
+                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {errors.cardCvc && (
+                    <p className="text-xs text-red-600 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>{errors.cardCvc}</span>
+                    </p>
                   )}
                 </div>
               </div>
-              
-              {errors.card && (
-                <div className="flex items-start space-x-2 p-2 bg-red-50 border border-red-200 rounded-md">
-                  <AlertCircle className="h-3 w-3 text-red-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-red-700">{errors.card}</p>
-                </div>
-              )}
             </div>
 
             {/* Set as Default Checkbox */}
@@ -348,7 +507,7 @@ export function AddPaymentMethodDialog({
             </Button>
             <Button
               type="submit"
-              disabled={!stripe || loading || !cardComplete || !billingName.trim()}
+              disabled={!stripe || loading || !isCardComplete || !billingName.trim()}
               className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90 disabled:bg-stone-gray disabled:text-charcoal/50 font-medium h-10 shadow-sm"
               onClick={handleSubmit}
             >
