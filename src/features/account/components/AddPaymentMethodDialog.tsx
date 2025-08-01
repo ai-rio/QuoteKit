@@ -40,7 +40,7 @@ export function AddPaymentMethodDialog({
   const cardElementOptions = {
     style: {
       base: {
-        fontSize: '16px',
+        fontSize: '15px',
         color: '#1C1C1C', // High contrast dark text
         fontFamily: 'Inter, system-ui, sans-serif',
         backgroundColor: '#FFFFFF', // Ensure white background
@@ -48,8 +48,8 @@ export function AddPaymentMethodDialog({
           color: '#6B7280', // Darker placeholder for better contrast
         },
         iconColor: '#374151', // Darker icons for better visibility
-        lineHeight: '24px',
-        padding: '12px',
+        lineHeight: '20px',
+        padding: '8px 0',
       },
       invalid: {
         color: '#DC2626', // Darker red for better contrast
@@ -68,18 +68,6 @@ export function AddPaymentMethodDialog({
       },
     },
     hidePostalCode: false,
-    // Separate fields for better UX
-    fields: {
-      number: {
-        placeholder: '1234 1234 1234 1234',
-      },
-      expiry: {
-        placeholder: 'MM/YY',
-      },
-      cvc: {
-        placeholder: 'CVC',
-      },
-    },
   };
 
   const handleCardChange = (event: any) => {
@@ -234,150 +222,135 @@ export function AddPaymentMethodDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-paper-white border-stone-gray shadow-xl">
-        <DialogHeader className="pb-4 border-b border-stone-gray/30">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] bg-paper-white border-stone-gray shadow-xl overflow-hidden flex flex-col">
+        <DialogHeader className="pb-3 border-b border-stone-gray/30 flex-shrink-0">
           <DialogTitle className="flex items-center space-x-2 text-charcoal">
             <CreditCard className="h-5 w-5 text-forest-green" />
             <span className="text-lg font-semibold">Add Payment Method</span>
           </DialogTitle>
-          <DialogDescription className="text-charcoal/70 text-sm leading-relaxed">
-            Add a new payment method to your account securely. Your information is encrypted and processed by Stripe.
+          <DialogDescription className="text-charcoal/70 text-sm">
+            Add a new payment method securely via Stripe.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
-          {/* General Error Alert */}
-          {errors.general && (
-            <Alert className="border-red-300 bg-red-50 shadow-sm">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800 font-medium">
-                {errors.general}
-              </AlertDescription>
-            </Alert>
-          )}
+        <div className="flex-1 overflow-y-auto py-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* General Error Alert */}
+            {errors.general && (
+              <Alert className="border-red-300 bg-red-50 shadow-sm">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800 font-medium">
+                  {errors.general}
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {/* Billing Name */}
-          <div className="space-y-2">
-            <Label htmlFor="billing-name" className="text-sm font-medium text-charcoal">
-              Cardholder Name *
-            </Label>
-            <Input
-              id="billing-name"
-              type="text"
-              placeholder="Enter the name on your card"
-              value={billingName}
-              onChange={(e) => setBillingName(e.target.value)}
-              className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green/20 bg-paper-white text-charcoal placeholder:text-charcoal/50"
-              disabled={loading}
-              required
-            />
-            <p className="text-xs text-charcoal/60">Enter the name exactly as it appears on your card</p>
-          </div>
+            {/* Billing Name */}
+            <div className="space-y-2">
+              <Label htmlFor="billing-name" className="text-sm font-medium text-charcoal">
+                Cardholder Name *
+              </Label>
+              <Input
+                id="billing-name"
+                type="text"
+                placeholder="Enter the name on your card"
+                value={billingName}
+                onChange={(e) => setBillingName(e.target.value)}
+                className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green/20 bg-paper-white text-charcoal placeholder:text-charcoal/50"
+                disabled={loading}
+                required
+              />
+            </div>
 
-          {/* Card Information */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-charcoal">
-              Card Information *
-            </Label>
-            <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
-              errors.card 
-                ? 'border-red-500 bg-red-50 shadow-sm' 
-                : cardComplete 
-                  ? 'border-green-500 bg-green-50 shadow-sm' 
-                  : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
-            }`}>
-              <div className="p-4">
-                <CardElement 
-                  options={cardElementOptions} 
-                  onChange={handleCardChange}
-                />
-              </div>
-              
-              {/* Visual feedback indicators */}
-              <div className="absolute top-3 right-3 flex items-center space-x-2">
-                {cardComplete && (
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-                {errors.card && (
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Helper text */}
-            <div className="text-xs text-charcoal/70 space-y-1">
-              <p>• Enter your card number, expiry date (MM/YY), and CVC</p>
-              <p>• All fields are required for security verification</p>
-            </div>
-            
-            {errors.card && (
-              <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-red-800">Card validation error</p>
-                  <p className="text-sm text-red-700">{errors.card}</p>
+            {/* Card Information */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-charcoal">
+                Card Information *
+              </Label>
+              <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                errors.card 
+                  ? 'border-red-500 bg-red-50 shadow-sm' 
+                  : cardComplete 
+                    ? 'border-green-500 bg-green-50 shadow-sm' 
+                    : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+              }`}>
+                <div className="p-3">
+                  <CardElement 
+                    options={cardElementOptions} 
+                    onChange={handleCardChange}
+                  />
+                </div>
+                
+                {/* Visual feedback indicators */}
+                <div className="absolute top-2 right-2 flex items-center space-x-1">
+                  {cardComplete && (
+                    <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                  {errors.card && (
+                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Set as Default Checkbox */}
-          <div className="flex items-start space-x-3 p-3 bg-stone-gray/5 rounded-lg border border-stone-gray/30">
-            <Checkbox
-              checked={setAsDefault}
-              onCheckedChange={(checked) => setSetAsDefault(checked as boolean)}
-              disabled={loading}
-              className="mt-0.5 border-2 border-stone-gray data-[state=checked]:bg-forest-green data-[state=checked]:border-forest-green"
-            />
-            <div className="flex-1">
-              <Label 
-                className="text-sm font-medium text-charcoal cursor-pointer leading-relaxed"
-              >
-                Set as default payment method
-              </Label>
-              <p className="text-xs text-charcoal/60 mt-1">
-                This card will be used for future subscription payments
-              </p>
+              
+              {errors.card && (
+                <div className="flex items-start space-x-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                  <AlertCircle className="h-3 w-3 text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-red-700">{errors.card}</p>
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Security Notice */}
-          <div className="flex items-start space-x-3 p-4 bg-forest-green/5 rounded-lg border border-forest-green/20">
-            <Shield className="h-5 w-5 text-forest-green mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-charcoal/80">
-              <p className="font-semibold text-charcoal mb-2">Your payment information is secure</p>
-              <ul className="space-y-1 text-xs">
-                <li>• All data is encrypted using industry-standard SSL</li>
-                <li>• Processed securely by Stripe (PCI DSS Level 1)</li>
-                <li>• Card details are never stored on our servers</li>
-                <li>• Your information is protected by bank-level security</li>
-              </ul>
+            {/* Set as Default Checkbox */}
+            <div className="flex items-start space-x-2 p-2 bg-stone-gray/5 rounded-lg border border-stone-gray/30">
+              <Checkbox
+                checked={setAsDefault}
+                onCheckedChange={(checked) => setSetAsDefault(checked as boolean)}
+                disabled={loading}
+                className="mt-0.5 border-2 border-stone-gray data-[state=checked]:bg-forest-green data-[state=checked]:border-forest-green"
+              />
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-charcoal cursor-pointer">
+                  Set as default payment method
+                </Label>
+              </div>
             </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-4 border-t border-stone-gray/30">
+            {/* Compact Security Notice */}
+            <div className="flex items-start space-x-2 p-3 bg-forest-green/5 rounded-lg border border-forest-green/20">
+              <Shield className="h-4 w-4 text-forest-green mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-charcoal/80">
+                <p className="font-semibold text-charcoal mb-1">Secure Payment Processing</p>
+                <p>Encrypted by Stripe (PCI DSS Level 1). Your card details are never stored on our servers.</p>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Action Buttons - Fixed at bottom */}
+        <div className="flex-shrink-0 border-t border-stone-gray/30 pt-3 mt-2">
+          <div className="flex space-x-3">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 border-2 border-stone-gray text-charcoal hover:bg-stone-gray/10 hover:border-stone-gray/70 font-medium h-11"
+              className="flex-1 border-2 border-stone-gray text-charcoal hover:bg-stone-gray/10 hover:border-stone-gray/70 font-medium h-10"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!stripe || loading || !cardComplete || !billingName.trim()}
-              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90 disabled:bg-stone-gray disabled:text-charcoal/50 font-medium h-11 shadow-sm"
+              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90 disabled:bg-stone-gray disabled:text-charcoal/50 font-medium h-10 shadow-sm"
+              onClick={handleSubmit}
             >
               {loading ? (
                 <>
@@ -387,12 +360,12 @@ export function AddPaymentMethodDialog({
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Payment Method
+                  Add Card
                 </>
               )}
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
