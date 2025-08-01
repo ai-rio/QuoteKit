@@ -41,23 +41,45 @@ export function AddPaymentMethodDialog({
     style: {
       base: {
         fontSize: '16px',
-        color: '#1C1C1C',
+        color: '#1C1C1C', // High contrast dark text
         fontFamily: 'Inter, system-ui, sans-serif',
+        backgroundColor: '#FFFFFF', // Ensure white background
         '::placeholder': {
-          color: '#9CA3AF',
+          color: '#6B7280', // Darker placeholder for better contrast
         },
-        iconColor: '#6B7280',
+        iconColor: '#374151', // Darker icons for better visibility
+        lineHeight: '24px',
+        padding: '12px',
       },
       invalid: {
-        color: '#EF4444',
-        iconColor: '#EF4444',
+        color: '#DC2626', // Darker red for better contrast
+        iconColor: '#DC2626',
+        backgroundColor: '#FEF2F2', // Light red background for errors
       },
       complete: {
-        color: '#10B981',
-        iconColor: '#10B981',
+        color: '#059669', // Darker green for better contrast
+        iconColor: '#059669',
+        backgroundColor: '#F0FDF4', // Light green background for success
+      },
+      focus: {
+        color: '#1C1C1C',
+        backgroundColor: '#FFFFFF',
+        iconColor: '#2A3D2F', // Forest green on focus
       },
     },
     hidePostalCode: false,
+    // Separate fields for better UX
+    fields: {
+      number: {
+        placeholder: '1234 1234 1234 1234',
+      },
+      expiry: {
+        placeholder: 'MM/YY',
+      },
+      cvc: {
+        placeholder: 'CVC',
+      },
+    },
   };
 
   const handleCardChange = (event: any) => {
@@ -212,23 +234,23 @@ export function AddPaymentMethodDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
+      <DialogContent className="sm:max-w-md bg-paper-white border-stone-gray shadow-xl">
+        <DialogHeader className="pb-4 border-b border-stone-gray/30">
+          <DialogTitle className="flex items-center space-x-2 text-charcoal">
             <CreditCard className="h-5 w-5 text-forest-green" />
-            <span>Add Payment Method</span>
+            <span className="text-lg font-semibold">Add Payment Method</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-charcoal/70 text-sm leading-relaxed">
             Add a new payment method to your account securely. Your information is encrypted and processed by Stripe.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
           {/* General Error Alert */}
           {errors.general && (
-            <Alert className="border-red-200 bg-red-50">
+            <Alert className="border-red-300 bg-red-50 shadow-sm">
               <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+              <AlertDescription className="text-red-800 font-medium">
                 {errors.general}
               </AlertDescription>
             </Alert>
@@ -245,10 +267,11 @@ export function AddPaymentMethodDialog({
               placeholder="Enter the name on your card"
               value={billingName}
               onChange={(e) => setBillingName(e.target.value)}
-              className="border-stone-gray focus:border-forest-green"
+              className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green/20 bg-paper-white text-charcoal placeholder:text-charcoal/50"
               disabled={loading}
               required
             />
+            <p className="text-xs text-charcoal/60">Enter the name exactly as it appears on your card</p>
           </div>
 
           {/* Card Information */}
@@ -256,70 +279,105 @@ export function AddPaymentMethodDialog({
             <Label className="text-sm font-medium text-charcoal">
               Card Information *
             </Label>
-            <div className={`p-4 border rounded-md bg-paper-white transition-colors ${
+            <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
               errors.card 
-                ? 'border-red-300 bg-red-50' 
+                ? 'border-red-500 bg-red-50 shadow-sm' 
                 : cardComplete 
-                  ? 'border-green-300 bg-green-50' 
-                  : 'border-stone-gray focus-within:border-forest-green'
+                  ? 'border-green-500 bg-green-50 shadow-sm' 
+                  : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
             }`}>
-              <CardElement 
-                options={cardElementOptions} 
-                onChange={handleCardChange}
-                disabled={loading}
-              />
+              <div className="p-4">
+                <CardElement 
+                  options={cardElementOptions} 
+                  onChange={handleCardChange}
+                />
+              </div>
+              
+              {/* Visual feedback indicators */}
+              <div className="absolute top-3 right-3 flex items-center space-x-2">
+                {cardComplete && (
+                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+                {errors.card && (
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </div>
+            
+            {/* Helper text */}
+            <div className="text-xs text-charcoal/70 space-y-1">
+              <p>• Enter your card number, expiry date (MM/YY), and CVC</p>
+              <p>• All fields are required for security verification</p>
+            </div>
+            
             {errors.card && (
-              <p className="text-sm text-red-600 flex items-center space-x-1">
-                <AlertCircle className="h-3 w-3" />
-                <span>{errors.card}</span>
-              </p>
+              <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">Card validation error</p>
+                  <p className="text-sm text-red-700">{errors.card}</p>
+                </div>
+              </div>
             )}
           </div>
 
           {/* Set as Default Checkbox */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-start space-x-3 p-3 bg-stone-gray/5 rounded-lg border border-stone-gray/30">
             <Checkbox
-              id="set-default"
               checked={setAsDefault}
               onCheckedChange={(checked) => setSetAsDefault(checked as boolean)}
               disabled={loading}
+              className="mt-0.5 border-2 border-stone-gray data-[state=checked]:bg-forest-green data-[state=checked]:border-forest-green"
             />
-            <Label 
-              htmlFor="set-default" 
-              className="text-sm text-charcoal cursor-pointer"
-            >
-              Set as default payment method
-            </Label>
-          </div>
-
-          {/* Security Notice */}
-          <div className="flex items-start space-x-2 p-3 bg-stone-gray/10 rounded-md">
-            <Shield className="h-4 w-4 text-forest-green mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-charcoal/70">
-              <p className="font-medium mb-1">Your payment information is secure</p>
-              <p>
-                We use Stripe to process payments securely. Your card details are encrypted 
-                and never stored on our servers.
+            <div className="flex-1">
+              <Label 
+                className="text-sm font-medium text-charcoal cursor-pointer leading-relaxed"
+              >
+                Set as default payment method
+              </Label>
+              <p className="text-xs text-charcoal/60 mt-1">
+                This card will be used for future subscription payments
               </p>
             </div>
           </div>
 
+          {/* Security Notice */}
+          <div className="flex items-start space-x-3 p-4 bg-forest-green/5 rounded-lg border border-forest-green/20">
+            <Shield className="h-5 w-5 text-forest-green mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-charcoal/80">
+              <p className="font-semibold text-charcoal mb-2">Your payment information is secure</p>
+              <ul className="space-y-1 text-xs">
+                <li>• All data is encrypted using industry-standard SSL</li>
+                <li>• Processed securely by Stripe (PCI DSS Level 1)</li>
+                <li>• Card details are never stored on our servers</li>
+                <li>• Your information is protected by bank-level security</li>
+              </ul>
+            </div>
+          </div>
+
           {/* Action Buttons */}
-          <div className="flex space-x-3 pt-2">
+          <div className="flex space-x-3 pt-4 border-t border-stone-gray/30">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 border-stone-gray text-charcoal hover:bg-stone-gray/10"
+              className="flex-1 border-2 border-stone-gray text-charcoal hover:bg-stone-gray/10 hover:border-stone-gray/70 font-medium h-11"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!stripe || loading || !cardComplete || !billingName.trim()}
-              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90"
+              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90 disabled:bg-stone-gray disabled:text-charcoal/50 font-medium h-11 shadow-sm"
             >
               {loading ? (
                 <>
