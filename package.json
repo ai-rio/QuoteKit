@@ -22,9 +22,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:lawnquote": "node scripts/run-lawnquote-tests.js",
-    "test:lawnquote:coverage": "node scripts/run-lawnquote-tests.js --coverage",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test:lawnquote:coverage": "node scripts/run-lawnquote-tests.js --coverage"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",
@@ -75,8 +73,10 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/react-hooks": "^8.0.1",
     "@types/jest": "^30.0.0",
     "@types/react": "19.0.4",
     "@types/react-dom": "19.0.2",
@@ -92,6 +92,7 @@
     "jest-environment-jsdom": "^30.0.5",
     "jest-environment-node": "^30.0.5",
     "jsdom": "^26.1.0",
+    "node-mocks-http": "^1.17.2",
     "postcss": "^8.4.49",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.3.0",
