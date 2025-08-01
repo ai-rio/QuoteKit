@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw, Sync } from 'lucide-react';
+import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw, RotateCcw } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -296,7 +296,7 @@ function PaymentMethodsContent() {
               className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
               title="Force sync from Stripe"
             >
-              <Sync className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>
