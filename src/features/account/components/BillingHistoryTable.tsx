@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Calendar, Download, Search, Filter, RefreshCw, FileText, AlertCircle } from 'lucide-react';
+import { useEffect, useMemo,useState } from 'react';
+import { AlertCircle,Calendar, Download, FileText, Filter, RefreshCw, Search } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDate } from '@/utils/to-date-time';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useBillingHistory } from '@/features/account/hooks/useBillingHistory';
+import { formatDate } from '@/utils/to-date-time';
 
 interface BillingHistoryItem {
   id: string;
@@ -128,12 +128,28 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
   // Handle invoice download
   const handleDownloadInvoice = async (invoiceUrl: string, invoiceId: string) => {
     try {
-      // Open invoice in new tab for download
-      window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+      // Check if we have a valid Stripe invoice ID (starts with 'in_')
+      if (invoiceId.startsWith('in_')) {
+        // Use our API route for proper Stripe invoice download
+        const downloadUrl = `/api/billing-history/${invoiceId}/invoice`;
+        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      } else if (invoiceUrl && invoiceUrl !== '#') {
+        // Fallback to direct URL for non-Stripe invoices
+        window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+      }
     } catch (error) {
       console.error('Failed to download invoice:', error);
-      // Could add toast notification here
+      // Fallback to direct URL if API route fails
+      if (invoiceUrl && invoiceUrl !== '#') {
+        window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+      }
     }
+  };
+
+  // Check if a record has a downloadable invoice
+  const hasDownloadableInvoice = (item: BillingHistoryItem) => {
+    // Only show download for actual Stripe invoices or records with valid URLs
+    return (item.id.startsWith('in_') || (item.invoice_url && item.invoice_url !== '#'));
   };
 
   // Status badge styling
@@ -355,15 +371,19 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="border-stone-gray text-charcoal hover:bg-light-concrete w-10 h-10"
-                          onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
-                          title="Download Invoice"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
+                        {hasDownloadableInvoice(item) ? (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="border-stone-gray text-charcoal hover:bg-light-concrete w-10 h-10"
+                            onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
+                            title="Download Invoice"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <span className="text-charcoal/40 text-sm">No invoice</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -393,15 +413,19 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
                       <span className="font-semibold text-charcoal text-lg">
                         ${(item.amount / 100).toFixed(2)}
                       </span>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="border-stone-gray text-charcoal hover:bg-paper-white"
-                        onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
+                      {hasDownloadableInvoice(item) ? (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="border-stone-gray text-charcoal hover:bg-paper-white"
+                          onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      ) : (
+                        <span className="text-charcoal/40 text-sm">No invoice available</span>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
