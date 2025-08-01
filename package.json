@@ -19,6 +19,11 @@
     "migration:up": "supabase migration up --linked --debug && npm run generate-types",
     "migration:squash": "supabase migration squash --linked",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:lawnquote": "node scripts/run-lawnquote-tests.js",
+    "test:lawnquote:coverage": "node scripts/run-lawnquote-tests.js --coverage",
+    "test": "jest",
     "test:watch": "jest --watch"
   },
   "dependencies": {

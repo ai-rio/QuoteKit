@@ -17,7 +17,7 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
   console.log('🎩 PRICING PAGE: Plan selection initiated:', {
     plan_name: planName,
     stripe_price_id: stripePriceId,
-    is_free: stripePriceId === 'price_free' || planName === 'Free',
+    is_free: stripePriceId === 'price_free_monthly' || planName === 'Free Plan',
     timestamp: new Date().toISOString()
   });
   
@@ -34,7 +34,7 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
   const { getSubscription } = await import('@/features/account/controllers/get-subscription');
   const existingSubscription = await getSubscription();
 
-  if (stripePriceId === 'price_free' || planName === 'Free') {
+  if (stripePriceId === 'price_free_monthly' || planName === 'Free Plan') {
     // Check if user already has an active subscription
     if (existingSubscription) {
       console.log('User already has active subscription, redirecting to dashboard:', {
@@ -70,28 +70,6 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
 }
 
 export default async function PricingPage() {
-  // Get actual prices from database for better UX
-  const supabase = await createSupabaseServerClient();
-  
-  // Get available prices from database
-  const { data: prices } = await supabase
-    .from('stripe_prices')
-    .select(`
-      stripe_price_id,
-      unit_amount,
-      currency,
-      recurring_interval,
-      active,
-      stripe_products (
-        stripe_product_id,
-        name,
-        description,
-        active
-      )
-    `)
-    .eq('active', true)
-    .order('unit_amount', { ascending: true });
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -146,10 +124,10 @@ export default async function PricingPage() {
               </div>
               
               <div>
-                <h3 className="font-semibold mb-2">Can I use QuoteKit for multiple businesses?</h3>
+                <h3 className="font-semibold mb-2">What&apos;s included in the Free plan?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Yes! Our Pro plan supports multiple business profiles and 
-                  custom branding for each of your ventures.
+                  The Free plan includes unlimited quotes, basic PDF generation, 
+                  client management, and item catalog - perfect for getting started.
                 </p>
               </div>
               
@@ -173,7 +151,7 @@ export default async function PricingPage() {
             Join thousands of businesses that trust QuoteKit for their quoting needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <form action={handlePlanSelection.bind(null, 'price_free', 'Free')}>
+            <form action={handlePlanSelection.bind(null, 'price_free_monthly', 'Free Plan')}>
               <button 
                 type="submit"
                 className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-8 py-3 rounded-lg font-semibold transition-colors"
@@ -181,33 +159,15 @@ export default async function PricingPage() {
                 Start Free
               </button>
             </form>
-            {prices && prices.length > 0 && (
-              <form action={handlePlanSelection.bind(null, prices[0].stripe_price_id, 'Pro')}>
-                <button 
-                  type="submit"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Try Pro Free
-                </button>
-              </form>
-            )}
+            <form action={handlePlanSelection.bind(null, 'price_pro_monthly', 'Pro Plan')}>
+              <button 
+                type="submit"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Try Pro Plan
+              </button>
+            </form>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PricingPageSkeleton() {
-  return (
-    <div className="rounded-lg bg-paper-white py-8">
-      <div className="relative z-10 m-auto flex max-w-[1200px] flex-col items-center gap-8 px-4 pt-8 lg:pt-16">
-        <div className="h-12 w-96 bg-light-concrete animate-pulse rounded"></div>
-        <div className="h-6 w-80 bg-light-concrete animate-pulse rounded"></div>
-        <div className="grid w-full gap-4 grid-cols-2 md:grid-cols-4 lg:gap-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-96 bg-light-concrete animate-pulse rounded-lg"></div>
-          ))}
         </div>
       </div>
     </div>

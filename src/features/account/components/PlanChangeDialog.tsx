@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CreditCard, Loader2, TrendingDown,TrendingUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -41,16 +41,48 @@ export function PlanChangeDialog({
   const [selectedPriceId, setSelectedPriceId] = useState<string>('');
   const [isChanging, setIsChanging] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🔍 PlanChangeDialog opened with data:', {
+        currentPlan,
+        availablePlansCount: availablePlans?.length || 0,
+        availablePlans: availablePlans?.map(p => ({
+          name: p.name,
+          pricesCount: p.prices?.length || 0,
+          prices: p.prices?.map(price => ({
+            id: price.stripe_price_id,
+            amount: price.unit_amount,
+            interval: price.interval
+          }))
+        }))
+      });
+    }
+  }, [isOpen, currentPlan, availablePlans]);
+
   const handlePlanChange = async () => {
     if (!selectedPriceId) return;
 
     const selectedPrice = availablePlans
-      .flatMap(p => p.prices)
+      .flatMap(p => p.prices || [])
       .find(price => price?.stripe_price_id === selectedPriceId);
 
-    if (!selectedPrice) return;
+    if (!selectedPrice) {
+      console.error('Selected price not found:', selectedPriceId);
+      return;
+    }
 
     const isUpgrade = (selectedPrice.unit_amount || 0) > currentPlan.price * 100;
+
+    console.log('💳 Plan change initiated:', {
+      selectedPriceId,
+      selectedPrice: {
+        amount: selectedPrice.unit_amount,
+        interval: selectedPrice.interval
+      },
+      currentPrice: currentPlan.price * 100,
+      isUpgrade
+    });
 
     setIsChanging(true);
     try {
@@ -76,6 +108,11 @@ export function PlanChangeDialog({
   const formatPrice = (amount: number) => {
     return `$${(amount / 100).toFixed(0)}`;
   };
+
+  // Filter out current plan and ensure we have valid data
+  const validPlans = availablePlans?.filter(product => 
+    product && product.prices && product.prices.length > 0
+  ) || [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -109,66 +146,85 @@ export function PlanChangeDialog({
           {/* Available Plans */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-charcoal">Available Plans</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {availablePlans.map((product) =>
-                product.prices?.map((price) => {
-                  const changeInfo = getChangeType(price.unit_amount || 0);
-                  const isSelected = selectedPriceId === price.stripe_price_id;
-                  const isCurrent = price.unit_amount === currentPlan.price * 100;
-                  const Icon = changeInfo.icon;
+            
+            {validPlans.length === 0 ? (
+              <Card className="bg-light-concrete border-stone-gray">
+                <CardContent className="p-4 text-center">
+                  <p className="text-charcoal/70">No alternative plans available at this time.</p>
+                  <p className="text-sm text-charcoal/60 mt-2">
+                    Debug: {availablePlans?.length || 0} plans received, {validPlans.length} valid
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {validPlans.map((product) =>
+                  product.prices?.map((price) => {
+                    if (!price || !price.stripe_price_id) return null;
+                    
+                    const changeInfo = getChangeType(price.unit_amount || 0);
+                    const isSelected = selectedPriceId === price.stripe_price_id;
+                    const isCurrent = price.stripe_price_id === currentPlan.id;
+                    const Icon = changeInfo.icon;
 
-                  return (
-                    <Card
-                      key={price.stripe_price_id}
-                      className={`cursor-pointer transition-all ${
-                        isSelected
-                          ? 'bg-forest-green/10 border-forest-green'
-                          : isCurrent
-                          ? 'bg-light-concrete border-stone-gray opacity-50'
-                          : 'bg-paper-white border-stone-gray hover:bg-light-concrete/50'
-                      }`}
-                      onClick={() => !isCurrent && setSelectedPriceId(price.stripe_price_id)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h4 className="font-bold text-charcoal">{product.name}</h4>
-                            <p className="text-sm text-charcoal/70">
-                              {formatPrice(price.unit_amount || 0)}/{price.interval}
-                            </p>
+                    return (
+                      <Card
+                        key={price.stripe_price_id}
+                        className={`cursor-pointer transition-all ${
+                          isSelected
+                            ? 'bg-forest-green/10 border-forest-green'
+                            : isCurrent
+                            ? 'bg-light-concrete border-stone-gray opacity-50'
+                            : 'bg-paper-white border-stone-gray hover:bg-light-concrete/50'
+                        }`}
+                        onClick={() => !isCurrent && setSelectedPriceId(price.stripe_price_id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h4 className="font-bold text-charcoal">{product.name}</h4>
+                              <p className="text-sm text-charcoal/70">
+                                {formatPrice(price.unit_amount || 0)}/{price.interval}
+                              </p>
+                              {price.interval === 'year' && (
+                                <p className="text-xs text-green-600 font-medium">
+                                  Save 20% vs monthly
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {isCurrent && (
+                                <Badge className="bg-stone-gray text-charcoal">Current</Badge>
+                              )}
+                              {!isCurrent && (
+                                <Icon className={`h-5 w-5 ${changeInfo.color}`} />
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            {isCurrent && (
-                              <Badge className="bg-stone-gray text-charcoal">Current</Badge>
-                            )}
-                            {!isCurrent && (
-                              <Icon className={`h-5 w-5 ${changeInfo.color}`} />
-                            )}
-                          </div>
-                        </div>
 
-                        {product.description && (
-                          <p className="text-sm text-charcoal/60 mb-3">{product.description}</p>
-                        )}
+                          {product.description && (
+                            <p className="text-sm text-charcoal/60 mb-3">{product.description}</p>
+                          )}
 
-                        {!isCurrent && changeInfo.type !== 'same' && (
-                          <div className="text-sm">
-                            <span className={`font-medium ${changeInfo.color}`}>
-                              {changeInfo.type === 'upgrade' ? 'Upgrade' : 'Downgrade'}
-                            </span>
-                            <span className="text-charcoal/70 ml-2">
-                              {changeInfo.type === 'upgrade'
-                                ? 'Changes take effect immediately with prorated billing'
-                                : 'Changes take effect at the end of current billing period'}
-                            </span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
+                          {!isCurrent && changeInfo.type !== 'same' && (
+                            <div className="text-sm">
+                              <span className={`font-medium ${changeInfo.color}`}>
+                                {changeInfo.type === 'upgrade' ? 'Upgrade' : 'Downgrade'}
+                              </span>
+                              <span className="text-charcoal/70 ml-2">
+                                {changeInfo.type === 'upgrade'
+                                  ? 'Changes take effect immediately with prorated billing'
+                                  : 'Changes take effect at the end of current billing period'}
+                              </span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  }).filter(Boolean)
+                )}
+              </div>
+            )}
           </div>
 
           {/* Proration Information */}
@@ -178,8 +234,8 @@ export function PlanChangeDialog({
                 <h4 className="font-medium text-charcoal mb-2">Billing Information</h4>
                 <div className="text-sm text-charcoal/70 space-y-1">
                   {getChangeType(
-                    availablePlans
-                      .flatMap(p => p.prices)
+                    validPlans
+                      .flatMap(p => p.prices || [])
                       .find(p => p?.stripe_price_id === selectedPriceId)?.unit_amount || 0
                   ).type === 'upgrade' ? (
                     <>

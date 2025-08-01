@@ -46,13 +46,13 @@ export async function getProducts() {
     const inactivePaidPrices = allPrices?.filter(p => p.unit_amount > 0 && p.active === false) || [];
     if (inactivePaidPrices.length > 0) {
       console.warn(`⚠️ Found ${inactivePaidPrices.length} inactive paid prices:`, 
-        inactivePaidPrices.map(p => `${p.stripe_price_id} ($${(p.unit_amount || 0) / 100})`));
+        inactivePaidPrices.map(p => `${p.id} ($${(p.unit_amount || 0) / 100})`));
     }
 
     // Log free price status for debugging
     if (freePrices.length > 0) {
       console.log('🆓 Free prices found:', freePrices.map(p => ({
-        id: p.stripe_price_id,
+        id: p.id,
         active: p.active,
         amount: p.unit_amount
       })));
@@ -61,41 +61,30 @@ export async function getProducts() {
     // DEBUG: Log raw price data from database
     console.log('🔍 DEBUG: Available prices for checkout:', availablePrices?.map(p => ({
       id: p.id,
-      stripe_price_id: p.stripe_price_id,
-      recurring_interval: p.recurring_interval,
+      stripe_product_id: p.stripe_product_id,
+      interval: p.interval,
       unit_amount: p.unit_amount,
       active: p.active,
       isFree: p.unit_amount === 0
     })));
 
     // Manually join products with their prices
-    // Transform stripe_prices to match expected Price type with interval and type fields
+    // Transform prices to match expected Price type
     const productsWithPrices = products.map(product => {
       const productPrices = availablePrices
-        .filter(price => price.stripe_product_id === product.stripe_product_id)
+        .filter(price => price.stripe_product_id === product.id) // Use product.id to match price.stripe_product_id
         .map(price => {
-          const transformedPrice = {
+          // Transform price to match expected interface
+          return {
             ...price,
-            interval: price.recurring_interval, // Map recurring_interval to interval for compatibility
-            type: price.recurring_interval ? 'recurring' as const : 'one_time' as const // Add type field based on recurring_interval
+            stripe_price_id: price.id, // Map id to stripe_price_id for compatibility
+            type: price.type || (price.interval ? 'recurring' as const : 'one_time' as const)
           };
-          
-          // DEBUG: Log each price transformation
-          console.log('🔍 DEBUG: Price transformation:', {
-            original_recurring_interval: price.recurring_interval,
-            transformed_interval: transformedPrice.interval,
-            transformed_type: transformedPrice.type,
-            stripe_price_id: price.stripe_price_id,
-            active: price.active,
-            isFree: price.unit_amount === 0,
-            availableForCheckout: price.unit_amount === 0 || price.active === true
-          });
-          
-          return transformedPrice;
         }) || [];
 
       return {
         ...product,
+        stripe_product_id: product.id, // Map id to stripe_product_id for compatibility
         prices: productPrices
       };
     });

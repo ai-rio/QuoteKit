@@ -115,3 +115,5 @@ claude-flow.ps1
 hive-mind-prompt-*.txt
 .claude-flow/
 .swarm/
+mcp-server/*
+.serena/

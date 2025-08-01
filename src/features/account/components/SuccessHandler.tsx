@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter,useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface SuccessHandlerProps {

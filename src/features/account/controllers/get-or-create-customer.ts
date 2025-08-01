@@ -2,6 +2,8 @@ import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 
 export async function getOrCreateCustomer({ userId, email }: { userId: string; email: string }) {
+  console.log(`🔄 [GET_OR_CREATE_CUSTOMER] Starting for user ${userId} with email ${email}`)
+  
   // Get Stripe configuration - try database first, fallback to environment
   const { data: stripeConfigRecord, error: configError } = await supabaseAdminClient
     .from('admin_settings')
@@ -41,30 +43,34 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
   });
 
   // Check if customer record exists
+  console.log(`🔍 [STEP 1] Checking if customer record exists for user ${userId}`)
   const { data, error } = await supabaseAdminClient
-    .from('stripe_customers')
+    .from('customers')  // Use 'customers' instead of 'stripe_customers'
     .select('stripe_customer_id')
-    .eq('user_id', userId)
+    .eq('id', userId)   // Use 'id' instead of 'user_id'
     .maybeSingle();
 
   // If customer exists and has a valid Stripe customer ID, return it
   if (!error && data?.stripe_customer_id) {
+    console.log(`✅ [STEP 1] Found existing customer record: ${data.stripe_customer_id}`)
     try {
       // Verify the customer still exists in Stripe
       const stripeCustomer = await stripeAdmin.customers.retrieve(data.stripe_customer_id);
       if (typeof stripeCustomer !== 'string' && !stripeCustomer.deleted) {
+        console.log(`✅ [SUCCESS] Returning existing Stripe customer: ${data.stripe_customer_id}`)
         return data.stripe_customer_id;
       } else {
-        console.warn(`Stripe customer ${data.stripe_customer_id} was deleted, creating new one`);
+        console.warn(`⚠️ [WARNING] Stripe customer ${data.stripe_customer_id} was deleted, creating new one`)
         // Continue to create new customer
       }
     } catch (stripeError) {
-      console.warn(`Failed to verify Stripe customer ${data.stripe_customer_id}, creating new one:`, stripeError);
+      console.warn(`⚠️ [WARNING] Failed to verify Stripe customer ${data.stripe_customer_id}, creating new one:`, stripeError)
       // Continue to create new customer
     }
   }
 
   // Customer doesn't exist or needs to be recreated - create new Stripe customer
+  console.log(`🆕 [STEP 2] Creating new Stripe customer for user ${userId}`)
   try {
     const customerData = {
       email,
@@ -73,60 +79,115 @@ export async function getOrCreateCustomer({ userId, email }: { userId: string; e
       },
     } as const;
 
+    // CRITICAL: Create Stripe customer first
+    console.log(`📞 [STEP 2A] Creating customer in Stripe...`)
     const customer = await stripeAdmin.customers.create(customerData);
+    console.log(`✅ [STEP 2A SUCCESS] Stripe customer created: ${customer.id}`)
 
-    // If customer database record doesn't exist, create it
-    if (error) {
-      const { error: insertError } = await supabaseAdminClient
-        .from('stripe_customers')
-        .insert([{ user_id: userId, stripe_customer_id: customer.id, email }]);
+    // CRITICAL: Immediately save to database with retry logic
+    console.log(`💾 [STEP 2B] Saving customer to database immediately...`)
+    let dbSaveSuccess = false
+    let retryCount = 0
+    const maxRetries = 3
+    const retryDelay = 200 // ms
+    
+    while (!dbSaveSuccess && retryCount <= maxRetries) {
+      try {
+        // Use upsert to handle potential race conditions
+        const { error: upsertError } = await supabaseAdminClient
+          .from('customers')  // Use 'customers' instead of 'stripe_customers'
+          .upsert([{ 
+            id: userId,  // Use 'id' instead of 'user_id'
+            stripe_customer_id: customer.id
+          }], {
+            onConflict: 'id',  // Use 'id' instead of 'user_id'
+            ignoreDuplicates: false
+          });
 
-      if (insertError) {
-        // If there's a unique constraint violation, another request might have created the record
-        // Try to get the existing record
-        if (insertError.code === '23505') { // Unique violation
-          const { data: existingData, error: fetchError } = await supabaseAdminClient
-            .from('stripe_customers')
-            .select('stripe_customer_id')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-          if (!fetchError && existingData?.stripe_customer_id) {
-            console.log(`Customer record was created concurrently, using existing: ${existingData.stripe_customer_id}`);
-            // We created a new Stripe customer but found an existing DB record
-            // We should use the existing Stripe customer and delete the one we just created
-            try {
-              await stripeAdmin.customers.del(customer.id);
-              return existingData.stripe_customer_id;
-            } catch (deleteError) {
-              console.warn('Failed to delete duplicate Stripe customer:', deleteError);
-              // Use the new customer we created
-              return customer.id;
-            }
+        if (upsertError) {
+          if (retryCount < maxRetries) {
+            console.warn(`⚠️ [STEP 2B RETRY ${retryCount + 1}/${maxRetries}] Database upsert failed, retrying in ${retryDelay}ms:`, upsertError.message)
+            retryCount++
+            await new Promise(resolve => setTimeout(resolve, retryDelay))
+            continue
           }
+          
+          console.error('💥 [STEP 2B CRITICAL ERROR] Failed to save customer to database after retries:', upsertError);
+          
+          // Cleanup: Delete the Stripe customer we just created
+          try {
+            await stripeAdmin.customers.del(customer.id);
+            console.log(`🧹 [CLEANUP] Deleted orphaned Stripe customer ${customer.id}`)
+          } catch (deleteError) {
+            console.error('💥 [CLEANUP ERROR] Failed to delete orphaned Stripe customer:', deleteError);
+          }
+          
+          throw upsertError;
         }
         
-        console.error('Failed to insert customer record:', insertError);
-        throw insertError;
-      }
-    } else {
-      // Customer record exists but needs Stripe customer ID - update it
-      const { error: updateError } = await supabaseAdminClient
-        .from('stripe_customers')
-        .update({ stripe_customer_id: customer.id, email })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Failed to update customer record with Stripe ID:', updateError);
-        throw updateError;
+        dbSaveSuccess = true
+        console.log(`✅ [STEP 2B SUCCESS] Customer saved to database successfully`)
+        
+      } catch (dbError) {
+        if (retryCount < maxRetries) {
+          console.warn(`⚠️ [STEP 2B RETRY ${retryCount + 1}/${maxRetries}] Database save failed, retrying in ${retryDelay}ms:`, dbError)
+          retryCount++
+          await new Promise(resolve => setTimeout(resolve, retryDelay))
+          continue
+        }
+        
+        console.error('💥 [STEP 2B CRITICAL ERROR] Database save failed after all retries:', dbError);
+        
+        // Cleanup: Delete the Stripe customer we just created
+        try {
+          await stripeAdmin.customers.del(customer.id);
+          console.log(`🧹 [CLEANUP] Deleted orphaned Stripe customer ${customer.id}`)
+        } catch (deleteError) {
+          console.error('💥 [CLEANUP ERROR] Failed to delete orphaned Stripe customer:', deleteError);
+        }
+        
+        throw dbError;
       }
     }
 
-    console.log(`Created new Stripe customer ${customer.id} for user ${userId}`);
+    // CRITICAL: Verify the customer was saved before returning
+    console.log(`🔍 [STEP 2C] Verifying customer was saved to database...`)
+    const { data: verifyData, error: verifyError } = await supabaseAdminClient
+      .from('customers')  // Use 'customers' instead of 'stripe_customers'
+      .select('stripe_customer_id, id')  // Use 'id' instead of 'user_id'
+      .eq('id', userId)   // Use 'id' instead of 'user_id'
+      .eq('stripe_customer_id', customer.id)
+      .single();
+
+    if (verifyError || !verifyData) {
+      console.error('💥 [STEP 2C CRITICAL ERROR] Customer verification failed:', {
+        verifyError,
+        hasVerifyData: !!verifyData,
+        userId,
+        customerId: customer.id
+      });
+      
+      // Cleanup: Delete the Stripe customer
+      try {
+        await stripeAdmin.customers.del(customer.id);
+        console.log(`🧹 [CLEANUP] Deleted unverified Stripe customer ${customer.id}`)
+      } catch (deleteError) {
+        console.error('💥 [CLEANUP ERROR] Failed to delete unverified Stripe customer:', deleteError);
+      }
+      
+      throw new Error(`Customer creation verification failed: ${verifyError?.message || 'Record not found'}`);
+    }
+
+    console.log(`✅ [STEP 2C SUCCESS] Customer verification confirmed:`, {
+      stripeCustomerId: verifyData.stripe_customer_id,
+      userId: verifyData.id  // Use 'id' instead of 'user_id'
+    });
+
+    console.log(`🎉 [SUCCESS] Created and verified new Stripe customer ${customer.id} for user ${userId}`)
     return customer.id;
 
   } catch (stripeError) {
-    console.error('getOrCreateCustomer: Failed to create Stripe customer', {
+    console.error('💥 [CRITICAL ERROR] getOrCreateCustomer: Failed to create Stripe customer', {
       userId,
       email,
       error: stripeError instanceof Error ? stripeError.message : 'Unknown error',
@@ -158,18 +219,20 @@ export async function getOrCreateCustomerForUser({
 
   // First try to get existing customer record using maybeSingle to avoid PGRST116 errors
   const { data, error } = await supabaseClient
-    .from('stripe_customers')
+    .from('customers')  // Use 'customers' instead of 'stripe_customers'
     .select('stripe_customer_id')
-    .eq('user_id', userId)
+    .eq('id', userId)   // Use 'id' instead of 'user_id'
     .maybeSingle();
 
   if (error) {
     console.error('getOrCreateCustomerForUser: Database error during customer lookup', { 
       userId, 
-      error: error.message,
-      code: error.code 
+      error: error.message || 'Unknown database error',
+      code: error.code || 'NO_CODE',
+      details: error.details || 'No details',
+      hint: error.hint || 'No hint'
     });
-    throw error;
+    throw new Error(`Database error during customer lookup: ${error.message || 'Unknown error'}`);
   }
 
   // If customer record exists and has Stripe customer ID, return it
@@ -251,9 +314,9 @@ export async function getOrCreateCustomerForUser({
     // If customer record exists, update it with Stripe customer ID
     if (data) {
       const { error: updateError } = await supabaseAdminClient
-        .from('stripe_customers')
-        .update({ stripe_customer_id: customer.id, email })
-        .eq('user_id', userId);
+        .from('customers')  // Use 'customers' instead of 'stripe_customers'
+        .update({ stripe_customer_id: customer.id })
+        .eq('id', userId);  // Use 'id' instead of 'user_id'
 
       if (updateError) {
         console.error('getOrCreateCustomerForUser: Failed to update existing customer record', {
@@ -271,8 +334,8 @@ export async function getOrCreateCustomerForUser({
     } else {
       // Create new customer record
       const { error: insertError } = await supabaseAdminClient
-        .from('stripe_customers')
-        .insert([{ user_id: userId, stripe_customer_id: customer.id, email }]);
+        .from('customers')  // Use 'customers' instead of 'stripe_customers'
+        .insert([{ id: userId, stripe_customer_id: customer.id }]);  // Use 'id' instead of 'user_id', remove email
 
       if (insertError) {
         console.error('getOrCreateCustomerForUser: Failed to create customer record', {

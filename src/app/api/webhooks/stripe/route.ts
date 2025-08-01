@@ -1030,47 +1030,84 @@ async function upsertUserSubscriptionWithConfig({
   console.log(`✅ [STEP 1 SUCCESS] All required parameters validated`)
   
   try {
-    // STEP 2: Get customer's userId from mapping table
+    // STEP 2: Get customer's userId from mapping table with retry mechanism
     console.log(`🔍 [STEP 2] Looking up user ID for Stripe customer: ${customerId}`)
     let customerData
-    try {
-      const customerResult = await supabaseAdminClient
-        .from('stripe_customers')
-        .select('id')
-        .eq('stripe_customer_id', customerId)
-        .single();
-      
-      customerData = customerResult.data
-      if (customerResult.error) {
-        console.error(`💥 [STEP 2 CRITICAL ERROR] Customer lookup failed for ${customerId}:`, {
-          error: customerResult.error,
-          message: customerResult.error.message,
-          code: customerResult.error.code,
-          details: customerResult.error.details,
-          hint: customerResult.error.hint
-        });
-        throw customerResult.error;
-      }
-      
-      if (!customerData) {
-        const error = `Customer mapping not found for Stripe customer: ${customerId}`
-        console.error(`💥 [STEP 2 CRITICAL ERROR] ${error}`)
-        throw new Error(error);
-      }
+    let retryCount = 0
+    const maxRetries = 3
+    const retryDelay = 500 // ms
+    
+    while (retryCount <= maxRetries) {
+      try {
+        const customerResult = await supabaseAdminClient
+          .from('stripe_customers')
+          .select('user_id') // CRITICAL FIX: Was selecting 'id', should be 'user_id'
+          .eq('stripe_customer_id', customerId)
+          .single();
+        
+        customerData = customerResult.data
+        if (customerResult.error) {
+          if (customerResult.error.code === 'PGRST116' && retryCount < maxRetries) {
+            // No rows returned - customer might not be saved yet due to race condition
+            console.warn(`⚠️ [STEP 2 RETRY ${retryCount + 1}/${maxRetries}] Customer ${customerId} not found, retrying in ${retryDelay}ms...`)
+            retryCount++
+            await new Promise(resolve => setTimeout(resolve, retryDelay))
+            continue
+          }
+          
+          console.error(`💥 [STEP 2 CRITICAL ERROR] Customer lookup failed for ${customerId} after ${retryCount + 1} attempts:`, {
+            error: customerResult.error,
+            message: customerResult.error.message,
+            code: customerResult.error.code,
+            details: customerResult.error.details,
+            hint: customerResult.error.hint
+          });
+          throw customerResult.error;
+        }
+        
+        if (!customerData || !customerData.user_id) {
+          if (retryCount < maxRetries) {
+            console.warn(`⚠️ [STEP 2 RETRY ${retryCount + 1}/${maxRetries}] Customer data incomplete for ${customerId}, retrying in ${retryDelay}ms...`)
+            retryCount++
+            await new Promise(resolve => setTimeout(resolve, retryDelay))
+            continue
+          }
+          
+          const error = `Customer mapping not found for Stripe customer: ${customerId} after ${retryCount + 1} attempts`
+          console.error(`💥 [STEP 2 CRITICAL ERROR] ${error}`)
+          throw new Error(error);
+        }
 
-      console.log(`✅ [STEP 2 SUCCESS] Found user ID: ${customerData.id} for Stripe customer: ${customerId}`)
-      
-    } catch (customerLookupError) {
-      console.error(`💥 [STEP 2 CRITICAL ERROR] Customer lookup operation failed:`, {
-        customerId,
-        error: customerLookupError,
-        message: customerLookupError instanceof Error ? customerLookupError.message : 'Unknown customer lookup error',
-        stack: customerLookupError instanceof Error ? customerLookupError.stack : undefined
-      })
-      throw customerLookupError
+        console.log(`✅ [STEP 2 SUCCESS] Found user ID: ${customerData.user_id} for Stripe customer: ${customerId}`)
+        break
+        
+      } catch (customerLookupError) {
+        if (retryCount < maxRetries && 
+            (customerLookupError instanceof Error && 
+             (customerLookupError.message.includes('not found') || 
+              customerLookupError.message.includes('0 rows')))) {
+          console.warn(`⚠️ [STEP 2 RETRY ${retryCount + 1}/${maxRetries}] Customer lookup failed, retrying in ${retryDelay}ms:`, customerLookupError.message)
+          retryCount++
+          await new Promise(resolve => setTimeout(resolve, retryDelay))
+          continue
+        }
+        
+        console.error(`💥 [STEP 2 CRITICAL ERROR] Customer lookup operation failed after ${retryCount + 1} attempts:`, {
+          customerId,
+          error: customerLookupError,
+          message: customerLookupError instanceof Error ? customerLookupError.message : 'Unknown customer lookup error',
+          stack: customerLookupError instanceof Error ? customerLookupError.stack : undefined
+        })
+        throw customerLookupError
+      }
     }
 
-    const { id: userId } = customerData;
+    if (!customerData?.user_id) {
+      console.error(`❌ [STEP 2 ERROR] No user_id found in customer data for ${customerId}`)
+      throw new Error(`Customer data missing user_id for customer: ${customerId}`)
+    }
+    
+    const { user_id: userId } = customerData; // CRITICAL FIX: Use user_id instead of id
 
     // STEP 3: Create Stripe client and retrieve subscription
     console.log(`🔌 [STEP 3] Creating Stripe client and retrieving subscription: ${subscriptionId}`)

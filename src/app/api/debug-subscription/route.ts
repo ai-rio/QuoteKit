@@ -14,11 +14,28 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔍 Debug: Checking subscriptions for user ${session.user.id}`);
 
+    // First check if user actually needs a Stripe customer (has paid subscriptions)
+    const { userNeedsStripeCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+    const { createSupabaseServerClient } = await import('@/libs/supabase/supabase-server-client');
+    const supabase = await createSupabaseServerClient();
+    
+    const needsCustomer = await userNeedsStripeCustomer(session.user.id, supabase);
+
+    if (!needsCustomer) {
+      console.log(`ℹ️ Debug: User ${session.user.id} is on free plan, no debug needed`);
+      return NextResponse.json({
+        success: true,
+        message: 'No subscription debug needed for free plan users',
+        subscriptions: [],
+        details: 'Free plan users do not have Stripe subscriptions to debug'
+      });
+    }
+
     // Get user's customer ID
     const { data: customer } = await supabaseAdminClient
-      .from('stripe_customers')
+      .from('customers')
       .select('stripe_customer_id')
-      .eq('user_id', session.user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (!customer) {

@@ -29,9 +29,11 @@ export async function upsertUserSubscription({
   try {
     // Get customer's userId from mapping table.
     console.log(`📋 Looking up user ID for Stripe customer: ${customerId}`);
+    
+    // CRITICAL FIX: Select 'user_id' instead of 'id' - the stripe_customers table doesn't have an 'id' column
     const { data: customerData, error: noCustomerError } = await supabaseAdminClient
       .from('stripe_customers')
-      .select('id')
+      .select('user_id')  // ✅ FIXED: Use 'user_id' instead of 'id'
       .eq('stripe_customer_id', customerId)
       .single();
     
@@ -45,7 +47,7 @@ export async function upsertUserSubscription({
       throw new Error(`Customer mapping not found for Stripe customer: ${customerId}`);
     }
 
-    const { id: userId } = customerData;
+    const { user_id: userId } = customerData; // ✅ FIXED: Extract user_id instead of id
     console.log(`✅ Found user ID: ${userId} for Stripe customer: ${customerId}`);
 
     console.log(`📞 Retrieving subscription from Stripe: ${subscriptionId}`);

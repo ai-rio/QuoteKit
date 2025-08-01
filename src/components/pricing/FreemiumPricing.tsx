@@ -10,55 +10,50 @@ import NumberFlow from '@number-flow/react';
 
 const PAYMENT_FREQUENCIES: ('monthly' | 'yearly')[] = ['monthly', 'yearly'];
 
-// Our freemium pricing tiers
+// Clean 2-tier pricing structure
 const TIERS = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'Free Plan',
     price: {
       monthly: 'Free',
       yearly: 'Free',
     },
-    description: 'Perfect for trying QuoteKit',
-    features: [
-      'Up to 5 quotes per month',
-      'Basic quote templates',
-      'Email delivery',
-      'Community support',
-      'Basic analytics',
-    ],
-    cta: 'Get Started Free',
-    stripePriceId: 'price_free',
-  },
-  {
-    id: 'pro-monthly',
-    name: 'Pro',
-    price: {
-      monthly: 12,
-      yearly: 12, // Will be overridden for yearly
-    },
-    description: 'For growing businesses',
+    description: 'Perfect for getting started with basic quote management',
     features: [
       'Unlimited quotes',
-      'Premium templates',
-      'Advanced customization',
+      'Basic PDF generation',
+      'Client management',
+      'Item catalog',
+      'Community support',
+    ],
+    cta: 'Get Started Free',
+    stripePriceId: 'price_free_monthly',
+  },
+  {
+    id: 'pro',
+    name: 'Pro Plan',
+    price: {
+      monthly: 12,
+      yearly: 115.20, // $12*12*0.8 = 20% discount
+    },
+    description: 'Advanced features for growing businesses',
+    features: [
+      'Everything in Free',
+      'Advanced analytics',
+      'Email integration',
+      'Quote templates',
       'Priority support',
-      'Detailed analytics',
       'Custom branding',
     ],
     cta: 'Start Pro Plan',
     popular: true,
     stripePriceId: {
-      monthly: 'price_monthly_1200',
-      yearly: 'price_annual_14400',
+      monthly: 'price_pro_monthly',
+      yearly: 'price_pro_annual',
     },
   },
 ];
-
-// Calculate yearly price with 20% discount
-const getYearlyPrice = (monthlyPrice: number) => {
-  return Math.round(monthlyPrice * 12 * 0.8); // 20% discount
-};
 
 const Tab = ({
   text,
@@ -112,23 +107,19 @@ const PricingCard = ({
   paymentFrequency: keyof typeof tier.price;
   onSelectPlan: (stripePriceId: string, planName: string) => void;
 }) => {
-  let price = tier.price[paymentFrequency];
+  const price = tier.price[paymentFrequency];
   let stripePriceId = tier.stripePriceId;
   
   // Handle Pro plan pricing logic
-  if (tier.id === 'pro-monthly') {
-    if (paymentFrequency === 'yearly') {
-      price = getYearlyPrice(12);
-      stripePriceId = (tier.stripePriceId as any).yearly;
-    } else {
-      stripePriceId = (tier.stripePriceId as any).monthly;
-    }
+  if (tier.id === 'pro' && typeof stripePriceId === 'object') {
+    stripePriceId = stripePriceId[paymentFrequency];
   }
 
   const isPopular = tier.popular;
+  const isFree = tier.id === 'free';
 
   const handleSelectPlan = () => {
-    const finalPriceId = typeof stripePriceId === 'string' ? stripePriceId : stripePriceId[paymentFrequency];
+    const finalPriceId = typeof stripePriceId === 'string' ? stripePriceId : stripePriceId;
     
     console.log('💳 FreemiumPricing: Plan selection triggered:', {
       tier_name: tier.name,
@@ -136,11 +127,16 @@ const PricingCard = ({
       payment_frequency: paymentFrequency,
       stripe_price_id: finalPriceId,
       price: price,
-      is_free: tier.id === 'free'
+      is_free: isFree
     });
     
     onSelectPlan(finalPriceId, tier.name);
   };
+
+  // Calculate savings for annual plan
+  const annualSavings = tier.id === 'pro' && paymentFrequency === 'yearly' 
+    ? (12 * 12) - 115.20 // Monthly cost * 12 - Annual cost
+    : 0;
 
   return (
     <div
@@ -153,7 +149,7 @@ const PricingCard = ({
       {isPopular && <PopularBackground />}
 
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold capitalize">
+        <h2 className="text-xl font-semibold">
           {tier.name}
         </h2>
         {isPopular && (
@@ -180,9 +176,9 @@ const PricingCard = ({
                 /{paymentFrequency === 'yearly' ? 'year' : 'month'}
               </span>
             </div>
-            {paymentFrequency === 'yearly' && (
+            {paymentFrequency === 'yearly' && annualSavings > 0 && (
               <p className="text-xs text-green-600 font-medium">
-                Save $28.80 annually
+                Save ${annualSavings.toFixed(2)} annually
               </p>
             )}
           </>
@@ -257,7 +253,7 @@ export default function FreemiumPricing({ onSelectPlan }: FreemiumPricingProps) 
       </div>
 
       <div className="grid w-full max-w-4xl grid-cols-1 gap-8 lg:grid-cols-2">
-        {TIERS.map((tier, i) => (
+        {TIERS.map((tier) => (
           <PricingCard
             key={tier.id}
             tier={tier}

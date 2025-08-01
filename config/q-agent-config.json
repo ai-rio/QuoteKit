@@ -1,0 +1,305 @@
+{
+  "agent": {
+    "id": "quotekit-fullstack-agent",
+    "name": "QuoteKit Fullstack Agent",
+    "version": "1.0.0",
+    "description": "Comprehensive fullstack agent for QuoteKit lawn care quote management system",
+    "type": "nextjs-fullstack",
+    "capabilities": [
+      "database-operations",
+      "api-management",
+      "ui-generation",
+      "business-logic",
+      "integration-management",
+      "analytics",
+      "automation"
+    ]
+  },
+  "tools": [
+    {
+      "id": "supabase-client",
+      "name": "Supabase Database Client",
+      "type": "database",
+      "description": "Direct access to Supabase PostgreSQL database",
+      "endpoint": "supabase://client",
+      "capabilities": ["read", "write", "schema", "rls"],
+      "authentication": {
+        "type": "service_key",
+        "env_var": "SUPABASE_SERVICE_ROLE_KEY"
+      }
+    },
+    {
+      "id": "nextjs-api",
+      "name": "Next.js API Routes",
+      "type": "api",
+      "description": "Access to Next.js API routes and server actions",
+      "endpoint": "http://localhost:3000/api",
+      "capabilities": ["crud", "business-logic", "integrations"],
+      "authentication": {
+        "type": "session",
+        "provider": "supabase-auth"
+      }
+    },
+    {
+      "id": "stripe-integration",
+      "name": "Stripe Payment Processing",
+      "type": "external-api",
+      "description": "Stripe payment and subscription management",
+      "endpoint": "https://api.stripe.com/v1",
+      "capabilities": ["payments", "subscriptions", "customers", "webhooks"],
+      "authentication": {
+        "type": "bearer",
+        "env_var": "STRIPE_SECRET_KEY"
+      }
+    },
+    {
+      "id": "email-service",
+      "name": "Email Service (Resend)",
+      "type": "external-api",
+      "description": "Email sending and template management",
+      "endpoint": "https://api.resend.com",
+      "capabilities": ["send", "templates", "tracking"],
+      "authentication": {
+        "type": "bearer",
+        "env_var": "RESEND_API_KEY"
+      }
+    },
+    {
+      "id": "pdf-generator",
+      "name": "PDF Generation Service",
+      "type": "internal",
+      "description": "React PDF quote generation",
+      "capabilities": ["generate", "template", "download"],
+      "configuration": {
+        "library": "@react-pdf/renderer",
+        "templates": ["quote", "invoice", "estimate"]
+      }
+    },
+    {
+      "id": "file-system",
+      "name": "File System Operations",
+      "type": "system",
+      "description": "File and directory operations",
+      "capabilities": ["read", "write", "create", "delete", "list"],
+      "restrictions": {
+        "allowed_paths": [
+          "/root/dev/.devcontainer/QuoteKit/src",
+          "/root/dev/.devcontainer/QuoteKit/public",
+          "/root/dev/.devcontainer/QuoteKit/docs"
+        ]
+      }
+    }
+  ],
+  "schemas": {
+    "database": {
+      "tables": [
+        {
+          "name": "quotes",
+          "operations": ["select", "insert", "update", "delete"],
+          "relationships": ["line_items", "company_settings", "users"]
+        },
+        {
+          "name": "line_items",
+          "operations": ["select", "insert", "update", "delete"],
+          "relationships": ["quotes", "users"]
+        },
+        {
+          "name": "company_settings",
+          "operations": ["select", "insert", "update"],
+          "relationships": ["users", "quotes"]
+        },
+        {
+          "name": "users",
+          "operations": ["select", "update"],
+          "relationships": ["quotes", "line_items", "company_settings"]
+        }
+      ]
+    },
+    "api": {
+      "routes": [
+        {
+          "path": "/api/quotes",
+          "methods": ["GET", "POST", "PUT", "DELETE"],
+          "description": "Quote management endpoints"
+        },
+        {
+          "path": "/api/line-items",
+          "methods": ["GET", "POST", "PUT", "DELETE"],
+          "description": "Line item management endpoints"
+        },
+        {
+          "path": "/api/company-settings",
+          "methods": ["GET", "PUT"],
+          "description": "Company settings management"
+        },
+        {
+          "path": "/api/pdf/quote",
+          "methods": ["POST"],
+          "description": "PDF generation endpoint"
+        },
+        {
+          "path": "/api/email/send-quote",
+          "methods": ["POST"],
+          "description": "Email quote sending endpoint"
+        }
+      ]
+    }
+  },
+  "context": {
+    "application": {
+      "name": "QuoteKit",
+      "type": "nextjs-app",
+      "version": "0.1.0",
+      "environment": "development",
+      "features": [
+        "user-authentication",
+        "quote-management",
+        "pdf-generation",
+        "email-integration",
+        "stripe-payments",
+        "company-settings",
+        "item-library",
+        "dashboard-analytics"
+      ]
+    },
+    "technology_stack": {
+      "frontend": "Next.js 15 with React 19",
+      "backend": "Next.js API Routes",
+      "database": "Supabase (PostgreSQL)",
+      "authentication": "Supabase Auth",
+      "payments": "Stripe",
+      "email": "Resend",
+      "pdf": "React PDF",
+      "styling": "Tailwind CSS",
+      "ui_components": "shadcn/ui",
+      "analytics": "PostHog"
+    },
+    "architecture": {
+      "pattern": "feature-based",
+      "structure": {
+        "src/app": "Next.js App Router pages and API routes",
+        "src/features": "Feature-based modules (auth, quotes, items, etc.)",
+        "src/components": "Reusable UI components",
+        "src/libs": "External service integrations",
+        "src/types": "TypeScript type definitions",
+        "src/utils": "Utility functions"
+      }
+    }
+  },
+  "capabilities": {
+    "database_operations": {
+      "description": "Full CRUD operations on all database tables",
+      "permissions": ["read", "write", "schema_access"],
+      "rls_aware": true
+    },
+    "api_management": {
+      "description": "Create, modify, and manage API routes",
+      "supports": ["REST", "server_actions", "middleware"]
+    },
+    "ui_generation": {
+      "description": "Generate and modify React components and pages",
+      "frameworks": ["React", "Next.js"],
+      "styling": ["Tailwind CSS", "shadcn/ui"]
+    },
+    "business_logic": {
+      "description": "Implement complex business logic and workflows",
+      "domains": ["quote_management", "pricing", "user_management", "payments"]
+    },
+    "integration_management": {
+      "description": "Manage external service integrations",
+      "services": ["Stripe", "Resend", "PostHog", "Supabase"]
+    },
+    "code_analysis": {
+      "description": "Analyze and understand existing codebase",
+      "capabilities": ["dependency_analysis", "architecture_review", "performance_optimization"]
+    },
+    "testing": {
+      "description": "Generate and run tests",
+      "frameworks": ["Jest", "React Testing Library", "Vitest"]
+    }
+  },
+  "memory": {
+    "conversation_context": {
+      "max_turns": 100,
+      "retention_policy": "session_based"
+    },
+    "code_context": {
+      "track_changes": true,
+      "maintain_history": true,
+      "max_history": 50
+    },
+    "user_preferences": {
+      "persist": true,
+      "storage": "local_file"
+    }
+  },
+  "security": {
+    "authentication": {
+      "required": true,
+      "methods": ["supabase_session", "api_key"]
+    },
+    "authorization": {
+      "rbac": true,
+      "permissions": ["read", "write", "admin", "developer"]
+    },
+    "data_protection": {
+      "encrypt_sensitive": true,
+      "mask_credentials": true,
+      "audit_trail": true
+    }
+  },
+  "performance": {
+    "caching": {
+      "enabled": true,
+      "strategies": ["memory", "redis", "file_system"],
+      "ttl": 3600
+    },
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_minute": 100,
+      "burst_limit": 20
+    },
+    "optimization": {
+      "lazy_loading": true,
+      "code_splitting": true,
+      "tree_shaking": true
+    }
+  },
+  "monitoring": {
+    "logging": {
+      "level": "info",
+      "destinations": ["console", "file"],
+      "structured": true
+    },
+    "metrics": {
+      "enabled": true,
+      "provider": "posthog",
+      "custom_events": true
+    },
+    "error_tracking": {
+      "enabled": true,
+      "provider": "built_in",
+      "notifications": true
+    }
+  },
+  "development": {
+    "hot_reload": true,
+    "type_checking": true,
+    "linting": true,
+    "formatting": true,
+    "testing": {
+      "unit": true,
+      "integration": true,
+      "e2e": false
+    }
+  },
+  "deployment": {
+    "platforms": ["vercel", "netlify", "docker"],
+    "environments": ["development", "staging", "production"],
+    "ci_cd": {
+      "enabled": true,
+      "provider": "github_actions",
+      "auto_deploy": false
+    }
+  }
+}

@@ -104,7 +104,7 @@ export async function getSubscription() {
         *,
         stripe_products!stripe_prices_stripe_product_id_fkey(*)
       `)
-      .eq('stripe_price_id', priceId)
+      .eq('id', priceId)  // Use 'id' instead of 'stripe_price_id'
       .maybeSingle();
 
     if (priceError) {
@@ -239,11 +239,11 @@ export async function getFreePlanInfo() {
       return null;
     }
 
-    // Get the free plan price
+    // Get the free plan price - use freeProduct.id to match stripe_product_id
     const { data: freePrice, error: priceError } = await supabase
       .from('stripe_prices')
       .select('*')
-      .eq('stripe_product_id', freeProduct.stripe_product_id)
+      .eq('stripe_product_id', freeProduct.id) // Use freeProduct.id instead of freeProduct.stripe_product_id
       .eq('active', true)
       .maybeSingle();
 
@@ -443,7 +443,8 @@ export async function getBillingHistory() {
     } catch (customerError) {
       console.error('getBillingHistory: Failed to get customer', {
         userId: user.id,
-        error: customerError instanceof Error ? customerError.message : 'Unknown error'
+        error: customerError instanceof Error ? customerError.message : 'Unknown customer error',
+        stack: customerError instanceof Error ? customerError.stack : undefined
       });
       // Return empty array instead of failing completely
       return [];
@@ -547,7 +548,8 @@ export async function getPaymentMethods() {
     } catch (customerError) {
       console.error('getPaymentMethods: Failed to get customer', {
         userId: user.id,
-        error: customerError instanceof Error ? customerError.message : 'Unknown error'
+        error: customerError instanceof Error ? customerError.message : 'Unknown customer error',
+        stack: customerError instanceof Error ? customerError.stack : undefined
       });
       // Return empty array instead of failing completely
       return [];

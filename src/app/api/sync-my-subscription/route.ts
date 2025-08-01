@@ -19,6 +19,20 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 User ${user.id} requesting subscription sync`);
 
+    // First check if user actually needs a Stripe customer (has paid subscriptions)
+    const { userNeedsStripeCustomer } = await import('@/features/account/controllers/get-or-create-customer');
+    const needsCustomer = await userNeedsStripeCustomer(user.id, supabase);
+
+    if (!needsCustomer) {
+      console.log(`ℹ️ User ${user.id} is on free plan, no sync needed`);
+      return NextResponse.json({
+        success: true,
+        message: 'No subscription sync needed for free plan users',
+        synced: 0,
+        details: 'Free plan users do not require Stripe customer records'
+      });
+    }
+
     // Get or create customer using the enhanced helper that avoids PGRST116 errors
     const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
     
@@ -27,8 +41,13 @@ export async function POST(request: NextRequest) {
       stripe_customer_id = await getOrCreateCustomerForUser({ 
         userId: user.id, 
         email: user.email!, 
-        supabaseClient: supabase 
+        supabaseClient: supabase,
+        forceCreate: true // Only force create if we know they need it
       });
+      
+      if (!stripe_customer_id) {
+        throw new Error('No customer found');
+      }
       
       console.log(`🔗 Got/created customer ID: ${stripe_customer_id} for user ${user.id}`);
     } catch (customerError) {
