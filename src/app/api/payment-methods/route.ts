@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ Stripe client created');
 
-    // Get or create customer using the same method as subscription actions
+    // Get existing customer - don't create new ones for payment method lookups
     let customerId: string;
     
     try {
@@ -71,14 +71,24 @@ export async function GET(request: NextRequest) {
         userId: user.id,
         email: user.email!,
         supabaseClient: supabase,
-        forceCreate: true
+        forceCreate: false // FIXED: Don't create new customers for payment method lookups
       });
       
-      console.log('✅ Got customer using consistent method:', customerId);
+      console.log('✅ Got existing customer:', customerId);
       
     } catch (customerError) {
-      console.error('❌ Customer creation/retrieval failed:', customerError);
-      return NextResponse.json({ error: 'Failed to get customer' }, { status: 500 });
+      console.log('ℹ️ No existing customer found for user - returning empty payment methods list');
+      // Return empty list if no customer exists yet
+      return NextResponse.json({
+        success: true,
+        data: [],
+        source: 'no-customer',
+        debug: {
+          customerId: null,
+          defaultPaymentMethodId: null,
+          timestamp: new Date().toISOString()
+        }
+      });
     }
 
     // Get payment methods from Stripe
@@ -182,7 +192,7 @@ export async function POST(request: NextRequest) {
       mode: 'test'
     });
 
-    // Get or create customer using the same method as subscription actions
+    // Get or create customer for adding payment methods
     let customerId: string;
     
     try {
@@ -193,10 +203,10 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         email: user.email!,
         supabaseClient: supabase,
-        forceCreate: true
+        forceCreate: true // Create customer when adding payment methods
       });
       
-      console.log('✅ Got customer using consistent method:', customerId);
+      console.log('✅ Got customer for payment method creation:', customerId);
       
     } catch (customerError) {
       console.error('❌ Customer creation/retrieval failed:', customerError);

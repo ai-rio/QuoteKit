@@ -31,7 +31,7 @@ export async function DELETE(
       mode: 'test'
     });
 
-    // Get customer using the same method as other APIs
+    // Get customer using consistent method - DON'T force create
     let customerId: string;
     
     try {
@@ -42,8 +42,13 @@ export async function DELETE(
         userId: user.id,
         email: user.email!,
         supabaseClient: supabase,
-        forceCreate: true
+        forceCreate: false // FIXED: Don't create new customer, use existing
       });
+      
+      if (!customerId) {
+        console.log('❌ No customer found for user');
+        return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+      }
       
       console.log('✅ Got customer using consistent method:', customerId);
       
@@ -65,7 +70,10 @@ export async function DELETE(
     }
     
     if (paymentMethod.customer !== customerId) {
-      console.log('❌ Payment method does not belong to customer');
+      console.log('❌ Payment method does not belong to customer', {
+        paymentMethodCustomer: paymentMethod.customer,
+        expectedCustomer: customerId
+      });
       return NextResponse.json({ error: 'Payment method not found' }, { status: 404 });
     }
 
@@ -138,7 +146,7 @@ export async function PATCH(
       mode: 'test'
     });
 
-    // Get customer using the same method as other APIs
+    // Get customer using consistent method - DON'T force create
     let customerId: string;
     
     try {
@@ -149,8 +157,13 @@ export async function PATCH(
         userId: user.id,
         email: user.email!,
         supabaseClient: supabase,
-        forceCreate: true
+        forceCreate: false // FIXED: Don't create new customer, use existing
       });
+      
+      if (!customerId) {
+        console.log('❌ No customer found for user');
+        return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+      }
       
       console.log('✅ Got customer using consistent method:', customerId);
       
@@ -172,8 +185,31 @@ export async function PATCH(
     }
     
     if (paymentMethod.customer !== customerId) {
-      console.log('❌ Payment method does not belong to customer');
-      return NextResponse.json({ error: 'Payment method not found' }, { status: 404 });
+      console.log('❌ Payment method customer mismatch:', {
+        paymentMethodCustomer: paymentMethod.customer,
+        expectedCustomer: customerId,
+        paymentMethodId: id
+      });
+
+      // Try to attach the payment method to the correct customer if it's orphaned
+      if (!paymentMethod.customer) {
+        console.log('🔄 Attaching orphaned payment method to customer...');
+        try {
+          await stripe.paymentMethods.attach(id, {
+            customer: customerId,
+          });
+          console.log('✅ Payment method attached to customer');
+        } catch (attachError) {
+          console.error('❌ Failed to attach payment method:', attachError);
+          return NextResponse.json({ 
+            error: 'Payment method belongs to a different customer' 
+          }, { status: 400 });
+        }
+      } else {
+        return NextResponse.json({ 
+          error: 'Payment method belongs to a different customer' 
+        }, { status: 400 });
+      }
     }
 
     // Update customer's default payment method
