@@ -11,7 +11,9 @@ import {
   Package,
   Plus, 
   RefreshCw, 
-  Trash2} from 'lucide-react'
+  Settings,
+  Trash2,
+  Zap} from 'lucide-react'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +29,25 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Separator } from '@/components/ui/separator'
+
+// Import feature management types
+import {
+  type PlanFeatures,
+  type FeatureKey,
+  type FeatureDefinition,
+  FEATURE_DEFINITIONS,
+  FREE_PLAN_FEATURES,
+  PREMIUM_PLAN_FEATURES,
+  parseStripeMetadata,
+  toStripeMetadata,
+  validateFeatureConfig,
+  getFeaturesByCategory,
+  getPlanTierName,
+  isPremiumFeature
+} from '@/types/features'
 
 interface StripeProduct {
   id: string | null
@@ -69,12 +90,14 @@ export default function PricingManagementPage() {
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
-    active: true
+    active: true,
+    features: FREE_PLAN_FEATURES
   })
   
   // Product edit state
   const [showEditProductDialog, setShowEditProductDialog] = useState(false)
   const [editingProduct, setEditingProduct] = useState<StripeProduct | null>(null)
+  const [editingFeatures, setEditingFeatures] = useState<PlanFeatures>(FREE_PLAN_FEATURES)
   
   // Price creation state
   const [showPriceDialog, setShowPriceDialog] = useState(false)
@@ -98,6 +121,24 @@ export default function PricingManagementPage() {
     action: () => void
     destructive?: boolean
   } | null>(null)
+
+  // Feature management helpers
+  const getProductFeatures = (product: StripeProduct): PlanFeatures => {
+    return parseStripeMetadata(product.metadata)
+  }
+
+  const updateProductFeatures = (features: PlanFeatures) => {
+    setEditingFeatures(features)
+  }
+
+  const applyFeaturePreset = (preset: 'free' | 'premium') => {
+    const presetFeatures = preset === 'free' ? FREE_PLAN_FEATURES : PREMIUM_PLAN_FEATURES
+    setEditingFeatures(presetFeatures)
+  }
+
+  const resetNewProductFeatures = () => {
+    setNewProduct(prev => ({ ...prev, features: FREE_PLAN_FEATURES }))
+  }
 
   useEffect(() => {
     fetchProducts()
@@ -175,6 +216,13 @@ export default function PricingManagementPage() {
       return
     }
 
+    // Validate features
+    const validation = validateFeatureConfig(newProduct.features)
+    if (!validation.isValid) {
+      setMessage({ type: 'error', text: `Feature validation failed: ${validation.errors.join(', ')}` })
+      return
+    }
+
     try {
       const response = await fetch('/api/admin/stripe-config/products', {
         method: 'POST',
@@ -182,16 +230,17 @@ export default function PricingManagementPage() {
         body: JSON.stringify({
           name: newProduct.name,
           description: newProduct.description,
-          active: newProduct.active
+          active: newProduct.active,
+          metadata: toStripeMetadata(newProduct.features)
         })
       })
       
       const data = await response.json()
       
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Product created successfully!' })
+        setMessage({ type: 'success', text: 'Product created successfully with feature configuration!' })
         setShowProductDialog(false)
-        setNewProduct({ name: '', description: '', active: true })
+        setNewProduct({ name: '', description: '', active: true, features: FREE_PLAN_FEATURES })
         fetchProducts() // Refresh products list
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to create product' })
@@ -204,6 +253,13 @@ export default function PricingManagementPage() {
   const updateProduct = async () => {
     if (!editingProduct) return
 
+    // Validate features
+    const validation = validateFeatureConfig(editingFeatures)
+    if (!validation.isValid) {
+      setMessage({ type: 'error', text: `Feature validation failed: ${validation.errors.join(', ')}` })
+      return
+    }
+
     try {
       const response = await fetch('/api/admin/stripe-config/products', {
         method: 'PUT',
@@ -212,16 +268,18 @@ export default function PricingManagementPage() {
           stripe_product_id: editingProduct.stripe_product_id,
           name: editingProduct.name,
           description: editingProduct.description,
-          active: editingProduct.active
+          active: editingProduct.active,
+          metadata: toStripeMetadata(editingFeatures)
         })
       })
       
       const data = await response.json()
       
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Product updated successfully!' })
+        setMessage({ type: 'success', text: 'Product and features updated successfully!' })
         setShowEditProductDialog(false)
         setEditingProduct(null)
+        setEditingFeatures(FREE_PLAN_FEATURES)
         fetchProducts() // Refresh products list
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to update product' })
@@ -400,6 +458,156 @@ export default function PricingManagementPage() {
     setConfirmAction(null)
   }
 
+  // Feature Toggle Component
+  const FeatureToggleSection = ({ 
+    features, 
+    onFeaturesChange, 
+    showPresets = false 
+  }: { 
+    features: PlanFeatures
+    onFeaturesChange: (features: PlanFeatures) => void
+    showPresets?: boolean
+  }) => {
+    const categorizedFeatures = getFeaturesByCategory()
+
+    const handleFeatureChange = (featureKey: FeatureKey, value: boolean | number) => {
+      const updatedFeatures = { ...features, [featureKey]: value }
+      onFeaturesChange(updatedFeatures)
+    }
+
+    const renderFeatureToggle = (feature: FeatureDefinition) => {
+      const currentValue = features[feature.key]
+      
+      if (feature.type === 'unlimited') {
+        return (
+          <div key={feature.key} className="flex items-center justify-between py-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium text-charcoal">
+                  {feature.name}
+                </Label>
+                {isPremiumFeature(feature.key) && (
+                  <Badge variant="outline" className="text-xs bg-equipment-yellow/10 text-equipment-yellow border-equipment-yellow">
+                    <Zap className="w-3 h-3 mr-1" />
+                    Premium
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-charcoal/70 mt-1">{feature.description}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="-1"
+                value={currentValue === -1 ? '' : currentValue}
+                onChange={(e) => {
+                  const value = e.target.value === '' ? -1 : parseInt(e.target.value, 10)
+                  if (!isNaN(value)) {
+                    handleFeatureChange(feature.key, value)
+                  }
+                }}
+                placeholder="Unlimited"
+                className="w-24 h-8 text-xs bg-light-concrete text-charcoal border-stone-gray"
+              />
+              <span className="text-xs text-charcoal/50 min-w-[60px]">
+                {currentValue === -1 ? 'Unlimited' : `${currentValue} max`}
+              </span>
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <div key={feature.key} className="flex items-center justify-between py-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium text-charcoal">
+                {feature.name}
+              </Label>
+              {isPremiumFeature(feature.key) && (
+                <Badge variant="outline" className="text-xs bg-equipment-yellow/10 text-equipment-yellow border-equipment-yellow">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Premium
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-charcoal/70 mt-1">{feature.description}</p>
+          </div>
+          <Switch
+            checked={currentValue as boolean}
+            onCheckedChange={(checked) => handleFeatureChange(feature.key, checked)}
+            className="data-[state=checked]:bg-forest-green"
+          />
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        {showPresets && (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-charcoal">Quick Presets</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => applyFeaturePreset('free')}
+                className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
+              >
+                Apply Free Tier
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => applyFeaturePreset('premium')}
+                className="bg-paper-white text-equipment-yellow border-2 border-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal font-bold transition-all duration-200"
+              >
+                Apply Premium Tier
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {Object.entries(categorizedFeatures).map(([category, categoryFeatures]) => {
+            if (categoryFeatures.length === 0) return null
+            
+            return (
+              <div key={category} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-charcoal/50" />
+                  <Label className="text-sm font-semibold text-charcoal capitalize">
+                    {category} Features
+                  </Label>
+                </div>
+                <div className="bg-light-concrete rounded-lg p-3 space-y-1">
+                  {categoryFeatures.map((feature) => (
+                    <div key={`${category}-${feature.key}`}>
+                      {renderFeatureToggle(feature)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="bg-equipment-yellow/10 border border-equipment-yellow/20 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="w-4 h-4 text-equipment-yellow" />
+            <span className="text-sm font-medium text-equipment-yellow">Plan Summary</span>
+          </div>
+          <p className="text-xs text-charcoal/70">
+            Current configuration: <strong>{getPlanTierName(features)}</strong> tier
+            {features.max_quotes === -1 ? ' with unlimited quotes' : ` with ${features.max_quotes} quote limit`}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8 bg-light-concrete min-h-screen p-6">
       {/* Page Header */}
@@ -482,66 +690,92 @@ export default function PricingManagementPage() {
                     Add Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-paper-white border-stone-gray">
+                <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-charcoal text-section-title">Create New Product</DialogTitle>
                     <DialogDescription className="text-charcoal/70">
-                      Add a new product to your Stripe catalog
+                      Add a new product to your Stripe catalog with feature configuration
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid gap-3">
-                      <Label htmlFor="product-name" className="text-label text-charcoal font-medium">
-                        Product Name *
-                      </Label>
-                      <Input
-                        id="product-name"
-                        value={newProduct.name}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="e.g., Premium Plan"
-                        className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
-                        required
+                  
+                  <Tabs defaultValue="basic" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-light-concrete">
+                      <TabsTrigger value="basic" className="data-[state=active]:bg-paper-white">
+                        Basic Info
+                      </TabsTrigger>
+                      <TabsTrigger value="features" className="data-[state=active]:bg-paper-white">
+                        Features
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="basic" className="space-y-4 mt-6">
+                      <div className="grid gap-3">
+                        <Label htmlFor="product-name" className="text-label text-charcoal font-medium">
+                          Product Name *
+                        </Label>
+                        <Input
+                          id="product-name"
+                          value={newProduct.name}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g., Premium Plan"
+                          className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-3">
+                        <Label htmlFor="product-description" className="text-label text-charcoal font-medium">
+                          Description
+                        </Label>
+                        <Input
+                          id="product-description"
+                          value={newProduct.description}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Brief description of the product"
+                          className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="product-active"
+                          checked={newProduct.active}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, active: e.target.checked }))}
+                          className="text-forest-green focus:ring-forest-green"
+                        />
+                        <Label htmlFor="product-active" className="text-charcoal">
+                          Active (available for purchase)
+                        </Label>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="features" className="mt-6">
+                      <FeatureToggleSection
+                        features={newProduct.features}
+                        onFeaturesChange={(features) => setNewProduct(prev => ({ ...prev, features }))}
+                        showPresets={true}
                       />
-                    </div>
-                    <div className="grid gap-3">
-                      <Label htmlFor="product-description" className="text-label text-charcoal font-medium">
-                        Description
-                      </Label>
-                      <Input
-                        id="product-description"
-                        value={newProduct.description}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Brief description of the product"
-                        className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
-                      />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="product-active"
-                        checked={newProduct.active}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, active: e.target.checked }))}
-                        className="text-forest-green focus:ring-forest-green"
-                      />
-                      <Label htmlFor="product-active" className="text-charcoal">
-                        Active (available for purchase)
-                      </Label>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowProductDialog(false)}
-                        className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={createProduct}
-                        className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
-                      >
-                        Create Product
-                      </Button>
-                    </div>
+                    </TabsContent>
+                  </Tabs>
+                  
+                  <Separator className="my-4" />
+                  
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowProductDialog(false)
+                        resetNewProductFeatures()
+                      }}
+                      className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={createProduct}
+                      className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold transition-all duration-200"
+                    >
+                      Create Product
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -562,73 +796,123 @@ export default function PricingManagementPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map(product => (
-                <div
-                  key={product.stripe_product_id}
-                  className="border border-stone-gray rounded-lg p-4 bg-light-concrete"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-charcoal">{product.name}</h3>
-                      {product.description && (
-                        <p className="text-sm text-charcoal/70 mt-1">{product.description}</p>
-                      )}
+              {products.map(product => {
+                const productFeatures = getProductFeatures(product)
+                const planTier = getPlanTierName(productFeatures)
+                
+                return (
+                  <div
+                    key={product.stripe_product_id}
+                    className="border border-stone-gray rounded-lg p-4 bg-light-concrete"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-charcoal">{product.name}</h3>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              planTier === 'Premium' 
+                                ? 'bg-equipment-yellow/10 text-equipment-yellow border-equipment-yellow' 
+                                : planTier === 'Free'
+                                ? 'bg-forest-green/10 text-forest-green border-forest-green'
+                                : 'bg-charcoal/10 text-charcoal border-charcoal'
+                            }`}
+                          >
+                            {planTier === 'Premium' && <Zap className="w-3 h-3 mr-1" />}
+                            {planTier}
+                          </Badge>
+                        </div>
+                        {product.description && (
+                          <p className="text-sm text-charcoal/70 mt-1">{product.description}</p>
+                        )}
+                        
+                        {/* Feature Summary */}
+                        <div className="mt-2 space-y-1">
+                          <div className="flex items-center gap-2 text-xs text-charcoal/60">
+                            <span>
+                              {productFeatures.max_quotes === -1 
+                                ? 'Unlimited quotes' 
+                                : `${productFeatures.max_quotes} quotes max`
+                              }
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {productFeatures.pdf_export && (
+                              <Badge variant="outline" className="text-xs bg-success-green/10 text-success-green border-success-green">
+                                PDF Export
+                              </Badge>
+                            )}
+                            {productFeatures.analytics_access && (
+                              <Badge variant="outline" className="text-xs bg-success-green/10 text-success-green border-success-green">
+                                Analytics
+                              </Badge>
+                            )}
+                            {productFeatures.custom_branding && (
+                              <Badge variant="outline" className="text-xs bg-success-green/10 text-success-green border-success-green">
+                                Branding
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={product.active ? "active" : "archived"}>
+                        {product.active ? "Active" : "Archived"}
+                      </Badge>
                     </div>
-                    <Badge variant={product.active ? "active" : "archived"}>
-                      {product.active ? "Active" : "Archived"}
-                    </Badge>
+                    <div className="text-xs text-charcoal/50 mb-3">
+                      ID: {product.stripe_product_id}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        key="edit"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingProduct(product)
+                          setEditingFeatures(getProductFeatures(product))
+                          setShowEditProductDialog(true)
+                        }}
+                        className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
+                        title="Edit Product & Features"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        key="toggle"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => showConfirmation(
+                          `${product.active ? 'Archive' : 'Restore'} Product`,
+                          `Are you sure you want to ${product.active ? 'archive' : 'restore'} "${product.name}"?`,
+                          () => toggleProductActive(product)
+                        )}
+                        className={`bg-paper-white border-2 hover:text-paper-white font-bold transition-all duration-200 ${
+                          product.active ? 'text-error-red border-error-red hover:bg-error-red' : 'text-success-green border-success-green hover:bg-success-green'
+                        }`}
+                        title={product.active ? 'Archive Product' : 'Restore Product'}
+                      >
+                        {product.active ? <AlertCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                      </Button>
+                      <Button
+                        key="delete"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => showConfirmation(
+                          'Delete Product',
+                          `Are you sure you want to permanently delete "${product.name}"? This action cannot be undone. The product must have no associated prices.`,
+                          () => deleteProduct(product),
+                          true
+                        )}
+                        className="bg-paper-white text-error-red border-2 border-error-red hover:bg-error-red hover:text-paper-white font-bold transition-all duration-200"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="text-xs text-charcoal/50 mb-3">
-                    ID: {product.stripe_product_id}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      key="edit"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingProduct(product)
-                        setShowEditProductDialog(true)
-                      }}
-                      className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
-                      title="Edit Product"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      key="toggle"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => showConfirmation(
-                        `${product.active ? 'Archive' : 'Restore'} Product`,
-                        `Are you sure you want to ${product.active ? 'archive' : 'restore'} "${product.name}"?`,
-                        () => toggleProductActive(product)
-                      )}
-                      className={`bg-paper-white border-2 hover:text-paper-white font-bold transition-all duration-200 ${
-                        product.active ? 'text-error-red border-error-red hover:bg-error-red' : 'text-success-green border-success-green hover:bg-success-green'
-                      }`}
-                      title={product.active ? 'Archive Product' : 'Restore Product'}
-                    >
-                      {product.active ? <AlertCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
-                    </Button>
-                    <Button
-                      key="delete"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => showConfirmation(
-                        'Delete Product',
-                        `Are you sure you want to permanently delete "${product.name}"? This action cannot be undone. The product must have no associated prices.`,
-                        () => deleteProduct(product),
-                        true
-                      )}
-                      className="bg-paper-white text-error-red border-2 border-error-red hover:bg-error-red hover:text-paper-white font-bold transition-all duration-200"
-                      title="Delete Product"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </CardContent>
@@ -842,58 +1126,83 @@ export default function PricingManagementPage() {
 
       {/* Edit Product Dialog */}
       <Dialog open={showEditProductDialog} onOpenChange={setShowEditProductDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray">
+        <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-charcoal text-section-title">Edit Product</DialogTitle>
             <DialogDescription className="text-charcoal/70">
-              Update product information
+              Update product information and feature configuration
             </DialogDescription>
           </DialogHeader>
           {editingProduct && (
-            <div className="space-y-4">
-              <div className="grid gap-3">
-                <Label htmlFor="edit-product-name" className="text-label text-charcoal font-medium">
-                  Product Name *
-                </Label>
-                <Input
-                  id="edit-product-name"
-                  value={editingProduct.name}
-                  onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
-                  placeholder="e.g., Premium Plan"
-                  className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
-                  required
-                />
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="edit-product-description" className="text-label text-charcoal font-medium">
-                  Description
-                </Label>
-                <Input
-                  id="edit-product-description"
-                  value={editingProduct.description || ''}
-                  onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                  placeholder="Brief description of the product"
-                  className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="edit-product-active"
-                  checked={editingProduct.active}
-                  onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, active: e.target.checked }) : null)}
-                  className="text-forest-green focus:ring-forest-green"
-                />
-                <Label htmlFor="edit-product-active" className="text-charcoal">
-                  Active (available for purchase)
-                </Label>
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
+            <>
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-light-concrete">
+                  <TabsTrigger value="basic" className="data-[state=active]:bg-paper-white">
+                    Basic Info
+                  </TabsTrigger>
+                  <TabsTrigger value="features" className="data-[state=active]:bg-paper-white">
+                    Features
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="basic" className="space-y-4 mt-6">
+                  <div className="grid gap-3">
+                    <Label htmlFor="edit-product-name" className="text-label text-charcoal font-medium">
+                      Product Name *
+                    </Label>
+                    <Input
+                      id="edit-product-name"
+                      value={editingProduct.name}
+                      onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                      placeholder="e.g., Premium Plan"
+                      className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="edit-product-description" className="text-label text-charcoal font-medium">
+                      Description
+                    </Label>
+                    <Input
+                      id="edit-product-description"
+                      value={editingProduct.description || ''}
+                      onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                      placeholder="Brief description of the product"
+                      className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="edit-product-active"
+                      checked={editingProduct.active}
+                      onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, active: e.target.checked }) : null)}
+                      className="text-forest-green focus:ring-forest-green"
+                    />
+                    <Label htmlFor="edit-product-active" className="text-charcoal">
+                      Active (available for purchase)
+                    </Label>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="features" className="mt-6">
+                  <FeatureToggleSection
+                    features={editingFeatures}
+                    onFeaturesChange={updateProductFeatures}
+                    showPresets={true}
+                  />
+                </TabsContent>
+              </Tabs>
+              
+              <Separator className="my-4" />
+              
+              <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowEditProductDialog(false)
                     setEditingProduct(null)
+                    setEditingFeatures(FREE_PLAN_FEATURES)
                   }}
                   className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
                 >
@@ -906,7 +1215,7 @@ export default function PricingManagementPage() {
                   Update Product
                 </Button>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

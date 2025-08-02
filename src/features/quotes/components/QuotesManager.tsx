@@ -2,17 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, Crown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 import { createTemplate, deleteQuotes, deleteTemplate, updateTemplate } from '../actions';
 import { sendBulkQuoteEmails } from '../email-actions';
 import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions, QuoteStatus } from '../types';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { UpgradePrompt, CompactUpgradePrompt } from '@/components/UpgradePrompt';
 
 import { BulkActions } from './BulkActions';
+import { CreateQuoteButton } from './CreateQuoteButton';
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import { QuotesFilters } from './QuotesFilters';
 import { QuotesTable } from './QuotesTable';
@@ -26,10 +31,13 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   const router = useRouter();
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const { duplicate, isDuplicating } = useDuplicateQuote();
+  const { canAccess, getUsagePercentage, isFreePlan } = useFeatureAccess();
+  
   const [selectedQuotes, setSelectedQuotes] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [filters, setFilters] = useState<QuoteFilters>({
     status: 'all',
     client: '',
@@ -487,13 +495,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
             Manage all your quotes and templates in one place
           </p>
         </div>
-        <Button 
-          onClick={() => router.push('/quotes/new')}
-          className="bg-forest-green text-white hover:opacity-90 font-bold"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Quote
-        </Button>
+        <CreateQuoteButton />
       </div>
 
       {/* Tabs */}

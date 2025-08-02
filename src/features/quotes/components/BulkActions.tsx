@@ -6,7 +6,9 @@ import {
   Edit,
   Mail,
   Trash2,
-  X
+  X,
+  Crown,
+  Lock
 } from 'lucide-react';
 
 import {
@@ -27,6 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { UpgradePrompt, CompactUpgradePrompt } from '@/components/UpgradePrompt';
 
 import { BulkQuoteActions,QuoteStatus } from '../types';
 
@@ -53,13 +63,34 @@ export function BulkActions({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<QuoteStatus | ''>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  
+  // Feature access checks
+  const { canAccess, isFreePlan } = useFeatureAccess();
+  const bulkAccess = canAccess('bulk_operations');
+  const pdfAccess = canAccess('pdf_export');
+  const hasBulkAccess = bulkAccess.hasAccess;
 
   if (selectedQuotes.length === 0) {
     return null;
   }
 
+  // Handle feature-gated actions
+  const handleFeatureGatedAction = (action: () => Promise<void>) => {
+    if (!hasBulkAccess) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    return action();
+  };
+
   const handleStatusUpdate = async () => {
     if (!selectedStatus) return;
+    
+    if (!hasBulkAccess) {
+      setShowUpgradeModal(true);
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -74,6 +105,11 @@ export function BulkActions({
   };
 
   const handleBulkDelete = async () => {
+    if (!hasBulkAccess) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await bulkActions.delete(selectedQuotes);
@@ -87,6 +123,12 @@ export function BulkActions({
   };
 
   const handleBulkExport = async () => {
+    // PDF export requires both bulk operations AND pdf_export features
+    if (!hasBulkAccess || !pdfAccess.hasAccess) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await bulkActions.export(selectedQuotes);
@@ -98,6 +140,11 @@ export function BulkActions({
   };
 
   const handleBulkEmail = async () => {
+    if (!hasBulkAccess) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await bulkActions.sendEmails(selectedQuotes);
@@ -107,6 +154,69 @@ export function BulkActions({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Render premium feature button with tooltip
+  const PremiumButton = ({ 
+    onClick, 
+    icon: Icon, 
+    children, 
+    requiresPDF = false 
+  }: { 
+    onClick: () => void
+    icon: any
+    children: React.ReactNode
+    requiresPDF?: boolean
+  }) => {
+    const hasRequiredAccess = hasBulkAccess && (!requiresPDF || pdfAccess.hasAccess);
+    
+    if (hasRequiredAccess) {
+      return (
+        <Button
+          size="sm"
+          onClick={onClick}
+          disabled={isLoading}
+          className="bg-forest-green text-white hover:opacity-90 font-bold"
+        >
+          <Icon className="w-3 h-3 mr-1" />
+          {children}
+        </Button>
+      );
+    }
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              onClick={onClick}
+              disabled={isLoading}
+              variant="outline"
+              className="bg-charcoal/10 text-charcoal/60 border-charcoal/20 hover:bg-charcoal/20 cursor-pointer"
+            >
+              <Lock className="w-3 h-3 mr-1" />
+              {children}
+              <Crown className="w-3 h-3 ml-1 text-equipment-yellow" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <div className="space-y-2">
+              <p className="font-medium flex items-center gap-2">
+                <Crown className="w-4 h-4 text-equipment-yellow" />
+                Premium Feature
+              </p>
+              <p className="text-xs">
+                {requiresPDF 
+                  ? 'Bulk PDF export requires Premium plan with PDF export enabled.'
+                  : 'Bulk operations are available with Premium plans.'
+                }
+              </p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   return (
@@ -134,8 +244,9 @@ export function BulkActions({
               <Select
                 value={selectedStatus}
                 onValueChange={(value) => setSelectedStatus(value as QuoteStatus | '')}
+                disabled={!hasBulkAccess}
               >
-                <SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-8 bg-light-concrete border-stone-gray text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60">
+                <SelectTrigger className={`w-full sm:w-[140px] h-10 sm:h-8 bg-light-concrete border-stone-gray text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 ${!hasBulkAccess ? 'opacity-60' : ''}`}>
                   <SelectValue placeholder="Update status" className="text-charcoal" />
                 </SelectTrigger>
                 <SelectContent className="bg-paper-white border-stone-gray shadow-lg z-[100]">
@@ -151,51 +262,50 @@ export function BulkActions({
                 </SelectContent>
               </Select>
               
-              <Button
-                size="sm"
+              <PremiumButton
                 onClick={handleStatusUpdate}
-                disabled={!selectedStatus || isLoading}
-                className="h-10 sm:h-8 w-full sm:w-auto bg-forest-green text-white hover:opacity-90 disabled:opacity-50"
+                icon={Edit}
               >
-                <Edit className="w-3 h-3 mr-1" />
                 Update
-              </Button>
+              </PremiumButton>
             </div>
 
             {/* Send Emails */}
-            <Button
-              size="sm"
+            <PremiumButton
               onClick={handleBulkEmail}
-              disabled={isLoading}
-              className="h-10 sm:h-8 w-full sm:w-auto bg-forest-green text-white hover:opacity-90 disabled:opacity-50"
+              icon={Mail}
             >
-              <Mail className="w-3 h-3 mr-1" />
               Send Emails
-            </Button>
+            </PremiumButton>
 
-            {/* Export */}
-            <Button
-              size="sm"
+            {/* Export PDFs */}
+            <PremiumButton
               onClick={handleBulkExport}
-              disabled={isLoading}
-              className="h-10 sm:h-8 w-full sm:w-auto bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold disabled:opacity-50"
+              icon={Download}
+              requiresPDF={true}
             >
-              <Download className="w-3 h-3 mr-1" />
-              Export
-            </Button>
+              Export PDFs
+            </PremiumButton>
 
             {/* Delete */}
-            <Button
-              size="sm"
+            <PremiumButton
               onClick={() => setShowDeleteDialog(true)}
-              disabled={isLoading}
-              className="h-10 sm:h-8 w-full sm:w-auto bg-stone-gray text-charcoal hover:bg-stone-gray/80 active:bg-stone-gray/70 font-bold border border-stone-gray disabled:opacity-50"
+              icon={Trash2}
             >
-              <Trash2 className="w-3 h-3 mr-1" />
               Delete
-            </Button>
+            </PremiumButton>
           </div>
         </div>
+        
+        {/* Free Plan Upgrade Prompt */}
+        {!hasBulkAccess && isFreePlan() && (
+          <div className="mt-4 pt-4 border-t border-equipment-yellow/30">
+            <CompactUpgradePrompt
+              feature="Bulk Operations"
+              onUpgrade={() => setShowUpgradeModal(true)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -224,6 +334,24 @@ export function BulkActions({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Upgrade Modal */}
+      <UpgradePrompt
+        feature="Bulk Operations"
+        title="Upgrade for Bulk Operations"
+        description="Manage multiple quotes at once with bulk operations. Update statuses, send emails, export PDFs, and delete quotes in batches."
+        modal={true}
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        benefits={[
+          'Bulk status updates for multiple quotes',
+          'Send emails to multiple clients at once',
+          'Bulk PDF export and download',
+          'Mass delete operations',
+          'Advanced quote management tools',
+          'Time-saving productivity features'
+        ]}
+      />
     </>
   );
 }

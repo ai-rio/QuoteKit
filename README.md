@@ -31,6 +31,12 @@
 - **Bulk Operations** - Select multiple quotes for status updates, export, or deletion
 - **Advanced Filtering** - Filter by status, client, date range, and search terms
 
+### 🔧 Recent Fixes
+
+- **Database Schema Compatibility** - Fixed "Product ID is required" error by correcting column name mismatches between API code and database schema
+- **Stripe Integration** - Improved database-only mode for local development with proper field mapping
+- **Admin Dashboard** - Enhanced pricing management with working premium tier feature application
+
 ### 💳 Advanced Billing Features
 
 - **Real Stripe Invoices** - Automatic invoice generation with secure download links

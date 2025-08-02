@@ -3,9 +3,10 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users } from "lucide-react"
+import { FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users, BarChart3, Crown } from "lucide-react"
 
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
+import { Badge } from "@/components/ui/badge"
 import {
   Popover,
   PopoverContent,
@@ -25,6 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { useMobileSidebar } from "@/hooks/use-mobile"
+import { useFeatureAccess } from "@/hooks/useFeatureAccess"
 
 // Navigation items organized into groups
 interface NavItem {
@@ -32,6 +34,8 @@ interface NavItem {
   url: string;
   icon: React.ComponentType<{ className?: string }>;
   highlight?: boolean;
+  featureKey?: string; // Feature key for gating
+  premiumOnly?: boolean; // Show premium badge
 }
 
 interface NavGroup {
@@ -70,6 +74,18 @@ const navGroups = [
         icon: Users,
       }
     ]
+  },
+  {
+    title: "Analytics",
+    items: [
+      {
+        title: "Analytics",
+        url: "/analytics",
+        icon: BarChart3,
+        featureKey: "analytics_access",
+        premiumOnly: true,
+      }
+    ]
   }
 ]
 
@@ -78,11 +94,18 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname()
   const { expandedSections, toggleSection, handleNavigation, isMobile } = useMobileSidebar()
+  const { canAccess, isFreePlan } = useFeatureAccess()
 
   const isInSection = (sectionItems: NavItem[], currentPath: string) => {
     return sectionItems.some(item => 
       currentPath === item.url || currentPath.startsWith(item.url + '/')
     )
+  }
+
+  // Check if user has access to a feature
+  const hasFeatureAccess = (featureKey?: string) => {
+    if (!featureKey) return true
+    return canAccess(featureKey as any).hasAccess
   }
 
   return (
@@ -137,6 +160,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   <span className="flex items-center gap-2">
                     {group.title === 'Core' && <Home className="w-4 h-4" />}
                     {group.title === 'Management' && <Package className="w-4 h-4" />}
+                    {group.title === 'Analytics' && <BarChart3 className="w-4 h-4" />}
                     {group.title}
                   </span>
                   <svg
@@ -159,6 +183,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                       const Icon = item.icon
                       const isHighlight = 'highlight' in item ? item.highlight : false
+                      const hasAccess = hasFeatureAccess(item.featureKey)
+                      const showPremiumBadge = item.premiumOnly && isFreePlan() && !hasAccess
                       
                       return (
                         <SidebarMenuItem key={item.title}>
@@ -167,15 +193,26 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                               href={item.url} 
                               onClick={handleNavigation}
                               className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-all duration-150 ease-out active:scale-95 ml-4 ${
-                                isHighlight 
-                                  ? 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200'
-                                  : isActive 
-                                    ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
-                                    : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
+                                !hasAccess && item.featureKey
+                                  ? 'text-white/50 hover:bg-white/5 hover:text-white/70 border-l-2 border-transparent cursor-pointer'
+                                  : isHighlight 
+                                    ? 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200'
+                                    : isActive 
+                                      ? 'bg-white/20 text-white font-bold border-l-2 border-white' 
+                                      : 'text-white/90 hover:bg-white/10 hover:text-white border-l-2 border-transparent hover:border-white/30'
                               }`}
                             >
                               <Icon className="w-4 h-4 mr-3 flex-shrink-0" />
-                              <span className="text-sm">{item.title}</span>
+                              <span className="text-sm flex-1">{item.title}</span>
+                              {showPremiumBadge && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="ml-2 text-xs bg-equipment-yellow/20 text-equipment-yellow border-equipment-yellow/50 px-1 py-0"
+                                >
+                                  <Crown className="w-2 h-2 mr-1" />
+                                  Pro
+                                </Badge>
+                              )}
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

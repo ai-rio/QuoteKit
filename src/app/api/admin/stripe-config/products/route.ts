@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
       const databaseProducts = (dbProducts || []).map(product => ({
         id: product.id,
-        stripe_product_id: product.stripe_product_id,
+        stripe_product_id: product.id, // Use id as stripe_product_id for compatibility
         name: product.name,
         description: product.description,
         active: product.active,
@@ -147,17 +147,67 @@ export async function POST(request: NextRequest) {
       .eq('key', 'stripe_config')
       .single()
 
-    if (!configData?.value) {
-      return NextResponse.json(
-        { error: 'Stripe not configured. Please configure Stripe first.' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const { name, description, active = true, metadata = {} } = body
 
     // Validate required fields
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Product name is required' },
+        { status: 400 }
+      )
+    }
+
+    // If no Stripe config, create in database only (for feature management)
+    if (!configData?.value) {
+      console.log('No Stripe config found, creating database-only mode for product')
+      
+      // Generate a unique product ID for database-only mode
+      const productId = `prod_db_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      // Create product in database only
+      const { data: dbProduct, error: dbError } = await supabaseAdminClient
+        .from('stripe_products')
+        .insert({
+          id: productId,
+          name: name,
+          description: description || null,
+          active: active,
+          metadata: metadata || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (dbError) {
+        console.error('Database product creation error:', dbError)
+        return NextResponse.json(
+          { error: `Failed to create product in database: ${dbError.message}` },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Product created successfully (database-only mode)',
+        product: {
+          id: dbProduct.id,
+          stripe_product_id: dbProduct.id, // Use id as stripe_product_id for compatibility
+          name: dbProduct.name,
+          description: dbProduct.description,
+          active: dbProduct.active,
+          created: dbProduct.created_at,
+          metadata: dbProduct.metadata,
+          images: [],
+          statement_descriptor: null,
+          unit_label: null,
+          url: null
+        }
+      })
+    }
+
+    // Stripe is configured, proceed with full Stripe + database sync
     if (!name) {
       return NextResponse.json(
         { error: 'Product name is required' },
@@ -246,13 +296,6 @@ export async function PUT(request: NextRequest) {
       .eq('key', 'stripe_config')
       .single()
 
-    if (!configData?.value) {
-      return NextResponse.json(
-        { error: 'Stripe not configured. Please configure Stripe first.' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const { 
       stripe_product_id, 
@@ -274,6 +317,52 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // If no Stripe config, update database only (for feature management)
+    if (!configData?.value) {
+      console.log('No Stripe config found, updating database-only mode for product:', stripe_product_id)
+      
+      // Update product in database only
+      const { data: dbProduct, error: dbError } = await supabaseAdminClient
+        .from('stripe_products')
+        .update({
+          name: name || undefined,
+          description: description || undefined,
+          active: active !== undefined ? active : undefined,
+          metadata: metadata || {},
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', stripe_product_id)
+        .select()
+        .single()
+
+      if (dbError) {
+        console.error('Database product update error:', dbError)
+        return NextResponse.json(
+          { error: `Failed to update product in database: ${dbError.message}` },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Product updated successfully (database-only mode)',
+        product: {
+          id: dbProduct.id,
+          stripe_product_id: dbProduct.id, // Use id as stripe_product_id for compatibility
+          name: dbProduct.name,
+          description: dbProduct.description,
+          active: dbProduct.active,
+          updated: dbProduct.updated_at,
+          metadata: dbProduct.metadata,
+          images: [],
+          statement_descriptor: null,
+          unit_label: null,
+          url: null
+        }
+      })
+    }
+
+    // Stripe is configured, proceed with full Stripe + database sync
     const stripeConfig = configData.value as unknown as StripeConfig
     const stripe = createStripeAdminClient(stripeConfig)
 

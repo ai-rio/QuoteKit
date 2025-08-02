@@ -151,10 +151,75 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!configData?.value) {
-      return NextResponse.json(
-        { error: 'Stripe not configured. Please configure Stripe first.' },
-        { status: 400 }
-      )
+      // Database-only mode for feature management
+      const body = await request.json()
+      const { 
+        product_id, 
+        unit_amount, 
+        currency = 'usd', 
+        recurring_interval, 
+        recurring_interval_count = 1,
+        trial_period_days,
+        metadata = {}
+      } = body
+
+      // Validate required fields
+      if (!product_id || unit_amount === undefined) {
+        return NextResponse.json(
+          { error: 'Product ID and unit amount are required' },
+          { status: 400 }
+        )
+      }
+
+      // Generate a unique price ID for database-only mode
+      const priceId = `price_db_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      // Create price in database only
+      const { data: dbPrice, error: dbError } = await supabaseAdminClient
+        .from('stripe_prices')
+        .insert({
+          id: priceId,
+          stripe_product_id: product_id,
+          unit_amount: unit_amount,
+          currency: currency,
+          type: recurring_interval ? 'recurring' : 'one_time',
+          interval: recurring_interval || null,
+          interval_count: recurring_interval_count || null,
+          trial_period_days: trial_period_days || null,
+          active: true,
+          metadata: metadata || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (dbError) {
+        console.error('Database price creation error:', dbError)
+        return NextResponse.json(
+          { error: `Failed to create price in database: ${dbError.message}` },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Price created successfully (database-only mode)',
+        price: {
+          id: dbPrice.id,
+          stripe_price_id: dbPrice.id, // Use id as stripe_price_id for compatibility
+          stripe_product_id: dbPrice.stripe_product_id,
+          active: dbPrice.active,
+          currency: dbPrice.currency,
+          unit_amount: dbPrice.unit_amount,
+          type: dbPrice.type,
+          interval: dbPrice.interval,
+          interval_count: dbPrice.interval_count,
+          trial_period_days: dbPrice.trial_period_days,
+          metadata: dbPrice.metadata,
+          created: dbPrice.created_at
+        }
+      })
     }
 
     const body = await request.json()
@@ -288,10 +353,60 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (!configData?.value) {
-      return NextResponse.json(
-        { error: 'Stripe not configured. Please configure Stripe first.' },
-        { status: 400 }
-      )
+      // Database-only mode for feature management
+      const body = await request.json()
+      const { 
+        stripe_price_id, 
+        active, 
+        metadata = {}
+      } = body
+
+      // Validate required fields
+      if (!stripe_price_id) {
+        return NextResponse.json(
+          { error: 'Price ID is required' },
+          { status: 400 }
+        )
+      }
+
+      // Update price in database only
+      const { data: dbPrice, error: dbError } = await supabaseAdminClient
+        .from('stripe_prices')
+        .update({
+          active: active !== undefined ? active : undefined,
+          metadata: metadata || {},
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', stripe_price_id)
+        .select()
+        .single()
+
+      if (dbError) {
+        console.error('Database price update error:', dbError)
+        return NextResponse.json(
+          { error: `Failed to update price in database: ${dbError.message}` },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Price updated successfully (database-only mode)',
+        price: {
+          id: dbPrice.id,
+          stripe_price_id: dbPrice.id, // Use id as stripe_price_id for compatibility
+          stripe_product_id: dbPrice.stripe_product_id,
+          active: dbPrice.active,
+          currency: dbPrice.currency,
+          unit_amount: dbPrice.unit_amount,
+          type: dbPrice.type,
+          interval: dbPrice.interval,
+          interval_count: dbPrice.interval_count,
+          trial_period_days: dbPrice.trial_period_days,
+          metadata: dbPrice.metadata,
+          updated: dbPrice.updated_at
+        }
+      })
     }
 
     const body = await request.json()
