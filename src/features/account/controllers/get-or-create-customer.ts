@@ -318,9 +318,7 @@ export async function getOrCreateCustomerForUser({
         .from('customers')
         .upsert({
           id: userId,
-          stripe_customer_id: validCustomer.id,
-          email: email,
-          updated_at: new Date().toISOString()
+          stripe_customer_id: validCustomer.id
         }, {
           onConflict: 'id'
         });
@@ -371,9 +369,7 @@ export async function getOrCreateCustomerForUser({
           .from('customers')
           .upsert({
             id: userId,
-            stripe_customer_id: newCustomer.id,
-            email: email,
-            updated_at: new Date().toISOString()
+            stripe_customer_id: newCustomer.id
           }, {
             onConflict: 'id'
           });
