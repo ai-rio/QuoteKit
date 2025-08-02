@@ -583,6 +583,7 @@ export default function PricingManagementPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button
+                      key="edit"
                       variant="outline"
                       size="sm"
                       onClick={() => {
@@ -595,6 +596,7 @@ export default function PricingManagementPage() {
                       <Edit3 className="w-3 h-3" />
                     </Button>
                     <Button
+                      key="toggle"
                       variant="outline"
                       size="sm"
                       onClick={() => showConfirmation(
@@ -610,6 +612,7 @@ export default function PricingManagementPage() {
                       {product.active ? <AlertCircle className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                     </Button>
                     <Button
+                      key="delete"
                       variant="outline"
                       size="sm"
                       onClick={() => showConfirmation(
@@ -801,6 +804,7 @@ export default function PricingManagementPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button
+                      key="edit"
                       variant="outline"
                       size="sm"
                       onClick={() => {
@@ -813,6 +817,7 @@ export default function PricingManagementPage() {
                       <Edit3 className="w-3 h-3" />
                     </Button>
                     <Button
+                      key="toggle"
                       variant="outline"
                       size="sm"
                       onClick={() => showConfirmation(
