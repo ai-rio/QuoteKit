@@ -31,22 +31,38 @@ export async function DELETE(
       mode: 'test'
     });
 
-    // Get customer by email
-    const existingCustomers = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
-
-    if (existingCustomers.data.length === 0) {
-      console.log('❌ Customer not found');
+    // Get customer using the same method as other APIs
+    let customerId: string;
+    
+    try {
+      // Use the same customer lookup method as subscription actions
+      const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+      
+      customerId = await getOrCreateCustomerForUser({
+        userId: user.id,
+        email: user.email!,
+        supabaseClient: supabase,
+        forceCreate: true
+      });
+      
+      console.log('✅ Got customer using consistent method:', customerId);
+      
+    } catch (customerError) {
+      console.error('❌ Customer lookup failed:', customerError);
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
-    const customerId = existingCustomers.data[0].id;
-    console.log('✅ Found customer:', customerId);
-
-    // Verify that the payment method belongs to this customer
-    const paymentMethod = await stripe.paymentMethods.retrieve(id);
+    // Verify that the payment method exists and belongs to this customer
+    let paymentMethod;
+    try {
+      paymentMethod = await stripe.paymentMethods.retrieve(id);
+    } catch (stripeError: any) {
+      if (stripeError.code === 'resource_missing') {
+        console.log('❌ Payment method not found in Stripe:', id);
+        return NextResponse.json({ error: 'Payment method not found' }, { status: 404 });
+      }
+      throw stripeError;
+    }
     
     if (paymentMethod.customer !== customerId) {
       console.log('❌ Payment method does not belong to customer');
@@ -122,22 +138,38 @@ export async function PATCH(
       mode: 'test'
     });
 
-    // Get customer by email
-    const existingCustomers = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
-
-    if (existingCustomers.data.length === 0) {
-      console.log('❌ Customer not found');
+    // Get customer using the same method as other APIs
+    let customerId: string;
+    
+    try {
+      // Use the same customer lookup method as subscription actions
+      const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+      
+      customerId = await getOrCreateCustomerForUser({
+        userId: user.id,
+        email: user.email!,
+        supabaseClient: supabase,
+        forceCreate: true
+      });
+      
+      console.log('✅ Got customer using consistent method:', customerId);
+      
+    } catch (customerError) {
+      console.error('❌ Customer lookup failed:', customerError);
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     }
 
-    const customerId = existingCustomers.data[0].id;
-    console.log('✅ Found customer:', customerId);
-
-    // Verify that the payment method belongs to this customer
-    const paymentMethod = await stripe.paymentMethods.retrieve(id);
+    // Verify that the payment method exists and belongs to this customer
+    let paymentMethod;
+    try {
+      paymentMethod = await stripe.paymentMethods.retrieve(id);
+    } catch (stripeError: any) {
+      if (stripeError.code === 'resource_missing') {
+        console.log('❌ Payment method not found in Stripe:', id);
+        return NextResponse.json({ error: 'Payment method not found' }, { status: 404 });
+      }
+      throw stripeError;
+    }
     
     if (paymentMethod.customer !== customerId) {
       console.log('❌ Payment method does not belong to customer');

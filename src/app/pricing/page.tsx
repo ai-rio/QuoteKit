@@ -159,7 +159,7 @@ export default async function PricingPage() {
                 Start Free
               </button>
             </form>
-            <form action={handlePlanSelection.bind(null, 'price_pro_monthly', 'Pro Plan')}>
+            <form action={handlePlanSelection.bind(null, 'price_1RVyAQGgBK1ooXYF0LokEHtQ', 'Pro Plan')}>
               <button 
                 type="submit"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-lg font-semibold transition-colors"

@@ -132,11 +132,21 @@ function PaymentMethodsContent() {
         });
         await fetchPaymentMethods();
       } else {
-        toast({
-          title: 'Error',
-          description: result.error || 'Failed to delete payment method',
-          variant: 'destructive',
-        });
+        // Handle specific error cases
+        if (response.status === 404) {
+          toast({
+            title: 'Payment Method Not Found',
+            description: 'This payment method may have already been deleted. Refreshing list...',
+            variant: 'destructive',
+          });
+          await fetchPaymentMethods(); // Refresh to sync state
+        } else {
+          toast({
+            title: 'Error',
+            description: result.error || 'Failed to delete payment method',
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error) {
       console.error('Error deleting payment method:', error);

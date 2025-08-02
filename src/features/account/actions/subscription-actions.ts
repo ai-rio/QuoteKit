@@ -88,8 +88,18 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
     };
 
     // Check if this is a free plan user (no Stripe subscription ID) - Handle as new paid subscription
-    if (!enhancedSubscription?.stripe_subscription_id) {
-      console.log('User has free plan, creating new paid subscription');
+    // PHASE 1 FIX: Also treat local dev subscriptions as "new subscription"
+    const hasRealStripeSubscription = enhancedSubscription?.stripe_subscription_id && 
+                                     !enhancedSubscription.stripe_subscription_id.startsWith('sub_dev_');
+    
+    if (!hasRealStripeSubscription) {
+      console.log('User has free plan or local dev subscription, creating new paid subscription');
+      console.log('Subscription analysis:', {
+        hasSubscription: !!enhancedSubscription,
+        stripeSubscriptionId: enhancedSubscription?.stripe_subscription_id || 'none',
+        isLocalDev: enhancedSubscription?.stripe_subscription_id?.startsWith('sub_dev_') || false,
+        willCreateNew: true
+      });
       
       // First, validate the new price exists and is active
       const { data: newPrice, error: priceError } = await supabase
@@ -112,9 +122,9 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         throw new Error(`Invalid or inactive price: ${priceId}. Error: ${priceError?.message || 'Price not found'}`);
       }
 
-      // Development mode: Create local subscription without Stripe
-      // TEMPORARY DEBUG FLAG - Set to true to test production Stripe path
-      const FORCE_PRODUCTION_PATH = false; // Change this to true to test Stripe integration
+      // PHASE 1 FIX: Enable real Stripe integration for new subscriptions
+      // FORCE_PRODUCTION_PATH set to true to implement proper Stripe customer creation
+      const FORCE_PRODUCTION_PATH = true; // PHASE 1: Enable Stripe integration
       const isDevelopment = !FORCE_PRODUCTION_PATH && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1'));
       
       console.log('🎯 Path Selection (New Subscription):', {
@@ -224,19 +234,268 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         throw new Error('Payment method is required for new paid subscriptions');
       }
       
-      // TODO: Implement new subscription creation with Stripe
-      // This would involve:
-      // 1. Creating Stripe customer if doesn't exist
-      // 2. Attaching payment method to customer
-      // 3. Creating subscription with the new price
-      // 4. Handling payment confirmation
-      // 5. Updating local database
+      // PHASE 1 IMPLEMENTATION: Create new Stripe subscription with customer
+      console.log('🏭 Production mode: Creating new Stripe subscription with customer');
       
-      throw new Error('New subscription creation not yet implemented. Please contact support.');
+      // Step 1: Create or get Stripe customer
+      const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+      
+      console.log('🔄 Step 1: Creating Stripe customer...');
+      const stripeCustomerId = await getOrCreateCustomerForUser({
+        userId: session.user.id,
+        email: session.user.email!,
+        supabaseClient: supabase,
+        forceCreate: true // Always create customer for paid subscriptions
+      });
+      
+      if (!stripeCustomerId) {
+        throw new Error('Failed to create Stripe customer. Please try again.');
+      }
+      
+      console.log('✅ Step 1 Complete: Stripe customer created/retrieved:', stripeCustomerId);
+      
+      // Step 2: Create Stripe subscription
+      console.log('🔄 Step 2: Creating Stripe subscription...');
+      const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
+      
+      // Get Stripe configuration
+      const { data: stripeConfigRecord } = await supabase
+        .from('admin_settings')
+        .select('value')
+        .eq('key', 'stripe_config')
+        .maybeSingle();
+
+      let stripeConfig: any = null;
+      if (stripeConfigRecord?.value) {
+        stripeConfig = stripeConfigRecord.value as any;
+      } else {
+        const secretKey = process.env.STRIPE_SECRET_KEY;
+        if (secretKey) {
+          stripeConfig = {
+            secret_key: secretKey,
+            mode: process.env.STRIPE_MODE || 'test'
+          };
+        }
+      }
+
+      if (!stripeConfig?.secret_key) {
+        throw new Error('Stripe not configured - cannot create subscription');
+      }
+
+      const stripeAdmin = createStripeAdminClient({
+        secret_key: stripeConfig.secret_key,
+        mode: stripeConfig.mode || 'test'
+      });
+      
+      // Create the Stripe subscription with proper payment handling
+      let subscriptionCreateParams = {
+        customer: stripeCustomerId,
+        items: [{ price: priceId }],
+        expand: ['latest_invoice.payment_intent'],
+      };
+
+      // If payment method is provided, validate it belongs to the correct customer
+      if (paymentMethodId) {
+        console.log('💳 Validating payment method ownership...');
+        
+        try {
+          // First, retrieve the payment method to check its current state
+          const paymentMethod = await stripeAdmin.paymentMethods.retrieve(paymentMethodId);
+          console.log(`📋 Payment method ${paymentMethodId}: customer=${paymentMethod.customer || 'none'}`);
+          
+          // Case 1: Payment method is not attached to any customer
+          if (!paymentMethod.customer) {
+            console.log('🔄 Payment method not attached, attaching to customer...');
+            
+            await stripeAdmin.paymentMethods.attach(paymentMethodId, {
+              customer: stripeCustomerId,
+            });
+            
+            console.log('✅ Payment method attached to customer');
+          }
+          // Case 2: Payment method is attached to the correct customer
+          else if (paymentMethod.customer === stripeCustomerId) {
+            console.log('✅ Payment method already belongs to correct customer');
+          }
+          // Case 3: Payment method belongs to a different customer
+          else {
+            console.error(`❌ Payment method belongs to different customer: ${paymentMethod.customer} (expected: ${stripeCustomerId})`);
+            
+            // According to Stripe best practices, we should NOT move payment methods between customers
+            // Instead, we should ask the user to create a new payment method
+            throw new Error('This payment method belongs to a different account. Please add a new payment method.');
+          }
+          
+          // Set as default payment method for the customer
+          await stripeAdmin.customers.update(stripeCustomerId, {
+            invoice_settings: {
+              default_payment_method: paymentMethodId,
+            },
+          });
+          
+          console.log('✅ Payment method set as default for customer');
+          
+          // Use the payment method in subscription creation
+          subscriptionCreateParams.default_payment_method = paymentMethodId;
+          subscriptionCreateParams.payment_behavior = 'default_incomplete';
+          console.log('💳 Creating subscription with validated payment method');
+          
+        } catch (validationError) {
+          console.error('❌ Payment method validation failed:', validationError.message);
+          
+          // Provide specific error messages based on the type of error
+          if (validationError.message.includes('belongs to a different account')) {
+            throw new Error('This payment method belongs to a different account. Please add a new payment method.');
+          } else if (validationError.message.includes('previously used without being attached') || 
+                     validationError.message.includes('was detached from a Customer')) {
+            throw new Error('This payment method is no longer valid. Please add a new payment method and try again.');
+          } else if (validationError.code === 'resource_missing') {
+            throw new Error('This payment method no longer exists. Please add a new payment method.');
+          } else {
+            throw new Error(`Payment method validation failed: ${validationError.message}`);
+          }
+        }
+      } else {
+        // For subscriptions without payment method, use allow_incomplete
+        subscriptionCreateParams.payment_behavior = 'allow_incomplete';
+        console.log('🆓 Creating subscription without payment method');
+      }
+
+      const stripeSubscription = await stripeAdmin.subscriptions.create(subscriptionCreateParams);
+      
+      console.log('✅ Step 2 Complete: Stripe subscription created:', stripeSubscription.id);
+      
+      // Step 3: Save subscription to local database
+      console.log('🔄 Step 3: Saving subscription to database...');
+      const localSubscription = {
+        id: stripeSubscription.id, // Use Stripe subscription ID as primary key
+        user_id: session.user.id,
+        status: stripeSubscription.status,
+        stripe_price_id: priceId,
+        stripe_subscription_id: stripeSubscription.id,
+        // stripe_customer_id: stripeCustomerId, // REMOVED: Column doesn't exist in database
+        quantity: 1,
+        cancel_at_period_end: stripeSubscription.cancel_at_period_end,
+        current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+        created: new Date(stripeSubscription.created * 1000).toISOString(),
+        trial_start: stripeSubscription.trial_start ? new Date(stripeSubscription.trial_start * 1000).toISOString() : null,
+        trial_end: stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000).toISOString() : null,
+      };
+
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .insert(localSubscription)
+        .select()
+        .single();
+
+      if (subError) {
+        console.error('❌ Failed to save subscription to database:', subError);
+        // Try to cancel the Stripe subscription we just created
+        try {
+          await stripeAdmin.subscriptions.cancel(stripeSubscription.id);
+          console.log('🧹 Cleaned up Stripe subscription after database error');
+        } catch (cleanupError) {
+          console.error('💥 Failed to cleanup Stripe subscription:', cleanupError);
+        }
+        throw new Error(`Failed to save subscription: ${subError.message}`);
+      }
+
+      console.log('✅ Step 3 Complete: Subscription saved to database');
+      
+      // Step 4: Save payment method if provided
+      if (paymentMethodId) {
+        console.log('🔄 Step 4: Saving payment method...');
+        try {
+          // Get payment method details from Stripe
+          const paymentMethod = await stripeAdmin.paymentMethods.retrieve(paymentMethodId);
+          
+          const paymentMethodRecord = {
+            id: paymentMethodId,
+            user_id: session.user.id,
+            stripe_payment_method_id: paymentMethodId,
+            type: paymentMethod.type,
+            card_brand: paymentMethod.card?.brand || null,
+            card_last4: paymentMethod.card?.last4 || null,
+            card_exp_month: paymentMethod.card?.exp_month || null,
+            card_exp_year: paymentMethod.card?.exp_year || null,
+            is_default: true, // First payment method is default
+          };
+
+          const { error: pmError } = await supabase
+            .from('payment_methods')
+            .upsert(paymentMethodRecord);
+
+          if (pmError) {
+            console.warn('⚠️ Failed to save payment method:', pmError.message);
+          } else {
+            console.log('✅ Step 4 Complete: Payment method saved');
+          }
+        } catch (pmSaveError) {
+          console.warn('⚠️ Failed to save payment method:', pmSaveError.message);
+        }
+      }
+
+      // Step 5: Create billing history entry
+      console.log('🔄 Step 5: Creating billing history...');
+      try {
+        const billingEntry = {
+          id: `bill_${subscription.id}_${Date.now()}`,
+          user_id: session.user.id,
+          subscription_id: subscription.id,
+          amount: newPrice.unit_amount || 0,
+          currency: 'usd',
+          status: stripeSubscription.status === 'active' ? 'paid' : 'pending',
+          description: `Subscription to ${newPrice.stripe_products?.name || 'Pro Plan'}`,
+          stripe_invoice_id: stripeSubscription.latest_invoice?.id || null,
+          invoice_url: stripeSubscription.latest_invoice?.hosted_invoice_url || null,
+        };
+
+        const { error: billingError } = await supabase
+          .from('billing_history')
+          .insert(billingEntry);
+
+        if (billingError) {
+          console.warn('⚠️ Failed to create billing history:', billingError.message);
+        } else {
+          console.log('✅ Step 5 Complete: Billing history created');
+        }
+      } catch (billingCreateError) {
+        console.warn('⚠️ Failed to create billing history:', billingCreateError.message);
+      }
+
+      console.log('🎉 New Stripe subscription created successfully!');
+      
+      // Return subscription with payment intent if payment confirmation is needed
+      const result = {
+        success: true, 
+        subscription: {
+          ...subscription,
+          stripe_prices: newPrice
+        },
+        needsBillingRefresh: true
+      };
+
+      // If subscription is incomplete, include payment intent for client-side confirmation
+      if (stripeSubscription.status === 'incomplete' && stripeSubscription.latest_invoice?.payment_intent) {
+        result.paymentIntent = {
+          client_secret: stripeSubscription.latest_invoice.payment_intent.client_secret,
+          status: stripeSubscription.latest_invoice.payment_intent.status
+        };
+        result.requiresPaymentConfirmation = true;
+        console.log('💳 Payment confirmation required - returning payment intent');
+      }
+
+      return result;
     }
 
-    // Handle existing subscription changes
-    console.log('User has existing subscription, updating plan');
+    // Handle existing subscription changes - ONLY for real Stripe subscriptions
+    console.log('User has existing REAL Stripe subscription, updating plan');
+    console.log('Existing subscription analysis:', {
+      subscriptionId: enhancedSubscription.stripe_subscription_id,
+      customerId: enhancedSubscription.stripe_customer_id,
+      isRealStripeSubscription: true
+    });
     
     // Validate the new price exists and is active
     const { data: newPrice, error: priceError } = await supabase
@@ -259,9 +518,9 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       throw new Error(`Invalid or inactive price: ${priceId}. Error: ${priceError?.message || 'Price not found'}`);
     }
 
-    // Development mode: Update existing subscription
-    // TEMPORARY DEBUG FLAG - Set to true to test production Stripe path
-    const FORCE_PRODUCTION_PATH = false; // Change this to true to test Stripe integration
+    // PHASE 1 FIX: Enable real Stripe integration for existing subscriptions
+    // FORCE_PRODUCTION_PATH set to true to implement proper Stripe customer creation
+    const FORCE_PRODUCTION_PATH = true; // PHASE 1: Enable Stripe integration
     const isDevelopment = !FORCE_PRODUCTION_PATH && (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('127.0.0.1'));
     
     console.log('🎯 Path Selection (Existing Subscription):', {

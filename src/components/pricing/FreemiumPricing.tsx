@@ -49,8 +49,8 @@ const TIERS = [
     cta: 'Start Pro Plan',
     popular: true,
     stripePriceId: {
-      monthly: 'price_pro_monthly',
-      yearly: 'price_pro_annual',
+      monthly: 'price_1RVyAQGgBK1ooXYF0LokEHtQ', // $12.00/month (Plus plan)
+      yearly: 'price_1RoUo5GgBK1ooXYF4nMSQooR',  // $72.00/year (Yearly plan)
     },
   },
 ];

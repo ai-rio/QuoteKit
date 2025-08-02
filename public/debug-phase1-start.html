@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 Pre-Implementation Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff4444; }
+        .warning { color: #ffaa00; }
+        .info { color: #4488ff; }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #444;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-good { background: #00ff00; }
+        .status-bad { background: #ff4444; }
+        .status-warning { background: #ffaa00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Phase 1 Pre-Implementation Test</h1>
+        <p class="info">This test analyzes the current state before Phase 1 Stripe integration implementation.</p>
+        
+        <button onclick="runTest()" id="testButton">Run Test</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function runTest() {
+            const resultsDiv = document.getElementById('results');
+            const testButton = document.getElementById('testButton');
+            
+            testButton.disabled = true;
+            testButton.textContent = 'Running Test...';
+            
+            resultsDiv.innerHTML = '<div class="section"><h3>🔄 Running tests...</h3></div>';
+            
+            try {
+                let html = '';
+                
+                // Test 1: Subscription Status
+                html += '<div class="section"><h3>📊 1. Testing Subscription Status</h3>';
+                try {
+                    const subscriptionResponse = await fetch('/api/subscription-status');
+                    const subscriptionData = await subscriptionResponse.json();
+                    
+                    const hasStripeCustomer = subscriptionData.status?.customer?.hasStripeCustomer || false;
+                    const subscriptionCount = subscriptionData.status?.subscriptions?.count || 0;
+                    const stripeCustomerId = subscriptionData.status?.customer?.stripeCustomerId || 'none';
+                    const currentPlan = subscriptionData.status?.subscription?.prices?.products?.name || 'none';
+                    
+                    html += `
+                        <div class="success">✅ Subscription API accessible</div>
+                        <pre>Response Data:
+- Subscription Count: ${subscriptionCount}
+- Has Stripe Customer: ${hasStripeCustomer} ${hasStripeCustomer ? '✅' : '❌'}
+- Stripe Customer ID: ${stripeCustomerId}
+- Current Plan: ${currentPlan}</pre>
+                    `;
+                } catch (error) {
+                    html += `<div class="error">❌ Subscription API failed: ${error.message}</div>`;
+                }
+                html += '</div>';
+                
+                // Test 2: Payment Methods
+                html += '<div class="section"><h3>💳 2. Testing Payment Methods</h3>';
+                try {
+                    const paymentResponse = await fetch('/api/payment-methods');
+                    const paymentData = await paymentResponse.json();
+                    
+                    const methodCount = paymentData.data?.length || 0;
+                    const methods = paymentData.data?.map(pm => ({
+                        id: pm.id,
+                        brand: pm.card?.brand,
+                        last4: pm.card?.last4,
+                        isDefault: pm.is_default
+                    })) || [];
+                    
+                    html += `
+                        <div class="success">✅ Payment Methods API accessible</div>
+                        <pre>Response Data:
+- Method Count: ${methodCount}
+- Methods: ${JSON.stringify(methods, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    html += `<div class="error">❌ Payment Methods API failed: ${error.message}</div>`;
+                }
+                html += '</div>';
+                
+                // Test 3: Billing History
+                html += '<div class="section"><h3>📄 3. Testing Billing History</h3>';
+                try {
+                    const billingResponse = await fetch('/api/billing-history');
+                    const billingData = await billingResponse.json();
+                    
+                    const recordCount = billingData.data?.length || 0;
+                    const records = billingData.data?.map(record => ({
+                        id: record.id,
+                        idType: record.id.startsWith('in_') ? 'REAL_STRIPE_INVOICE' : 
+                                record.id.startsWith('sub_') ? 'LOCAL_SUBSCRIPTION' : 'UNKNOWN',
+                        amount: record.amount,
+                        status: record.status,
+                        hasDownload: record.invoice_url !== '#'
+                    })) || [];
+                    
+                    html += `
+                        <div class="success">✅ Billing History API accessible</div>
+                        <pre>Response Data:
+- Record Count: ${recordCount}
+- Records: ${JSON.stringify(records, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    html += `<div class="error">❌ Billing History API failed: ${error.message}</div>`;
+                }
+                html += '</div>';
+                
+                // Analysis
+                html += '<div class="section"><h3>🔍 4. Current State Analysis</h3>';
+                
+                // Re-fetch data for analysis
+                try {
+                    const subscriptionResponse = await fetch('/api/subscription-status');
+                    const subscriptionData = await subscriptionResponse.json();
+                    const billingResponse = await fetch('/api/billing-history');
+                    const billingData = await billingResponse.json();
+                    
+                    const hasStripeCustomer = subscriptionData.status?.customer?.hasStripeCustomer || false;
+                    const hasSubscriptions = (subscriptionData.status?.subscriptions?.count || 0) > 0;
+                    const hasRealInvoices = billingData.data?.some(record => record.id.startsWith('in_')) || false;
+                    const hasLocalSubscriptions = billingData.data?.some(record => record.id.startsWith('sub_')) || false;
+                    
+                    const userType = hasSubscriptions ? 'PAID_USER' : 'FREE_USER';
+                    const stripeIntegration = hasStripeCustomer ? 'HAS_CUSTOMER' : 'NO_CUSTOMER';
+                    const billingType = hasRealInvoices ? 'REAL_STRIPE_INVOICES' : 
+                                       hasLocalSubscriptions ? 'LOCAL_SUBSCRIPTIONS_ONLY' : 'NO_BILLING_DATA';
+                    const needsPhase1Fix = hasSubscriptions && !hasStripeCustomer;
+                    
+                    html += `
+                        <div class="${userType === 'PAID_USER' ? 'warning' : 'info'}">
+                            <span class="status-indicator ${userType === 'PAID_USER' ? 'status-warning' : 'status-good'}"></span>
+                            User Type: ${userType}
+                        </div>
+                        <div class="${hasStripeCustomer ? 'success' : 'error'}">
+                            <span class="status-indicator ${hasStripeCustomer ? 'status-good' : 'status-bad'}"></span>
+                            Stripe Integration: ${stripeIntegration}
+                        </div>
+                        <div class="${hasRealInvoices ? 'success' : 'warning'}">
+                            <span class="status-indicator ${hasRealInvoices ? 'status-good' : 'status-warning'}"></span>
+                            Billing Type: ${billingType}
+                        </div>
+                        <div class="${needsPhase1Fix ? 'error' : 'success'}">
+                            <span class="status-indicator ${needsPhase1Fix ? 'status-bad' : 'status-good'}"></span>
+                            Needs Phase 1 Fix: ${needsPhase1Fix ? 'YES' : 'NO'}
+                        </div>
+                    `;
+                    
+                    html += '<h4>🎯 Phase 1 Implementation Requirements:</h4>';
+                    html += `<pre>Tasks Needed:
+- Create Stripe Customer: ${hasSubscriptions && !hasStripeCustomer ? '✅ REQUIRED' : '❌ Not needed'}
+- Fix Subscription Creation: ${hasLocalSubscriptions && !hasRealInvoices ? '✅ REQUIRED' : '❌ Not needed'}  
+- Update Billing History: ${hasLocalSubscriptions ? '✅ REQUIRED' : '❌ Not needed'}</pre>`;
+                    
+                } catch (error) {
+                    html += `<div class="error">❌ Analysis failed: ${error.message}</div>`;
+                }
+                html += '</div>';
+                
+                // Summary
+                html += '<div class="section"><h3>📋 Test Summary</h3>';
+                html += '<div class="success">✅ Pre-implementation test complete!</div>';
+                html += '<div class="info">📋 Ready to start Phase 1 implementation.</div>';
+                html += '</div>';
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="section">
+                        <h3 class="error">❌ Test Failed</h3>
+                        <div class="error">Error: ${error.message}</div>
+                        <div class="info">
+                            <h4>🔧 Debug Information:</h4>
+                            <ul>
+                                <li>Make sure you are logged in to the application</li>
+                                <li>Verify the application is running on localhost:3000</li>
+                                <li>Check that API routes are accessible</li>
+                                <li>Open browser console for more details</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            testButton.disabled = false;
+            testButton.textContent = 'Run Test Again';
+        }
+    </script>
+</body>
+</html>

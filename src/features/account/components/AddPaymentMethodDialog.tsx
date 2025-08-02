@@ -61,28 +61,18 @@ export function AddPaymentMethodDialog({
         fontSize: '15px',
         color: '#1C1C1C',
         fontFamily: 'Inter, system-ui, sans-serif',
-        backgroundColor: '#FFFFFF',
         '::placeholder': {
           color: '#6B7280',
         },
         iconColor: '#374151',
-        lineHeight: '20px',
-        padding: '12px 0',
       },
       invalid: {
         color: '#DC2626',
         iconColor: '#DC2626',
-        backgroundColor: '#FEF2F2',
       },
       complete: {
         color: '#059669',
         iconColor: '#059669',
-        backgroundColor: '#F0FDF4',
-      },
-      focus: {
-        color: '#1C1C1C',
-        backgroundColor: '#FFFFFF',
-        iconColor: '#2A3D2F',
       },
     },
   };

@@ -60,30 +60,22 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ Stripe client created');
 
-    // Get or create customer in Stripe
+    // Get or create customer using the same method as subscription actions
     let customerId: string;
     
     try {
-      // First, try to find existing customer by email
-      const existingCustomers = await stripe.customers.list({
-        email: user.email,
-        limit: 1,
+      // Use the same customer lookup method as subscription actions
+      const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+      
+      customerId = await getOrCreateCustomerForUser({
+        userId: user.id,
+        email: user.email!,
+        supabaseClient: supabase,
+        forceCreate: true
       });
-
-      if (existingCustomers.data.length > 0) {
-        customerId = existingCustomers.data[0].id;
-        console.log('✅ Found existing Stripe customer:', customerId);
-      } else {
-        // Create new customer
-        const newCustomer = await stripe.customers.create({
-          email: user.email,
-          metadata: {
-            userId: user.id,
-          },
-        });
-        customerId = newCustomer.id;
-        console.log('✅ Created new Stripe customer:', customerId);
-      }
+      
+      console.log('✅ Got customer using consistent method:', customerId);
+      
     } catch (customerError) {
       console.error('❌ Customer creation/retrieval failed:', customerError);
       return NextResponse.json({ error: 'Failed to get customer' }, { status: 500 });
@@ -190,31 +182,22 @@ export async function POST(request: NextRequest) {
       mode: 'test'
     });
 
-    // Get or create customer
+    // Get or create customer using the same method as subscription actions
     let customerId: string;
     
     try {
-      // First, try to find existing customer by email
-      const existingCustomers = await stripe.customers.list({
-        email: user.email,
-        limit: 1,
+      // Use the same customer lookup method as subscription actions
+      const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
+      
+      customerId = await getOrCreateCustomerForUser({
+        userId: user.id,
+        email: user.email!,
+        supabaseClient: supabase,
+        forceCreate: true
       });
-
-      if (existingCustomers.data.length > 0) {
-        customerId = existingCustomers.data[0].id;
-        console.log('✅ Found existing Stripe customer:', customerId);
-      } else {
-        // Create new customer
-        const newCustomer = await stripe.customers.create({
-          email: user.email,
-          name: body.billing_name || user.email,
-          metadata: {
-            userId: user.id,
-          },
-        });
-        customerId = newCustomer.id;
-        console.log('✅ Created new Stripe customer:', customerId);
-      }
+      
+      console.log('✅ Got customer using consistent method:', customerId);
+      
     } catch (customerError) {
       console.error('❌ Customer creation/retrieval failed:', customerError);
       return NextResponse.json({ error: 'Failed to get customer' }, { status: 500 });

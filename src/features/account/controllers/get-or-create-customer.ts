@@ -208,12 +208,12 @@ export async function getOrCreateCustomerForUser({
   userId, 
   email, 
   supabaseClient, 
-  forceCreate = false 
+  forceCreate = true // PHASE 1 FIX: Default to true for paid users
 }: { 
   userId: string; 
   email: string;
   supabaseClient: any; // Supabase client (server or admin)
-  forceCreate?: boolean; // Only create customer if this is true
+  forceCreate?: boolean; // Create customer by default for paid users
 }) {
   console.debug('getOrCreateCustomerForUser: Starting customer lookup/creation', { userId, email, forceCreate });
 
@@ -311,46 +311,40 @@ export async function getOrCreateCustomerForUser({
       stripeCustomerId: customer.id 
     });
 
-    // If customer record exists, update it with Stripe customer ID
-    if (data) {
-      const { error: updateError } = await supabaseAdminClient
-        .from('customers')  // Use 'customers' instead of 'stripe_customers'
-        .update({ stripe_customer_id: customer.id })
-        .eq('id', userId);  // Use 'id' instead of 'user_id'
-
-      if (updateError) {
-        console.error('getOrCreateCustomerForUser: Failed to update existing customer record', {
-          userId,
-          stripeCustomerId: customer.id,
-          error: updateError.message
-        });
-        throw updateError;
-      }
-
-      console.debug('getOrCreateCustomerForUser: Updated existing customer record', { 
-        userId, 
-        stripeCustomerId: customer.id 
+    // Use upsert to handle both insert and update cases safely
+    const { error: upsertError } = await supabaseAdminClient
+      .from('customers')
+      .upsert([{ 
+        id: userId, 
+        stripe_customer_id: customer.id 
+      }], {
+        onConflict: 'id',
+        ignoreDuplicates: false
       });
-    } else {
-      // Create new customer record
-      const { error: insertError } = await supabaseAdminClient
-        .from('customers')  // Use 'customers' instead of 'stripe_customers'
-        .insert([{ id: userId, stripe_customer_id: customer.id }]);  // Use 'id' instead of 'user_id', remove email
 
-      if (insertError) {
-        console.error('getOrCreateCustomerForUser: Failed to create customer record', {
-          userId,
-          stripeCustomerId: customer.id,
-          error: insertError.message
-        });
-        throw insertError;
-      }
-
-      console.debug('getOrCreateCustomerForUser: Created new customer record', { 
-        userId, 
-        stripeCustomerId: customer.id 
+    if (upsertError) {
+      console.error('getOrCreateCustomerForUser: Failed to upsert customer record', {
+        userId,
+        stripeCustomerId: customer.id,
+        error: upsertError.message,
+        code: upsertError.code
       });
+      
+      // Clean up the Stripe customer we just created since we can't save it
+      try {
+        await stripeAdmin.customers.del(customer.id);
+        console.debug('getOrCreateCustomerForUser: Cleaned up Stripe customer after database error');
+      } catch (cleanupError) {
+        console.error('getOrCreateCustomerForUser: Failed to cleanup Stripe customer', cleanupError);
+      }
+      
+      throw upsertError;
     }
+
+    console.debug('getOrCreateCustomerForUser: Successfully upserted customer record', { 
+      userId, 
+      stripeCustomerId: customer.id 
+    });
 
     return customer.id;
   } catch (stripeError) {
@@ -380,11 +374,12 @@ export async function getOrCreateCustomerForUser({
 export async function userNeedsStripeCustomer(userId: string, supabaseClient: any): Promise<boolean> {
   try {
     // Check if user has any paid subscriptions (non-null stripe_subscription_id)
+    // Include 'incomplete' status for subscriptions that need payment confirmation
     const { data: paidSubscriptions, error } = await supabaseClient
       .from('subscriptions')
       .select('stripe_subscription_id')
       .eq('user_id', userId)
-      .in('status', ['active', 'trialing', 'past_due'])
+      .in('status', ['active', 'trialing', 'past_due', 'incomplete'])
       .not('stripe_subscription_id', 'is', null)
       .limit(1);
 
@@ -397,7 +392,8 @@ export async function userNeedsStripeCustomer(userId: string, supabaseClient: an
     console.debug('userNeedsStripeCustomer: Checked subscription status', {
       userId,
       hasPaidSubscription: needsCustomer,
-      subscriptionCount: paidSubscriptions?.length || 0
+      subscriptionCount: paidSubscriptions?.length || 0,
+      includedStatuses: ['active', 'trialing', 'past_due', 'incomplete']
     });
 
     return needsCustomer;

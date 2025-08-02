@@ -18,7 +18,7 @@ async function testPlanChangeFixes() {
   const { data: priceById, error: priceError } = await supabase
     .from('stripe_prices')
     .select('*')
-    .eq('id', 'price_pro_monthly')
+    .eq('id', 'price_1RVyAQGgBK1ooXYF0LokEHtQ')
     .single();
 
   if (priceError) {

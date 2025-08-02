@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 1.1 Test - Stripe Customer Creation</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff4444; }
+        .warning { color: #ffaa00; }
+        .info { color: #4488ff; }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 5px;
+        }
+        button:hover {
+            background: #444;
+        }
+        button:disabled {
+            background: #222;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-good { background: #00ff00; }
+        .status-bad { background: #ff4444; }
+        .status-warning { background: #ffaa00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Step 1.1 Test - Stripe Customer Creation</h1>
+        <p class="info">This test verifies that Step 1.1 (Fix Stripe Customer Creation) is working correctly.</p>
+        
+        <div class="section">
+            <h3>Test Instructions</h3>
+            <ol>
+                <li>First, run the "Before Test" to see current state</li>
+                <li>If you're a paid user without Stripe customer, try upgrading your plan</li>
+                <li>Run the "After Test" to verify the fix worked</li>
+            </ol>
+        </div>
+        
+        <button onclick="runBeforeTest()" id="beforeButton">Run Before Test</button>
+        <button onclick="runAfterTest()" id="afterButton">Run After Test</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function runBeforeTest() {
+            const resultsDiv = document.getElementById('results');
+            const beforeButton = document.getElementById('beforeButton');
+            
+            beforeButton.disabled = true;
+            beforeButton.textContent = 'Running Before Test...';
+            
+            try {
+                let html = '<div class="section"><h3>📊 BEFORE Step 1.1 Implementation</h3>';
+                
+                const subscriptionResponse = await fetch('/api/subscription-status');
+                const subscriptionData = await subscriptionResponse.json();
+                
+                const hasStripeCustomer = subscriptionData.status?.customer?.hasStripeCustomer || false;
+                const subscriptionCount = subscriptionData.status?.subscriptions?.count || 0;
+                const stripeCustomerId = subscriptionData.status?.customer?.stripeCustomerId || 'none';
+                
+                html += `
+                    <div class="${hasStripeCustomer ? 'success' : 'error'}">
+                        <span class="status-indicator ${hasStripeCustomer ? 'status-good' : 'status-bad'}"></span>
+                        Has Stripe Customer: ${hasStripeCustomer}
+                    </div>
+                    <div class="${subscriptionCount > 0 ? 'warning' : 'info'}">
+                        <span class="status-indicator ${subscriptionCount > 0 ? 'status-warning' : 'status-good'}"></span>
+                        Subscription Count: ${subscriptionCount}
+                    </div>
+                    <div class="info">
+                        Stripe Customer ID: ${stripeCustomerId}
+                    </div>
+                `;
+                
+                if (subscriptionCount > 0 && !hasStripeCustomer) {
+                    html += `
+                        <div class="error">
+                            ❌ ISSUE DETECTED: You have ${subscriptionCount} subscription(s) but no Stripe customer!
+                        </div>
+                        <div class="warning">
+                            🔧 This is exactly what Step 1.1 should fix.
+                        </div>
+                    `;
+                } else if (subscriptionCount > 0 && hasStripeCustomer) {
+                    html += `
+                        <div class="success">
+                            ✅ GOOD: You have subscriptions AND a Stripe customer.
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="info">
+                            ℹ️ You're on the free plan - no Stripe customer needed.
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="section">
+                        <h3 class="error">❌ Before Test Failed</h3>
+                        <div class="error">Error: ${error.message}</div>
+                    </div>
+                `;
+            }
+            
+            beforeButton.disabled = false;
+            beforeButton.textContent = 'Run Before Test Again';
+        }
+
+        async function runAfterTest() {
+            const resultsDiv = document.getElementById('results');
+            const afterButton = document.getElementById('afterButton');
+            
+            afterButton.disabled = true;
+            afterButton.textContent = 'Running After Test...';
+            
+            try {
+                let html = '<div class="section"><h3>📊 AFTER Step 1.1 Implementation</h3>';
+                
+                const subscriptionResponse = await fetch('/api/subscription-status');
+                const subscriptionData = await subscriptionResponse.json();
+                
+                const hasStripeCustomer = subscriptionData.status?.customer?.hasStripeCustomer || false;
+                const subscriptionCount = subscriptionData.status?.subscriptions?.count || 0;
+                const stripeCustomerId = subscriptionData.status?.customer?.stripeCustomerId || 'none';
+                
+                // Check billing history for real invoices
+                const billingResponse = await fetch('/api/billing-history');
+                const billingData = await billingResponse.json();
+                const hasRealInvoices = billingData.data?.some(record => record.id.startsWith('in_')) || false;
+                const hasLocalSubscriptions = billingData.data?.some(record => record.id.startsWith('sub_')) || false;
+                
+                html += `
+                    <div class="${hasStripeCustomer ? 'success' : 'error'}">
+                        <span class="status-indicator ${hasStripeCustomer ? 'status-good' : 'status-bad'}"></span>
+                        Has Stripe Customer: ${hasStripeCustomer}
+                    </div>
+                    <div class="${subscriptionCount > 0 ? 'warning' : 'info'}">
+                        <span class="status-indicator ${subscriptionCount > 0 ? 'status-warning' : 'status-good'}"></span>
+                        Subscription Count: ${subscriptionCount}
+                    </div>
+                    <div class="info">
+                        Stripe Customer ID: ${stripeCustomerId}
+                    </div>
+                    <div class="${hasRealInvoices ? 'success' : 'warning'}">
+                        <span class="status-indicator ${hasRealInvoices ? 'status-good' : 'status-warning'}"></span>
+                        Has Real Stripe Invoices: ${hasRealInvoices}
+                    </div>
+                `;
+                
+                // Analyze the results
+                if (subscriptionCount > 0 && hasStripeCustomer && hasRealInvoices) {
+                    html += `
+                        <div class="success">
+                            🎉 STEP 1.1 SUCCESS: Perfect Stripe integration!
+                        </div>
+                        <div class="success">
+                            ✅ You have subscriptions, Stripe customer, AND real invoices.
+                        </div>
+                    `;
+                } else if (subscriptionCount > 0 && hasStripeCustomer && !hasRealInvoices) {
+                    html += `
+                        <div class="warning">
+                            🔄 STEP 1.1 PARTIAL: Customer created, but still need real subscriptions.
+                        </div>
+                        <div class="info">
+                            ℹ️ This means Step 1.1 worked, but you need Step 1.2 (Real Subscription Creation).
+                        </div>
+                    `;
+                } else if (subscriptionCount > 0 && !hasStripeCustomer) {
+                    html += `
+                        <div class="error">
+                            ❌ STEP 1.1 NOT WORKING: Still no Stripe customer for paid user.
+                        </div>
+                        <div class="warning">
+                            🔧 Try upgrading your plan to trigger customer creation.
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="info">
+                            ℹ️ You're on the free plan - Step 1.1 not applicable.
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="section">
+                        <h3 class="error">❌ After Test Failed</h3>
+                        <div class="error">Error: ${error.message}</div>
+                    </div>
+                `;
+            }
+            
+            afterButton.disabled = false;
+            afterButton.textContent = 'Run After Test Again';
+        }
+    </script>
+</body>
+</html>
