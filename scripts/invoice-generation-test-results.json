@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-08-02T13:58:02Z",
+  "tests": {
+    "invoice_generation_unit_tests": { "status": "FAILED", "message": "Unit tests failed" },
+    "billing_history_api_integration": { "status": "FAILED", "message": "API integration tests failed" },
+    "typescript_compilation": { "status": "FAILED", "message": "TypeScript compilation failed" },
+    "controller_import_test": { "status": "PASSED", "message": "Controller imports correctly" },
+    "api_import_test": { "status": "PASSED", "message": "API controller imports correctly" },
+    "schema_compatibility_test": { "status": "PASSED", "message": "Database schema is compatible" },
+    "api_route_update_test": { "status": "PASSED", "message": "API route successfully updated" }
+  },
+  "summary": {
+    "total_tests": 7,
+    "passed_tests": 4,
+    "failed_tests": 3,
+    "success_rate": "57.14%"
+  }
+}

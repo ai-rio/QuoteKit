@@ -20,6 +20,7 @@ interface BillingHistoryItem {
   status: string;
   invoice_url: string;
   description: string;
+  type?: 'stripe_invoice' | 'subscription_change' | 'billing_record';
 }
 
 interface BillingHistoryTableProps {
@@ -165,6 +166,34 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
         return 'bg-stone-gray text-charcoal hover:bg-stone-gray/90';
       default:
         return 'bg-stone-gray text-charcoal hover:bg-stone-gray/90';
+    }
+  };
+
+  // Type badge styling for billing record source
+  const getTypeBadgeClass = (type?: string) => {
+    switch (type) {
+      case 'stripe_invoice':
+        return 'bg-blue-500 text-paper-white hover:bg-blue-500/90';
+      case 'subscription_change':
+        return 'bg-purple-500 text-paper-white hover:bg-purple-500/90';
+      case 'billing_record':
+        return 'bg-green-500 text-paper-white hover:bg-green-500/90';
+      default:
+        return 'bg-gray-500 text-paper-white hover:bg-gray-500/90';
+    }
+  };
+
+  // Get display text for type
+  const getTypeDisplayText = (type?: string) => {
+    switch (type) {
+      case 'stripe_invoice':
+        return 'Invoice';
+      case 'subscription_change':
+        return 'Subscription';
+      case 'billing_record':
+        return 'Billing';
+      default:
+        return 'Unknown';
     }
   };
 
@@ -350,6 +379,7 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
                         </span>
                       )}
                     </TableHead>
+                    <TableHead className="text-charcoal">Source</TableHead>
                     <TableHead className="text-charcoal">Invoice</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -368,6 +398,11 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
                       <TableCell>
                         <Badge className={getStatusBadgeClass(item.status)}>
                           {item.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getTypeBadgeClass(item.type)}>
+                          {getTypeDisplayText(item.type)}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -405,9 +440,14 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
                           {formatDate(item.date)}
                         </p>
                       </div>
-                      <Badge className={getStatusBadgeClass(item.status)}>
-                        {item.status}
-                      </Badge>
+                      <div className="flex flex-col gap-2">
+                        <Badge className={getStatusBadgeClass(item.status)}>
+                          {item.status}
+                        </Badge>
+                        <Badge className={getTypeBadgeClass(item.type)}>
+                          {getTypeDisplayText(item.type)}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-charcoal text-lg">

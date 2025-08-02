@@ -1,31 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { stripeAdmin } from '@/libs/stripe/stripe-admin';
 
 /**
  * GET /api/billing-history/[id]/invoice
- * Download or redirect to invoice for a specific billing record
+ * Download invoice PDF for a specific billing history item
  * 
- * This endpoint handles invoice downloads by:
- * 1. Verifying user authentication and ownership
- * 2. Fetching the invoice from Stripe
- * 3. Either redirecting to Stripe's hosted invoice or proxying the PDF
+ * Security: Only allows users to download their own invoices
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    console.debug('invoice-download API: Processing GET request', {
-      invoiceId: params.id,
+    const invoiceId = params.id;
+    
+    console.debug('Invoice Download API: Processing download request', {
+      invoiceId,
       timestamp: new Date().toISOString()
     });
+
+    // Validate invoice ID format
+    if (!invoiceId || (!invoiceId.startsWith('in_') && !invoiceId.startsWith('sub_'))) {
+      console.warn('Invoice Download API: Invalid invoice ID format', {
+        invoiceId
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Invalid invoice ID format',
+          code: 'INVALID_INVOICE_ID'
+        },
+        { status: 400 }
+      );
+    }
 
     // Get authenticated user
     const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('invoice-download API: Authentication failed', {
+      console.error('Invoice Download API: Authentication failed', {
         hasAuthError: !!authError,
         hasUser: !!user,
         errorMessage: authError?.message
@@ -40,239 +55,322 @@ export async function GET(
       );
     }
 
-    console.debug('invoice-download API: User authenticated', {
+    console.debug('Invoice Download API: User authenticated', {
       userId: user.id,
       email: user.email,
-      invoiceId: params.id
+      invoiceId
     });
 
-    // Import Stripe admin client
-    const { stripeAdmin } = await import('@/libs/stripe/stripe-admin');
-    
-    // Get user's Stripe customer ID
-    const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
-    
-    let stripeCustomerId;
-    try {
-      stripeCustomerId = await getOrCreateCustomerForUser({ 
-        userId: user.id, 
-        email: user.email!, 
-        supabaseClient: supabase,
-        forceCreate: false // Don't create customer just for invoice download
-      });
-      
-      if (!stripeCustomerId) {
-        console.error('invoice-download API: No Stripe customer found', {
-          userId: user.id,
-          invoiceId: params.id
-        });
-        
-        return NextResponse.json(
-          { 
-            error: 'No billing history available',
-            code: 'NO_CUSTOMER'
-          },
-          { status: 404 }
-        );
-      }
-      
-      console.debug('invoice-download API: Found Stripe customer', {
-        userId: user.id,
-        stripeCustomerId,
-        invoiceId: params.id
-      });
-    } catch (customerError) {
-      console.error('invoice-download API: Failed to get customer', {
-        userId: user.id,
-        invoiceId: params.id,
-        error: customerError instanceof Error ? customerError.message : 'Unknown customer error'
-      });
-      
-      return NextResponse.json(
-        { 
-          error: 'Failed to retrieve customer information',
-          code: 'CUSTOMER_ERROR'
-        },
-        { status: 500 }
-      );
-    }
-
-    // Fetch the specific invoice from Stripe
-    let invoice;
-    try {
-      console.debug('invoice-download API: Fetching invoice from Stripe', {
-        invoiceId: params.id,
-        stripeCustomerId
-      });
-
-      invoice = await stripeAdmin.invoices.retrieve(params.id);
-      
-      console.debug('invoice-download API: Retrieved invoice from Stripe', {
-        invoiceId: params.id,
-        invoiceStatus: invoice.status,
-        invoiceCustomer: invoice.customer,
-        hasHostedUrl: !!invoice.hosted_invoice_url,
-        hasPdfUrl: !!invoice.invoice_pdf
-      });
-
-      // Verify the invoice belongs to the authenticated user's customer
-      if (invoice.customer !== stripeCustomerId) {
-        console.error('invoice-download API: Invoice does not belong to user', {
-          userId: user.id,
-          invoiceId: params.id,
-          invoiceCustomer: invoice.customer,
-          userCustomer: stripeCustomerId
-        });
-        
-        return NextResponse.json(
-          { 
-            error: 'Invoice not found or access denied',
-            code: 'ACCESS_DENIED'
-          },
-          { status: 403 }
-        );
-      }
-
-    } catch (stripeError: any) {
-      console.error('invoice-download API: Stripe API error', {
-        userId: user.id,
-        invoiceId: params.id,
-        stripeCustomerId,
-        error: stripeError.message,
-        stripeErrorType: stripeError.type,
-        stripeErrorCode: stripeError.code
-      });
-
-      // Handle specific Stripe errors
-      if (stripeError.type === 'StripeInvalidRequestError' && stripeError.code === 'resource_missing') {
-        return NextResponse.json(
-          { 
-            error: 'Invoice not found',
-            code: 'INVOICE_NOT_FOUND'
-          },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(
-        { 
-          error: 'Failed to retrieve invoice from Stripe',
-          code: 'STRIPE_ERROR',
-          details: stripeError.message
-        },
-        { status: 500 }
-      );
-    }
-
-    // Determine the best download method
-    const hostedUrl = invoice.hosted_invoice_url;
-    const pdfUrl = invoice.invoice_pdf;
-    
-    console.debug('invoice-download API: Determining download method', {
-      invoiceId: params.id,
-      hasHostedUrl: !!hostedUrl,
-      hasPdfUrl: !!pdfUrl,
-      invoiceStatus: invoice.status
-    });
-
-    // Check query parameters for download preference
-    const { searchParams } = new URL(request.url);
-    const downloadType = searchParams.get('type') || 'redirect'; // 'redirect' or 'proxy'
-    const forceDownload = searchParams.get('download') === 'true';
-
-    if (downloadType === 'proxy' && pdfUrl) {
-      // Option 1: Proxy the PDF through our server
+    // Handle Stripe invoices
+    if (invoiceId.startsWith('in_')) {
       try {
-        console.debug('invoice-download API: Proxying PDF download', {
-          invoiceId: params.id,
-          pdfUrl: pdfUrl.substring(0, 50) + '...'
-        });
-
-        const pdfResponse = await fetch(pdfUrl);
+        // Get invoice from Stripe
+        const invoice = await stripeAdmin.invoices.retrieve(invoiceId);
         
-        if (!pdfResponse.ok) {
-          throw new Error(`PDF fetch failed: ${pdfResponse.status}`);
+        if (!invoice) {
+          console.warn('Invoice Download API: Invoice not found in Stripe', {
+            invoiceId,
+            userId: user.id
+          });
+          
+          return NextResponse.json(
+            { 
+              error: 'Invoice not found',
+              code: 'INVOICE_NOT_FOUND'
+            },
+            { status: 404 }
+          );
         }
 
-        const pdfBuffer = await pdfResponse.arrayBuffer();
+        // Verify user owns this invoice by checking customer
+        const { getOrCreateCustomerForUser } = await import('@/features/account/controllers/get-or-create-customer');
         
-        console.debug('invoice-download API: Successfully proxied PDF', {
-          invoiceId: params.id,
-          pdfSize: pdfBuffer.byteLength
+        const userStripeCustomerId = await getOrCreateCustomerForUser({
+          userId: user.id,
+          email: user.email!,
+          supabaseClient: supabase,
+          forceCreate: false
         });
 
-        // Return the PDF with appropriate headers
-        return new NextResponse(pdfBuffer, {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': forceDownload 
-              ? `attachment; filename="invoice-${params.id}.pdf"`
-              : `inline; filename="invoice-${params.id}.pdf"`,
-            'Content-Length': pdfBuffer.byteLength.toString(),
-            'Cache-Control': 'private, no-cache'
-          }
+        if (!userStripeCustomerId || invoice.customer !== userStripeCustomerId) {
+          console.warn('Invoice Download API: User does not own this invoice', {
+            invoiceId,
+            userId: user.id,
+            userStripeCustomerId,
+            invoiceCustomerId: invoice.customer
+          });
+          
+          return NextResponse.json(
+            { 
+              error: 'Access denied - invoice not found for this user',
+              code: 'ACCESS_DENIED'
+            },
+            { status: 403 }
+          );
+        }
+
+        // Get download URL
+        let downloadUrl = invoice.hosted_invoice_url || invoice.invoice_pdf;
+        
+        if (!downloadUrl) {
+          console.warn('Invoice Download API: No download URL available', {
+            invoiceId,
+            userId: user.id,
+            hasHostedUrl: !!invoice.hosted_invoice_url,
+            hasPdfUrl: !!invoice.invoice_pdf
+          });
+          
+          return NextResponse.json(
+            { 
+              error: 'Invoice download not available',
+              code: 'DOWNLOAD_NOT_AVAILABLE'
+            },
+            { status: 404 }
+          );
+        }
+
+        console.debug('Invoice Download API: Redirecting to Stripe invoice', {
+          invoiceId,
+          userId: user.id,
+          downloadUrl: downloadUrl.substring(0, 50) + '...'
         });
 
-      } catch (proxyError) {
-        console.error('invoice-download API: PDF proxy failed', {
-          invoiceId: params.id,
-          error: proxyError instanceof Error ? proxyError.message : 'Unknown proxy error'
+        // Redirect to Stripe's hosted invoice URL
+        return NextResponse.redirect(downloadUrl);
+
+      } catch (stripeError) {
+        console.error('Invoice Download API: Stripe API error', {
+          invoiceId,
+          userId: user.id,
+          error: stripeError instanceof Error ? stripeError.message : 'Unknown Stripe error'
         });
-        
-        // Fall back to redirect if proxy fails
+
+        return NextResponse.json(
+          { 
+            error: 'Failed to retrieve invoice from Stripe',
+            code: 'STRIPE_ERROR',
+            details: stripeError instanceof Error ? stripeError.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
       }
     }
 
-    // Option 2: Redirect to Stripe's hosted invoice (default and fallback)
-    if (hostedUrl) {
-      console.debug('invoice-download API: Redirecting to hosted invoice', {
-        invoiceId: params.id,
-        hostedUrl: hostedUrl.substring(0, 50) + '...'
+    // Handle subscription-based invoices (fallback for development)
+    if (invoiceId.startsWith('sub_')) {
+      console.debug('Invoice Download API: Handling subscription-based invoice', {
+        invoiceId,
+        userId: user.id
       });
 
-      // Add download parameter to Stripe URL if requested
-      const redirectUrl = forceDownload && hostedUrl.includes('?') 
-        ? `${hostedUrl}&download=true`
-        : forceDownload 
-        ? `${hostedUrl}?download=true`
-        : hostedUrl;
+      // Extract subscription ID from invoice ID
+      const subscriptionId = invoiceId.replace('sub_', '');
+      
+      // Verify user owns this subscription
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('id, user_id, stripe_price_id, prices:stripe_prices(unit_amount, products:stripe_products(name))')
+        .eq('id', subscriptionId)
+        .eq('user_id', user.id)
+        .single();
 
-      return NextResponse.redirect(redirectUrl, 302);
-    }
+      if (subError || !subscription) {
+        console.warn('Invoice Download API: Subscription not found or access denied', {
+          invoiceId,
+          subscriptionId,
+          userId: user.id,
+          error: subError?.message
+        });
+        
+        return NextResponse.json(
+          { 
+            error: 'Subscription invoice not found',
+            code: 'SUBSCRIPTION_NOT_FOUND'
+          },
+          { status: 404 }
+        );
+      }
 
-    // Option 3: Direct PDF URL redirect (if no hosted URL)
-    if (pdfUrl) {
-      console.debug('invoice-download API: Redirecting to PDF URL', {
-        invoiceId: params.id,
-        pdfUrl: pdfUrl.substring(0, 50) + '...'
+      // For subscription invoices, we don't have a real PDF
+      // Return a message or generate a simple receipt
+      console.debug('Invoice Download API: Subscription invoice - no PDF available', {
+        invoiceId,
+        subscriptionId,
+        userId: user.id
       });
 
-      return NextResponse.redirect(pdfUrl, 302);
+      return NextResponse.json(
+        { 
+          error: 'PDF not available for subscription records',
+          code: 'PDF_NOT_AVAILABLE',
+          message: 'This is a subscription record. Real invoices will be available once Stripe invoicing is fully configured.',
+          subscription: {
+            id: subscription.id,
+            plan: subscription.prices?.products?.name || 'Unknown Plan',
+            amount: subscription.prices?.unit_amount || 0
+          }
+        },
+        { status: 404 }
+      );
     }
 
-    // No download options available
-    console.error('invoice-download API: No download options available', {
-      invoiceId: params.id,
-      invoiceStatus: invoice.status,
-      hasHostedUrl: !!hostedUrl,
-      hasPdfUrl: !!pdfUrl
+    // Invalid invoice ID format
+    console.warn('Invoice Download API: Unrecognized invoice ID format', {
+      invoiceId,
+      userId: user.id
     });
 
     return NextResponse.json(
       { 
-        error: 'Invoice download not available',
-        code: 'NO_DOWNLOAD_URL',
-        details: 'This invoice does not have a downloadable URL'
+        error: 'Unrecognized invoice ID format',
+        code: 'INVALID_FORMAT'
       },
-      { status: 404 }
+      { status: 400 }
     );
 
   } catch (error) {
-    console.error('invoice-download API: Unexpected error', {
+    console.error('Invoice Download API: Unexpected error', {
       invoiceId: params.id,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
+    });
+
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/billing-history/[id]/invoice
+ * Generate a new invoice for a subscription (admin/development use)
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const invoiceId = params.id;
+    
+    console.debug('Invoice Generation API: Processing generation request', {
+      invoiceId,
+      timestamp: new Date().toISOString()
+    });
+
+    // Get authenticated user
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { 
+          error: 'Authentication required',
+          code: 'UNAUTHORIZED'
+        },
+        { status: 401 }
+      );
+    }
+
+    // Parse request body
+    const body = await request.json().catch(() => ({}));
+    const { description, metadata } = body;
+
+    // Only allow for subscription IDs in development
+    if (!invoiceId.startsWith('sub_')) {
+      return NextResponse.json(
+        { 
+          error: 'Invoice generation only supported for subscriptions',
+          code: 'INVALID_OPERATION'
+        },
+        { status: 400 }
+      );
+    }
+
+    const subscriptionId = invoiceId.replace('sub_', '');
+
+    // Verify user owns this subscription
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('id, user_id, stripe_subscription_id')
+      .eq('id', subscriptionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (subError || !subscription) {
+      return NextResponse.json(
+        { 
+          error: 'Subscription not found',
+          code: 'SUBSCRIPTION_NOT_FOUND'
+        },
+        { status: 404 }
+      );
+    }
+
+    // If this is a real Stripe subscription, generate invoice
+    if (subscription.stripe_subscription_id && subscription.stripe_subscription_id.startsWith('sub_')) {
+      const { generateSubscriptionInvoice } = await import('@/features/billing/controllers/invoice-generation');
+      
+      try {
+        const generatedInvoice = await generateSubscriptionInvoice(
+          subscription.stripe_subscription_id,
+          {
+            description: description || `Manual invoice for subscription ${subscription.id}`,
+            metadata: {
+              user_id: user.id,
+              subscription_id: subscription.id,
+              ...metadata
+            }
+          }
+        );
+
+        console.debug('Invoice Generation API: Successfully generated invoice', {
+          subscriptionId: subscription.stripe_subscription_id,
+          invoiceId: generatedInvoice.id,
+          userId: user.id
+        });
+
+        return NextResponse.json({
+          success: true,
+          invoice: generatedInvoice,
+          message: 'Invoice generated successfully'
+        });
+
+      } catch (generationError) {
+        console.error('Invoice Generation API: Failed to generate invoice', {
+          subscriptionId: subscription.stripe_subscription_id,
+          userId: user.id,
+          error: generationError instanceof Error ? generationError.message : 'Unknown error'
+        });
+
+        return NextResponse.json(
+          { 
+            error: 'Failed to generate invoice',
+            code: 'GENERATION_FAILED',
+            details: generationError instanceof Error ? generationError.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    // For local subscriptions, return not supported
+    return NextResponse.json(
+      { 
+        error: 'Invoice generation not supported for local subscriptions',
+        code: 'NOT_SUPPORTED',
+        message: 'This subscription is not connected to Stripe. Invoice generation requires a Stripe subscription.'
+      },
+      { status: 400 }
+    );
+
+  } catch (error) {
+    console.error('Invoice Generation API: Unexpected error', {
+      invoiceId: params.id,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
 
     return NextResponse.json(

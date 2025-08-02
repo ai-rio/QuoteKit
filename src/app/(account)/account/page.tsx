@@ -10,7 +10,8 @@ import { StripeEnhancedCurrentPlanCard } from '@/features/account/components/Str
 import { SuccessHandler } from '@/features/account/components/SuccessHandler';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
-import { getBillingHistory, getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
+import { getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
+import { getBillingHistory } from '@/features/billing/api/billing-history';
 
 import { AccountPageWrapper } from './AccountPageWrapper';
 
@@ -21,13 +22,16 @@ export default async function AccountPage() {
     redirect('/login');
   }
 
-  const [subscription, billingHistory, paymentMethods, availablePlans, stripePublishableKey] = await Promise.all([
+  const [subscription, billingHistoryResponse, paymentMethods, availablePlans, stripePublishableKey] = await Promise.all([
     getSubscription(),
-    getBillingHistory(),
+    getBillingHistory(session.user.id),
     getPaymentMethods(),
     getAvailablePlans(),
     getStripePublishableKey(),
   ]);
+
+  // Extract billing history data from the enhanced API response
+  const billingHistory = billingHistoryResponse.data;
 
   // Bridge solution: If user has no subscription record, get free plan info as fallback
   // This handles the edge case where authenticated users don't have subscription records yet

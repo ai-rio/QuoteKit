@@ -52,7 +52,8 @@ const config = {
       displayName: 'integration',
       testMatch: [
         '<rootDir>/tests/integration/checkout-flow-simple.test.ts',
-        '<rootDir>/tests/integration/checkout-flow-comprehensive.test.ts'
+        '<rootDir>/tests/integration/checkout-flow-comprehensive.test.ts',
+        '<rootDir>/tests/integration/invoice-generation.test.ts'
       ],
       testEnvironment: 'node',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
