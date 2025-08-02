@@ -90,7 +90,9 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
     // Check if this is a free plan user (no Stripe subscription ID) - Handle as new paid subscription
     // PHASE 1 FIX: Also treat local dev subscriptions as "new subscription"
     const hasRealStripeSubscription = enhancedSubscription?.stripe_subscription_id && 
-                                     !enhancedSubscription.stripe_subscription_id.startsWith('sub_dev_');
+                                     !enhancedSubscription.stripe_subscription_id.startsWith('sub_dev_') &&
+                                     !enhancedSubscription.stripe_subscription_id.startsWith('sub_free_') &&
+                                     !enhancedSubscription.stripe_subscription_id.startsWith('sub_admin_');
     
     if (!hasRealStripeSubscription) {
       console.log('User has free plan or local dev subscription, creating new paid subscription');
@@ -98,6 +100,8 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         hasSubscription: !!enhancedSubscription,
         stripeSubscriptionId: enhancedSubscription?.stripe_subscription_id || 'none',
         isLocalDev: enhancedSubscription?.stripe_subscription_id?.startsWith('sub_dev_') || false,
+        isFree: enhancedSubscription?.stripe_subscription_id?.startsWith('sub_free_') || false,
+        isAdmin: enhancedSubscription?.stripe_subscription_id?.startsWith('sub_admin_') || false,
         willCreateNew: true
       });
       
@@ -636,6 +640,12 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
     const stripeSubscriptionId = enhancedSubscription.stripe_subscription_id;
     
     if (!stripeCustomerId || !stripeSubscriptionId) {
+      console.error('❌ Missing Stripe IDs for existing subscription update:', {
+        hasCustomerId: !!stripeCustomerId,
+        hasSubscriptionId: !!stripeSubscriptionId,
+        subscriptionId: enhancedSubscription.id,
+        userId: session.user.id
+      });
       throw new Error('Missing Stripe customer or subscription ID. Please contact support.');
     }
     

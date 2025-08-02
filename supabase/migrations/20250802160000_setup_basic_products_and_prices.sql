@@ -131,6 +131,7 @@ BEGIN
     AND status IN ('active', 'trialing', 'past_due')
   ) THEN
     -- Create a free subscription for the new user
+    -- NOTE: Don't set stripe_subscription_id for free subscriptions to ensure proper plan change flow
     INSERT INTO public.subscriptions (
       id,
       user_id,
@@ -204,6 +205,25 @@ BEGIN
       '{}'
     );
   END LOOP;
+END $$;
+
+-- Fix existing subscriptions that have invalid stripe_subscription_id values
+-- Free subscriptions should not have stripe_subscription_id set
+DO $$
+DECLARE
+  fixed_count INTEGER;
+BEGIN
+  UPDATE public.subscriptions 
+  SET stripe_subscription_id = NULL
+  WHERE stripe_subscription_id IS NOT NULL 
+  AND (
+    stripe_subscription_id LIKE 'sub_free_%' OR
+    stripe_subscription_id LIKE 'sub_admin_%' OR
+    stripe_subscription_id LIKE 'sub_dev_%'
+  );
+  
+  GET DIAGNOSTICS fixed_count = ROW_COUNT;
+  RAISE NOTICE 'Fixed % existing subscriptions with invalid stripe_subscription_id', fixed_count;
 END $$;
 
 -- Log the setup
