@@ -166,7 +166,7 @@ export async function getEnhancedBillingHistory(
       }
     }
 
-    // Step 3: Development/fallback mode - subscription history (only if explicitly enabled)
+    // Step 3: subscription history in development mode (only if explicitly enabled)
     if (billingHistory.length === 0 && includeSubscriptionHistory && !productionMode) {
       console.debug('Enhanced Billing History: Fetching subscription history (development mode)', {
         userId,

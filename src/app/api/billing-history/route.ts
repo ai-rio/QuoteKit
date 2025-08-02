@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
-import { getBillingHistory } from '@/features/billing/api/billing-history';
+import { getEnhancedBillingHistory } from '@/features/billing/api/enhanced-billing-history';
 
 /**
  * GET /api/billing-history
- * Fetch billing history for the authenticated user using enhanced logic
+ * Fetch billing history for the authenticated user using enhanced production-ready logic
  * 
  * Query Parameters:
  * - limit: number (optional, default: 50, max: 100)
@@ -12,7 +12,8 @@ import { getBillingHistory } from '@/features/billing/api/billing-history';
  * - status: string (optional, filter by status)
  * - from_date: string (optional, ISO date string)
  * - to_date: string (optional, ISO date string)
- * - include_subscription_history: boolean (optional, default: true)
+ * - include_subscription_history: boolean (optional, default: false in production)
+ * - production_mode: boolean (optional, force production behavior)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +26,9 @@ export async function GET(request: NextRequest) {
     const statusFilter = searchParams.get('status') || undefined;
     const fromDate = searchParams.get('from_date') || undefined;
     const toDate = searchParams.get('to_date') || undefined;
-    const includeSubscriptionHistory = searchParams.get('include_subscription_history') !== 'false';
+    const includeSubscriptionHistory = searchParams.get('include_subscription_history') === 'true';
+    const productionMode = searchParams.get('production_mode') === 'true' || 
+                          process.env.NODE_ENV === 'production';
 
     console.debug('billing-history API: Query parameters', {
       limit,
@@ -33,7 +36,8 @@ export async function GET(request: NextRequest) {
       statusFilter,
       fromDate,
       toDate,
-      includeSubscriptionHistory
+      includeSubscriptionHistory,
+      productionMode
     });
 
     // Get authenticated user
@@ -62,24 +66,27 @@ export async function GET(request: NextRequest) {
     });
 
     // Use enhanced billing history logic
-    const billingHistoryResponse = await getBillingHistory(user.id, {
+    const billingHistoryResponse = await getEnhancedBillingHistory(user.id, {
       limit,
       offset,
       statusFilter,
       fromDate,
       toDate,
-      includeSubscriptionHistory
+      includeSubscriptionHistory,
+      productionMode
     });
 
-    console.debug('billing-history API: Successfully retrieved billing history', {
+    console.debug('billing-history API: Successfully retrieved enhanced billing history', {
       userId: user.id,
       itemCount: billingHistoryResponse.data.length,
       hasStripeInvoices: billingHistoryResponse.metadata.hasStripeInvoices,
       hasSubscriptionHistory: billingHistoryResponse.metadata.hasSubscriptionHistory,
+      hasBillingRecords: billingHistoryResponse.metadata.hasBillingRecords,
+      isProductionMode: billingHistoryResponse.metadata.isProductionMode,
       stripeCustomerId: billingHistoryResponse.metadata.stripeCustomerId
     });
 
-    // Return the response from the enhanced billing history logic
+    // Return the enhanced response
     return NextResponse.json(billingHistoryResponse);
 
   } catch (error) {

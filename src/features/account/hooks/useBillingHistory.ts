@@ -9,6 +9,7 @@ interface BillingHistoryItem {
   status: string;
   invoice_url: string;
   description: string;
+  type?: 'stripe_invoice' | 'subscription_change' | 'billing_record';
 }
 
 interface UseBillingHistoryReturn {
@@ -77,6 +78,7 @@ export function useBillingHistory(initialData: BillingHistoryItem[] = []): UseBi
           status: item.status || 'unknown',
           invoice_url: item.invoice_url || '#',
           description: item.description || 'Invoice',
+          type: item.type || undefined,
         };
       });
 

@@ -20,6 +20,8 @@
 - **📊 Dashboard Analytics** - Overview of quotes, revenue, and business performance
 - **📄 Professional PDFs** - Branded, client-ready quotes with automatic calculations
 - **📧 Email System** - Send quotes via email with professional templates and branding
+- **🧾 Billing System** - Real Stripe invoice generation with downloadable receipts
+- **💳 Payment Processing** - Complete Stripe integration with subscription management
 - **📱 Mobile Responsive** - Optimized interface for all devices and screen sizes
 
 ### 🚀 Advanced Quote Features
@@ -28,6 +30,15 @@
 - **Status Management** - Track quotes through draft, sent, accepted, declined, expired, converted
 - **Bulk Operations** - Select multiple quotes for status updates, export, or deletion
 - **Advanced Filtering** - Filter by status, client, date range, and search terms
+
+### 💳 Advanced Billing Features
+
+- **Real Stripe Invoices** - Automatic invoice generation with secure download links
+- **Enhanced Billing History** - Intelligent prioritization of real billing data
+- **Production-Ready Logic** - No development fallbacks in production environment
+- **Visual Status Indicators** - Color-coded badges showing data sources (Invoice/Subscription/Billing)
+- **Mobile-Responsive Billing** - Touch-friendly billing interface with enhanced messaging
+- **Secure Invoice Downloads** - Authentication-protected access to billing documents
 - **Template System** - Create reusable templates from existing quotes
 - **Auto-save Drafts** - Never lose work with automatic draft saving
 - **Date Range Selection** - Professional calendar interface for filtering

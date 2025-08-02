@@ -26,13 +26,20 @@ interface BillingHistoryItem {
 interface BillingHistoryTableProps {
   initialData?: BillingHistoryItem[];
   className?: string;
+  metadata?: {
+    hasStripeInvoices?: boolean;
+    hasSubscriptionHistory?: boolean;
+    hasBillingRecords?: boolean;
+    isProductionMode?: boolean;
+    message?: string;
+  };
 }
 
 type StatusFilter = 'all' | 'paid' | 'pending' | 'failed' | 'draft';
 type SortField = 'date' | 'amount' | 'status' | 'description';
 type SortDirection = 'asc' | 'desc';
 
-export function BillingHistoryTable({ initialData = [], className }: BillingHistoryTableProps) {
+export function BillingHistoryTable({ initialData = [], className, metadata }: BillingHistoryTableProps) {
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -290,6 +297,34 @@ export function BillingHistoryTable({ initialData = [], className }: BillingHist
         </div>
       </CardHeader>
       <CardContent>
+        {/* Enhanced Status Message */}
+        {metadata?.message && (
+          <div className={`mb-4 p-3 rounded-lg border ${
+            metadata.hasStripeInvoices 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : metadata.hasBillingRecords
+              ? 'bg-blue-50 border-blue-200 text-blue-800'
+              : metadata.hasSubscriptionHistory
+              ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+              : 'bg-gray-50 border-gray-200 text-gray-600'
+          }`}>
+            <div className="flex items-start gap-2">
+              <div className="flex-shrink-0 mt-0.5">
+                {metadata.hasStripeInvoices ? (
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                ) : metadata.hasBillingRecords ? (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                ) : metadata.hasSubscriptionHistory ? (
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                ) : (
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                )}
+              </div>
+              <p className="text-sm font-medium">{metadata.message}</p>
+            </div>
+          </div>
+        )}
+        
         {billingHistory.length > 0 ? (
           <>
             {/* Filters and Search */}
