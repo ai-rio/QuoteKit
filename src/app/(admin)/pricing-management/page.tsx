@@ -46,7 +46,9 @@ import {
   validateFeatureConfig,
   getFeaturesByCategory,
   getPlanTierName,
-  isPremiumFeature
+  isPremiumFeature,
+  isFreeplan,
+  isPremiumPlan
 } from '@/types/features'
 
 interface StripeProduct {
@@ -94,10 +96,77 @@ export default function PricingManagementPage() {
     features: FREE_PLAN_FEATURES
   })
   
-  // Product edit state
+  // Product edit state with Fast Refresh persistence
   const [showEditProductDialog, setShowEditProductDialog] = useState(false)
   const [editingProduct, setEditingProduct] = useState<StripeProduct | null>(null)
-  const [editingFeatures, setEditingFeatures] = useState<PlanFeatures>(FREE_PLAN_FEATURES)
+  const [editingFeatures, setEditingFeatures] = useState<PlanFeatures>(() => {
+    // Persist state across Fast Refresh in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      const saved = sessionStorage.getItem('editingFeatures')
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch (e) {
+          console.warn('Failed to parse saved editingFeatures:', e)
+        }
+      }
+    }
+    return FREE_PLAN_FEATURES
+  })
+  const [featuresManuallyChanged, setFeaturesManuallyChanged] = useState(() => {
+    // Persist manual change flag across Fast Refresh
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      return sessionStorage.getItem('featuresManuallyChanged') === 'true'
+    }
+    return false
+  })
+
+  // Track editingFeatures changes (minimal logging)
+  useEffect(() => {
+    // Only log in development and avoid excessive logging that triggers Fast Refresh
+    if (process.env.NODE_ENV === 'development') {
+      // Persist to sessionStorage to survive Fast Refresh
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('editingFeatures', JSON.stringify(editingFeatures))
+      }
+    }
+  }, [editingFeatures])
+
+  // Persist featuresManuallyChanged flag
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      sessionStorage.setItem('featuresManuallyChanged', featuresManuallyChanged.toString())
+    }
+  }, [featuresManuallyChanged])
+
+  // Restore dialog state after Fast Refresh
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      const wasDialogOpen = sessionStorage.getItem('editDialogOpen') === 'true'
+      const savedProductId = sessionStorage.getItem('editingProductId')
+      
+      if (wasDialogOpen && savedProductId && products.length > 0) {
+        const product = products.find(p => p.stripe_product_id === savedProductId)
+        if (product) {
+          setEditingProduct(product)
+          setShowEditProductDialog(true)
+        }
+      }
+    }
+  }, [products])
+
+  // Manage dialog state persistence
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      if (showEditProductDialog && editingProduct) {
+        sessionStorage.setItem('editDialogOpen', 'true')
+        sessionStorage.setItem('editingProductId', editingProduct.stripe_product_id)
+      } else {
+        sessionStorage.removeItem('editDialogOpen')
+        sessionStorage.removeItem('editingProductId')
+      }
+    }
+  }, [showEditProductDialog, editingProduct])
   
   // Price creation state
   const [showPriceDialog, setShowPriceDialog] = useState(false)
@@ -134,6 +203,7 @@ export default function PricingManagementPage() {
   const applyFeaturePreset = (preset: 'free' | 'premium') => {
     const presetFeatures = preset === 'free' ? FREE_PLAN_FEATURES : PREMIUM_PLAN_FEATURES
     setEditingFeatures(presetFeatures)
+    setFeaturesManuallyChanged(true)
   }
 
   const resetNewProductFeatures = () => {
@@ -280,6 +350,16 @@ export default function PricingManagementPage() {
         setShowEditProductDialog(false)
         setEditingProduct(null)
         setEditingFeatures(FREE_PLAN_FEATURES)
+        setFeaturesManuallyChanged(false)
+        
+        // Clear all sessionStorage after successful update
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+          sessionStorage.removeItem('editingFeatures')
+          sessionStorage.removeItem('featuresManuallyChanged')
+          sessionStorage.removeItem('editDialogOpen')
+          sessionStorage.removeItem('editingProductId')
+        }
+        
         fetchProducts() // Refresh products list
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to update product' })
@@ -869,8 +949,24 @@ export default function PricingManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
+                          const productFeatures = getProductFeatures(product)
                           setEditingProduct(product)
-                          setEditingFeatures(getProductFeatures(product))
+                          
+                          // Check if we have saved features from sessionStorage (Fast Refresh recovery)
+                          let shouldUseSavedFeatures = false
+                          if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+                            const savedFeatures = sessionStorage.getItem('editingFeatures')
+                            const savedManualFlag = sessionStorage.getItem('featuresManuallyChanged') === 'true'
+                            if (savedFeatures && savedManualFlag) {
+                              shouldUseSavedFeatures = true
+                            }
+                          }
+                          
+                          // Only reset features if not manually changed and no saved state
+                          if (!featuresManuallyChanged && !shouldUseSavedFeatures) {
+                            setEditingFeatures(productFeatures)
+                          }
+                          
                           setShowEditProductDialog(true)
                         }}
                         className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
@@ -1187,6 +1283,7 @@ export default function PricingManagementPage() {
                 
                 <TabsContent value="features" className="mt-6">
                   <FeatureToggleSection
+                    key={`edit-features-${JSON.stringify(editingFeatures)}`}
                     features={editingFeatures}
                     onFeaturesChange={updateProductFeatures}
                     showPresets={true}
@@ -1203,6 +1300,15 @@ export default function PricingManagementPage() {
                     setShowEditProductDialog(false)
                     setEditingProduct(null)
                     setEditingFeatures(FREE_PLAN_FEATURES)
+                    setFeaturesManuallyChanged(false)
+                    
+                    // Clear all sessionStorage when dialog closes
+                    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+                      sessionStorage.removeItem('editingFeatures')
+                      sessionStorage.removeItem('featuresManuallyChanged')
+                      sessionStorage.removeItem('editDialogOpen')
+                      sessionStorage.removeItem('editingProductId')
+                    }
                   }}
                   className="bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white font-bold transition-all duration-200"
                 >
