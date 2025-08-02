@@ -117,3 +117,4 @@ hive-mind-prompt-*.txt
 .swarm/
 mcp-server/*
 .serena/
+.amazonq/
