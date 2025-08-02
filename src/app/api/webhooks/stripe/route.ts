@@ -4,6 +4,7 @@ import Stripe from 'stripe'
 import { upsertUserSubscription } from '@/features/account/controllers/upsert-user-subscription'
 import { createStripeAdminClient, stripeAdmin } from '@/libs/stripe/stripe-admin'
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
+import { handleBillingEdgeCase } from '@/features/billing/controllers/edge-case-coordinator'
 
 // Helper function to convert Unix timestamp to Date
 const toDateTime = (secs: number): Date => {
@@ -307,6 +308,49 @@ async function processWebhookEventWithRetry(
 
 // Process individual webhook event
 async function processWebhookEvent(event: Stripe.Event): Promise<void> {
+  // STEP 1: Check if this is an edge case event that needs special handling
+  const edgeCaseEvents = [
+    'invoice.payment_failed',
+    'charge.dispute.created',
+    'charge.dispute.updated', 
+    'charge.dispute.closed',
+    'payment_method.attached',
+    'setup_intent.succeeded',
+    'customer.subscription.updated'
+  ];
+
+  if (edgeCaseEvents.includes(event.type)) {
+    console.log(`🎯 [EDGE_CASE] Processing edge case event: ${event.type}`);
+    
+    try {
+      // Get Stripe configuration for edge case handling
+      const { data: configData } = await supabaseAdminClient
+        .from('admin_settings')
+        .select('value')
+        .eq('key', 'stripe_config')
+        .single();
+
+      const stripeConfig = configData?.value as any;
+      if (stripeConfig) {
+        const edgeCaseResult = await handleBillingEdgeCase(event, stripeConfig);
+        console.log(`✅ [EDGE_CASE] Edge case handled:`, {
+          eventType: event.type,
+          success: edgeCaseResult.success,
+          handlerUsed: edgeCaseResult.handlerUsed,
+          actions: edgeCaseResult.actions
+        });
+      }
+    } catch (edgeCaseError) {
+      console.error(`❌ [EDGE_CASE] Edge case handling failed:`, {
+        eventType: event.type,
+        eventId: event.id,
+        error: edgeCaseError instanceof Error ? edgeCaseError.message : 'Unknown error'
+      });
+      // Don't throw - continue with normal webhook processing
+    }
+  }
+
+  // STEP 2: Continue with normal webhook processing
   switch (event.type) {
     case 'product.created':
     case 'product.updated':
