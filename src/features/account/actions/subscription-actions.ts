@@ -341,8 +341,9 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           
           // Use the payment method in subscription creation
           subscriptionCreateParams.default_payment_method = paymentMethodId;
-          subscriptionCreateParams.payment_behavior = 'default_incomplete';
-          console.log('💳 Creating subscription with validated payment method');
+          subscriptionCreateParams.payment_behavior = 'error_if_incomplete';
+          subscriptionCreateParams.expand = ['latest_invoice.payment_intent'];
+          console.log('💳 Creating subscription with immediate payment processing');
           
         } catch (validationError) {
           console.error('❌ Payment method validation failed:', validationError.message);
@@ -360,18 +361,32 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           }
         }
       } else {
-        // For subscriptions without payment method, use allow_incomplete
+        // For paid subscriptions, payment method is required
+        if (newPrice.unit_amount > 0) {
+          throw new Error('Payment method is required for paid subscriptions. Please add a payment method first.');
+        }
+        
+        // For free subscriptions, allow without payment method
         subscriptionCreateParams.payment_behavior = 'allow_incomplete';
-        console.log('🆓 Creating subscription without payment method');
+        console.log('🆓 Creating free subscription without payment method');
       }
 
-      const stripeSubscription = await stripeAdmin.subscriptions.create(subscriptionCreateParams);
-      
-      console.log('✅ Step 2 Complete: Stripe subscription created:', stripeSubscription.id);
-      
-      // Step 3: Save subscription to local database
-      console.log('🔄 Step 3: Saving subscription to database...');
-      const localSubscription = {
+      try {
+        const stripeSubscription = await stripeAdmin.subscriptions.create(subscriptionCreateParams);
+        
+        console.log('✅ Step 2 Complete: Stripe subscription created:', stripeSubscription.id);
+        console.log('💳 Payment status:', stripeSubscription.status);
+        
+        // With error_if_incomplete, successful creation means payment was processed
+        if (stripeSubscription.status === 'active') {
+          console.log('🎉 Payment processed successfully!');
+        } else if (stripeSubscription.status === 'trialing') {
+          console.log('🆓 Trial period started successfully!');
+        }
+        
+        // Step 3: Save subscription to local database
+        console.log('🔄 Step 3: Saving subscription to database...');
+        const localSubscription = {
         id: stripeSubscription.id, // Use Stripe subscription ID as primary key
         user_id: session.user.id,
         status: stripeSubscription.status,
@@ -450,7 +465,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           amount: newPrice.unit_amount || 0,
           currency: 'usd',
           status: stripeSubscription.status === 'active' ? 'paid' : 'pending',
-          description: `Subscription to ${newPrice.stripe_products?.name || 'Pro Plan'}`,
+          description: `Payment for ${newPrice.stripe_products?.name || 'Pro Plan'}`,
           stripe_invoice_id: stripeSubscription.latest_invoice?.id || null,
           invoice_url: stripeSubscription.latest_invoice?.hosted_invoice_url || null,
         };
@@ -469,28 +484,54 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       }
 
       console.log('🎉 New Stripe subscription created successfully!');
+      console.log('Subscription status:', stripeSubscription.status);
       
-      // Return subscription with payment intent if payment confirmation is needed
+      // With error_if_incomplete, we should get either 'active' or 'trialing' status
+      // If payment failed, Stripe would have thrown an error already
+      
+      // Return subscription with success status
       const result = {
         success: true, 
         subscription: {
           ...subscription,
           stripe_prices: newPrice
         },
-        needsBillingRefresh: true
+        needsBillingRefresh: true,
+        paymentProcessed: stripeSubscription.status === 'active'
       };
 
-      // If subscription is incomplete, include payment intent for client-side confirmation
-      if (stripeSubscription.status === 'incomplete' && stripeSubscription.latest_invoice?.payment_intent) {
-        result.paymentIntent = {
-          client_secret: stripeSubscription.latest_invoice.payment_intent.client_secret,
-          status: stripeSubscription.latest_invoice.payment_intent.status
+      // Check if we have invoice information for receipt
+      if (stripeSubscription.latest_invoice) {
+        result.invoice = {
+          id: stripeSubscription.latest_invoice.id,
+          status: stripeSubscription.latest_invoice.status,
+          amount_paid: stripeSubscription.latest_invoice.amount_paid,
+          hosted_invoice_url: stripeSubscription.latest_invoice.hosted_invoice_url,
+          invoice_pdf: stripeSubscription.latest_invoice.invoice_pdf
         };
-        result.requiresPaymentConfirmation = true;
-        console.log('💳 Payment confirmation required - returning payment intent');
+        console.log('📄 Invoice/receipt information included');
       }
 
       return result;
+      
+      } catch (subscriptionError) {
+        console.error('❌ Stripe subscription creation failed:', subscriptionError.message);
+        
+        // Handle specific payment errors
+        if (subscriptionError.code === 'card_declined') {
+          throw new Error('Your card was declined. Please try a different payment method or contact your bank.');
+        } else if (subscriptionError.code === 'insufficient_funds') {
+          throw new Error('Insufficient funds. Please check your account balance or try a different payment method.');
+        } else if (subscriptionError.code === 'expired_card') {
+          throw new Error('Your card has expired. Please update your payment method.');
+        } else if (subscriptionError.code === 'incorrect_cvc') {
+          throw new Error('Incorrect security code. Please check your card details.');
+        } else if (subscriptionError.type === 'card_error') {
+          throw new Error(`Payment failed: ${subscriptionError.message}`);
+        } else {
+          throw new Error(`Failed to create subscription: ${subscriptionError.message}`);
+        }
+      }
     }
 
     // Handle existing subscription changes - ONLY for real Stripe subscriptions
