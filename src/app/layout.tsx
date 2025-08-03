@@ -5,6 +5,8 @@ import { Inter, Roboto_Mono, Kalam } from 'next/font/google';
 import { MarketingHeader } from '@/components/layout/marketing-header';
 import { MarketingFooter } from '@/components/layout/marketing-footer';
 import { Toaster } from '@/components/ui/toaster';
+import { CookieConsentProvider } from '@/contexts/cookie-consent-context';
+import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 import { cn } from '@/utils/cn';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -68,15 +70,18 @@ export default function RootLayout({ children }: PropsWithChildren) {
         />
       </head>
       <body className={cn('font-sans antialiased', inter.variable, robotoMono.variable, kalam.variable)}>
-        <div className='flex min-h-screen flex-col'>
-          <MarketingHeader />
-          <main className='flex-1'>
-            {children}
-          </main>
-          <MarketingFooter />
-        </div>
-        <Toaster />
-        <Analytics />
+        <CookieConsentProvider>
+          <div className='flex min-h-screen flex-col'>
+            <MarketingHeader />
+            <main className='flex-1'>
+              {children}
+            </main>
+            <MarketingFooter />
+          </div>
+          <CookieConsentBanner />
+          <Toaster />
+          <Analytics />
+        </CookieConsentProvider>
       </body>
     </html>
   );
