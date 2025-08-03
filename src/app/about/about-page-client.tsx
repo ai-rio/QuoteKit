@@ -101,7 +101,7 @@ export function AboutPageClient() {
           <p className="mt-4 max-w-2xl mx-auto text-lg text-charcoal/70">
             Join thousands of landscapers who are saving time, looking professional, and winning more jobs. Create your free account today.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex justify-center">
             <Button
               variant="sexy"
               size="lg"

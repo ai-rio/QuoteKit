@@ -5,12 +5,13 @@ import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-clie
 import HomePageClient from './home-page-client';
 
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default async function HomePage({ searchParams }: Props) {
   // Allow bypass for testing with ?preview=true
-  const isPreview = searchParams.preview === 'true';
+  const resolvedSearchParams = await searchParams;
+  const isPreview = resolvedSearchParams.preview === 'true';
   
   if (!isPreview) {
     // Check if user is authenticated

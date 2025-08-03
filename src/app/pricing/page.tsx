@@ -27,7 +27,7 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
   if (!user) {
     console.log('🔐 User not authenticated, redirecting to signup');
     // Redirect to signup with pricing context
-    redirect(`/auth/sign-up?plan=${encodeURIComponent(planName)}&price_id=${stripePriceId}`);
+    redirect(`/signup?plan=${encodeURIComponent(planName)}&price_id=${stripePriceId}`);
   }
 
   // Import getSubscription to check for existing subscription
