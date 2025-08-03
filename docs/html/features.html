@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - LawnQuote</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+            scroll-behavior: smooth;
+        }
+        .font-sans { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        
+        /* Animation for elements fading in on scroll */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7D7',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                        'success-green': '#16a34a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Header (Consistent) -->
+    <header class="bg-paper-white/80 backdrop-blur-lg border-b border-stone-gray/50 sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3"><div class="w-10 h-10 bg-forest-green rounded-lg flex items-center justify-center"><span class="font-black text-paper-white text-xl">LQ</span></div><span class="font-bold text-2xl text-charcoal">LawnQuote</span></a>
+            <div class="hidden md:flex items-center space-x-8"><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Features</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Pricing</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Blog</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Login</a></div>
+            <a href="#" class="hidden md:inline-block bg-equipment-yellow text-charcoal font-bold px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-200 shadow-md hover:shadow-lg">Start for Free</a>
+            <button class="md:hidden text-forest-green"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-paper-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-charcoal leading-tight">
+                    The Pro-Grade Kit for Your Business.
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal/70">
+                    LawnQuote is a complete system of simple, powerful tools designed to solve your biggest headaches. Save time, look professional, and win more profitable jobs.
+                </p>
+            </div>
+        </section>
+
+        <!-- Features Grid -->
+        <section class="bg-light-concrete py-20">
+            <div class="container mx-auto px-6 space-y-20">
+
+                <!-- Feature 1: Item Library -->
+                <div class="fade-in-section grid md:grid-cols-2 gap-12 items-center">
+                    <div class="text-content">
+                        <span class="font-bold text-forest-green">FEATURE 01</span>
+                        <h2 class="text-4xl lg:text-5xl font-black text-charcoal mt-2">Your Digital Parts Bin.</h2>
+                        <p class="mt-4 text-lg text-charcoal/70">Stop guessing material costs or forgetting items. Build your library of services and materials once, and add them to quotes with a single click. No more lost profits from forgotten costs.</p>
+                    </div>
+                    <div class="mockup-container">
+                        <div class="bg-paper-white p-6 rounded-2xl shadow-2xl border border-stone-gray/20">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-lg text-charcoal">Item Library</h3>
+                                <button class="bg-equipment-yellow text-charcoal font-bold px-4 py-2 rounded-lg text-sm">Add New Item</button>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="bg-light-concrete p-4 rounded-lg grid grid-cols-3 gap-4 items-center"><span class="font-medium col-span-2">Lawn Mowing</span><span class="font-mono font-bold text-forest-green text-right">$65.00</span></div>
+                                <div class="bg-light-concrete p-4 rounded-lg grid grid-cols-3 gap-4 items-center"><span class="font-medium col-span-2">Mulch Installation (per yard)</span><span class="font-mono font-bold text-forest-green text-right">$80.00</span></div>
+                                <div class="bg-light-concrete p-4 rounded-lg grid grid-cols-3 gap-4 items-center"><span class="font-medium col-span-2">Hedge Trimming (per hour)</span><span class="font-mono font-bold text-forest-green text-right">$50.00</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Quote Management -->
+                 <div class="fade-in-section grid md:grid-cols-2 gap-12 items-center">
+                    <div class="mockup-container md:order-last">
+                        <div class="bg-paper-white p-6 rounded-2xl shadow-2xl border border-stone-gray/20">
+                            <h3 class="font-bold text-lg text-charcoal mb-4">Quote Management</h3>
+                            <div class="space-y-3">
+                                <div class="bg-light-concrete p-4 rounded-lg flex justify-between items-center"><div class="font-medium">Quote #2025-041 <span class="text-xs text-charcoal/60 ml-2">for ACME Corp</span></div><span class="font-mono font-bold text-sm px-2 py-1 bg-success-green text-paper-white rounded-full">Accepted</span></div>
+                                <div class="bg-light-concrete p-4 rounded-lg flex justify-between items-center"><div class="font-medium">Quote #2025-040 <span class="text-xs text-charcoal/60 ml-2">for Smith Residence</span></div><span class="font-mono font-bold text-sm px-2 py-1 bg-stone-gray text-charcoal rounded-full">Sent</span></div>
+                                <div class="bg-light-concrete p-4 rounded-lg flex justify-between items-center"><div class="font-medium">Quote #2025-039 <span class="text-xs text-charcoal/60 ml-2">for City Park</span></div><span class="font-mono font-bold text-sm px-2 py-1 bg-equipment-yellow/50 text-charcoal rounded-full">Draft</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-content">
+                        <span class="font-bold text-forest-green">FEATURE 02</span>
+                        <h2 class="text-4xl lg:text-5xl font-black text-charcoal mt-2">Your Sales Pipeline, Simplified.</h2>
+                        <p class="mt-4 text-lg text-charcoal/70">Don't let leads slip through the cracks. Manage all your quotes in one place. Track what's been sent, what's been accepted, and who you need to follow up with. Turn chaos into cashflow.</p>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Professional PDF -->
+                <div class="fade-in-section grid md:grid-cols-2 gap-12 items-center">
+                    <div class="text-content">
+                        <span class="font-bold text-forest-green">FEATURE 03</span>
+                        <h2 class="text-4xl lg:text-5xl font-black text-charcoal mt-2">Win the Job Before You Start.</h2>
+                        <p class="mt-4 text-lg text-charcoal/70">Send polished, professional PDF quotes that build client trust instantly. Your branding, your prices, our professional format. Stop looking like a small operation and start winning bigger jobs.</p>
+                    </div>
+                    <div class="mockup-container">
+                       <div class="bg-paper-white p-4 rounded-2xl shadow-2xl border border-stone-gray/20 transform rotate-2">
+                            <div class="bg-paper-white p-6 rounded-lg w-full max-w-sm">
+                                <div class="flex justify-between items-start pb-3 border-b border-stone-gray/30"><div><h2 class="font-sans font-bold text-lg text-forest-green">Your Company Inc.</h2></div><div class="text-right"><h3 class="font-sans font-bold text-md">QUOTE</h3><p class="font-mono text-xs text-charcoal/60">#2025-042</p></div></div>
+                                <div class="mt-4 space-y-2"><div class="grid grid-cols-12 gap-2 text-sm"><div class="col-span-6 font-sans font-medium">Lawn Mowing</div><div class="col-span-2 text-right font-mono">1</div><div class="col-span-2 text-right font-mono">$65.00</div><div class="col-span-2 text-right font-mono font-bold">$65.00</div></div><div class="grid grid-cols-12 gap-2 text-sm"><div class="col-span-6 font-sans font-medium">Mulch Installation</div><div class="col-span-2 text-right font-mono">3</div><div class="col-span-2 text-right font-mono">$80.00</div><div class="col-span-2 text-right font-mono font-bold">$240.00</div></div></div>
+                                <div class="mt-4 pt-3 border-t border-stone-gray/30 space-y-1 text-sm"><div class="flex justify-between"><p class="font-sans">Subtotal</p><p class="font-mono font-bold">$305.00</p></div><div class="flex justify-between"><p class="font-sans">Tax (8.25%)</p><p class="font-mono font-bold">$25.16</p></div><div class="flex justify-between font-bold text-lg text-forest-green mt-2"><p class="font-sans">Total</p><p class="font-mono">$330.16</p></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Dashboard -->
+                 <div class="fade-in-section grid md:grid-cols-2 gap-12 items-center">
+                    <div class="mockup-container md:order-last">
+                        <div class="bg-paper-white p-6 rounded-2xl shadow-2xl border border-stone-gray/20">
+                            <h3 class="font-bold text-lg text-charcoal mb-4">Business Dashboard</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-light-concrete p-4 rounded-lg text-center"><p class="text-sm text-charcoal/70 font-medium">Total Revenue</p><p class="font-mono text-3xl font-bold text-forest-green mt-1">$12,450</p></div>
+                                <div class="bg-light-concrete p-4 rounded-lg text-center"><p class="text-sm text-charcoal/70 font-medium">Quotes Sent</p><p class="font-mono text-3xl font-bold text-forest-green mt-1">42</p></div>
+                                <div class="bg-light-concrete p-4 rounded-lg text-center"><p class="text-sm text-charcoal/70 font-medium">Acceptance Rate</p><p class="font-mono text-3xl font-bold text-forest-green mt-1">78%</p></div>
+                                <div class="bg-light-concrete p-4 rounded-lg text-center"><p class="text-sm text-charcoal/70 font-medium">Avg. Quote Value</p><p class="font-mono text-3xl font-bold text-forest-green mt-1">$296</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-content">
+                        <span class="font-bold text-forest-green">FEATURE 04</span>
+                        <h2 class="text-4xl lg:text-5xl font-black text-charcoal mt-2">Know Your Numbers. Grow Your Business.</h2>
+                        <p class="mt-4 text-lg text-charcoal/70">The LawnQuote dashboard gives you a real-time overview of your business health. Track revenue, acceptance rates, and performance to make smarter decisions and grow with confidence.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="bg-paper-white py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-black text-charcoal">Ready to Stop Leaving Money on the Table?</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-charcoal/70">
+                    Join thousands of landscapers who are saving time, looking professional, and winning more jobs. Create your free account today.
+                </p>
+                <div class="mt-8">
+                    <a href="#" class="bg-equipment-yellow text-charcoal font-bold px-8 py-4 rounded-lg hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl text-lg">
+                        Start for Free
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (Consistent) -->
+    <footer class="bg-charcoal text-stone-gray"><div class="container mx-auto px-6 py-12"><div class="grid grid-cols-1 md:grid-cols-4 gap-8"><div><h3 class="font-bold text-lg text-paper-white">LawnQuote</h3><p class="mt-2 text-sm">The professional-grade quoting tool for landscaping solopreneurs.</p></div><div><h4 class="font-bold text-paper-white">Product</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">Features</a></li><li><a href="#" class="hover:text-equipment-yellow">Pricing</a></li><li><a href="#" class="hover:text-equipment-yellow">Blog</a></li><li><a href="#" class="hover:text-equipment-yellow">Login</a></li></ul></div><div><h4 class="font-bold text-paper-white">Company</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">About Us</a></li><li><a href="#" class="hover:text-equipment-yellow">Contact</a></li></ul></div><div><h4 class="font-bold text-paper-white">Legal</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">Privacy Policy</a></li><li><a href="#" class="hover:text-equipment-yellow">Terms of Service</a></li></ul></div></div><div class="mt-12 border-t border-stone-gray/30 pt-8 text-center text-sm"><p>&copy; 2025 LawnQuote. All rights reserved.</p></div></div></footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.fade-in-section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, {
+                threshold: 0.2 // Trigger when 20% of the element is visible
+            });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+</html>

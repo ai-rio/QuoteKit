@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - LawnQuote</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter and Roboto Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles and Tailwind Config -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+            scroll-behavior: smooth;
+        }
+        .font-sans {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F5F5F5; }
+        ::-webkit-scrollbar-thumb { background: #2A3D2F; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a6b55; }
+        /* Custom prose styles for the legal text */
+        .prose-legal p { margin-bottom: 1em; }
+        .prose-legal h3 { font-size: 1.25rem; font-weight: 700; margin-top: 2em; margin-bottom: 0.5em; }
+        .prose-legal ul { list-style-position: inside; padding-left: 1em; margin-bottom: 1em; }
+        .prose-legal li { margin-bottom: 0.5em; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7D7',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Header (Consistent with Homepage) -->
+    <header class="bg-paper-white/80 backdrop-blur-lg border-b border-stone-gray/50 sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-forest-green rounded-lg flex items-center justify-center">
+                    <span class="font-black text-paper-white text-xl">LQ</span>
+                </div>
+                <span class="font-bold text-2xl text-charcoal">LawnQuote</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Features</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Pricing</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Blog</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Login</a>
+            </div>
+            <a href="#" class="hidden md:inline-block bg-equipment-yellow text-charcoal font-bold px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-200 shadow-md hover:shadow-lg">
+                Start for Free
+            </a>
+            <button class="md:hidden text-forest-green">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-paper-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-charcoal leading-tight">
+                    Our Agreement.
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal/70">
+                    Like any good business relationship, it helps to have clear expectations. Here are the terms of our service, written so you can actually understand them. This is our promise to you, and what we ask of you in return.
+                </p>
+                <p class="mt-4 text-sm text-charcoal/60">Last Updated: August 3, 2025</p>
+            </div>
+        </section>
+
+        <!-- Terms of Service Content -->
+        <section class="bg-light-concrete py-20">
+            <div class="container mx-auto px-6">
+                <div class="max-w-6xl mx-auto bg-paper-white p-8 md:p-12 rounded-2xl shadow-lg border border-stone-gray/20">
+                    
+                    <!-- Section 1: Your Account -->
+                    <div class="grid md:grid-cols-3 gap-8 pb-8 border-b border-stone-gray/30">
+                        <div class="md:col-span-1">
+                            <h2 class="text-2xl font-bold text-forest-green">1. Your Account & Responsibilities</h2>
+                            <p class="mt-2 text-charcoal/70 text-sm">This section covers your role in keeping your account secure and using our service fairly.</p>
+                        </div>
+                        <div class="md:col-span-2 prose-legal text-charcoal/80">
+                            <div class="bg-forest-green/10 p-4 rounded-lg border border-forest-green/20 mb-6">
+                                <p class="font-bold text-forest-green">Plain English Summary:</p>
+                                <p class="text-charcoal/90">You're responsible for your account. Keep your password safe. Please use our service for your landscaping business as intended, not for anything illegal or harmful. You own all the business data you put into LawnQuote.</p>
+                            </div>
+                            <h3>1.1. Account Security</h3>
+                            <p>You are responsible for safeguarding your password and for all activities that occur under your account. You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.</p>
+                            <h3>1.2. Acceptable Use</h3>
+                            <p>You agree not to use the Service for any unlawful purpose or to engage in any activity that would disrupt or harm the Service or its users. This includes, but is not limited to, uploading malicious software or attempting to access accounts that do not belong to you.</p>
+                            <h3>1.3. Ownership of Your Data</h3>
+                            <p>You retain full ownership of all the content and data you create and upload to the Service, including your client lists, item pricing, and quotes ("User Content"). We do not claim any ownership rights over your User Content.</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Our Service -->
+                    <div class="grid md:grid-cols-3 gap-8 py-8 border-b border-stone-gray/30">
+                        <div class="md:col-span-1">
+                            <h2 class="text-2xl font-bold text-forest-green">2. Our Service & Limitations</h2>
+                            <p class="mt-2 text-charcoal/70 text-sm">This is our promise to you about the service we provide, and the reality of running a software tool.</p>
+                        </div>
+                        <div class="md:col-span-2 prose-legal text-charcoal/80">
+                             <div class="bg-forest-green/10 p-4 rounded-lg border border-forest-green/20 mb-6">
+                                <p class="font-bold text-forest-green">Plain English Summary:</p>
+                                <p class="text-charcoal/90">We'll do our best to keep LawnQuote running smoothly, but we can't promise it will be perfect 100% of the time. We're constantly improving the tool, which means things might change. We are not responsible for business losses if something goes wrong, but we promise to act in good faith to resolve any issues.</p>
+                            </div>
+                            <h3>2.1. Service Availability</h3>
+                            <p>We will make reasonable efforts to ensure the Service is available to you. However, access may be interrupted for maintenance, upgrades, or emergency repairs. We will try to provide advance notice of any planned downtime.</p>
+                            <h3>2.2. Limitation of Liability</h3>
+                            <p>To the maximum extent permitted by law, LawnQuote shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Payment and Subscription -->
+                    <div class="grid md:grid-cols-3 gap-8 py-8">
+                        <div class="md:col-span-1">
+                            <h2 class="text-2xl font-bold text-forest-green">3. Payment & Subscription</h2>
+                            <p class="mt-2 text-charcoal/70 text-sm">This covers the terms for our Freemium and Pro plans.</p>
+                        </div>
+                        <div class="md:col-span-2 prose-legal text-charcoal/80">
+                            <div class="bg-forest-green/10 p-4 rounded-lg border border-forest-green/20 mb-6">
+                                <p class="font-bold text-forest-green">Plain English Summary:</p>
+                                <p class="text-charcoal/90">Our Free plan is free forever and includes 5 quotes per month. If you upgrade to Pro, you'll be billed monthly or yearly. You can cancel your Pro plan at any time, and you'll retain access until the end of your billing period. If you cancel, your account will revert to the Free plan.</p>
+                            </div>
+                            <h3>3.1. Freemium Plan</h3>
+                            <p>The free tier of our Service allows you to create a limited number of quotes per calendar month as specified on our Pricing page. This plan is offered free of charge and can be used indefinitely.</p>
+                            <h3>3.2. Pro Subscription</h3>
+                            <p>For paid subscriptions, you will be billed in advance on a recurring and periodic basis ("Billing Cycle"). Billing cycles are set either on a monthly or annual basis. Your Subscription will automatically renew under the exact same conditions unless you cancel it or LawnQuote cancels it.</p>
+                            <h3>3.3. Cancellation</h3>
+                            <p>You may cancel your Subscription renewal at any time through your account settings page. You will not receive a refund for the fees you already paid for your current subscription period, and you will be able to access the Service until the end of your current subscription period.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (Consistent with Homepage) -->
+    <footer class="bg-charcoal text-stone-gray">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="font-bold text-lg text-paper-white">LawnQuote</h3>
+                    <p class="mt-2 text-sm">The professional-grade quoting tool for landscaping solopreneurs.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Product</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">Features</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Pricing</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Blog</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Login</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Company</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">About Us</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Legal</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 border-t border-stone-gray/30 pt-8 text-center text-sm">
+                <p>&copy; 2025 LawnQuote. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

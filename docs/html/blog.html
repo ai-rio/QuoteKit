@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - LawnQuote</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+            scroll-behavior: smooth;
+        }
+        .font-sans { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F5F5F5; }
+        ::-webkit-scrollbar-thumb { background: #2A3D2F; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a6b55; }
+        
+        /* Transition for blog cards */
+        .blog-card {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+        .blog-card.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            display: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7D7',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Header (Consistent) -->
+    <header class="bg-paper-white/80 backdrop-blur-lg border-b border-stone-gray/50 sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3"><div class="w-10 h-10 bg-forest-green rounded-lg flex items-center justify-center"><span class="font-black text-paper-white text-xl">LQ</span></div><span class="font-bold text-2xl text-charcoal">LawnQuote</span></a>
+            <div class="hidden md:flex items-center space-x-8"><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Features</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Pricing</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Blog</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Login</a></div>
+            <a href="#" class="hidden md:inline-block bg-equipment-yellow text-charcoal font-bold px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-200 shadow-md hover:shadow-lg">Start for Free</a>
+            <button class="md:hidden text-forest-green"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-paper-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-charcoal leading-tight">
+                    The Pro-Grade Resource Hub.
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal/70">
+                    Actionable advice, not just articles. This is your library of trade secrets for growing a more profitable landscaping business. Search our insights to find exactly what you need.
+                </p>
+            </div>
+        </section>
+
+        <!-- Search and Filter Section -->
+        <section class="bg-light-concrete py-12 sticky top-[73px] z-40 border-b border-stone-gray/30">
+            <div class="container mx-auto px-6">
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    <!-- Search Input -->
+                    <div class="relative w-full md:w-1/2 lg:w-2/3">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-charcoal/50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" id="search-input" placeholder="Search articles (e.g., 'pricing', 'clients'...)" class="w-full bg-paper-white border-2 border-stone-gray/30 rounded-full py-3 pl-12 pr-4 text-charcoal focus:ring-2 focus:ring-forest-green focus:border-forest-green transition-all">
+                    </div>
+                    <!-- Filter Buttons -->
+                    <div id="filter-buttons" class="flex-shrink-0 flex items-center gap-2">
+                        <button data-category="all" class="filter-btn bg-forest-green text-paper-white font-bold px-4 py-2 rounded-full text-sm transition-all">All</button>
+                        <button data-category="pricing" class="filter-btn bg-paper-white text-charcoal font-bold px-4 py-2 rounded-full text-sm transition-all">Pricing</button>
+                        <button data-category="operations" class="filter-btn bg-paper-white text-charcoal font-bold px-4 py-2 rounded-full text-sm transition-all">Operations</button>
+                        <button data-category="tools" class="filter-btn bg-paper-white text-charcoal font-bold px-4 py-2 rounded-full text-sm transition-all">Tools</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog Grid -->
+        <section class="py-20">
+            <div class="container mx-auto px-6">
+                <div id="blog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- JS will populate this section -->
+                </div>
+                <div id="no-results" class="text-center py-20 hidden">
+                    <h3 class="text-2xl font-bold text-charcoal">No Articles Found</h3>
+                    <p class="mt-2 text-charcoal/70">Try adjusting your search or filter to find what you're looking for.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer (Consistent) -->
+    <footer class="bg-charcoal text-stone-gray"><div class="container mx-auto px-6 py-12"><div class="grid grid-cols-1 md:grid-cols-4 gap-8"><div><h3 class="font-bold text-lg text-paper-white">LawnQuote</h3><p class="mt-2 text-sm">The professional-grade quoting tool for landscaping solopreneurs.</p></div><div><h4 class="font-bold text-paper-white">Product</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">Features</a></li><li><a href="#" class="hover:text-equipment-yellow">Pricing</a></li><li><a href="#" class="hover:text-equipment-yellow">Blog</a></li><li><a href="#" class="hover:text-equipment-yellow">Login</a></li></ul></div><div><h4 class="font-bold text-paper-white">Company</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">About Us</a></li><li><a href="#" class="hover:text-equipment-yellow">Contact</a></li></ul></div><div><h4 class="font-bold text-paper-white">Legal</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">Privacy Policy</a></li><li><a href="#" class="hover:text-equipment-yellow">Terms of Service</a></li></ul></div></div><div class="mt-12 border-t border-stone-gray/30 pt-8 text-center text-sm"><p>&copy; 2025 LawnQuote. All rights reserved.</p></div></div></footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Mock Blog Post Data ---
+            const posts = [
+                { title: 'The 5-Minute Quote: How to Price a Paver Patio', category: 'pricing', image: 'https://placehold.co/600x400/2A3D2F/F2B705?text=Pricing+Guide', summary: 'Stop guessing. Learn the formula for calculating materials, labor, and profit to create bids that win.' },
+                { title: '3 Things Your Quote Must Include to Build Client Trust', category: 'operations', image: 'https://placehold.co/600x400/2A3D2F/F2B705?text=Pro+Tips', summary: 'Elevate your brand and protect yourself with a professional quote structure that builds client trust from day one.' },
+                { title: 'The $12 Tool with a Better ROI Than a New Mower', category: 'tools', image: 'https://placehold.co/600x400/2A3D2F/F2B705?text=ROI', summary: 'How a small software investment can save you more time and make you more money than expensive hardware.' },
+                { title: 'Avoiding Scope Creep: How to Set Clear Expectations', category: 'operations', image: 'https://placehold.co/600x400/2A3D2F/F2B705?text=Contracts', summary: 'Learn the secrets to defining project boundaries that keep clients happy and your profits secure.' },
+                { title: 'The Art of the Upsell: How to Increase Quote Value', category: 'pricing', image: 'https://placehold.co/600x400/2A3D2F/F2B705?text=Upsell', summary: 'Simple techniques to offer more value to your clients and increase the average value of every job you win.' },
+                { title: 'Digital Toolbox: 5 Must-Have Apps for Landscapers', category: 'tools', image: 'https://placehold.co/600x400/2A3D2F/F2B705?text=Apps', summary: 'Beyond quoting, these essential apps will help you manage every aspect of your growing business.' },
+            ];
+
+            const blogGrid = document.getElementById('blog-grid');
+            const searchInput = document.getElementById('search-input');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const noResults = document.getElementById('no-results');
+
+            let currentCategory = 'all';
+            let currentSearchTerm = '';
+
+            // --- Functions ---
+            const renderPosts = () => {
+                blogGrid.innerHTML = '';
+                let visiblePosts = 0;
+
+                posts.forEach(post => {
+                    const categoryMatch = currentCategory === 'all' || post.category === currentCategory;
+                    const searchMatch = post.title.toLowerCase().includes(currentSearchTerm) || post.summary.toLowerCase().includes(currentSearchTerm);
+
+                    if (categoryMatch && searchMatch) {
+                        const postEl = document.createElement('a');
+                        postEl.href = '#';
+                        postEl.className = 'blog-card group block bg-paper-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300';
+                        postEl.innerHTML = `
+                            <div class="h-48 bg-stone-gray/50">
+                                <img src="${post.image}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            </div>
+                            <div class="p-6">
+                                <p class="text-sm font-bold text-forest-green uppercase">${post.category.replace('-', ' ')}</p>
+                                <h3 class="mt-2 text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors">${post.title}</h3>
+                                <p class="mt-3 text-charcoal/70 text-sm">${post.summary}</p>
+                            </div>
+                        `;
+                        blogGrid.appendChild(postEl);
+                        visiblePosts++;
+                    }
+                });
+
+                noResults.classList.toggle('hidden', visiblePosts > 0);
+            };
+
+            const handleFilterClick = (e) => {
+                currentCategory = e.target.dataset.category;
+                
+                filterButtons.forEach(btn => {
+                    if (btn.dataset.category === currentCategory) {
+                        btn.classList.remove('bg-paper-white', 'text-charcoal');
+                        btn.classList.add('bg-forest-green', 'text-paper-white');
+                    } else {
+                        btn.classList.remove('bg-forest-green', 'text-paper-white');
+                        btn.classList.add('bg-paper-white', 'text-charcoal');
+                    }
+                });
+                
+                renderPosts();
+            };
+
+            const handleSearchInput = (e) => {
+                currentSearchTerm = e.target.value.toLowerCase();
+                renderPosts();
+            };
+
+            // --- Event Listeners ---
+            filterButtons.forEach(btn => btn.addEventListener('click', handleFilterClick));
+            searchInput.addEventListener('input', handleSearchInput);
+
+            // --- Initial Render ---
+            renderPosts();
+        });
+    </script>
+
+</body>
+</html>

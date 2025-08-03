@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawnQuote - Professional Landscaping Quotes in Minutes</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter, Roboto Mono, and a handwritten font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&family=Kalam:wght@300;400&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles and Tailwind Config -->
+    <style>
+        /* Define custom font families for Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+            scroll-behavior: smooth;
+        }
+        .font-sans {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .font-handwriting {
+            font-family: 'Kalam', cursive;
+        }
+        /* Custom scrollbar for a more polished look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F5F5F5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A3D2F;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a6b55;
+        }
+        /* Animation keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            80% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes number-flicker {
+            0% { opacity: 0.5; text-shadow: 0 0 4px #F2B705; }
+            50% { opacity: 1; text-shadow: 0 0 8px #F2B705, 0 0 12px #F2B705; }
+            100% { opacity: 1; text-shadow: none; }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        .animate-popIn {
+            animation: popIn 0.5s ease-out forwards;
+        }
+        .animate-flicker {
+            animation: number-flicker 0.4s ease-out;
+        }
+    </style>
+    <script>
+        // Custom Tailwind theme configuration
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7D7',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                        'success-green': '#16a34a',
+                        'error-red': '#dc2626',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                        handwriting: ['Kalam', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-paper-white/80 backdrop-blur-lg border-b border-stone-gray/50 sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-forest-green rounded-lg flex items-center justify-center">
+                    <span class="font-black text-paper-white text-xl">LQ</span>
+                </div>
+                <span class="font-bold text-2xl text-charcoal">LawnQuote</span>
+            </div>
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#features" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Features</a>
+                <a href="#pricing" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Pricing</a>
+                <a href="#blog" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Blog</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Login</a>
+            </div>
+            <!-- CTA Button -->
+            <a href="#" class="hidden md:inline-block bg-equipment-yellow text-charcoal font-bold px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-200 shadow-md hover:shadow-lg">
+                Start for Free
+            </a>
+            <button class="md:hidden text-forest-green">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-forest-green text-paper-white min-h-screen flex items-center py-20 lg:py-0 overflow-hidden">
+            <div class="container mx-auto px-6">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <!-- Left: Text Content -->
+                    <div class="text-center lg:text-left">
+                        <h1 class="font-black text-4xl md:text-5xl lg:text-6xl leading-tight tracking-tighter">
+                            Stop Underbidding.
+                            <span class="text-equipment-yellow">Start Winning Jobs.</span>
+                        </h1>
+                        <p class="mt-6 text-lg md:text-xl text-stone-gray max-w-xl mx-auto lg:mx-0">
+                            Create professional landscaping quotes in under 5 minutes. Ditch the messy spreadsheets, look like a pro, and win the bids you deserve.
+                        </p>
+                        <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                            <a href="#" class="bg-equipment-yellow text-charcoal font-bold px-8 py-4 rounded-lg hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl text-lg w-full sm:w-auto">
+                                Create Your Free Account
+                            </a>
+                            <a href="#pricing" class="bg-paper-white/20 text-paper-white font-bold px-8 py-4 rounded-lg hover:bg-paper-white/30 transition-all duration-200 w-full sm:w-auto">
+                                See Pricing
+                            </a>
+                        </div>
+                        <p class="mt-6 text-sm text-stone-gray/70">Free plan with 5 quotes/month. No credit card required.</p>
+                    </div>
+
+                    <!-- Right: Interactive Quote Sandbox -->
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <!-- Item Library Panel -->
+                        <div class="w-full md:w-56 bg-paper-white/10 p-4 rounded-2xl border border-paper-white/20">
+                            <h3 class="font-bold text-lg text-paper-white mb-4 text-center">Click to Add Items</h3>
+                            <div id="item-library" class="space-y-3">
+                                <!-- JS will populate this -->
+                            </div>
+                        </div>
+
+                        <!-- Quote Demo Card -->
+                        <div id="quote-demo" class="flex-1 bg-paper-white text-charcoal rounded-2xl shadow-2xl p-6 md:p-8">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start pb-4 border-b border-stone-gray/30">
+                                <div>
+                                    <h2 class="font-bold text-xl md:text-2xl text-forest-green">Your Company Inc.</h2>
+                                    <p class="text-sm text-charcoal/60">123 Green St, Meadowville</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 class="font-bold text-lg">QUOTE</h3>
+                                    <p class="font-mono text-sm text-charcoal/60">#2025-001</p>
+                                </div>
+                            </div>
+                            <!-- Line Items -->
+                            <div class="mt-4">
+                                <div class="hidden sm:grid grid-cols-12 gap-2 font-bold text-sm text-charcoal/60 mb-2 px-3">
+                                    <div class="col-span-6">ITEM</div>
+                                    <div class="col-span-2 text-right">QTY</div>
+                                    <div class="col-span-2 text-right">PRICE</div>
+                                    <div class="col-span-2 text-right">TOTAL</div>
+                                </div>
+                                <div id="line-items-container" class="space-y-2 min-h-[150px]">
+                                    <p id="empty-state" class="text-center text-charcoal/50 pt-10">Your quote is empty.</p>
+                                </div>
+                            </div>
+                            <!-- Totals -->
+                            <div id="totals-container" class="mt-6 pt-4 border-t border-stone-gray/30 space-y-2">
+                                <div class="flex justify-between items-center text-charcoal/80">
+                                    <p class="font-medium">Subtotal</p>
+                                    <p id="subtotal" class="font-mono font-bold">$0.00</p>
+                                </div>
+                                <div class="flex justify-between items-center text-charcoal/80">
+                                    <p class="font-medium">Tax (8.25%)</p>
+                                    <p id="tax" class="font-mono font-bold">$0.00</p>
+                                </div>
+                                <div class="flex justify-between items-center text-forest-green text-xl mt-2">
+                                    <p class="font-bold">Total</p>
+                                    <p id="total" class="font-mono font-bold text-2xl">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Problem/Solution Section -->
+        <section id="features" class="py-20 bg-light-concrete">
+             <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-black text-charcoal">From Messy Notes to Professional Bids.</h2>
+                    <p class="mt-4 text-lg text-charcoal/70 max-w-2xl mx-auto">Stop looking unprofessional. Start winning clients' trust before the job even begins.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
+                    <!-- Before -->
+                    <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray shadow-lg">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-error-red/10 flex items-center justify-center">
+                                <span class="text-2xl">👎</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-charcoal">The Old Way</h3>
+                                <p class="text-charcoal/60">Inaccurate, unprofessional, and slow.</p>
+                            </div>
+                        </div>
+                        <div class="bg-stone-gray/20 rounded-lg p-6 flex items-center justify-center">
+                            <!-- Messy Note Mockup -->
+                            <div class="bg-yellow-50 p-6 rounded-md shadow-inner border border-yellow-200 w-full max-w-sm font-handwriting text-gray-700 transform -rotate-3">
+                                <h3 class="text-2xl font-bold text-gray-800">Job for Bob</h3>
+                                <ul class="mt-4 space-y-2 text-lg">
+                                    <li>Mow lawn - $50?</li>
+                                    <li><span class="line-through">2</span> 3 bags mulch - $25/bag</li>
+                                    <li>Trim hedges - 1 hr? - $45</li>
+                                </ul>
+                                <div class="mt-6 border-t border-dashed border-gray-400 pt-4 text-right">
+                                    <p>Subtotal: $170</p>
+                                    <p>Tax??</p>
+                                    <p class="font-bold text-xl text-red-600">Total: ???</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- After -->
+                    <div class="bg-paper-white p-6 rounded-2xl border-2 border-forest-green shadow-2xl">
+                        <div class="flex items-center gap-3 mb-4">
+                             <div class="w-12 h-12 rounded-full bg-success-green/10 flex items-center justify-center">
+                                <span class="text-2xl">👍</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-charcoal">The LawnQuote Way</h3>
+                                <p class="text-charcoal/60">Polished, profitable, and fast.</p>
+                            </div>
+                        </div>
+                         <div class="bg-forest-green/5 rounded-lg p-6 flex items-center justify-center">
+                            <!-- Polished Quote Mockup -->
+                            <div class="bg-paper-white p-6 rounded-lg shadow-lg w-full max-w-sm border border-stone-gray/20 transform rotate-2">
+                                <div class="flex justify-between items-start pb-3 border-b border-stone-gray/30">
+                                    <div>
+                                        <h2 class="font-sans font-bold text-lg text-forest-green">Your Company Inc.</h2>
+                                    </div>
+                                    <div class="text-right">
+                                        <h3 class="font-sans font-bold text-md">QUOTE</h3>
+                                        <p class="font-mono text-xs text-charcoal/60">#2025-042</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 space-y-2">
+                                    <div class="grid grid-cols-12 gap-2 text-sm">
+                                        <div class="col-span-6 font-sans font-medium">Lawn Mowing</div>
+                                        <div class="col-span-2 text-right font-mono">1</div>
+                                        <div class="col-span-2 text-right font-mono">$65.00</div>
+                                        <div class="col-span-2 text-right font-mono font-bold">$65.00</div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-2 text-sm">
+                                        <div class="col-span-6 font-sans font-medium">Mulch Installation</div>
+                                        <div class="col-span-2 text-right font-mono">3</div>
+                                        <div class="col-span-2 text-right font-mono">$80.00</div>
+                                        <div class="col-span-2 text-right font-mono font-bold">$240.00</div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-stone-gray/30 space-y-1 text-sm">
+                                    <div class="flex justify-between"><p class="font-sans">Subtotal</p><p class="font-mono font-bold">$305.00</p></div>
+                                    <div class="flex justify-between"><p class="font-sans">Tax (8.25%)</p><p class="font-mono font-bold">$25.16</p></div>
+                                    <div class="flex justify-between font-bold text-lg text-forest-green mt-2"><p class="font-sans">Total</p><p class="font-mono">$330.16</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Blog Section -->
+        <section id="blog" class="bg-paper-white py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-black text-charcoal">Actionable Advice for Your Business.</h2>
+                    <p class="mt-4 text-lg text-charcoal/70 max-w-2xl mx-auto">Insights and strategies to help you grow your landscaping company and increase your profits.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Blog Post 1 -->
+                    <a href="#" class="group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
+                        <div class="h-48 bg-stone-gray/50">
+                            <img src="https://placehold.co/600x400/2A3D2F/F2B705?text=Pricing+Guide" alt="Pricing guide for paver patios" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm font-bold text-forest-green">PRICING STRATEGY</p>
+                            <h3 class="mt-2 text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors">The 5-Minute Quote: How to Price a Paver Patio Accurately</h3>
+                            <p class="mt-3 text-charcoal/70 text-sm">Stop guessing. Learn the formula for calculating materials, labor, and profit to create bids that win.</p>
+                        </div>
+                    </a>
+                    <!-- Blog Post 2 -->
+                    <a href="#" class="group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
+                        <div class="h-48 bg-stone-gray/50">
+                             <img src="https://placehold.co/600x400/2A3D2F/F2B705?text=Pro+Tips" alt="Professional quote template" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm font-bold text-forest-green">BUSINESS OPERATIONS</p>
+                            <h3 class="mt-2 text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors">From Messy Notes to Pro-Grade Bids: 3 Things Your Quote Must Include</h3>
+                            <p class="mt-3 text-charcoal/70 text-sm">Elevate your brand and protect yourself with a professional quote structure that builds client trust.</p>
+                        </div>
+                    </a>
+                    <!-- Blog Post 3 -->
+                    <a href="#" class="group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
+                        <div class="h-48 bg-stone-gray/50">
+                             <img src="https://placehold.co/600x400/2A3D2F/F2B705?text=ROI" alt="A tool with better ROI" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm font-bold text-forest-green">TOOLBOX TALK</p>
+                            <h3 class="mt-2 text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors">The $12 Tool with a Better ROI Than a New Mower</h3>
+                            <p class="mt-3 text-charcoal/70 text-sm">How a small software investment can save you more time and make you more money than expensive hardware.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Social Proof Section -->
+        <section class="bg-light-concrete py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-black text-charcoal">Built for the Trade.</h2>
+                <p class="mt-4 text-lg text-charcoal/70 max-w-3xl mx-auto">
+                    We've seen the discussions on <span class="font-bold text-forest-green">r/landscaping</span> and <span class="font-bold text-forest-green">r/hardscape</span>. We know you're asking for advice on pricing and client contracts. We built LawnQuote to solve those exact problems.
+                </p>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-paper-white p-8 rounded-2xl shadow-sm">
+                        <p class="text-charcoal/80 italic">"How much should I charge for a paver patio? I'm worried about underbidding."</p>
+                        <p class="mt-4 font-bold text-forest-green">- A real question from r/hardscape</p>
+                    </div>
+                    <div class="bg-paper-white p-8 rounded-2xl shadow-sm">
+                        <p class="text-charcoal/80 italic">"My quotes are just a list in an email. How can I look more professional to win bigger jobs?"</p>
+                        <p class="mt-4 font-bold text-forest-green">- Inspired by r/landscaping</p>
+                    </div>
+                    <div class="bg-paper-white p-8 rounded-2xl shadow-sm">
+                        <p class="text-charcoal/80 italic">"I spend hours on quotes after working all day. There has to be a faster way."</p>
+                        <p class="mt-4 font-bold text-forest-green">- The reason we exist</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Pricing Section -->
+        <section id="pricing" class="bg-forest-green text-paper-white py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-black">A Better ROI Than Any Tool in Your Truck.</h2>
+                <p class="mt-4 text-lg text-stone-gray max-w-2xl mx-auto">For just $12 a month, LawnQuote pays for itself the first time you don't leave money on the table.</p>
+                
+                <!-- Pricing Toggle -->
+                <div id="pricing-toggle" class="mt-10 flex justify-center items-center space-x-4 font-medium">
+                    <span class="monthly-label text-paper-white">Monthly</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" value="" class="sr-only peer" id="billing-toggle">
+                        <div class="w-14 h-8 bg-paper-white/30 rounded-full peer peer-checked:bg-equipment-yellow peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:border-stone-gray after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                    </label>
+                    <span class="yearly-label text-stone-gray">Yearly <span class="bg-equipment-yellow text-charcoal text-xs font-bold px-2 py-1 rounded-full ml-1">Save 20%</span></span>
+                </div>
+
+                <!-- Pricing Card -->
+                <div class="mt-8 bg-paper-white/10 p-10 rounded-2xl max-w-lg mx-auto border border-paper-white/20">
+                    <h3 class="text-2xl font-bold">Pro Plan</h3>
+                    <p class="mt-2 text-equipment-yellow font-mono text-5xl font-bold">
+                        <span id="price-display">$12.00</span>
+                        <span id="billing-cycle-display" class="text-xl text-paper-white/70">/ month</span>
+                    </p>
+                    <p id="yearly-total-display" class="text-sm text-stone-gray font-mono mt-1 h-5 transition-opacity duration-300 opacity-0"></p>
+                    
+                    <ul class="mt-8 space-y-4 text-left">
+                        <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Unlimited Quotes</li>
+                        <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Professional PDF Branding</li>
+                        <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Save Unlimited Items & Clients</li>
+                        <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Priority Support</li>
+                    </ul>
+                    <a href="#" class="mt-10 block bg-equipment-yellow text-charcoal font-bold px-8 py-4 rounded-lg hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl text-lg">
+                        Get Started Now
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-charcoal text-stone-gray">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="font-bold text-lg text-paper-white">LawnQuote</h3>
+                    <p class="mt-2 text-sm">The professional-grade quoting tool for landscaping solopreneurs.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Product</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#features" class="hover:text-equipment-yellow">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-equipment-yellow">Pricing</a></li>
+                        <li><a href="#blog" class="hover:text-equipment-yellow">Blog</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Login</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Company</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">About Us</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Legal</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 border-t border-stone-gray/30 pt-8 text-center text-sm">
+                <p>&copy; 2025 LawnQuote. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Interactive Quote Sandbox Logic ---
+            const itemLibraryEl = document.getElementById('item-library');
+            const lineItemsContainer = document.getElementById('line-items-container');
+            const emptyStateEl = document.getElementById('empty-state');
+            const subtotalEl = document.getElementById('subtotal');
+            const taxEl = document.getElementById('tax');
+            const totalEl = document.getElementById('total');
+
+            const libraryItems = [
+                { id: 'mow', name: 'Lawn Mowing', price: 65.00 },
+                { id: 'mulch', name: 'Mulch Installation', price: 80.00 },
+                { id: 'hedge', name: 'Hedge Trimming', price: 50.00 },
+                { id: 'aerate', name: 'Core Aeration', price: 150.00 },
+            ];
+
+            const quote = {};
+            const taxRate = 0.0825;
+
+            function initializeSandbox() {
+                libraryItems.forEach(item => {
+                    const button = document.createElement('button');
+                    button.className = 'w-full text-left bg-paper-white/20 text-paper-white p-3 rounded-lg hover:bg-equipment-yellow hover:text-charcoal transition-all duration-200 font-medium';
+                    button.textContent = item.name;
+                    button.dataset.itemId = item.id;
+                    button.addEventListener('click', () => handleAddItem(item.id));
+                    itemLibraryEl.appendChild(button);
+                });
+            }
+
+            function handleAddItem(itemId) {
+                if (emptyStateEl) emptyStateEl.style.display = 'none';
+                if (quote[itemId]) {
+                    quote[itemId].qty++;
+                } else {
+                    const libraryItem = libraryItems.find(i => i.id === itemId);
+                    quote[itemId] = { ...libraryItem, qty: 1 };
+                }
+                renderQuote();
+            }
+            
+            function renderQuote() {
+                lineItemsContainer.innerHTML = '';
+                let subtotal = 0;
+                Object.values(quote).forEach(item => {
+                    const itemTotal = item.qty * item.price;
+                    subtotal += itemTotal;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'animate-popIn grid grid-cols-12 gap-2 items-center bg-stone-gray/10 p-2 sm:p-3 rounded-lg';
+                    const isMobile = window.innerWidth < 640;
+                    if(isMobile) {
+                         itemEl.innerHTML = `
+                            <div class="col-span-8">
+                                <p class="font-medium text-sm">${item.name}</p>
+                                <p class="font-mono text-xs text-charcoal/60">${item.qty} x ${formatCurrency(item.price)}</p>
+                            </div>
+                            <div class="col-span-4 text-right font-mono text-sm font-bold">${formatCurrency(itemTotal)}</div>
+                        `;
+                    } else {
+                        itemEl.innerHTML = `
+                            <div class="col-span-6"><p class="font-medium text-sm">${item.name}</p></div>
+                            <div class="col-span-2 text-right font-mono text-sm">${item.qty}</div>
+                            <div class="col-span-2 text-right font-mono text-sm">${formatCurrency(item.price)}</div>
+                            <div class="col-span-2 text-right font-mono text-sm font-bold">${formatCurrency(itemTotal)}</div>
+                        `;
+                    }
+                    lineItemsContainer.appendChild(itemEl);
+                });
+                recalculateTotals(subtotal);
+            }
+
+            function recalculateTotals(subtotal) {
+                const tax = subtotal * taxRate;
+                const total = subtotal + tax;
+                subtotalEl.textContent = formatCurrency(subtotal);
+                taxEl.textContent = formatCurrency(tax);
+                totalEl.textContent = formatCurrency(total);
+                totalEl.classList.add('animate-flicker');
+                setTimeout(() => totalEl.classList.remove('animate-flicker'), 400);
+            }
+
+            const formatCurrency = (amount) => `$${amount.toFixed(2)}`;
+            initializeSandbox();
+
+            // --- Pricing Toggle Logic ---
+            const billingToggle = document.getElementById('billing-toggle');
+            const priceDisplay = document.getElementById('price-display');
+            const billingCycleDisplay = document.getElementById('billing-cycle-display');
+            const yearlyTotalDisplay = document.getElementById('yearly-total-display');
+            const monthlyLabel = document.querySelector('.monthly-label');
+            const yearlyLabel = document.querySelector('.yearly-label');
+
+            const monthlyPrice = 12;
+            const yearlyDiscount = 0.20;
+            const yearlyPriceMonthly = monthlyPrice * (1 - yearlyDiscount);
+            const yearlyPriceTotal = yearlyPriceMonthly * 12;
+
+            billingToggle.addEventListener('change', () => {
+                if (billingToggle.checked) { // Yearly view
+                    priceDisplay.textContent = formatCurrency(yearlyPriceMonthly);
+                    billingCycleDisplay.textContent = '/ month';
+                    yearlyTotalDisplay.textContent = `Billed as ${formatCurrency(yearlyPriceTotal)} per year`;
+                    yearlyTotalDisplay.style.opacity = 1;
+                    yearlyLabel.classList.remove('text-stone-gray');
+                    yearlyLabel.classList.add('text-paper-white');
+                    monthlyLabel.classList.remove('text-paper-white');
+                    monthlyLabel.classList.add('text-stone-gray');
+                } else { // Monthly view
+                    priceDisplay.textContent = formatCurrency(monthlyPrice);
+                    billingCycleDisplay.textContent = '/ month';
+                    yearlyTotalDisplay.style.opacity = 0;
+                    monthlyLabel.classList.remove('text-stone-gray');
+                    monthlyLabel.classList.add('text-paper-white');
+                    yearlyLabel.classList.remove('text-paper-white');
+                    yearlyLabel.classList.add('text-stone-gray');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

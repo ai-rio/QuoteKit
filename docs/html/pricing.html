@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - LawnQuote</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+            scroll-behavior: smooth;
+        }
+        .font-sans { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F5F5F5; }
+        ::-webkit-scrollbar-thumb { background: #2A3D2F; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a6b55; }
+
+        /* Styles for Accordion */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+        .accordion-item.open .accordion-content {
+            padding-top: 1rem;
+            max-height: 200px; /* Adjust as needed */
+        }
+        .accordion-item.open .accordion-arrow {
+            transform: rotate(180deg);
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease-out;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7D7',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                        'success-green': '#16a34a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Header (Consistent) -->
+    <header class="bg-paper-white/80 backdrop-blur-lg border-b border-stone-gray/50 sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3"><div class="w-10 h-10 bg-forest-green rounded-lg flex items-center justify-center"><span class="font-black text-paper-white text-xl">LQ</span></div><span class="font-bold text-2xl text-charcoal">LawnQuote</span></a>
+            <div class="hidden md:flex items-center space-x-8"><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Features</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Pricing</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Blog</a><a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Login</a></div>
+            <a href="#" class="hidden md:inline-block bg-equipment-yellow text-charcoal font-bold px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-200 shadow-md hover:shadow-lg">Start for Free</a>
+            <button class="md:hidden text-forest-green"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-paper-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-charcoal leading-tight">
+                    The Right Plan for Your Business.
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal/70">
+                    Start for free and see how it works. Upgrade when you're ready to unlock powerful features and grow your business. Simple, transparent pricing. No surprises.
+                </p>
+            </div>
+        </section>
+
+        <!-- Pricing Cards Section -->
+        <section class="bg-light-concrete py-20">
+            <div class="container mx-auto px-6">
+                <!-- Cards -->
+                <div class="max-w-5xl mx-auto grid lg:grid-cols-2 gap-8 items-start">
+                    <!-- Free Plan -->
+                    <div class="bg-paper-white p-8 rounded-2xl border border-stone-gray/20 shadow-lg h-full flex flex-col">
+                        <h3 class="text-2xl font-bold text-charcoal">Free</h3>
+                        <p class="mt-2 text-charcoal/70">For new businesses getting started and learning the ropes.</p>
+                        <p class="mt-6 font-mono text-5xl font-bold text-charcoal">$0</p>
+                        <a href="#" class="mt-8 w-full block text-center bg-paper-white text-forest-green border-2 border-forest-green font-bold px-6 py-4 rounded-lg hover:bg-forest-green hover:text-paper-white transition-all duration-200">
+                            Start for Free
+                        </a>
+                        <div class="mt-8 border-t border-stone-gray/20 pt-8">
+                            <p class="font-bold text-charcoal mb-4">Core features include:</p>
+                            <ul class="space-y-3 text-charcoal/80">
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-success-green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>5 Quotes / Month</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-success-green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Unlimited Item Library</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-success-green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Real-time Quote Calculator</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-success-green" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Professional PDF Generation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Pro Plan -->
+                    <div class="bg-forest-green text-paper-white p-8 rounded-2xl shadow-2xl relative overflow-hidden flex flex-col">
+                        <span class="absolute top-0 right-0 bg-equipment-yellow text-charcoal text-xs font-bold px-4 py-1 rounded-bl-lg">MOST POPULAR</span>
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <h3 class="text-2xl font-bold">Pro</h3>
+                                <p class="mt-2 text-stone-gray">For established businesses ready to grow.</p>
+                             </div>
+                             <!-- Toggle -->
+                            <div id="pricing-toggle" class="flex items-center space-x-3 font-medium text-sm">
+                                <span class="monthly-label font-bold">Monthly</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" value="" class="sr-only peer" id="billing-toggle">
+                                    <div class="w-11 h-6 bg-paper-white/30 rounded-full peer peer-checked:bg-equipment-yellow peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                </label>
+                                <span class="yearly-label text-stone-gray">Yearly</span>
+                            </div>
+                        </div>
+
+                        <p class="mt-6 font-mono text-5xl font-bold text-equipment-yellow">
+                            <span id="price-display">$12.00</span>
+                            <span id="billing-cycle-display" class="text-xl text-paper-white/70">/ month</span>
+                        </p>
+                        <p id="yearly-total-display" class="text-sm text-stone-gray font-mono mt-1 h-5 transition-opacity duration-300 opacity-0"></p>
+                        <a href="#" class="mt-8 w-full block text-center bg-equipment-yellow text-charcoal font-bold px-6 py-4 rounded-lg hover:brightness-110 transition-all duration-200">
+                            Upgrade to Pro
+                        </a>
+                        <div class="mt-8 border-t border-paper-white/20 pt-8">
+                            <p class="font-bold text-paper-white mb-4">Everything in Free, plus:</p>
+                            <ul class="space-y-3 text-stone-gray">
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Unlimited Quotes</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Remove LawnQuote Branding</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Client Management</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Quote Templates</li>
+                                <li class="flex items-center"><svg class="w-5 h-5 mr-3 text-equipment-yellow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Business Dashboard & Analytics</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="bg-paper-white py-20">
+            <div class="container mx-auto px-6 max-w-4xl">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-black text-charcoal">Frequently Asked Questions</h2>
+                </div>
+                <div id="faq-accordion" class="space-y-4">
+                    <!-- FAQ Item 1 -->
+                    <div class="accordion-item border-b border-stone-gray/20 pb-4">
+                        <button class="accordion-header w-full flex justify-between items-center text-left">
+                            <h3 class="font-bold text-lg text-charcoal">What happens when I use my 5 free quotes?</h3>
+                            <svg class="accordion-arrow w-6 h-6 text-charcoal/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p class="text-charcoal/70">Your account remains active and you can still manage your item library and clients. To create more quotes for the month, you'll need to upgrade to the Pro plan. Your limit will reset to 5 quotes on the first of the next month.</p>
+                        </div>
+                    </div>
+                    <!-- FAQ Item 2 -->
+                    <div class="accordion-item border-b border-stone-gray/20 pb-4">
+                        <button class="accordion-header w-full flex justify-between items-center text-left">
+                            <h3 class="font-bold text-lg text-charcoal">Can I cancel my Pro plan at any time?</h3>
+                             <svg class="accordion-arrow w-6 h-6 text-charcoal/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p class="text-charcoal/70">Absolutely. You can cancel your subscription from your account settings with a single click. You'll retain access to all Pro features until the end of your current billing period.</p>
+                        </div>
+                    </div>
+                    <!-- FAQ Item 3 -->
+                    <div class="accordion-item border-b border-stone-gray/20 pb-4">
+                        <button class="accordion-header w-full flex justify-between items-center text-left">
+                            <h3 class="font-bold text-lg text-charcoal">What kind of support is included?</h3>
+                             <svg class="accordion-arrow w-6 h-6 text-charcoal/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p class="text-charcoal/70">All users have access to our email support. Pro plan users receive priority support, meaning your inquiries will be moved to the front of the queue for faster responses.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer (Consistent) -->
+    <footer class="bg-charcoal text-stone-gray"><div class="container mx-auto px-6 py-12"><div class="grid grid-cols-1 md:grid-cols-4 gap-8"><div><h3 class="font-bold text-lg text-paper-white">LawnQuote</h3><p class="mt-2 text-sm">The professional-grade quoting tool for landscaping solopreneurs.</p></div><div><h4 class="font-bold text-paper-white">Product</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">Features</a></li><li><a href="#" class="hover:text-equipment-yellow">Pricing</a></li><li><a href="#" class="hover:text-equipment-yellow">Blog</a></li><li><a href="#" class="hover:text-equipment-yellow">Login</a></li></ul></div><div><h4 class="font-bold text-paper-white">Company</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">About Us</a></li><li><a href="#" class="hover:text-equipment-yellow">Contact</a></li></ul></div><div><h4 class="font-bold text-paper-white">Legal</h4><ul class="mt-4 space-y-2 text-sm"><li><a href="#" class="hover:text-equipment-yellow">Privacy Policy</a></li><li><a href="#" class="hover:text-equipment-yellow">Terms of Service</a></li></ul></div></div><div class="mt-12 border-t border-stone-gray/30 pt-8 text-center text-sm"><p>&copy; 2025 LawnQuote. All rights reserved.</p></div></div></footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Pricing Toggle Logic ---
+            const billingToggle = document.getElementById('billing-toggle');
+            const priceDisplay = document.getElementById('price-display');
+            const billingCycleDisplay = document.getElementById('billing-cycle-display');
+            const yearlyTotalDisplay = document.getElementById('yearly-total-display');
+            const monthlyLabel = document.querySelector('.monthly-label');
+            const yearlyLabel = document.querySelector('.yearly-label');
+
+            const monthlyPrice = 12;
+            const yearlyDiscount = 0.20;
+            const yearlyPriceMonthly = monthlyPrice * (1 - yearlyDiscount);
+            const yearlyPriceTotal = yearlyPriceMonthly * 12;
+
+            const formatCurrency = (amount) => `$${amount.toFixed(2)}`;
+
+            billingToggle.addEventListener('change', () => {
+                if (billingToggle.checked) { // Yearly view
+                    priceDisplay.textContent = formatCurrency(yearlyPriceMonthly);
+                    billingCycleDisplay.textContent = '/ month';
+                    yearlyTotalDisplay.textContent = `Billed as ${formatCurrency(yearlyPriceTotal)} per year`;
+                    yearlyTotalDisplay.style.opacity = 1;
+                    yearlyLabel.classList.remove('text-stone-gray');
+                    yearlyLabel.classList.add('font-bold', 'text-paper-white');
+                    monthlyLabel.classList.remove('font-bold', 'text-paper-white');
+                    monthlyLabel.classList.add('text-stone-gray');
+                } else { // Monthly view
+                    priceDisplay.textContent = formatCurrency(monthlyPrice);
+                    billingCycleDisplay.textContent = '/ month';
+                    yearlyTotalDisplay.style.opacity = 0;
+                    monthlyLabel.classList.remove('text-stone-gray');
+                    monthlyLabel.classList.add('font-bold', 'text-paper-white');
+                    yearlyLabel.classList.remove('font-bold', 'text-paper-white');
+                    yearlyLabel.classList.add('text-stone-gray');
+                }
+            });
+
+            // --- FAQ Accordion Logic ---
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                header.addEventListener('click', () => {
+                    // Close other open items
+                    accordionItems.forEach(otherItem => {
+                        if (otherItem !== item && otherItem.classList.contains('open')) {
+                            otherItem.classList.remove('open');
+                        }
+                    });
+                    // Toggle the clicked item
+                    item.classList.toggle('open');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

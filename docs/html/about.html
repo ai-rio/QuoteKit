@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About LawnQuote - Built for the Trade</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter and Roboto Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles and Tailwind Config -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+            scroll-behavior: smooth;
+        }
+        .font-sans {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F5F5F5; }
+        ::-webkit-scrollbar-thumb { background: #2A3D2F; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a6b55; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7D7',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- Header (Consistent with Homepage) -->
+    <header class="bg-paper-white/80 backdrop-blur-lg border-b border-stone-gray/50 sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-forest-green rounded-lg flex items-center justify-center">
+                    <span class="font-black text-paper-white text-xl">LQ</span>
+                </div>
+                <span class="font-bold text-2xl text-charcoal">LawnQuote</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Features</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Pricing</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Blog</a>
+                <a href="#" class="text-charcoal/80 hover:text-forest-green font-medium transition-colors">Login</a>
+            </div>
+            <a href="#" class="hidden md:inline-block bg-equipment-yellow text-charcoal font-bold px-6 py-3 rounded-lg hover:brightness-110 transition-all duration-200 shadow-md hover:shadow-lg">
+                Start for Free
+            </a>
+            <button class="md:hidden text-forest-green">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-paper-white py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-charcoal leading-tight">
+                    I got into landscaping to work with my hands,<br class="hidden md:block"> not to do paperwork.
+                </h1>
+                <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-charcoal/70">
+                    LawnQuote was born in the field, not in a boardroom. It’s the tool I wish I had when I was running my own crew, turning messy notes into winning bids.
+                </p>
+            </div>
+        </section>
+
+        <!-- Founder's Story Section -->
+        <section class="bg-light-concrete py-20">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+                    <!-- Image -->
+                    <div>
+                        <img src="https://placehold.co/800x1000/2A3D2F/FFFFFF?text=Founder+Portrait" alt="Founder of LawnQuote" class="rounded-2xl shadow-xl w-full h-full object-cover">
+                    </div>
+                    <!-- Text Content -->
+                    <div class="prose prose-lg lg:prose-xl max-w-none text-charcoal/80">
+                        <h2 class="text-3xl md:text-4xl font-bold text-charcoal mb-6">The Story Behind the Tool</h2>
+                        <p>
+                            For years, my office was the front seat of my truck. My filing system was a pile of crumpled, coffee-stained napkins in the center console. I loved the feeling of transforming a client's yard, but I dreaded the end of the day. That's when the "real" work began: trying to decipher my own handwriting, guessing at material costs, and typing up quotes in a clunky spreadsheet—all while my family waited for me to come home.
+                        </p>
+                        <p>
+                            I knew two things for sure: <strong class="text-forest-green">I was losing money</strong> from inaccurate bids, and <strong class="text-forest-green">I looked unprofessional</strong>. Every messy quote I sent felt like it undermined the quality of my actual work.
+                        </p>
+                        <p>
+                            I looked for a tool to help, but everything was either too complicated, too expensive, or built for giant corporations. I needed something simple, fast, and professional. A tool that understood that my most valuable asset was my time.
+                        </p>
+                        <p>
+                            So, I built it.
+                        </p>
+                        <p class="mt-8 border-t border-stone-gray pt-8 font-bold text-charcoal">
+                            — John, Founder of LawnQuote
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Mission Section -->
+        <section class="bg-forest-green text-paper-white py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-black">Our Pro-Grade Promise</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-stone-gray">
+                    We believe your skill deserves to be presented professionally. Our mission is to give every solo operator the power to look, quote, and win jobs like a major firm.
+                </p>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-paper-white/10 p-8 rounded-2xl border border-paper-white/20">
+                        <h3 class="text-2xl font-bold text-equipment-yellow">Radical Simplicity</h3>
+                        <p class="mt-3 text-stone-gray">No bloated features you'll never use. Just a laser-focused tool that helps you create quotes in minutes, not hours.</p>
+                    </div>
+                    <div class="bg-paper-white/10 p-8 rounded-2xl border border-paper-white/20">
+                        <h3 class="text-2xl font-bold text-equipment-yellow">Effortless Professionalism</h3>
+                        <p class="mt-3 text-stone-gray">Generate polished, accurate PDF quotes that build client trust and help you win more profitable jobs.</p>
+                    </div>
+                    <div class="bg-paper-white/10 p-8 rounded-2xl border border-paper-white/20">
+                        <h3 class="text-2xl font-bold text-equipment-yellow">Built for the Trade</h3>
+                        <p class="mt-3 text-stone-gray">We're not a generic business app. We speak your language and build features that solve your real-world problems.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="bg-light-concrete py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-black text-charcoal">Ready to Stop Leaving Money on the Table?</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-charcoal/70">
+                    Join thousands of landscapers who are saving time, looking professional, and winning more jobs. Create your free account today.
+                </p>
+                <div class="mt-8">
+                    <a href="#" class="bg-equipment-yellow text-charcoal font-bold px-8 py-4 rounded-lg hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl text-lg">
+                        Start for Free
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (Consistent with Homepage) -->
+    <footer class="bg-charcoal text-stone-gray">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="font-bold text-lg text-paper-white">LawnQuote</h3>
+                    <p class="mt-2 text-sm">The professional-grade quoting tool for landscaping solopreneurs.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Product</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">Features</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Pricing</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Blog</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Login</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Company</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">About Us</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-paper-white">Legal</h4>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-equipment-yellow">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-equipment-yellow">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 border-t border-stone-gray/30 pt-8 text-center text-sm">
+                <p>&copy; 2025 LawnQuote. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
