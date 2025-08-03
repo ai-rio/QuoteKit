@@ -79,27 +79,25 @@ function InteractiveQuoteSandbox() {
 
         {/* Line Items */}
         <div className="mt-4">
-          <div className="hidden md:grid grid-cols-12 gap-2 font-bold text-xs lg:text-sm text-charcoal/60 mb-2 px-2 lg:px-3">
-            <div className="col-span-6">ITEM</div>
-            <div className="col-span-2 text-right">QTY</div>
-            <div className="col-span-2 text-right">PRICE</div>
-            <div className="col-span-2 text-right">TOTAL</div>
-          </div>
-          <div className="space-y-2 min-h-[120px] sm:min-h-[150px]">
+          <div className="space-y-2 min-h-[80px] sm:min-h-[100px]">
             {Object.keys(quote).length === 0 ? (
-              <p className="text-center text-charcoal/50 pt-8 sm:pt-10 text-sm sm:text-base">Your quote is empty.</p>
+              <p className="text-center text-charcoal/50 pt-6 sm:pt-8 text-sm sm:text-base">Your quote is empty.</p>
             ) : (
               Object.values(quote).map(item => {
                 const itemTotal = item.qty * item.price;
                 return (
-                  <div key={item.id} className="grid grid-cols-12 gap-1 sm:gap-2 items-center bg-stone-gray/10 p-2 sm:p-3 rounded-lg animate-in fade-in slide-in-from-top-2 duration-500">
-                    <div className="col-span-8 md:col-span-6">
-                      <p className="font-medium text-xs sm:text-sm">{item.name}</p>
-                      <p className="font-mono text-xs text-charcoal/60 md:hidden">{item.qty} x {formatCurrency(item.price)}</p>
+                  <div key={item.id} className="bg-stone-gray/10 p-3 sm:p-4 rounded-lg animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 pr-3">
+                        <p className="font-medium text-sm sm:text-base text-charcoal">{item.name}</p>
+                        <p className="text-xs sm:text-sm text-charcoal/60 mt-1">
+                          {item.qty} {item.qty === 1 ? 'unit' : 'units'} × {formatCurrency(item.price)} each
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-mono font-bold text-sm sm:text-base text-forest-green">{formatCurrency(itemTotal)}</p>
+                      </div>
                     </div>
-                    <div className="hidden md:block col-span-2 text-right font-mono text-xs lg:text-sm">{item.qty}</div>
-                    <div className="hidden md:block col-span-2 text-right font-mono text-xs lg:text-sm">{formatCurrency(item.price)}</div>
-                    <div className="col-span-4 md:col-span-2 text-right font-mono text-xs sm:text-sm font-bold">{formatCurrency(itemTotal)}</div>
                   </div>
                 );
               })
@@ -299,25 +297,25 @@ export default function HomePageClient() {
                       <h2 className="font-sans font-bold text-base sm:text-lg text-forest-green">Your Company Inc.</h2>
                     </div>
                     <div className="text-right">
-                      <h3 className="font-sans font-bold text-sm sm:text-base">QUOTE</h3>
+                      <h3 className="font-sans font-bold text-sm sm:text-base text-charcoal">QUOTE</h3>
                       <p className="font-mono text-xs text-charcoal/60">#2025-042</p>
                     </div>
                   </div>
                   <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2">
-                    <div className="grid grid-cols-12 gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <div className="grid grid-cols-12 gap-1 sm:gap-2 text-xs sm:text-sm text-charcoal">
                       <div className="col-span-6 font-sans font-medium">Lawn Mowing</div>
                       <div className="col-span-2 text-right font-mono">1</div>
                       <div className="col-span-2 text-right font-mono">$65.00</div>
                       <div className="col-span-2 text-right font-mono font-bold">$65.00</div>
                     </div>
-                    <div className="grid grid-cols-12 gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <div className="grid grid-cols-12 gap-1 sm:gap-2 text-xs sm:text-sm text-charcoal">
                       <div className="col-span-6 font-sans font-medium">Mulch Installation</div>
                       <div className="col-span-2 text-right font-mono">3</div>
                       <div className="col-span-2 text-right font-mono">$80.00</div>
                       <div className="col-span-2 text-right font-mono font-bold">$240.00</div>
                     </div>
                   </div>
-                  <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-stone-gray/30 space-y-1 text-xs sm:text-sm">
+                  <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-stone-gray/30 space-y-1 text-xs sm:text-sm text-charcoal">
                     <div className="flex justify-between"><p className="font-sans">Subtotal</p><p className="font-mono font-bold">$305.00</p></div>
                     <div className="flex justify-between"><p className="font-sans">Tax (8.25%)</p><p className="font-mono font-bold">$25.16</p></div>
                     <div className="flex justify-between font-bold text-sm sm:text-base lg:text-lg text-forest-green mt-1 sm:mt-2"><p className="font-sans">Total</p><p className="font-mono">$330.16</p></div>
