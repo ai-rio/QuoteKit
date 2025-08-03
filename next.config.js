@@ -1,5 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Configure external image domains
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+  
   // Override default serverExternalPackages to exclude prettier
   // This allows prettier dependencies to be bundled instead of treated as external
   serverExternalPackages: [

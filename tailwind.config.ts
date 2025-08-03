@@ -78,6 +78,7 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', ...fontFamily.sans],
         mono: ['var(--font-roboto-mono)', ...fontFamily.mono],
+        handwriting: ['var(--font-kalam)', 'cursive'],
       },
       keyframes: {
         'accordion-down': {
