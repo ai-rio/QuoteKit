@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BlogPostHeader } from '../components/blog-post-header';
+
 import { BlogPostContent } from '../components/blog-post-content';
+import { BlogPostHeader } from '../components/blog-post-header';
 import { BlogPostNavigation } from '../components/blog-post-navigation';
 import { RelatedPosts } from '../components/related-posts';
 import { blogPosts } from '../data/blog-posts';
