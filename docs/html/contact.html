@@ -87,9 +87,23 @@
                 <h1 class="text-4xl md:text-6xl font-black text-charcoal leading-tight">
                     Let's Talk.
                 </h1>
-                <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-charcoal/70">
+                <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-charcoal/90">
                     Have a question, a feature idea, or a story to share? We're a small team that loves to hear from the people we're building for. We read every message.
                 </p>
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-charcoal/80">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-forest-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Usually respond within 24 hours</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-forest-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Read and responded to personally</span>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -97,56 +111,101 @@
         <section class="bg-light-concrete py-20">
             <div class="container mx-auto px-6">
                 <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-12">
-                    <!-- Left: Personal Note -->
-                    <div class="md:col-span-1">
+                    <!-- Left: Personal Note & Contact Info -->
+                    <div class="md:col-span-1 space-y-6">
+                        <!-- Personal Note -->
                         <div class="bg-paper-white p-6 rounded-2xl shadow-sm border border-stone-gray/20">
                             <img src="https://placehold.co/100x100/2A3D2F/FFFFFF?text=J" alt="Founder of LawnQuote" class="rounded-full w-20 h-20 mx-auto">
                             <h3 class="mt-4 text-center font-bold text-lg text-charcoal">A Note from John</h3>
-                            <p class="mt-2 text-center text-sm text-charcoal/70">
+                            <p class="mt-2 text-center text-sm text-charcoal/90">
                                 "Your feedback directly shapes the future of this tool. If you have an idea that would make your life easier, I genuinely want to hear it. Let's build the best quoting tool for the trade, together."
                             </p>
+                        </div>
+
+                        <!-- Quick Contact Info -->
+                        <div class="bg-paper-white p-6 rounded-2xl shadow-sm border border-stone-gray/20">
+                            <h4 class="font-bold text-charcoal mb-4">Other Ways to Reach Us</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-forest-green/10 rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-forest-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-charcoal">Email</p>
+                                        <p class="text-sm text-charcoal/90">hello@lawnquote.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-forest-green/10 rounded-lg flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-forest-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-charcoal">Response Time</p>
+                                        <p class="text-sm text-charcoal/90">Usually within 24 hours</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Right: Contact Form -->
                     <div class="md:col-span-2">
                         <div class="bg-paper-white p-8 rounded-2xl shadow-lg border border-stone-gray/20">
-                            <form action="#" method="POST" class="space-y-6">
+                            <form action="#" method="POST" class="space-y-6" id="contact-form">
                                 <div>
-                                    <label for="full-name" class="block text-sm font-bold text-charcoal">Full Name</label>
-                                    <div class="mt-2">
-                                        <input type="text" name="full-name" id="full-name" autocomplete="name" class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6" placeholder="Jane Doe">
-                                    </div>
+                                    <label for="full-name" class="block text-sm font-bold text-charcoal mb-2">Full Name *</label>
+                                    <input type="text" name="full-name" id="full-name" autocomplete="name" required 
+                                           class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6 transition-all duration-200" 
+                                           placeholder="Jane Doe">
                                 </div>
                                 <div>
-                                    <label for="email" class="block text-sm font-bold text-charcoal">Email Address</label>
-                                    <div class="mt-2">
-                                        <input type="email" name="email" id="email" autocomplete="email" class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6" placeholder="you@example.com">
-                                    </div>
+                                    <label for="email" class="block text-sm font-bold text-charcoal mb-2">Email Address *</label>
+                                    <input type="email" name="email" id="email" autocomplete="email" required 
+                                           class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6 transition-all duration-200" 
+                                           placeholder="you@example.com">
                                 </div>
                                 <div>
-                                    <label for="reason" class="block text-sm font-bold text-charcoal">What can we help with?</label>
-                                    <div class="mt-2">
-                                        <select id="reason" name="reason" class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6">
-                                            <option>I have a question about LawnQuote</option>
-                                            <option>I have a feature idea</option>
-                                            <option>I need help with my account</option>
-                                            <option>I'm from the press</option>
-                                            <option>Just want to say hi!</option>
-                                        </select>
-                                    </div>
+                                    <label for="company" class="block text-sm font-bold text-charcoal mb-2">Company Name</label>
+                                    <input type="text" name="company" id="company" autocomplete="organization" 
+                                           class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6 transition-all duration-200" 
+                                           placeholder="Your Landscaping Business">
                                 </div>
                                 <div>
-                                    <label for="message" class="block text-sm font-bold text-charcoal">Message</label>
-                                    <div class="mt-2">
-                                        <textarea name="message" id="message" rows="4" class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6" placeholder="Tell us what's on your mind..."></textarea>
-                                    </div>
+                                    <label for="reason" class="block text-sm font-bold text-charcoal mb-2">What can we help with? *</label>
+                                    <select id="reason" name="reason" required 
+                                            class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6 transition-all duration-200">
+                                        <option value="">Select a topic...</option>
+                                        <option value="question">I have a question about LawnQuote</option>
+                                        <option value="feature">I have a feature idea</option>
+                                        <option value="account">I need help with my account</option>
+                                        <option value="billing">Billing or subscription question</option>
+                                        <option value="press">I'm from the press</option>
+                                        <option value="partnership">Partnership opportunity</option>
+                                        <option value="hello">Just want to say hi!</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="message" class="block text-sm font-bold text-charcoal mb-2">Message *</label>
+                                    <textarea name="message" id="message" rows="5" required 
+                                              class="block w-full rounded-lg border-0 py-3 px-4 bg-light-concrete text-charcoal shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal/60 focus:ring-2 focus:ring-inset focus:ring-forest-green sm:text-sm sm:leading-6 transition-all duration-200 resize-none" 
+                                              placeholder="Tell us what's on your mind..."></textarea>
+                                    <p class="mt-1 text-xs text-charcoal/70">Please be as specific as possible so we can help you better.</p>
                                 </div>
                                 <div class="pt-4">
-                                    <button type="submit" class="w-full bg-forest-green text-paper-white font-bold py-4 px-6 rounded-lg hover:opacity-90 transition-opacity duration-200 shadow-md hover:shadow-lg">
-                                        Send Message
+                                    <button type="submit" 
+                                            class="w-full bg-forest-green text-paper-white font-bold py-4 px-6 rounded-lg hover:opacity-90 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span class="submit-text">Send Message</span>
+                                        <span class="loading-text hidden">Sending...</span>
                                     </button>
                                 </div>
+                                <p class="text-xs text-charcoal/70 text-center">
+                                    We'll get back to you within 24 hours. For urgent matters, email us directly at 
+                                    <a href="mailto:hello@lawnquote.com" class="text-forest-green hover:underline font-medium">hello@lawnquote.com</a>
+                                </p>
                             </form>
                         </div>
                     </div>
@@ -192,6 +251,125 @@
             </div>
         </div>
     </footer>
+
+    <!-- JavaScript for Form Enhancement -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('contact-form');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const submitText = submitButton.querySelector('.submit-text');
+            const loadingText = submitButton.querySelector('.loading-text');
+
+            // Form validation
+            function validateForm() {
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.classList.add('ring-red-500');
+                        field.classList.remove('ring-stone-gray/50');
+                    } else {
+                        field.classList.remove('ring-red-500');
+                        field.classList.add('ring-stone-gray/50');
+                    }
+                });
+
+                // Email validation
+                const emailField = form.querySelector('#email');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailField.value && !emailRegex.test(emailField.value)) {
+                    isValid = false;
+                    emailField.classList.add('ring-red-500');
+                }
+
+                return isValid;
+            }
+
+            // Real-time validation
+            form.addEventListener('input', function(e) {
+                if (e.target.hasAttribute('required')) {
+                    if (e.target.value.trim()) {
+                        e.target.classList.remove('ring-red-500');
+                        e.target.classList.add('ring-stone-gray/50');
+                    }
+                }
+            });
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    // Scroll to first error
+                    const firstError = form.querySelector('.ring-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                    return;
+                }
+
+                // Show loading state
+                submitButton.disabled = true;
+                submitText.classList.add('hidden');
+                loadingText.classList.remove('hidden');
+
+                // Simulate form submission (replace with actual submission logic)
+                setTimeout(() => {
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4';
+                    successMessage.innerHTML = `
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium">Message sent successfully! We'll get back to you within 24 hours.</span>
+                        </div>
+                    `;
+                    
+                    form.insertBefore(successMessage, form.firstChild);
+                    form.reset();
+                    
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitText.classList.remove('hidden');
+                    loadingText.classList.add('hidden');
+                    
+                    // Scroll to success message
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Remove success message after 5 seconds
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 5000);
+                }, 2000);
+            });
+
+            // Character counter for message field
+            const messageField = document.getElementById('message');
+            const messageContainer = messageField.parentElement;
+            
+            const charCounter = document.createElement('div');
+            charCounter.className = 'text-xs text-charcoal/60 text-right mt-1';
+            charCounter.textContent = '0 characters';
+            messageContainer.appendChild(charCounter);
+            
+            messageField.addEventListener('input', function() {
+                const length = this.value.length;
+                charCounter.textContent = `${length} character${length !== 1 ? 's' : ''}`;
+                
+                if (length > 500) {
+                    charCounter.classList.add('text-red-600');
+                    charCounter.textContent += ' (recommended: under 500)';
+                } else {
+                    charCounter.classList.remove('text-red-600');
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
