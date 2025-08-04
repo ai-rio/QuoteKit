@@ -174,6 +174,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
+  // Get all posts for navigation
+  const allPosts = await getAllPosts();
   const relatedPosts = await getRelatedPosts(post.slug, post.category, 3);
   
   // Use pre-optimized components
@@ -231,7 +233,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </article>
         </div>
         
-        <BlogPostNavigation />
+        <BlogPostNavigation currentSlug={post.slug} allPosts={allPosts} />
         <RelatedPosts posts={relatedPosts} />
       </div>
     </>

@@ -30,7 +30,7 @@ function extractBlogPosts() {
 }
 
 // Generate slug from filename with date prefix
-function generateFilename(post: any, index: number): string {
+function generateFilename(post: any, index: number): { filename: string; year: string } {
   const date = new Date(post.publishedAt);
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');

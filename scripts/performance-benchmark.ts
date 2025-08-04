@@ -99,7 +99,6 @@ async function measureBuildTime(): Promise<number> {
   
   try {
     await execAsync('npm run build', { 
-      stdio: 'pipe',
       timeout: 300000 // 5 minute timeout
     });
     

@@ -122,7 +122,7 @@ class EssentialTester {
     
 
     // Verify SEO fields
-    if (!seoPost.seo?.description) {
+    if (!seoPost.seo?.metaDescription) {
       throw new Error('Missing SEO description');
     }
     
