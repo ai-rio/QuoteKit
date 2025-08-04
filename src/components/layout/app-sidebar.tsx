@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useMobileSidebar } from "@/hooks/use-mobile"
 import { useFeatureAccess } from "@/hooks/useFeatureAccess"
+import { signOut } from "@/app/(auth)/auth-actions"
 
 // Navigation items organized into groups
 interface NavItem {
@@ -246,14 +247,18 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                     <Settings className="h-4 w-4" />
                     <span>Settings</span>
                   </Link>
-                  <Link 
-                    href="/auth/logout" 
-                    onClick={handleNavigation}
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  <button 
+                    onClick={async () => {
+                      const { error } = await signOut()
+                      if (!error) {
+                        window.location.href = '/'
+                      }
+                    }}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
-                  </Link>
+                  </button>
                 </div>
               </PopoverContent>
             </Popover>

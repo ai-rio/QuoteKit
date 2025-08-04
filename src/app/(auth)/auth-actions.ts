@@ -135,8 +135,7 @@ export async function signInWithPassword(formData: FormData): Promise<ActionResp
     return { data: null, error: error };
   }
 
-  // Redirect to dashboard after successful login
-  redirect('/dashboard');
+  return { data: { success: true }, error: null };
 }
 
 export async function signOut(): Promise<ActionResponse> {

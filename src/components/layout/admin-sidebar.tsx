@@ -40,6 +40,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { useMobileSidebar } from "@/hooks/use-mobile"
+import { signOut } from "@/app/(auth)/auth-actions"
 
 // Admin navigation items following the planned structure
 interface NavItem {
@@ -292,14 +293,18 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                     <ArrowLeft className="h-4 w-4" />
                     <span>Back to App</span>
                   </Link>
-                  <Link 
-                    href="/auth/logout" 
-                    onClick={handleNavigation}
-                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  <button 
+                    onClick={async () => {
+                      const { error } = await signOut()
+                      if (!error) {
+                        window.location.href = '/'
+                      }
+                    }}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
-                  </Link>
+                  </button>
                 </div>
               </PopoverContent>
             </Popover>

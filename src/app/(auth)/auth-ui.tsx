@@ -78,8 +78,10 @@ export function AuthUI({
           toast({
             description: `Account created successfully! Welcome to LawnQuote.`,
           });
+        } else {
+          // Successful login - redirect to dashboard
+          window.location.href = '/dashboard';
         }
-        // Password login and signup handle redirect internally
       }
     } catch (error) {
       toast({
