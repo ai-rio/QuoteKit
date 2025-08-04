@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { getSession } from '@/features/account/controllers/get-session';
 import { getStripePublishableKey } from '@/features/account/controllers/get-stripe-config';
-import { getBillingHistory, getPaymentMethods,getSubscription } from '@/features/account/controllers/get-subscription';
+import { getPaymentMethods, getSubscription } from '@/features/account/controllers/get-subscription';
+import { getBillingHistory } from '@/features/billing/api/billing-history';
 
 export async function GET() {
   try {
@@ -27,10 +28,16 @@ export async function GET() {
       });
     }
 
+    // Get session first to get userId
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
     // Test all account functions
     const [subscription, billingHistory, paymentMethods, stripeKey] = await Promise.all([
       getSubscription(),
-      getBillingHistory(), 
+      getBillingHistory(session.user.id), 
       getPaymentMethods(),
       getStripePublishableKey()
     ]);
@@ -43,8 +50,8 @@ export async function GET() {
         priceId: subscription?.stripe_price_id
       },
       billingHistory: {
-        count: billingHistory?.length || 0,
-        hasData: !!billingHistory && billingHistory.length > 0
+        count: billingHistory?.data?.length || 0,
+        hasData: !!billingHistory?.data && billingHistory.data.length > 0
       },
       paymentMethods: {
         count: paymentMethods?.length || 0,

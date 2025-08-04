@@ -88,16 +88,16 @@ export function UpgradePrompt({
     <div className="text-center space-y-6">
       {/* Icon */}
       <div className="flex justify-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-          <Crown className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-equipment-yellow rounded-full flex items-center justify-center">
+          <Crown className="w-8 h-8 text-charcoal" />
         </div>
       </div>
 
       {/* Title and Description */}
       <div className="space-y-2">
-        <h3 className="text-xl font-semibold text-charcoal flex items-center justify-center gap-2">
+        <h3 className="text-xl font-bold text-charcoal flex items-center justify-center gap-2">
           {defaultTitle}
-          <Badge variant="secondary" className="bg-gradient-to-r from-amber-400 to-orange-500 text-white">
+          <Badge className="bg-equipment-yellow text-charcoal font-semibold">
             <Crown className="w-3 h-3 mr-1" />
             Premium
           </Badge>
@@ -109,8 +109,8 @@ export function UpgradePrompt({
 
       {/* Benefits */}
       <div className="space-y-3">
-        <h4 className="font-medium text-charcoal flex items-center justify-center gap-2">
-          <Zap className="w-4 h-4 text-amber-500" />
+        <h4 className="font-semibold text-charcoal flex items-center justify-center gap-2">
+          <Zap className="w-4 h-4 text-equipment-yellow" />
           Premium Features Include:
         </h4>
         <ul className="space-y-2 text-sm text-charcoal/70 max-w-sm mx-auto">
@@ -126,7 +126,7 @@ export function UpgradePrompt({
       {/* CTA Button */}
       <Button 
         onClick={handleUpgrade}
-        className="bg-gradient-to-r from-forest-green to-emerald-600 hover:from-forest-green/90 hover:to-emerald-600/90 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold px-6 py-3 rounded-lg transition-all duration-200"
       >
         {ctaText}
         <ArrowRight className="w-4 h-4 ml-2" />
@@ -138,10 +138,10 @@ export function UpgradePrompt({
   if (modal) {
     return (
       <Dialog open={open ?? isModalOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="bg-paper-white border-stone-gray sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
-            <DialogTitle>{defaultTitle}</DialogTitle>
-            <DialogDescription>{defaultDescription}</DialogDescription>
+            <DialogTitle className="text-charcoal">{defaultTitle}</DialogTitle>
+            <DialogDescription className="text-charcoal/70">{defaultDescription}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <PromptContent />
@@ -154,7 +154,7 @@ export function UpgradePrompt({
   // Inline card version
   if (inline) {
     return (
-      <Card className="border-2 border-dashed border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
+      <Card className="bg-paper-white border-2 border-dashed border-equipment-yellow/30 shadow-sm">
         <CardContent className="p-6">
           <PromptContent />
         </CardContent>
@@ -164,7 +164,7 @@ export function UpgradePrompt({
 
   // Default inline version (no card wrapper)
   return (
-    <div className="p-6 border-2 border-dashed border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg">
+    <div className="p-6 border-2 border-dashed border-equipment-yellow/30 bg-light-concrete rounded-lg">
       <PromptContent />
     </div>
   )
@@ -189,10 +189,10 @@ export function CompactUpgradePrompt({
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
-      <Crown className="w-5 h-5 text-amber-600 flex-shrink-0" />
+    <div className="flex items-center gap-3 p-3 bg-light-concrete border border-equipment-yellow/30 rounded-lg">
+      <Crown className="w-5 h-5 text-equipment-yellow flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-charcoal">
+        <p className="text-sm font-semibold text-charcoal">
           {feature} requires Premium
         </p>
         <p className="text-xs text-charcoal/60">
@@ -202,7 +202,7 @@ export function CompactUpgradePrompt({
       <Button 
         size="sm" 
         onClick={handleUpgrade}
-        className="bg-gradient-to-r from-forest-green to-emerald-600 hover:from-forest-green/90 hover:to-emerald-600/90 text-white font-medium"
+        className="bg-forest-green text-paper-white hover:opacity-90 font-semibold"
       >
         Upgrade
       </Button>
@@ -224,8 +224,7 @@ export function FeatureBadge({
 
   return (
     <Badge 
-      variant="secondary" 
-      className={`bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs ${className}`}
+      className={`bg-equipment-yellow text-charcoal font-semibold text-xs ${className}`}
     >
       <Crown className="w-3 h-3 mr-1" />
       Premium

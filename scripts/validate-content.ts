@@ -178,4 +178,5 @@ if (require.main === module) {
   main();
 }
 
-export { validateAllContent, ValidationSummary };
+export { validateAllContent };
+export type { ValidationSummary };

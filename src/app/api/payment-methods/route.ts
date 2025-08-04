@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     let defaultPaymentMethodId: string | null = null;
     try {
       const customer = await stripe.customers.retrieve(customerId);
-      if (typeof customer !== 'string' && customer.invoice_settings?.default_payment_method) {
+      if (typeof customer !== 'string' && !customer.deleted && customer.invoice_settings?.default_payment_method) {
         defaultPaymentMethodId = customer.invoice_settings.default_payment_method as string;
       }
     } catch (error) {

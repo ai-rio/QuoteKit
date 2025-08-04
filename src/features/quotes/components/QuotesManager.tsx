@@ -530,8 +530,13 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
           <Button
             onClick={refreshQuotes}
             disabled={isRefreshing}
-            variant="outline"
-            className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+            className={`
+              ${isRefreshing 
+                ? 'bg-paper-white text-stone-gray border-2 border-stone-gray cursor-not-allowed' 
+                : 'bg-paper-white text-forest-green border-2 border-forest-green hover:bg-forest-green hover:text-paper-white'
+              } 
+              font-bold px-6 py-3 rounded-lg transition-all duration-200
+            `}
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh'}

@@ -20,7 +20,7 @@ export async function validateFeatureAccess(
   error?: string
 }> {
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
     
     // Get user if not provided
     let user_id = userId
@@ -55,7 +55,7 @@ export async function validateFeatureAccess(
     if (subError || !subscription) {
       // User has no active subscription, use free plan features
       const features = FREE_PLAN_FEATURES
-      const hasAccess = checkFeatureAccess(features, featureKey, user_id)
+      const hasAccess = await checkFeatureAccess(features, featureKey, user_id)
       
       return {
         hasAccess,
@@ -107,7 +107,7 @@ async function checkFeatureAccess(
       }
 
       // Check current usage
-      const supabase = createSupabaseServerClient()
+      const supabase = await createSupabaseServerClient()
       const { count: currentUsage, error } = await supabase
         .from('quotes')
         .select('*', { count: 'exact', head: true })
@@ -200,7 +200,7 @@ export async function validateMultipleFeatures(
   error?: string
 }> {
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
     
     // Get user if not provided
     let user_id = userId

@@ -51,12 +51,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   return {
     title: `${post.title} - LawnQuote Blog`,
-    description: post.seo?.description || post.summary,
+    description: post.seo?.metaDescription || post.summary,
     keywords: post.seo?.keywords?.join(', ') || `${post.category}, landscaping, ${post.title.toLowerCase()}`,
     authors: [{ name: post.author }],
     openGraph: {
       title: post.title,
-      description: post.seo?.description || post.summary,
+      description: post.seo?.metaDescription || post.summary,
       type: 'article',
       publishedTime: post.publishedAt,
       authors: [post.author],
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.seo?.description || post.summary,
+      description: post.seo?.metaDescription || post.summary,
       images: [post.image],
     },
   };
@@ -205,7 +205,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       '@id': `https://lawnquote.com/blog/${post.slug}`,
     },
     headline: post.title,
-    description: post.seo?.description || post.summary,
+    description: post.seo?.metaDescription || post.summary,
     image: post.image,
     author: {
       '@type': 'Person',

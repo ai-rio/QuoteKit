@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-clie
 import { AnalyticsDashboard } from '@/features/analytics/components/AnalyticsDashboard'
 
 export default async function AnalyticsPage() {
-  const supabase = createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
   
   // Check authentication
   const { data: { user } } = await supabase.auth.getUser()

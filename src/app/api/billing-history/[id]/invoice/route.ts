@@ -230,8 +230,9 @@ export async function GET(
     );
 
   } catch (error) {
+    const resolvedParams = await params;
     console.error('Invoice Download API: Unexpected error', {
-      invoiceId: params.id,
+      invoiceId: resolvedParams.id,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     });
@@ -370,8 +371,9 @@ export async function POST(
     );
 
   } catch (error) {
+    const resolvedParams = await params;
     console.error('Invoice Generation API: Unexpected error', {
-      invoiceId: params.id,
+      invoiceId: resolvedParams.id,
       error: error instanceof Error ? error.message : 'Unknown error'
     });
 

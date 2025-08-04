@@ -579,7 +579,7 @@ export default function PricingManagementPage() {
               <Input
                 type="number"
                 min="-1"
-                value={currentValue === -1 ? '' : currentValue}
+                value={currentValue === -1 ? '' : String(currentValue)}
                 onChange={(e) => {
                   const value = e.target.value === '' ? -1 : parseInt(e.target.value, 10)
                   if (!isNaN(value)) {
