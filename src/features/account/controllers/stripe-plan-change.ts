@@ -34,7 +34,10 @@ export async function previewPlanChange(
     newPriceId
   });
 
-  const stripe = createStripeAdminClient();
+  const stripe = createStripeAdminClient({
+    secret_key: process.env.STRIPE_SECRET_KEY!,
+    mode: process.env.NODE_ENV === 'production' ? 'live' : 'test'
+  });
 
   try {
     // Get the upcoming invoice with the subscription change
@@ -95,7 +98,10 @@ export async function executeStripePlanChange(
     isUpgrade
   });
 
-  const stripe = createStripeAdminClient();
+  const stripe = createStripeAdminClient({
+    secret_key: process.env.STRIPE_SECRET_KEY!,
+    mode: process.env.NODE_ENV === 'production' ? 'live' : 'test'
+  });
   const supabase = await createSupabaseServerClient();
 
   try {
@@ -216,7 +222,10 @@ export async function validatePaymentMethod(
 ): Promise<boolean> {
   console.log('🔍 Validating payment method:', { stripeCustomerId, paymentMethodId });
 
-  const stripe = createStripeAdminClient();
+  const stripe = createStripeAdminClient({
+    secret_key: process.env.STRIPE_SECRET_KEY!,
+    mode: process.env.NODE_ENV === 'production' ? 'live' : 'test'
+  });
 
   try {
     // Retrieve the payment method

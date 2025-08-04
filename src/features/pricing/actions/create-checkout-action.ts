@@ -13,18 +13,16 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   // DEBUG: Log immediately at function start
   console.log('🚨 CHECKOUT ACTION CALLED - Analyzing price object');
   console.log('🔍 Price object analysis:', {
-    stripe_price_id: price.stripe_price_id,
+    id: price.id, // This is the Stripe price ID
     unit_amount: price.unit_amount,
     currency: price.currency,
-    recurring_interval: price.recurring_interval,
-    interval: price.interval,
+    interval: price.interval, // Use interval instead of recurring_interval
     type: price.type,
     active: price.active,
     // Validation checks
-    hasRecurringInterval: !!price.recurring_interval,
     hasInterval: !!price.interval,
     hasType: !!price.type,
-    isSubscription: !!(price.recurring_interval || price.interval),
+    isSubscription: !!price.interval,
     isFree: (price.unit_amount ?? 0) === 0
   });
 
@@ -36,7 +34,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     
     // Create search params to preserve plan selection during signup
     const searchParams = new URLSearchParams();
-    searchParams.set('plan', price.stripe_price_id);
+    searchParams.set('plan', price.id);
     searchParams.set('amount', (price.unit_amount ?? 0).toString());
     searchParams.set('interval', price.interval || 'one_time');
     searchParams.set('type', price.type || 'one_time');
@@ -86,34 +84,25 @@ export async function createCheckoutAction({ price }: { price: Price }) {
 
   // 3. For paid plans, validate price is active before proceeding
   if (price.active === false) {
-    console.error('❌ ERROR: Attempting to create checkout with inactive price:', price.stripe_price_id);
-    throw new Error(`Price ${price.stripe_price_id} is inactive and cannot be used for checkout. Please contact support or try refreshing the page.`);
+    console.error('❌ ERROR: Attempting to create checkout with inactive price:', price.id);
+    throw new Error(`Price ${price.id} is inactive and cannot be used for checkout. Please contact support or try refreshing the page.`);
   }
 
   // Get Stripe configuration and initialize admin client
   const { supabaseAdminClient } = await import('@/libs/supabase/supabase-admin');
   const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
   
-  // Get Stripe config to validate price status
-  const { data: configData } = await supabaseAdminClient
-    .from('admin_settings')
-    .select('value')
-    .eq('key', 'stripe_config')
-    .single();
-
+  // Get Stripe config from environment variables
+  const secretKey = process.env.STRIPE_SECRET_KEY;
   let stripeConfig: any = null;
 
-  if (configData?.value) {
-    stripeConfig = configData.value as { secret_key: string; mode: 'test' | 'live' };
+  if (secretKey) {
+    stripeConfig = {
+      secret_key: secretKey,
+      mode: process.env.NODE_ENV === 'production' ? 'live' : 'test'
+    };
   } else {
-    // Fallback to environment variables
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (secretKey) {
-      stripeConfig = {
-        secret_key: secretKey,
-        mode: process.env.STRIPE_MODE || 'test'
-      };
-    }
+    throw new Error('Stripe configuration not found. Please check environment variables.');
   }
 
   if (!stripeConfig?.secret_key) {
@@ -125,15 +114,15 @@ export async function createCheckoutAction({ price }: { price: Price }) {
   // Additional validation: Verify price exists in Stripe before creating checkout
   try {
     // Verify price is still active in Stripe
-    const stripePrice = await stripeAdmin.prices.retrieve(price.stripe_price_id);
+    const stripePrice = await stripeAdmin.prices.retrieve(price.id);
     
     if (!stripePrice.active) {
       console.error('❌ ERROR: Price is inactive in Stripe:', {
-        price_id: price.stripe_price_id,
+        price_id: price.id,
         stripe_active: stripePrice.active,
         db_active: price.active
       });
-      throw new Error(`Price ${price.stripe_price_id} is no longer active in Stripe. Please try a different plan or contact support.`);
+      throw new Error(`Price ${price.id} is no longer active in Stripe. Please try a different plan or contact support.`);
     }
     
     console.log('✅ Price validation passed - price is active in both database and Stripe');
@@ -156,14 +145,14 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     console.log('ℹ️ User already has active subscription, checking if this is a plan change');
     
     // If trying to select the same plan, redirect to account
-    if (existingSubscription.stripe_price_id === price.stripe_price_id) {
+    if (existingSubscription.stripe_price_id === price.id) {
       console.log('ℹ️ User trying to select same plan, redirecting to account');
       redirect(`${getURL()}/account?message=same_plan`);
     }
     
     // If different plan, this should be handled by the plan change functionality
     console.log('ℹ️ User trying to change plan, redirecting to account for plan change');
-    redirect(`${getURL()}/account?message=use_plan_change&target_price=${price.stripe_price_id}`);
+    redirect(`${getURL()}/account?message=use_plan_change&target_price=${price.id}`);
   }
 
   // 5. Retrieve or create the customer in Stripe for paid plans
@@ -202,34 +191,31 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     console.warn('⚠️ Could not check Stripe subscriptions (proceeding with checkout):', error);
   }
 
-  // CRITICAL FIX: Determine checkout mode more robustly
-  // Check both recurring_interval and interval fields for maximum compatibility
-  const isSubscription = !!(price.recurring_interval || price.interval);
+  // CRITICAL FIX: Determine checkout mode using interval field
+  const isSubscription = !!price.interval;
   const checkoutMode = isSubscription ? 'subscription' : 'payment';
   
   console.log('🔍 CHECKOUT MODE DETERMINATION:', {
-    recurring_interval: price.recurring_interval,
     interval: price.interval,
     type: price.type,
     isSubscription,
     checkoutMode,
-    decision_logic: 'Using recurring_interval OR interval presence to determine mode'
+    decision_logic: 'Using interval presence to determine mode'
   });
   
   // Additional validation for subscription mode
-  if (checkoutMode === 'subscription' && !(price.recurring_interval || price.interval)) {
+  if (checkoutMode === 'subscription' && !price.interval) {
     console.error('❌ ERROR: Subscription mode selected but no interval found:', {
-      recurring_interval: price.recurring_interval,
       interval: price.interval,
       type: price.type
     });
-    throw new Error('Invalid price configuration: subscription mode requires recurring_interval or interval');
+    throw new Error('Invalid price configuration: subscription mode requires interval');
   }
 
   // 6. Create a checkout session in Stripe
   console.log('🚀 Creating Stripe checkout session with:', {
     mode: checkoutMode,
-    price_id: price.stripe_price_id,
+    price_id: price.id,
     customer,
     success_url: `${getURL()}/account`,
     cancel_url: `${getURL()}/pricing`
@@ -244,7 +230,7 @@ export async function createCheckoutAction({ price }: { price: Price }) {
     },
     line_items: [
       {
-        price: price.stripe_price_id,
+        price: price.id,
         quantity: 1,
       },
     ],

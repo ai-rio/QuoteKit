@@ -6,6 +6,7 @@ import { getSession } from '@/features/account/controllers/get-session';
 import { getSubscription } from '@/features/account/controllers/get-subscription';
 import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { handleStripeError, isStripeError } from '@/utils/stripe-error-guards';
 import { executeStripePlanChange, validatePaymentMethod } from '../controllers/stripe-plan-change';
 
 
@@ -262,24 +263,14 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       console.log('🔄 Step 2: Creating Stripe subscription...');
       const { createStripeAdminClient } = await import('@/libs/stripe/stripe-admin');
       
-      // Get Stripe configuration
-      const { data: stripeConfigRecord } = await supabase
-        .from('admin_settings')
-        .select('value')
-        .eq('key', 'stripe_config')
-        .maybeSingle();
-
+      // Get Stripe configuration from environment variables
+      const secretKey = process.env.STRIPE_SECRET_KEY;
       let stripeConfig: any = null;
-      if (stripeConfigRecord?.value) {
-        stripeConfig = stripeConfigRecord.value as any;
-      } else {
-        const secretKey = process.env.STRIPE_SECRET_KEY;
-        if (secretKey) {
-          stripeConfig = {
-            secret_key: secretKey,
-            mode: process.env.STRIPE_MODE || 'test'
-          };
-        }
+      if (secretKey) {
+        stripeConfig = {
+          secret_key: secretKey,
+          mode: process.env.NODE_ENV === 'production' ? 'live' : 'test'
+        };
       }
 
       if (!stripeConfig?.secret_key) {
@@ -292,7 +283,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       });
       
       // Create the Stripe subscription with proper payment handling
-      let subscriptionCreateParams = {
+      let subscriptionCreateParams: any = {
         customer: stripeCustomerId,
         items: [{ price: priceId }],
         expand: ['latest_invoice.payment_intent'],
@@ -346,18 +337,23 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           console.log('💳 Creating subscription with immediate payment processing');
           
         } catch (validationError) {
-          console.error('❌ Payment method validation failed:', validationError.message);
+          const errorInfo = handleStripeError(validationError);
+          console.error('❌ Payment method validation failed:', errorInfo.message);
           
           // Provide specific error messages based on the type of error
-          if (validationError.message.includes('belongs to a different account')) {
-            throw new Error('This payment method belongs to a different account. Please add a new payment method.');
-          } else if (validationError.message.includes('previously used without being attached') || 
-                     validationError.message.includes('was detached from a Customer')) {
-            throw new Error('This payment method is no longer valid. Please add a new payment method and try again.');
-          } else if (validationError.code === 'resource_missing') {
-            throw new Error('This payment method no longer exists. Please add a new payment method.');
+          if (isStripeError(validationError)) {
+            if (validationError.message?.includes('belongs to a different account')) {
+              throw new Error('This payment method belongs to a different account. Please add a new payment method.');
+            } else if (validationError.message?.includes('previously used without being attached') || 
+                       validationError.message?.includes('was detached from a Customer')) {
+              throw new Error('This payment method is no longer valid. Please add a new payment method and try again.');
+            } else if (validationError.code === 'resource_missing') {
+              throw new Error('This payment method no longer exists. Please add a new payment method.');
+            } else {
+              throw new Error(`Payment method validation failed: ${errorInfo.message}`);
+            }
           } else {
-            throw new Error(`Payment method validation failed: ${validationError.message}`);
+            throw new Error(`Payment method validation failed: ${errorInfo.message}`);
           }
         }
       } else {
@@ -451,7 +447,8 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
             console.log('✅ Step 4 Complete: Payment method saved');
           }
         } catch (pmSaveError) {
-          console.warn('⚠️ Failed to save payment method:', pmSaveError.message);
+          const errorInfo = handleStripeError(pmSaveError);
+          console.warn('⚠️ Failed to save payment method:', errorInfo.message);
         }
       }
 
@@ -480,7 +477,8 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           console.log('✅ Step 5 Complete: Billing history created');
         }
       } catch (billingCreateError) {
-        console.warn('⚠️ Failed to create billing history:', billingCreateError.message);
+        const errorInfo = handleStripeError(billingCreateError);
+        console.warn('⚠️ Failed to create billing history:', errorInfo.message);
       }
 
       console.log('🎉 New Stripe subscription created successfully!');
@@ -515,21 +513,26 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       return result;
       
       } catch (subscriptionError) {
-        console.error('❌ Stripe subscription creation failed:', subscriptionError.message);
+        const errorInfo = handleStripeError(subscriptionError);
+        console.error('❌ Stripe subscription creation failed:', errorInfo.message);
         
         // Handle specific payment errors
-        if (subscriptionError.code === 'card_declined') {
-          throw new Error('Your card was declined. Please try a different payment method or contact your bank.');
-        } else if (subscriptionError.code === 'insufficient_funds') {
-          throw new Error('Insufficient funds. Please check your account balance or try a different payment method.');
-        } else if (subscriptionError.code === 'expired_card') {
-          throw new Error('Your card has expired. Please update your payment method.');
-        } else if (subscriptionError.code === 'incorrect_cvc') {
-          throw new Error('Incorrect security code. Please check your card details.');
-        } else if (subscriptionError.type === 'card_error') {
-          throw new Error(`Payment failed: ${subscriptionError.message}`);
+        if (isStripeError(subscriptionError)) {
+          if (subscriptionError.code === 'card_declined') {
+            throw new Error('Your card was declined. Please try a different payment method or contact your bank.');
+          } else if (subscriptionError.code === 'insufficient_funds') {
+            throw new Error('Insufficient funds. Please check your account balance or try a different payment method.');
+          } else if (subscriptionError.code === 'expired_card') {
+            throw new Error('Your card has expired. Please update your payment method.');
+          } else if (subscriptionError.code === 'incorrect_cvc') {
+            throw new Error('Incorrect security code. Please check your card details.');
+          } else if (subscriptionError.type === 'card_error') {
+            throw new Error(`Payment failed: ${errorInfo.message}`);
+          } else {
+            throw new Error(`Failed to create subscription: ${errorInfo.message}`);
+          }
         } else {
-          throw new Error(`Failed to create subscription: ${subscriptionError.message}`);
+          throw new Error(`Failed to create subscription: ${errorInfo.message}`);
         }
       }
     }
@@ -674,61 +677,62 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
     }
 
     // Production mode: Update existing Stripe subscription
-    console.log('🏭 Production mode: Updating existing Stripe subscription');
-    
-    // Get Stripe customer and subscription IDs
-    const stripeCustomerId = enhancedSubscription.stripe_customer_id;
-    const stripeSubscriptionId = enhancedSubscription.stripe_subscription_id;
-    
-    if (!stripeCustomerId || !stripeSubscriptionId) {
-      console.error('❌ Missing Stripe IDs for existing subscription update:', {
-        hasCustomerId: !!stripeCustomerId,
-        hasSubscriptionId: !!stripeSubscriptionId,
-        subscriptionId: enhancedSubscription.id,
-        userId: session.user.id
-      });
-      throw new Error('Missing Stripe customer or subscription ID. Please contact support.');
-    }
-    
-    // For upgrades, validate payment method if provided
-    if (isUpgrade && paymentMethodId) {
-      console.log('💳 Validating payment method for upgrade...');
-      const isValidPaymentMethod = await validatePaymentMethod(stripeCustomerId, paymentMethodId);
-      if (!isValidPaymentMethod) {
-        throw new Error('Invalid or expired payment method. Please add a valid payment method.');
+    try {
+      console.log('🏭 Production mode: Updating existing Stripe subscription');
+      
+      // Get Stripe customer and subscription IDs
+      const stripeCustomerId = enhancedSubscription.stripe_customer_id;
+      const stripeSubscriptionId = enhancedSubscription.stripe_subscription_id;
+      
+      if (!stripeCustomerId || !stripeSubscriptionId) {
+        console.error('❌ Missing Stripe IDs for existing subscription update:', {
+          hasCustomerId: !!stripeCustomerId,
+          hasSubscriptionId: !!stripeSubscriptionId,
+          subscriptionId: enhancedSubscription.id,
+          userId: session.user.id
+        });
+        throw new Error('Missing Stripe customer or subscription ID. Please contact support.');
       }
-    }
-    
-    // Execute the plan change with Stripe
-    const result = await executeStripePlanChange(
-      session.user.id,
-      stripeCustomerId,
-      stripeSubscriptionId,
-      priceId,
-      paymentMethodId,
-      isUpgrade
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update subscription with Stripe');
-    }
-    
-    console.log('✅ Stripe plan change completed successfully');
-    
-    // Revalidate the account page to refresh the UI
-    revalidatePath('/account');
-    
-    // Note: Event dispatching moved to client-side component
-    // Server actions cannot dispatch window events
-    
-    return {
-      success: true,
-      subscription: result.subscription,
-      invoice: result.invoice,
-      needsBillingRefresh: true
-    };
+      
+      // For upgrades, validate payment method if provided
+      if (isUpgrade && paymentMethodId) {
+        console.log('💳 Validating payment method for upgrade...');
+        const isValidPaymentMethod = await validatePaymentMethod(stripeCustomerId, paymentMethodId);
+        if (!isValidPaymentMethod) {
+          throw new Error('Invalid or expired payment method. Please add a valid payment method.');
+        }
+      }
+      
+      // Execute the plan change with Stripe
+      const result = await executeStripePlanChange(
+        session.user.id,
+        stripeCustomerId,
+        stripeSubscriptionId,
+        priceId,
+        paymentMethodId,
+        isUpgrade
+      );
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update subscription with Stripe');
+      }
+      
+      console.log('✅ Stripe plan change completed successfully');
+      
+      // Revalidate the account page to refresh the UI
+      revalidatePath('/account');
+      
+      // Note: Event dispatching moved to client-side component
+      // Server actions cannot dispatch window events
+      
+      return {
+        success: true,
+        subscription: result.subscription,
+        invoice: result.invoice,
+        needsBillingRefresh: true
+      };
 
-  } catch (error) {
+    } catch (error) {
     console.error('❌ Plan change error:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
