@@ -26,7 +26,14 @@
     "blog:migrate": "npx tsx scripts/migrate-blog-posts.ts",
     "blog:validate": "npx tsx scripts/validate-content.ts",
     "blog:seo-audit": "npx tsx scripts/seo-audit.ts",
-    "blog:benchmark": "npx tsx scripts/performance-benchmark.ts"
+    "blog:benchmark": "npx tsx scripts/performance-benchmark.ts",
+    "blog:new": "npx tsx scripts/create-blog-post.ts --",
+    "blog:analytics": "npx tsx scripts/content-analytics.ts",
+    "blog:publish": "npx tsx scripts/publishing-workflow.ts publish",
+    "blog:draft": "npx tsx scripts/publishing-workflow.ts draft",
+    "blog:schedule": "npx tsx scripts/publishing-workflow.ts schedule",
+    "blog:status": "npx tsx scripts/publishing-workflow.ts status",
+    "blog:process-scheduled": "npx tsx scripts/publishing-workflow.ts process-scheduled"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",
