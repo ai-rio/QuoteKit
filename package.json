@@ -34,7 +34,9 @@
     "blog:schedule": "npx tsx scripts/publishing-workflow.ts schedule",
     "blog:status": "npx tsx scripts/publishing-workflow.ts status",
     "blog:process-scheduled": "npx tsx scripts/publishing-workflow.ts process-scheduled",
-    "blog:validate-seo": "npx tsx scripts/validate-seo-geo.ts"
+    "blog:validate-seo": "npx tsx scripts/validate-seo-geo.ts",
+    "analyze": "ANALYZE=true npm run build",
+    "blog:perf-test": "npx tsx scripts/performance-benchmark.ts"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",
@@ -95,6 +97,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.4.5",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",

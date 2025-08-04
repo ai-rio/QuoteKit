@@ -69,6 +69,104 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   };
 }
 
+// Optimize component imports for better bundle splitting
+const MDXComponents = {
+  // Style default HTML elements with LawnQuote design system per style guide
+  h1: ({ children }: { children: React.ReactNode }) => (
+    <h1 className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }: { children: React.ReactNode }) => (
+    <h2 className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }: { children: React.ReactNode }) => (
+    <h3 className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
+      {children}
+    </h3>
+  ),
+  h4: ({ children }: { children: React.ReactNode }) => (
+    <h4 className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
+      {children}
+    </h4>
+  ),
+  p: ({ children }: { children: React.ReactNode }) => (
+    <p className="text-lg text-charcoal mb-6 leading-relaxed">
+      {children}
+    </p>
+  ),
+  ul: ({ children }: { children: React.ReactNode }) => (
+    <ul className="list-disc list-inside text-lg text-charcoal mb-6 space-y-2 ml-4">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }: { children: React.ReactNode }) => (
+    <ol className="list-decimal list-inside text-lg text-charcoal mb-6 space-y-2 ml-4">
+      {children}
+    </ol>
+  ),
+  li: ({ children }: { children: React.ReactNode }) => (
+    <li className="text-lg text-charcoal leading-relaxed">
+      {children}
+    </li>
+  ),
+  blockquote: ({ children }: { children: React.ReactNode }) => (
+    <blockquote className="border-l-4 border-equipment-yellow pl-8 py-4 mb-6 bg-light-concrete italic text-lg text-charcoal rounded-r-lg">
+      {children}
+    </blockquote>
+  ),
+  code: ({ children }: { children: React.ReactNode }) => (
+    <code className="bg-light-concrete px-2 py-1 rounded text-base font-mono text-charcoal border border-stone-gray/20">
+      {children}
+    </code>
+  ),
+  pre: ({ children }: { children: React.ReactNode }) => (
+    <pre className="bg-charcoal text-paper-white p-6 rounded-2xl mb-6 overflow-x-auto border border-stone-gray/20 shadow-lg">
+      {children}
+    </pre>
+  ),
+  a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
+    <a 
+      href={href} 
+      className="text-forest-green hover:text-equipment-yellow underline transition-colors duration-200 font-medium"
+      target={href?.startsWith('http') ? '_blank' : undefined}
+      rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+    >
+      {children}
+    </a>
+  ),
+  img: ({ src, alt }: { src?: string; alt?: string }) => (
+    <img 
+      src={src} 
+      alt={alt} 
+      className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
+    />
+  ),
+  hr: () => (
+    <hr className="border-stone-gray/30 my-12" />
+  ),
+  strong: ({ children }: { children: React.ReactNode }) => (
+    <strong className="font-bold text-charcoal">
+      {children}
+    </strong>
+  ),
+  em: ({ children }: { children: React.ReactNode }) => (
+    <em className="italic text-charcoal">
+      {children}
+    </em>
+  ),
+
+  // Custom MDX Components - individually imported to avoid chunk issues
+  Callout,
+  CodeBlock,
+  PricingCalculator,
+  KeyTakeaways,
+  FAQAccordion,
+  MaterialCostTable,
+};
+
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { getPostBySlug, getRelatedPosts } = await import('@/lib/blog/content');
   
@@ -81,103 +179,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   const relatedPosts = await getRelatedPosts(post.slug, post.category, 3);
   
-  // Define components for MDX - simplified to avoid chunk loading issues
-  const components = {
-    // Style default HTML elements with LawnQuote design system per style guide
-    h1: ({ children }: { children: React.ReactNode }) => (
-      <h1 className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
-        {children}
-      </h1>
-    ),
-    h2: ({ children }: { children: React.ReactNode }) => (
-      <h2 className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
-        {children}
-      </h2>
-    ),
-    h3: ({ children }: { children: React.ReactNode }) => (
-      <h3 className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
-        {children}
-      </h3>
-    ),
-    h4: ({ children }: { children: React.ReactNode }) => (
-      <h4 className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
-        {children}
-      </h4>
-    ),
-    p: ({ children }: { children: React.ReactNode }) => (
-      <p className="text-lg text-charcoal mb-6 leading-relaxed">
-        {children}
-      </p>
-    ),
-    ul: ({ children }: { children: React.ReactNode }) => (
-      <ul className="list-disc list-inside text-lg text-charcoal mb-6 space-y-2 ml-4">
-        {children}
-      </ul>
-    ),
-    ol: ({ children }: { children: React.ReactNode }) => (
-      <ol className="list-decimal list-inside text-lg text-charcoal mb-6 space-y-2 ml-4">
-        {children}
-      </ol>
-    ),
-    li: ({ children }: { children: React.ReactNode }) => (
-      <li className="text-lg text-charcoal leading-relaxed">
-        {children}
-      </li>
-    ),
-    blockquote: ({ children }: { children: React.ReactNode }) => (
-      <blockquote className="border-l-4 border-equipment-yellow pl-8 py-4 mb-6 bg-light-concrete italic text-lg text-charcoal rounded-r-lg">
-        {children}
-      </blockquote>
-    ),
-    code: ({ children }: { children: React.ReactNode }) => (
-      <code className="bg-light-concrete px-2 py-1 rounded text-base font-mono text-charcoal border border-stone-gray/20">
-        {children}
-      </code>
-    ),
-    pre: ({ children }: { children: React.ReactNode }) => (
-      <pre className="bg-charcoal text-paper-white p-6 rounded-2xl mb-6 overflow-x-auto border border-stone-gray/20 shadow-lg">
-        {children}
-      </pre>
-    ),
-    a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
-      <a 
-        href={href} 
-        className="text-forest-green hover:text-equipment-yellow underline transition-colors duration-200 font-medium"
-        target={href?.startsWith('http') ? '_blank' : undefined}
-        rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
-      >
-        {children}
-      </a>
-    ),
-    img: ({ src, alt }: { src?: string; alt?: string }) => (
-      <img 
-        src={src} 
-        alt={alt} 
-        className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
-      />
-    ),
-    hr: () => (
-      <hr className="border-stone-gray/30 my-12" />
-    ),
-    strong: ({ children }: { children: React.ReactNode }) => (
-      <strong className="font-bold text-charcoal">
-        {children}
-      </strong>
-    ),
-    em: ({ children }: { children: React.ReactNode }) => (
-      <em className="italic text-charcoal">
-        {children}
-      </em>
-    ),
-
-    // Custom MDX Components - individually imported to avoid chunk issues
-    Callout,
-    CodeBlock,
-    PricingCalculator,
-    KeyTakeaways,
-    FAQAccordion,
-    MaterialCostTable,
-  };
+  // Use pre-optimized components
+  const components = MDXComponents;
 
   // Structured data for SEO
   const structuredData = {

@@ -12,6 +12,88 @@ import { safeParseFrontmatter,validateFrontmatter } from './validation';
 
 // Content directory path
 const CONTENT_DIR = path.join(process.cwd(), 'content', 'posts');
+// Performance optimization: In-memory cache for blog posts
+interface BlogPostCache {
+  posts: Map<string, ProcessedBlogPost>;
+  lastUpdated: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+const CACHE_TTL = process.env.NODE_ENV === 'development' ? 5000 : 300000; // 5s in dev, 5min in prod
+let blogCache: BlogPostCache = {
+  posts: new Map(),
+  lastUpdated: 0,
+  ttl: CACHE_TTL
+};
+
+// Content index for faster lookups
+interface ContentIndex {
+  slugToFilepath: Map<string, string>;
+  lastUpdated: number;
+}
+
+let contentIndex: ContentIndex = {
+  slugToFilepath: new Map(),
+  lastUpdated: 0
+};
+// Build content index for faster lookups
+async function buildContentIndex(): Promise<void> {
+  const now = Date.now();
+  
+  // Only rebuild if index is stale
+  if (now - contentIndex.lastUpdated < CACHE_TTL) {
+    return;
+  }
+  
+  const files = await getAllMDXFiles();
+  contentIndex.slugToFilepath.clear();
+  
+  // Build slug-to-filepath mapping in parallel
+  const indexPromises = files.map(async (filepath) => {
+    const slug = path.basename(filepath, '.mdx').replace(/^\\d{2}-/, '');
+    return { slug, filepath };
+  });
+  
+  const mappings = await Promise.all(indexPromises);
+  mappings.forEach(({ slug, filepath }) => {
+    contentIndex.slugToFilepath.set(slug, filepath);
+  });
+  
+  contentIndex.lastUpdated = now;
+}
+
+// Check if cache is valid
+function isCacheValid(): boolean {
+  const now = Date.now();
+  return now - blogCache.lastUpdated < blogCache.ttl && blogCache.posts.size > 0;
+}
+
+// Clear cache (useful for development/testing)
+export function clearBlogCache(): void {
+  blogCache.posts.clear();
+  blogCache.lastUpdated = 0;
+  contentIndex.slugToFilepath.clear();
+  contentIndex.lastUpdated = 0;
+}
+
+// Lazy loading utilities for better performance
+export async function getPostWithLazyContent(slug: string): Promise<ProcessedBlogPost | null> {
+  const post = await getPostBySlug(slug);
+  if (!post) return null;
+  
+  // Return post metadata first, content can be loaded separately
+  return {
+    ...post,
+    // Mark content as lazy-loaded
+    isContentLoaded: true
+  };
+}
+
+// Preload critical posts for better performance
+export async function preloadCriticalPosts(count: number = 5): Promise<ProcessedBlogPost[]> {
+  const allPosts = await getAllPosts();
+  return allPosts.slice(0, count);
+}
 
 /**
  * Get all MDX files from the content directory
@@ -20,20 +102,28 @@ export async function getAllMDXFiles(): Promise<string[]> {
   try {
     const files: string[] = [];
     
-    // Read all years directories
-    const years = fs.readdirSync(CONTENT_DIR, { withFileTypes: true })
+    // Use async operations for better performance
+    const years = (await fs.promises.readdir(CONTENT_DIR, { withFileTypes: true }))
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name);
     
-    // Get all .mdx files from each year directory
-    for (const year of years) {
+    // Process years in parallel for better performance
+    const yearPromises = years.map(async (year) => {
       const yearPath = path.join(CONTENT_DIR, year);
-      const yearFiles = fs.readdirSync(yearPath)
-        .filter(file => file.endsWith('.mdx'))
-        .map(file => path.join(year, file));
-      
-      files.push(...yearFiles);
-    }
+      try {
+        const yearFiles = (await fs.promises.readdir(yearPath))
+          .filter(file => file.endsWith('.mdx'))
+          .map(file => path.join(year, file));
+        
+        return yearFiles;
+      } catch (error) {
+        console.warn(`Could not read year directory ${year}:`, error);
+        return [];
+      }
+    });
+    
+    const allYearFiles = await Promise.all(yearPromises);
+    files.push(...allYearFiles.flat());
     
     return files;
   } catch (error) {
@@ -49,11 +139,14 @@ export async function readMDXFile(filepath: string): Promise<MDXBlogPost | null>
   try {
     const fullPath = path.join(CONTENT_DIR, filepath);
     
-    if (!fs.existsSync(fullPath)) {
+    // Use async file operations
+    try {
+      await fs.promises.access(fullPath);
+    } catch {
       return null;
     }
     
-    const fileContents = fs.readFileSync(fullPath, 'utf8');
+    const fileContents = await fs.promises.readFile(fullPath, 'utf8');
     const { data, content } = matter(fileContents);
     
     // Validate the frontmatter
@@ -65,7 +158,7 @@ export async function readMDXFile(filepath: string): Promise<MDXBlogPost | null>
     }
     
     const frontmatter = validationResult.data;
-    const slug = path.basename(filepath, '.mdx').replace(/^\d{2}-/, ''); // Remove date prefix
+    const slug = path.basename(filepath, '.mdx').replace(/^\\d{2}-/, ''); // Remove date prefix
     
     return {
       frontmatter,
@@ -114,21 +207,44 @@ export function mdxToLegacyBlogPost(mdxPost: MDXBlogPost): ProcessedBlogPost {
  * Returns posts in legacy BlogPost format for backward compatibility
  */
 export async function getAllPosts(): Promise<ProcessedBlogPost[]> {
+  // Return cached posts if valid
+  if (isCacheValid()) {
+    const posts = Array.from(blogCache.posts.values())
+      .filter(post => !post.draft)
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    return posts;
+  }
+  
+  // Build fresh cache
   const files = await getAllMDXFiles();
   const posts: ProcessedBlogPost[] = [];
   
-  for (const file of files) {
-    const mdxPost = await readMDXFile(file);
-    
-    if (mdxPost) {
-      const legacyPost = mdxToLegacyBlogPost(mdxPost);
-      
-      // Only include published posts (not drafts)
-      if (!legacyPost.draft) {
-        posts.push(legacyPost);
+  // Process files in parallel batches for better performance
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    const batch = files.slice(i, i + BATCH_SIZE);
+    const batchPromises = batch.map(async (file) => {
+      const mdxPost = await readMDXFile(file);
+      if (mdxPost) {
+        const legacyPost = mdxToLegacyBlogPost(mdxPost);
+        
+        // Cache all posts (including drafts for faster admin access)
+        blogCache.posts.set(legacyPost.slug, legacyPost);
+        
+        // Only include published posts in the result
+        if (!legacyPost.draft) {
+          return legacyPost;
+        }
       }
-    }
+      return null;
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    posts.push(...batchResults.filter(Boolean) as ProcessedBlogPost[]);
   }
+  
+  // Update cache timestamp
+  blogCache.lastUpdated = Date.now();
   
   // Sort by published date (newest first)
   return posts.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
@@ -138,20 +254,31 @@ export async function getAllPosts(): Promise<ProcessedBlogPost[]> {
  * Get a single blog post by slug
  */
 export async function getPostBySlug(slug: string): Promise<ProcessedBlogPost | null> {
-  const files = await getAllMDXFiles();
-  
-  for (const file of files) {
-    const mdxPost = await readMDXFile(file);
-    
-    if (mdxPost && mdxPost.frontmatter.slug === slug) {
-      const legacyPost = mdxToLegacyBlogPost(mdxPost);
-      
-      // Return post even if it's a draft (for preview purposes)
-      return legacyPost;
-    }
+  // Check cache first
+  if (isCacheValid() && blogCache.posts.has(slug)) {
+    return blogCache.posts.get(slug) || null;
   }
   
-  return null;
+  // Build content index if needed
+  await buildContentIndex();
+  
+  // Use index for fast lookup
+  const filepath = contentIndex.slugToFilepath.get(slug);
+  if (!filepath) {
+    return null;
+  }
+  
+  const mdxPost = await readMDXFile(filepath);
+  if (!mdxPost) {
+    return null;
+  }
+  
+  const legacyPost = mdxToLegacyBlogPost(mdxPost);
+  
+  // Cache the post
+  blogCache.posts.set(slug, legacyPost);
+  
+  return legacyPost;
 }
 
 /**

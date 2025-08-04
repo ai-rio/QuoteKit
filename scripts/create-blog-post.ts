@@ -696,7 +696,7 @@ async function createBlogPost(
     console.log(`📂 Category: ${category}`);
     console.log(`📖 Reading time: ${readTime} min`);
     console.log(`📝 Status: ${isDraft ? 'Draft' : 'Published'}`);
-    console.log(`🏷️  Tags: ${metadata.tags.join(', ')}`);
+    console.log(`🏷️  Tags: ${metadata.tags?.join(', ') || 'None'}`);
     
     if (isDraft) {
       console.log(`\n💡 To publish this post, edit the file and set isDraft: false`);
@@ -749,7 +749,7 @@ Categories:
   
   // Parse arguments more carefully
   let title = '';
-  let category: Category = 'guides';
+  let category: Category = 'pricing';
   let isDraft = false;
   
   // Separate title words from options

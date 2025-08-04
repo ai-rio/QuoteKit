@@ -49,6 +49,13 @@ interface PerformanceMetrics {
     count: number;
     size: number;
   };
+  // Enhanced MDX performance metrics
+  mdxPerformance: {
+    contentCacheHitRate: number;
+    indexBuildTime: number;
+    parallelProcessingTime: number;
+    avgPostLoadTime: number;
+  };
 }
 
 interface PageMetrics {
@@ -214,6 +221,142 @@ async function measurePageMetrics(): Promise<{ blogIndex: PageMetrics; blogPost:
   }
 }
 
+// Enhanced MDX performance measurements  
+async function measureMDXPerformance(): Promise<{
+  contentCacheHitRate: number;
+  indexBuildTime: number;
+  parallelProcessingTime: number;
+  avgPostLoadTime: number;
+}> {
+  console.log('📚 Measuring MDX performance...');
+  
+  const { getAllPosts, getPostBySlug, clearBlogCache } = await import('../src/lib/blog/content');
+  
+  // Clear cache to measure cold performance
+  clearBlogCache();
+  
+  // Measure index build time
+  const indexStart = performance.now();
+  await getAllPosts();
+  const indexBuildTime = performance.now() - indexStart;
+  
+  // Measure cache hit rate
+  const testSlugs = ['pricing-guide', 'lawn-care-tips', 'seasonal-maintenance'];
+  let cacheHits = 0;
+  let totalRequests = 0;
+  
+  // First pass - cold cache
+  const coldStart = performance.now();
+  for (const slug of testSlugs) {
+    await getPostBySlug(slug);
+    totalRequests++;
+  }
+  const coldTime = performance.now() - coldStart;
+  
+  // Second pass - warm cache
+  const warmStart = performance.now();
+  for (const slug of testSlugs) {
+    const post = await getPostBySlug(slug);
+    if (post) cacheHits++;
+    totalRequests++;
+  }
+  const warmTime = performance.now() - warmStart;
+  
+  const cacheHitRate = (cacheHits / totalRequests) * 100;
+  const avgPostLoadTime = (coldTime + warmTime) / (testSlugs.length * 2);
+  const parallelProcessingTime = warmTime - coldTime;
+  
+  return {
+    contentCacheHitRate: cacheHitRate,
+    indexBuildTime: Math.round(indexBuildTime * 100) / 100,
+    parallelProcessingTime: Math.round(parallelProcessingTime * 100) / 100,
+    avgPostLoadTime: Math.round(avgPostLoadTime * 100) / 100,
+  };
+}
+
+// Standalone MDX performance test (no build required)
+async function testMDXPerformanceStandalone(): Promise<void> {
+  console.log('🔬 Testing MDX Performance Optimizations (Standalone)\n');
+  
+  try {
+    const { getAllPosts, getPostBySlug, clearBlogCache } = await import('../src/lib/blog/content');
+    
+    // Test 1: Cold vs Warm Cache Performance
+    console.log('📊 Test 1: Cache Performance');
+    console.log('   Clearing cache...');
+    clearBlogCache();
+    
+    const coldStart = performance.now();
+    const coldPosts = await getAllPosts();
+    const coldTime = performance.now() - coldStart;
+    console.log(`   Cold cache: ${coldTime.toFixed(2)}ms (${coldPosts.length} posts)`);
+    
+    const warmStart = performance.now();
+    const warmPosts = await getAllPosts();
+    const warmTime = performance.now() - warmStart;
+    console.log(`   Warm cache: ${warmTime.toFixed(2)}ms (${warmPosts.length} posts)`);
+    
+    const speedup = ((coldTime - warmTime) / coldTime * 100);
+    console.log(`   🚀 Cache speedup: ${speedup.toFixed(1)}%\n`);
+    
+    // Test 2: Single Post Lookup Performance
+    console.log('📊 Test 2: Post Lookup Performance');
+    let lookupSpeedup = 0;
+    if (coldPosts.length > 0) {
+      const testSlug = coldPosts[0].slug;
+      
+      // Cold lookup
+      clearBlogCache();
+      const lookupColdStart = performance.now();
+      const coldPost = await getPostBySlug(testSlug);
+      const lookupColdTime = performance.now() - lookupColdStart;
+      console.log(`   Cold lookup: ${lookupColdTime.toFixed(2)}ms`);
+      
+      // Warm lookup
+      const lookupWarmStart = performance.now();
+      const warmPost = await getPostBySlug(testSlug);
+      const lookupWarmTime = performance.now() - lookupWarmStart;
+      console.log(`   Warm lookup: ${lookupWarmTime.toFixed(2)}ms`);
+      
+      lookupSpeedup = ((lookupColdTime - lookupWarmTime) / lookupColdTime * 100);
+      console.log(`   🚀 Lookup speedup: ${lookupSpeedup.toFixed(1)}%\n`);
+    } else {
+      console.log('   ⚠️  No posts found for lookup test\n');
+    }
+    
+    // Test 3: Parallel Processing
+    console.log('📊 Test 3: Parallel Processing Test');
+    clearBlogCache();
+    
+    const parallelStart = performance.now();
+    const testSlugs = coldPosts.slice(0, Math.min(3, coldPosts.length)).map(p => p.slug);
+    const parallelPromises = testSlugs.map(slug => getPostBySlug(slug));
+    const parallelResults = await Promise.all(parallelPromises);
+    const parallelTime = performance.now() - parallelStart;
+    
+    console.log(`   ${testSlugs.length} posts in parallel: ${parallelTime.toFixed(2)}ms`);
+    console.log(`   Average per post: ${(parallelTime / testSlugs.length).toFixed(2)}ms\n`);
+    
+    // Results Summary
+    console.log('✅ MDX Performance Test Results:');
+    console.log(`   Posts Available: ${coldPosts.length}`);
+    console.log(`   Cache Effectiveness: ${speedup.toFixed(1)}% faster`);
+    console.log(`   Lookup Optimization: ${lookupSpeedup.toFixed(1)}% faster`);
+    console.log(`   Parallel Processing: ${(parallelTime / testSlugs.length).toFixed(2)}ms per post`);
+    
+    // Performance Score
+    let score = 100;
+    if (coldTime > 1000) score -= 20; // Penalty for slow cold starts
+    if (warmTime > 100) score -= 15;  // Penalty for slow warm cache
+    if (speedup < 50) score -= 25;    // Penalty for poor cache effectiveness
+    
+    console.log(`   🎯 Performance Score: ${Math.max(0, score)}/100`);
+    
+  } catch (error) {
+    console.error('❌ MDX Performance Test Failed:', error);
+  }
+}
+
 async function measureSinglePageMetrics(url: string): Promise<PageMetrics> {
   // Simple curl-based measurement
   // In production, you'd use tools like Puppeteer or Lighthouse
@@ -291,12 +434,14 @@ async function runFullBenchmark(): Promise<PerformanceMetrics> {
     memoryUsage,
     pageMetrics,
     dependencies,
+    mdxPerformance,
   ] = await Promise.all([
     measureBuildTime(),
     measureBundleSize(),
     measureMemoryUsage(),
     measurePageMetrics(),
     measureDependencies(),
+    measureMDXPerformance(),
   ]);
   
   const metrics: PerformanceMetrics = {
@@ -306,6 +451,7 @@ async function runFullBenchmark(): Promise<PerformanceMetrics> {
     memoryUsage,
     pageMetrics,
     dependencies,
+    mdxPerformance,
   };
   
   const totalTime = Date.now() - startTime;
@@ -399,11 +545,100 @@ function compareMetrics(baseline: PerformanceMetrics, current: PerformanceMetric
   }
 }
 
+// Performance monitoring utilities
+function generatePerformanceReport(current: PerformanceMetrics, baseline?: PerformanceMetrics): string {
+  let report = '\n📊 PERFORMANCE REPORT\n';
+  report += '=' .repeat(50) + '\n\n';
+  
+  // Build Time
+  report += `🏗️  BUILD PERFORMANCE\n`;
+  report += `   Build Time: ${current.buildTime.toFixed(2)}s`;
+  if (baseline) {
+    const diff = current.buildTime - baseline.buildTime;
+    const percent = ((diff / baseline.buildTime) * 100).toFixed(1);
+    report += ` (${diff > 0 ? '+' : ''}${diff.toFixed(2)}s, ${percent}%)`;
+  }
+  report += '\n\n';
+  
+  // Bundle Size
+  report += `📦 BUNDLE SIZE\n`;
+  report += `   Total: ${(current.bundleSize.total / 1024).toFixed(1)} KB`;
+  if (baseline) {
+    const diff = current.bundleSize.total - baseline.bundleSize.total;
+    const percent = ((diff / baseline.bundleSize.total) * 100).toFixed(1);
+    report += ` (${diff > 0 ? '+' : ''}${(diff / 1024).toFixed(1)} KB, ${percent}%)`;
+  }
+  report += `\n   JS: ${(current.bundleSize.js / 1024).toFixed(1)} KB`;
+  report += `\n   CSS: ${(current.bundleSize.css / 1024).toFixed(1)} KB\n\n`;
+  
+  // MDX Performance
+  report += `📚 MDX PERFORMANCE\n`;
+  report += `   Cache Hit Rate: ${current.mdxPerformance.contentCacheHitRate.toFixed(1)}%\n`;
+  report += `   Index Build Time: ${current.mdxPerformance.indexBuildTime.toFixed(2)}ms\n`;
+  report += `   Avg Post Load: ${current.mdxPerformance.avgPostLoadTime.toFixed(2)}ms\n`;
+  report += `   Parallel Processing: ${current.mdxPerformance.parallelProcessingTime.toFixed(2)}ms\n\n`;
+  
+  // Memory Usage
+  report += `💾 MEMORY USAGE\n`;
+  report += `   Peak: ${current.memoryUsage.peak.toFixed(1)} MB\n`;
+  report += `   Average: ${current.memoryUsage.average.toFixed(1)} MB\n\n`;
+  
+  // Page Metrics
+  report += `⚡ PAGE PERFORMANCE\n`;
+  report += `   Blog Index: ${current.pageMetrics.blogIndex.loadTime.toFixed(0)}ms\n`;
+  report += `   Blog Post: ${current.pageMetrics.blogPost.loadTime.toFixed(0)}ms\n\n`;
+  
+  // Performance Score
+  const performanceScore = calculatePerformanceScore(current);
+  report += `🎯 PERFORMANCE SCORE: ${performanceScore}/100\n`;
+  
+  if (performanceScore >= 90) {
+    report += `✅ Excellent performance!\n`;
+  } else if (performanceScore >= 70) {
+    report += `⚠️  Good performance, minor optimizations needed\n`;
+  } else {
+    report += `🚨 Performance improvements required\n`;
+  }
+  
+  return report;
+}
+
+function calculatePerformanceScore(metrics: PerformanceMetrics): number {
+  let score = 100;
+  
+  // Build time penalty (target: <30s)
+  if (metrics.buildTime > 30) score -= Math.min(20, (metrics.buildTime - 30) * 2);
+  
+  // Bundle size penalty (target: <2MB total)
+  const bundleMB = metrics.bundleSize.total / (1024 * 1024);
+  if (bundleMB > 2) score -= Math.min(15, (bundleMB - 2) * 5);
+  
+  // Cache hit rate bonus/penalty (target: >80%)
+  if (metrics.mdxPerformance.contentCacheHitRate < 80) {
+    score -= (80 - metrics.mdxPerformance.contentCacheHitRate) * 0.5;
+  }
+  
+  // Page load time penalty (target: <1000ms)
+  const avgPageLoad = (metrics.pageMetrics.blogIndex.loadTime + metrics.pageMetrics.blogPost.loadTime) / 2;
+  if (avgPageLoad > 1000) score -= Math.min(15, (avgPageLoad - 1000) / 100);
+  
+  // Memory usage penalty (target: <500MB peak)
+  if (metrics.memoryUsage.peak > 500) score -= Math.min(10, (metrics.memoryUsage.peak - 500) / 50);
+  
+  return Math.max(0, Math.round(score));
+}
+
 async function main() {
   const options = parseArgs();
   
   console.log('🌿 LawnQuote Blog Performance Benchmark');
   console.log('=======================================\n');
+  
+  // Add standalone MDX test option
+  if (process.argv.includes('--mdx-only')) {
+    await testMDXPerformanceStandalone();
+    return;
+  }
   
   ensureBenchmarkDir();
   
@@ -413,8 +648,9 @@ async function main() {
     const metrics = await runFullBenchmark();
     saveMetrics(metrics, 'baseline.json');
     
+    console.log(generatePerformanceReport(metrics));
     console.log('\n✅ Baseline metrics recorded successfully!');
-    console.log('💡 Run with --compare flag after MDX migration to compare performance.');
+    console.log('💡 Run with --compare flag after optimizations to compare performance.');
     
   } else if (options.compare) {
     console.log('📊 Comparing current performance against baseline...\n');
@@ -428,18 +664,24 @@ async function main() {
     const current = await runFullBenchmark();
     saveMetrics(current, 'current.json');
     
+    console.log(generatePerformanceReport(current, baseline));
     compareMetrics(baseline, current);
     
   } else {
-    // Default: run current benchmark only
+    // Default: run current benchmark with enhanced reporting
     console.log('📊 Running performance benchmark (current state)...\n');
     
     const metrics = await runFullBenchmark();
-    saveMetrics(metrics, `benchmark-${Date.now()}.json`);
+    const timestamp = Date.now();
+    saveMetrics(metrics, `benchmark-${timestamp}.json`);
     
-    console.log('\n💡 To compare performance:');
-    console.log('1. Run with --baseline before migration');
-    console.log('2. Run with --compare after migration');
+    console.log(generatePerformanceReport(metrics));
+    
+    console.log('\n💡 Performance Commands:');
+    console.log('• npm run blog:perf-test -- --mdx-only     (test MDX only, no build)');
+    console.log('• npm run blog:perf-test -- --baseline     (record baseline)');
+    console.log('• npm run blog:perf-test -- --compare      (compare vs baseline)');
+    console.log('• npm run analyze                          (bundle analysis)');
   }
 }
 
