@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { BlogHero } from './components/blog-hero';
 import { BlogSearchAndFilter } from './components/blog-search-and-filter';
-import { BlogGrid } from './components/blog-grid';
 import { BlogFilterProvider } from './contexts/blog-filter-context';
 
 export const metadata: Metadata = {

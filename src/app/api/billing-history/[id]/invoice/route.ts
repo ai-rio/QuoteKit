@@ -10,10 +10,11 @@ import { stripeAdmin } from '@/libs/stripe/stripe-admin';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = params.id;
+    const resolvedParams = await params;
+    const invoiceId = resolvedParams.id;
     
     console.debug('Invoice Download API: Processing download request', {
       invoiceId,
@@ -251,10 +252,11 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = params.id;
+    const resolvedParams = await params;
+    const invoiceId = resolvedParams.id;
     
     console.debug('Invoice Generation API: Processing generation request', {
       invoiceId,

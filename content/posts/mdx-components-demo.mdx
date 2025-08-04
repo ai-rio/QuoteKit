@@ -1,0 +1,251 @@
+---
+title: "MDX Components Demo"
+slug: "mdx-components-demo"
+category: "tools"
+author: "LawnQuote Team"
+publishedAt: "2025-08-04"
+summary: "A demonstration of all available custom MDX components for enhanced blog content"
+readTime: 8
+image: "https://placehold.co/600x400/2A3D2F/FFFFFF?text=MDX+Components&font=source-sans-pro"
+featured: false
+draft: false
+tags: ["mdx", "components", "demo", "development"]
+seo:
+  description: "A demonstration of all available custom MDX components for enhanced blog content"
+  keywords: ["mdx", "components", "demo", "development"]
+imageAlt: "MDX Components Demo"
+---
+
+# MDX Components Demo
+
+This post demonstrates all the custom MDX components available for creating rich, interactive blog content. These components enhance the standard markdown experience with styled callouts, interactive calculators, and enhanced code blocks.
+
+## Callout Components
+
+Callouts are perfect for highlighting important information, warnings, tips, and more.
+
+<InfoCallout title="Information Callout">
+This is an informational callout. Use it to provide helpful context or additional details that readers should know.
+</InfoCallout>
+
+<WarningCallout title="Warning Callout">
+This is a warning callout. Use it to alert readers about potential issues, deprecated features, or important considerations.
+</WarningCallout>
+
+<SuccessCallout title="Success Callout">
+This is a success callout. Use it to highlight positive outcomes, completed steps, or successful implementations.
+</SuccessCallout>
+
+<ErrorCallout title="Error Callout">
+This is an error callout. Use it to highlight critical issues, breaking changes, or things that could cause problems.
+</ErrorCallout>
+
+<TipCallout title="Pro Tip">
+This is a tip callout. Use it to share helpful tips, best practices, or insider knowledge that can improve the reader's experience.
+</TipCallout>
+
+### Callouts Without Titles
+
+You can also use callouts without titles for simpler messaging:
+
+<InfoCallout>
+Simple informational message without a title.
+</InfoCallout>
+
+<WarningCallout>
+Quick warning without additional formatting.
+</WarningCallout>
+
+## Code Block Components
+
+Enhanced code blocks with syntax highlighting, copy functionality, and language-specific styling.
+
+### JavaScript Code
+
+<JavaScriptCode title="React Component Example">
+{`import React, { useState } from 'react';
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="counter">
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+    </div>
+  );
+}`}
+</JavaScriptCode>
+
+### TypeScript Code
+
+<TypeScriptCode title="Type Definitions" showLineNumbers={true}>
+{`interface User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+  preferences: UserPreferences;
+}
+
+interface UserPreferences {
+  theme: 'light' | 'dark';
+  notifications: boolean;
+  language: string;
+}
+
+type CreateUserRequest = Omit<User, 'id' | 'createdAt'>;`}
+</TypeScriptCode>
+
+### Bash Commands
+
+<BashCode title="Installation and Setup">
+{`# Install dependencies
+npm install next react react-dom
+
+# Install MDX support
+npm install @next/mdx @mdx-js/loader @mdx-js/react
+
+# Start development server
+npm run dev`}
+</BashCode>
+
+### SQL Queries
+
+<SQLCode title="Database Schema">
+{`CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_created_at ON users(created_at);`}
+</SQLCode>
+
+### Generic Code Block
+
+<CodeBlock language="json" title="Configuration File">
+{`{
+  "name": "lawnquote-blog",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0"
+  }
+}`}
+</CodeBlock>
+
+## Interactive Components
+
+### Pricing Calculator
+
+Our interactive pricing calculator helps visitors understand lawn care costs:
+
+<PricingCalculator />
+
+<TipCallout title="Calculator Usage">
+Try changing the service type and area to see how pricing varies. This calculator uses real-world rates and includes tax calculations.
+</TipCallout>
+
+### Specialized Calculators
+
+For specific use cases, we have preset calculators:
+
+<MowingCalculator />
+
+<InfoCallout>
+The mowing calculator is pre-configured with lawn mowing as the default service, making it perfect for mowing-focused blog posts.
+</InfoCallout>
+
+## Combining Components
+
+You can combine multiple components to create rich, informative content:
+
+<WarningCallout title="Before You Begin">
+Make sure you have the following prerequisites installed before running the code examples.
+</WarningCallout>
+
+<BashCode title="Prerequisites Check">
+{`# Check Node.js version
+node --version
+
+# Check npm version
+npm --version
+
+# Verify git installation
+git --version`}
+</BashCode>
+
+<SuccessCallout>
+If all commands return version numbers, you're ready to proceed!
+</SuccessCallout>
+
+## Best Practices
+
+When using these components in your blog posts, consider these best practices:
+
+### Content Organization
+
+<TipCallout title="Structure Your Content">
+Use callouts to break up long sections of text and highlight key information. This improves readability and helps readers scan for important details.
+</TipCallout>
+
+### Code Examples
+
+<InfoCallout title="Code Context">
+Always provide context for your code examples. Use descriptive titles and explain what the code does before showing it.
+</InfoCallout>
+
+<JavaScriptCode title="Well-Documented Function">
+{`/**
+ * Calculates the total price for lawn care services
+ * @param {number} area - The area in square feet
+ * @param {number} rate - The rate per square foot
+ * @param {number} taxRate - The tax rate as a percentage
+ * @returns {number} The total price including tax
+ */
+function calculateTotalPrice(area, rate, taxRate = 8.25) {
+  const subtotal = area * rate;
+  const tax = subtotal * (taxRate / 100);
+  return subtotal + tax;
+}`}
+</JavaScriptCode>
+
+### Interactive Elements
+
+<WarningCallout>
+Interactive components like calculators should be used sparingly and only when they add real value to the content. Too many interactive elements can be distracting.
+</WarningCallout>
+
+## Accessibility Features
+
+All components are built with accessibility in mind:
+
+- **Keyboard Navigation**: All interactive elements are keyboard accessible
+- **Screen Reader Support**: Proper ARIA labels and semantic HTML
+- **Color Contrast**: All color combinations meet WCAG AA standards
+- **Focus Management**: Clear focus indicators for all interactive elements
+
+<SuccessCallout title="Accessibility First">
+These components are designed to be inclusive and accessible to all users, regardless of their abilities or the assistive technologies they use.
+</SuccessCallout>
+
+## Conclusion
+
+These MDX components provide a powerful way to create engaging, interactive blog content while maintaining consistency with the LawnQuote design system. They're designed to be easy to use, accessible, and performant.
+
+<TipCallout title="Next Steps">
+Try using these components in your own blog posts! Start with simple callouts and gradually incorporate more complex interactive elements as needed.
+</TipCallout>
+
+For more information about using these components, check out the [component documentation](https://github.com/your-repo/src/components/mdx/README.md) or reach out to the development team.

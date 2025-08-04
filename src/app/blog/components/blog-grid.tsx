@@ -3,25 +3,33 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, User } from 'lucide-react';
-import { useBlogFilter } from '../contexts/blog-filter-context';
-import { blogPosts } from '../data/blog-posts';
-import { BlogImage } from './blog-image';
+
+import { ProcessedBlogPost } from '@/lib/blog/types';
 import { cn } from '@/utils/cn';
 
-export function BlogGrid() {
+import { useBlogFilter } from '../contexts/blog-filter-context';
+
+import { BlogImage } from './blog-image';
+
+interface BlogGridProps {
+  posts: ProcessedBlogPost[];
+}
+
+export function BlogGrid({ posts }: BlogGridProps) {
   const { searchTerm, selectedCategory } = useBlogFilter();
 
   const filteredPosts = useMemo(() => {
-    return blogPosts.filter((post) => {
+    return posts.filter((post) => {
       const categoryMatch = selectedCategory === 'all' || post.category === selectedCategory;
       const searchMatch = 
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.category.toLowerCase().includes(searchTerm.toLowerCase());
+        post.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (post.tags && post.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
       
       return categoryMatch && searchMatch;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [posts, searchTerm, selectedCategory]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -53,7 +61,7 @@ export function BlogGrid() {
               No Articles Found
             </h3>
             <p className="text-lg text-charcoal/80">
-              Try adjusting your search or filter to find what you're looking for.
+              Try adjusting your search or filter to find what you&apos;re looking for.
             </p>
           </div>
         </div>
@@ -75,7 +83,7 @@ export function BlogGrid() {
               <div className="relative h-48 bg-stone-gray/50 overflow-hidden">
                 <BlogImage
                   src={post.image}
-                  alt={post.title}
+                  alt={post.imageAlt || post.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />

@@ -1,15 +1,21 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { blogPosts } from '../data/blog-posts';
+import { BlogPostFrontmatter } from '@/lib/blog/types';
 
 interface BlogPostNavigationProps {
   currentSlug: string;
+  allPosts: BlogPostFrontmatter[];
 }
 
-export function BlogPostNavigation({ currentSlug }: BlogPostNavigationProps) {
-  const currentIndex = blogPosts.findIndex(post => post.slug === currentSlug);
-  const previousPost = currentIndex > 0 ? blogPosts[currentIndex - 1] : null;
-  const nextPost = currentIndex < blogPosts.length - 1 ? blogPosts[currentIndex + 1] : null;
+export function BlogPostNavigation({ currentSlug, allPosts }: BlogPostNavigationProps) {
+  // Sort posts by publication date (newest first) to match blog index order
+  const sortedPosts = [...allPosts].sort((a, b) => 
+    new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+  
+  const currentIndex = sortedPosts.findIndex(post => post.slug === currentSlug);
+  const previousPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
+  const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
 
   if (!previousPost && !nextPost) {
     return null;

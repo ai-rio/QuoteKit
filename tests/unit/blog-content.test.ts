@@ -1,0 +1,381 @@
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { blogPostFrontmatterSchema } from '@/lib/blog/validation';
+
+// Mock the entire blog content module
+jest.mock('@/lib/blog/content', () => ({
+  getAllPosts: jest.fn(),
+  getPostBySlug: jest.fn(),
+  getRelatedPosts: jest.fn(),
+}));
+
+// Mock fs module for testing
+jest.mock('fs', () => ({
+  readdirSync: jest.fn(),
+  statSync: jest.fn(),
+  readFileSync: jest.fn(),
+  existsSync: jest.fn(() => true),
+}));
+
+jest.mock('path', () => ({
+  join: jest.fn((...args) => args.join('/')),
+}));
+
+// Mock gray-matter
+jest.mock('gray-matter', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+const { getAllPosts, getPostBySlug, getRelatedPosts } = require('@/lib/blog/content');
+
+describe('Blog Content Functions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('getAllPosts', () => {
+    test('should return all valid posts', async () => {
+      const mockPosts = [
+        {
+          slug: 'test-post',
+          title: 'Test Post',
+          category: 'pricing',
+          author: 'Test Author',
+          publishedAt: '2025-01-15',
+          summary: 'Test summary',
+          readTime: 5,
+          image: 'https://example.com/test.jpg',
+          draft: false,
+          content: '# Test Content\n\nThis is test content.',
+        },
+        {
+          slug: 'another-post',
+          title: 'Another Post',
+          category: 'operations',
+          author: 'Test Author',
+          publishedAt: '2025-01-10',
+          summary: 'Another summary',
+          readTime: 3,
+          image: 'https://example.com/another.jpg',
+          draft: false,
+          content: '# Another Content',
+        }
+      ];
+
+      (getAllPosts as jest.Mock).mockResolvedValue(mockPosts);
+
+      const posts = await getAllPosts();
+
+      expect(posts).toBeInstanceOf(Array);
+      expect(posts).toHaveLength(2);
+      expect(posts[0]).toHaveProperty('slug');
+      expect(posts[0]).toHaveProperty('title');
+      expect(posts[0]).toHaveProperty('category');
+    });
+
+    test('should filter out draft posts in production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      mockFs.readdirSync
+        .mockReturnValueOnce(['2025'])
+        .mockReturnValueOnce(['01-draft-post.mdx']);
+
+      const draftFrontmatter = {
+        title: 'Draft Post',
+        slug: 'draft-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Draft summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: true, // This should be filtered out
+      };
+
+      mockMatter.mockReturnValue({
+        data: draftFrontmatter,
+        content: '# Draft Content',
+      });
+
+      mockFs.readFileSync.mockReturnValue('mock file content');
+
+      const posts = await getAllPosts();
+
+      expect(posts).toHaveLength(0);
+
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    test('should sort posts by publication date (newest first)', async () => {
+      mockFs.readdirSync
+        .mockReturnValueOnce(['2025'])
+        .mockReturnValueOnce(['01-old-post.mdx', '02-new-post.mdx']);
+
+      const oldPost = {
+        title: 'Old Post',
+        slug: 'old-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-01',
+        summary: 'Old post summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      const newPost = {
+        title: 'New Post',
+        slug: 'new-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'New post summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      mockMatter
+        .mockReturnValueOnce({ data: oldPost, content: 'Old content' })
+        .mockReturnValueOnce({ data: newPost, content: 'New content' });
+
+      mockFs.readFileSync.mockReturnValue('mock file content');
+
+      const posts = await getAllPosts();
+
+      expect(posts[0].frontmatter.slug).toBe('new-post');
+      expect(posts[1].frontmatter.slug).toBe('old-post');
+    });
+  });
+
+  describe('getPostBySlug', () => {
+    test('should return correct post for valid slug', async () => {
+      mockFs.readdirSync
+        .mockReturnValueOnce(['2025'])
+        .mockReturnValueOnce(['01-test-post.mdx']);
+
+      const mockFrontmatter = {
+        title: 'Test Post',
+        slug: 'test-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Test summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      mockMatter.mockReturnValue({
+        data: mockFrontmatter,
+        content: '# Test Content',
+      });
+
+      mockFs.readFileSync.mockReturnValue('mock file content');
+
+      const post = await getPostBySlug('test-post');
+
+      expect(post).toBeDefined();
+      expect(post?.slug).toBe('test-post');
+      expect(post?.title).toBe('Test Post');
+    });
+
+    test('should return null for non-existent slug', async () => {
+      mockFs.readdirSync
+        .mockReturnValueOnce(['2025'])
+        .mockReturnValueOnce(['01-test-post.mdx']);
+
+      const mockFrontmatter = {
+        title: 'Test Post',
+        slug: 'test-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Test summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      mockMatter.mockReturnValue({
+        data: mockFrontmatter,
+        content: '# Test Content',
+      });
+
+      mockFs.readFileSync.mockReturnValue('mock file content');
+
+      const post = await getPostBySlug('non-existent-post');
+
+      expect(post).toBeNull();
+    });
+  });
+
+  describe('getRelatedPosts', () => {
+    test('should return posts from same category', async () => {
+      mockFs.readdirSync
+        .mockReturnValueOnce(['2025'])
+        .mockReturnValueOnce([
+          '01-current-post.mdx',
+          '02-related-post.mdx',
+          '03-different-category.mdx'
+        ]);
+
+      const currentPost = {
+        title: 'Current Post',
+        slug: 'current-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Current post summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      const relatedPost = {
+        title: 'Related Post',
+        slug: 'related-post',
+        category: 'pricing' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-10',
+        summary: 'Related post summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      const differentCategoryPost = {
+        title: 'Different Category Post',
+        slug: 'different-category',
+        category: 'operations' as const,
+        author: 'Test Author',
+        publishedAt: '2025-01-05',
+        summary: 'Different category summary',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+        draft: false,
+      };
+
+      mockMatter
+        .mockReturnValueOnce({ data: currentPost, content: 'Current content' })
+        .mockReturnValueOnce({ data: relatedPost, content: 'Related content' })
+        .mockReturnValueOnce({ data: differentCategoryPost, content: 'Different content' });
+
+      mockFs.readFileSync.mockReturnValue('mock file content');
+
+      const relatedPosts = await getRelatedPosts('current-post', 'pricing', 3);
+
+      expect(relatedPosts).toHaveLength(1);
+      expect(relatedPosts[0].slug).toBe('related-post');
+      expect(relatedPosts[0].category).toBe('pricing');
+    });
+
+    test('should respect limit parameter', async () => {
+      mockFs.readdirSync
+        .mockReturnValueOnce(['2025'])
+        .mockReturnValueOnce([
+          '01-current-post.mdx',
+          '02-related-1.mdx',
+          '03-related-2.mdx',
+          '04-related-3.mdx',
+          '05-related-4.mdx'
+        ]);
+
+      // Mock multiple related posts in same category
+      const posts = [
+        { slug: 'current-post', category: 'pricing' },
+        { slug: 'related-1', category: 'pricing' },
+        { slug: 'related-2', category: 'pricing' },
+        { slug: 'related-3', category: 'pricing' },
+        { slug: 'related-4', category: 'pricing' },
+      ];
+
+      posts.forEach((post, index) => {
+        mockMatter.mockReturnValueOnce({
+          data: {
+            title: `Post ${index}`,
+            slug: post.slug,
+            category: post.category as const,
+            author: 'Test Author',
+            publishedAt: '2025-01-15',
+            summary: `Summary ${index}`,
+            readTime: 5,
+            image: 'https://example.com/test.jpg',
+            draft: false,
+          },
+          content: `Content ${index}`,
+        });
+      });
+
+      mockFs.readFileSync.mockReturnValue('mock file content');
+
+      const relatedPosts = await getRelatedPosts('current-post', 'pricing', 2);
+
+      expect(relatedPosts).toHaveLength(2);
+      expect(relatedPosts.every(post => post.slug !== 'current-post')).toBe(true);
+    });
+  });
+
+  describe('Frontmatter Validation', () => {
+    test('should validate required fields', () => {
+      const validFrontmatter = {
+        title: 'Test Post',
+        slug: 'test-post',
+        category: 'pricing',
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Test summary that is long enough',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+      };
+
+      expect(() => blogPostFrontmatterSchema.parse(validFrontmatter)).not.toThrow();
+    });
+
+    test('should reject invalid slug format', () => {
+      const invalidFrontmatter = {
+        title: 'Test Post',
+        slug: 'Test Post With Spaces', // Invalid slug
+        category: 'pricing',
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Test summary that is long enough',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+      };
+
+      expect(() => blogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
+    });
+
+    test('should reject invalid category', () => {
+      const invalidFrontmatter = {
+        title: 'Test Post',
+        slug: 'test-post',
+        category: 'invalid-category', // Invalid category
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Test summary that is long enough',
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+      };
+
+      expect(() => blogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
+    });
+
+    test('should reject summary that is too short', () => {
+      const invalidFrontmatter = {
+        title: 'Test Post',
+        slug: 'test-post',
+        category: 'pricing',
+        author: 'Test Author',
+        publishedAt: '2025-01-15',
+        summary: 'Short', // Too short
+        readTime: 5,
+        image: 'https://example.com/test.jpg',
+      };
+
+      expect(() => blogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
+    });
+  });
+});
