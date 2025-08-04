@@ -36,7 +36,8 @@
     "blog:process-scheduled": "npx tsx scripts/publishing-workflow.ts process-scheduled",
     "blog:validate-seo": "npx tsx scripts/validate-seo-geo.ts",
     "analyze": "ANALYZE=true npm run build",
-    "blog:perf-test": "npx tsx scripts/performance-benchmark.ts"
+    "blog:perf-test": "npx tsx scripts/performance-benchmark.ts",
+    "blog:test-essential": "npx tsx scripts/essential-tests.ts"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",
