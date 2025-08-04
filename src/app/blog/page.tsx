@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { BlogHero } from './components/blog-hero';
 import { BlogSearchAndFilter } from './components/blog-search-and-filter';
 import { BlogGrid } from './components/blog-grid';
@@ -22,12 +23,14 @@ export const metadata: Metadata = {
 
 export default function BlogPage() {
   return (
-    <BlogFilterProvider>
-      <div className="min-h-screen bg-light-concrete">
-        <BlogHero />
-        <BlogSearchAndFilter />
-        <BlogGrid />
-      </div>
-    </BlogFilterProvider>
+    <MarketingLayout>
+      <BlogFilterProvider>
+        <div className="min-h-screen bg-light-concrete">
+          <BlogHero />
+          <BlogSearchAndFilter />
+          <BlogGrid />
+        </div>
+      </BlogFilterProvider>
+    </MarketingLayout>
   );
 }

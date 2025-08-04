@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { AboutPageClient } from './about-page-client';
 
 export const metadata: Metadata = {
@@ -18,5 +19,9 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return <AboutPageClient />;
+  return (
+    <MarketingLayout>
+      <AboutPageClient />
+    </MarketingLayout>
+  );
 }

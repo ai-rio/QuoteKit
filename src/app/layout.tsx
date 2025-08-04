@@ -2,8 +2,7 @@ import { PropsWithChildren } from 'react';
 import type { Metadata } from 'next';
 import { Inter, Roboto_Mono, Kalam } from 'next/font/google';
 
-import { MarketingHeader } from '@/components/layout/marketing-header';
-import { MarketingFooter } from '@/components/layout/marketing-footer';
+
 import { Toaster } from '@/components/ui/toaster';
 import { CookieConsentProvider } from '@/contexts/cookie-consent-context';
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
@@ -72,11 +71,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <body className={cn('font-sans antialiased', inter.variable, robotoMono.variable, kalam.variable)}>
         <CookieConsentProvider>
           <div className='flex min-h-screen flex-col'>
-            <MarketingHeader />
-            <main className='flex-1'>
-              {children}
-            </main>
-            <MarketingFooter />
+            {children}
           </div>
           <CookieConsentBanner />
           <Toaster />

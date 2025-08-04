@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 
 import HomePageClient from './home-page-client';
 
@@ -25,5 +26,9 @@ export default async function HomePage({ searchParams }: Props) {
   }
 
   // Show the public marketing page
-  return <HomePageClient />;
+  return (
+    <MarketingLayout>
+      <HomePageClient />
+    </MarketingLayout>
+  );
 }

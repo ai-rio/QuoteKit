@@ -1,19 +1,34 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { IoLogoGithub, IoLogoGoogle } from 'react-icons/io5';
 
+import { LawnQuoteLogo } from '@/components/branding/lawn-quote-logo';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { ActionResponse } from '@/types/action-response';
+import { cn } from '@/utils/cn';
+
+interface AuthUIProps {
+  mode: 'login' | 'signup';
+  signInWithOAuth: (provider: 'google') => Promise<ActionResponse>;
+  signInWithEmail?: (formData: FormData) => Promise<ActionResponse>;
+  signInWithPassword?: (formData: FormData) => Promise<ActionResponse>;
+  signUpWithEmail?: (formData: FormData) => Promise<ActionResponse>;
+  className?: string;
+}
 
 const titleMap = {
-  login: 'Login to LawnQuote',
-  signup: 'Join LawnQuote and start creating professional quotes',
+  login: 'Welcome back to LawnQuote',
+  signup: 'Create your LawnQuote account',
+} as const;
+
+const descriptionMap = {
+  login: 'Sign in to access your professional quoting dashboard',
+  signup: 'Start creating professional landscaping quotes today',
 } as const;
 
 export function AuthUI({
@@ -22,16 +37,9 @@ export function AuthUI({
   signInWithEmail,
   signInWithPassword,
   signUpWithEmail,
-}: {
-  mode: 'login' | 'signup';
-  signInWithOAuth: (provider: 'github' | 'google') => Promise<ActionResponse>;
-  signInWithEmail: (formData: FormData) => Promise<ActionResponse>;
-  signInWithPassword?: (formData: FormData) => Promise<ActionResponse>;
-  signUpWithEmail?: (formData: FormData) => Promise<ActionResponse>;
-}) {
+  className,
+}: AuthUIProps) {
   const [pending, setPending] = useState(false);
-  const [emailFormOpen, setEmailFormOpen] = useState(false);
-  const [usePassword, setUsePassword] = useState(false);
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,158 +50,217 @@ export function AuthUI({
 
     let response: ActionResponse | undefined;
 
-    if (mode === 'signup') {
-      if (signUpWithEmail) {
-        response = await signUpWithEmail(formData);
+    try {
+      if (mode === 'signup') {
+        if (signUpWithEmail) {
+          response = await signUpWithEmail(formData);
+        } else {
+          console.error('signUpWithEmail function is not provided in signup mode');
+          return;
+        }
       } else {
-        console.error('signUpWithEmail function is not provided in signup mode');
-        return;
+        // Login mode - always use password
+        if (signInWithPassword) {
+          response = await signInWithPassword(formData);
+        } else {
+          console.error('signInWithPassword function is not provided in login mode');
+          return;
+        }
       }
-    } else {
-      // Login mode
-      if (usePassword && signInWithPassword) {
-        response = await signInWithPassword(formData);
-      } else {
-        response = await signInWithEmail(formData);
-      }
-    }
 
-    if (response?.error) {
+      if (response?.error) {
+        toast({
+          variant: 'destructive',
+          description: response.error.message || 'An error occurred while authenticating. Please try again.',
+        });
+      } else {
+        if (mode === 'signup') {
+          toast({
+            description: `Account created successfully! Welcome to LawnQuote.`,
+          });
+        }
+        // Password login and signup handle redirect internally
+      }
+    } catch (error) {
       toast({
         variant: 'destructive',
-        description: response.error.message || 'An error occurred while authenticating. Please try again.',
+        description: 'An unexpected error occurred. Please try again.',
       });
-    } else {
-      if (mode === 'login' && usePassword) {
-        // Password login handles redirect internally
-      } else {
-        toast({
-          description: `To continue, click the link in the email sent to: ${email}`,
-        });
-      }
+    } finally {
+      setPending(false);
     }
-
-    form.reset();
-    setPending(false);
   }
 
-  async function handleOAuthClick(provider: 'google' | 'github') {
+  async function handleGoogleClick() {
     setPending(true);
-    const response = await signInWithOAuth(provider);
+    try {
+      const response = await signInWithOAuth('google');
 
-    if (response?.error) {
+      if (response?.error) {
+        toast({
+          variant: 'destructive',
+          description: 'An error occurred while authenticating with Google. Please try again.',
+        });
+        setPending(false);
+      }
+    } catch (error) {
       toast({
         variant: 'destructive',
-        description: 'An error occurred while authenticating. Please try again.',
+        description: 'An unexpected error occurred. Please try again.',
       });
       setPending(false);
     }
   }
 
   return (
-    <section className='mt-16 flex w-full flex-col gap-16 rounded-lg bg-black p-10 px-4 text-center'>
-      <div className='flex flex-col gap-4'>
-        <Image src='/logo.png' width={80} height={80} alt='' className='m-auto' />
-        <h1 className='text-lg'>{titleMap[mode]}</h1>
+    <div className={cn('flex flex-col gap-6 w-full max-w-sm', className)}>
+      {/* Logo and Brand */}
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex items-center gap-3">
+          <LawnQuoteLogo className="text-forest-green" width={40} height={40} />
+          <span className="text-2xl font-bold text-charcoal">LawnQuote</span>
+        </div>
       </div>
-      <div className='flex flex-col gap-4'>
-        <button
-          className='flex items-center justify-center gap-2 rounded-md bg-cyan-500 py-4 font-medium text-black transition-all hover:bg-cyan-400 disabled:bg-neutral-700'
-          onClick={() => handleOAuthClick('google')}
-          disabled={pending}
-        >
-          <IoLogoGoogle size={20} />
-          Continue with Google
-        </button>
-        <button
-          className='flex items-center justify-center gap-2 rounded-md bg-fuchsia-500 py-4 font-medium text-black transition-all hover:bg-fuchsia-400 disabled:bg-neutral-700'
-          onClick={() => handleOAuthClick('github')}
-          disabled={pending}
-        >
-          <IoLogoGithub size={20} />
-          Continue with GitHub
-        </button>
 
-        <Collapsible open={emailFormOpen} onOpenChange={setEmailFormOpen}>
-          <CollapsibleTrigger asChild>
-            <button
-              className='text-neutral6 flex w-full items-center justify-center gap-2 rounded-md bg-zinc-900 py-4 font-medium transition-all hover:bg-zinc-800 disabled:bg-neutral-700 disabled:text-black'
-              disabled={pending}
-            >
-              Continue with Email
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className='mt-[-2px] w-full rounded-b-md bg-zinc-900 p-8'>
-              {mode === 'login' && signInWithPassword && (
-                <div className='mb-4 flex justify-center gap-2'>
-                  <button
-                    type='button'
-                    onClick={() => setUsePassword(false)}
-                    className={`px-3 py-1 rounded text-sm ${
-                      !usePassword 
-                        ? 'bg-cyan-500 text-black' 
-                        : 'bg-zinc-800 text-neutral-400 hover:text-white'
-                    }`}
-                  >
-                    Magic Link
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => setUsePassword(true)}
-                    className={`px-3 py-1 rounded text-sm ${
-                      usePassword 
-                        ? 'bg-cyan-500 text-black' 
-                        : 'bg-zinc-800 text-neutral-400 hover:text-white'
-                    }`}
-                  >
-                    Password
-                  </button>
-                </div>
-              )}
-              <form onSubmit={handleEmailSubmit}>
-                <Input
-                  type='email'
-                  name='email'
-                  placeholder='Enter your email'
-                  aria-label='Enter your email'
-                  autoFocus
-                />
-                {(mode === 'signup' || (mode === 'login' && usePassword)) && (
-                  <Input
-                    type='password'
-                    name='password'
-                    placeholder='Enter your password'
-                    aria-label='Enter your password'
-                    className='mt-4'
-                  />
-                )}
-                <div className='mt-4 flex justify-end gap-2'>
-                  <Button type='button' onClick={() => setEmailFormOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button variant='secondary' type='submit'>
-                    Submit
-                  </Button>
-                </div>
-              </form>
+      {/* Auth Card */}
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-xl font-bold text-charcoal">{titleMap[mode]}</CardTitle>
+          <CardDescription className="text-charcoal/70">
+            {descriptionMap[mode]}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Google Login Button */}
+          <Button
+            variant="outline"
+            onClick={handleGoogleClick}
+            disabled={pending}
+            className="w-full bg-paper-white text-charcoal border-2 border-stone-gray hover:bg-light-concrete hover:text-charcoal focus:border-forest-green focus:ring-forest-green font-medium py-3"
+          >
+            <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+              />
+            </svg>
+            Continue with Google
+          </Button>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-stone-gray" />
             </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-paper-white px-2 text-charcoal/60">Or continue with email</span>
+            </div>
+          </div>
+
+          {/* Email/Password Form */}
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <div className="grid gap-3">
+              <Label htmlFor="email" className="text-label text-charcoal font-medium">
+                Email
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                required
+                disabled={pending}
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+              />
+            </div>
+
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-label text-charcoal font-medium">
+                  Password
+                </Label>
+                {mode === 'login' && (
+                  <Link
+                    href="/reset-password"
+                    className="text-sm text-charcoal/70 hover:text-forest-green underline-offset-4 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder={mode === 'signup' ? 'Create a password' : 'Enter your password'}
+                required
+                disabled={pending}
+                className="bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={pending}
+              className="w-full bg-forest-green text-paper-white hover:opacity-90 active:opacity-80 font-bold py-3 transition-all duration-200"
+            >
+              {pending
+                ? mode === 'signup'
+                  ? 'Creating account...'
+                  : 'Signing in...'
+                : mode === 'signup'
+                ? 'Create account'
+                : 'Sign in'}
+            </Button>
+          </form>
+
+          {/* Switch Mode Link */}
+          <div className="text-center text-sm text-charcoal/70">
+            {mode === 'signup' ? (
+              <>
+                Already have an account?{' '}
+                <Link
+                  href="/login"
+                  className="text-forest-green hover:text-forest-green/90 underline-offset-4 hover:underline font-medium"
+                >
+                  Sign in
+                </Link>
+              </>
+            ) : (
+              <>
+                Don't have an account?{' '}
+                <Link
+                  href="/signup"
+                  className="text-forest-green hover:text-forest-green/90 underline-offset-4 hover:underline font-medium"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Terms and Privacy for Signup */}
       {mode === 'signup' && (
-        <span className='text-neutral5 m-auto max-w-sm text-sm'>
-          By clicking continue, you agree to our{' '}
-          <Link href='/terms' className='underline'>
+        <div className="text-center text-xs text-charcoal/60 px-4">
+          By creating an account, you agree to our{' '}
+          <Link
+            href="/terms"
+            className="text-forest-green hover:text-forest-green/90 underline-offset-4 hover:underline"
+          >
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href='/privacy' className='underline'>
+          <Link
+            href="/privacy"
+            className="text-forest-green hover:text-forest-green/90 underline-offset-4 hover:underline"
+          >
             Privacy Policy
           </Link>
           .
-        </span>
+        </div>
       )}
-    </section>
+    </div>
   );
 }

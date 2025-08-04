@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { FeaturesCTA } from './components/features-cta';
 import { FeaturesGrid } from './components/features-grid';
 import { FeaturesHero } from './components/features-hero';
@@ -17,10 +18,10 @@ export const metadata: Metadata = {
 
 export default function FeaturesPage() {
   return (
-    <main>
+    <MarketingLayout>
       <FeaturesHero />
       <FeaturesGrid />
       <FeaturesCTA />
-    </main>
+    </MarketingLayout>
   );
 }

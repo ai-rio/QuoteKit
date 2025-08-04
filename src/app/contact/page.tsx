@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { ContactHero } from './components/contact-hero';
 import { ContactForm } from './components/contact-form';
 
@@ -20,9 +21,11 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-light-concrete">
-      <ContactHero />
-      <ContactForm />
-    </div>
+    <MarketingLayout>
+      <div className="min-h-screen bg-light-concrete">
+        <ContactHero />
+        <ContactForm />
+      </div>
+    </MarketingLayout>
   );
 }

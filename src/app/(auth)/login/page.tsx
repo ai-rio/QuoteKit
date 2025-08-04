@@ -16,8 +16,8 @@ export default async function LoginPage() {
   }
 
   return (
-    <section className='py-xl m-auto flex h-full max-w-lg items-center'>
+    <div className="min-h-screen bg-light-concrete flex items-center justify-center p-6">
       <AuthUI mode='login' signInWithOAuth={signInWithOAuth} signInWithEmail={signInWithEmail} signInWithPassword={signInWithPassword} />
-    </section>
+    </div>
   );
 }

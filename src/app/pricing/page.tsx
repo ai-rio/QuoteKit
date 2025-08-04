@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import LawnQuotePricing from '@/components/pricing/LawnQuotePricing';
 import { createFreeSubscription } from '@/features/pricing/actions/create-free-subscription';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
@@ -70,5 +71,9 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
 }
 
 export default async function PricingPage() {
-  return <LawnQuotePricing onSelectPlan={handlePlanSelection} />;
+  return (
+    <MarketingLayout>
+      <LawnQuotePricing onSelectPlan={handlePlanSelection} />
+    </MarketingLayout>
+  );
 }

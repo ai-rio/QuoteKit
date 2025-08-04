@@ -24,8 +24,6 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'Features', href: '/features' },
       { label: 'Pricing', href: '/pricing' },
-      { label: 'Integrations', href: '/integrations' },
-      { label: 'API', href: '/api' },
     ],
   },
   {
@@ -33,17 +31,7 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
-    ],
-  },
-  {
-    title: 'Resources',
-    links: [
-      { label: 'Help Center', href: '/help' },
-      { label: 'Documentation', href: '/docs' },
-      { label: 'Templates', href: '/templates' },
-      { label: 'Community', href: '/community' },
     ],
   },
   {
@@ -140,7 +128,7 @@ export function MarketingFooter({ className }: MarketingFooterProps) {
 
           {/* Navigation sections */}
           <div className="mt-12 xl:mt-0 xl:col-span-2">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
               {footerSections.map((section) => (
                 <div key={section.title}>
                   <h3 className="text-sm font-semibold text-charcoal tracking-wider uppercase">

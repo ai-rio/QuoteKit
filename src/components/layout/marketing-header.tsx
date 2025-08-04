@@ -37,48 +37,7 @@ const navigationItems: NavigationItem[] = [
   { label: 'Contact', href: '/contact' },
 ]
 
-const featuresSubmenu: NavigationSection[] = [
-  {
-    title: 'Core Features',
-    items: [
-      {
-        label: 'Quote Management',
-        href: '/features/quotes',
-        description: 'Create professional estimates and track quote status'
-      },
-      {
-        label: 'Client Management',
-        href: '/features/clients',
-        description: 'Organize customer information and project history'
-      },
-      {
-        label: 'Project Tracking',
-        href: '/features/projects',
-        description: 'Monitor job progress and team assignments'
-      },
-    ],
-  },
-  {
-    title: 'Business Tools',
-    items: [
-      {
-        label: 'Reporting & Analytics',
-        href: '/features/analytics',
-        description: 'Track business performance and growth metrics'
-      },
-      {
-        label: 'Team Management',
-        href: '/features/team',
-        description: 'Manage crew schedules and assign projects'
-      },
-      {
-        label: 'Mobile App',
-        href: '/features/mobile',
-        description: 'Access your business data on the go'
-      },
-    ],
-  },
-]
+
 
 interface MarketingHeaderProps {
   className?: string
@@ -141,38 +100,12 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
                 </Link>
               </NavigationMenuItem>
 
-              {/* Features Dropdown */}
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete bg-transparent">
-                  Features
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="w-[600px] p-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      {featuresSubmenu.map((section) => (
-                        <div key={section.title} className="space-y-3">
-                          <h4 className="text-sm font-medium text-charcoal/80 uppercase tracking-wider">
-                            {section.title}
-                          </h4>
-                          <div className="space-y-1">
-                            {section.items.map((item) => (
-                              <Link key={item.label} href={item.href} legacyBehavior passHref>
-                                <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-light-concrete hover:text-forest-green focus:bg-light-concrete focus:text-forest-green">
-                                  <div className="text-sm font-medium leading-none text-charcoal">
-                                    {item.label}
-                                  </div>
-                                  <p className="line-clamp-2 text-sm leading-snug text-charcoal/70">
-                                    {item.description}
-                                  </p>
-                                </NavigationMenuLink>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </NavigationMenuContent>
+                <Link href="/features" legacyBehavior passHref>
+                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                    Features
+                  </NavigationMenuLink>
+                </Link>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
@@ -273,33 +206,7 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
                     ))}
                   </nav>
 
-                  {/* Mobile Features Submenu */}
-                  <div className="px-4 py-2 border-t border-stone-gray/20">
-                    <h3 className="text-sm font-semibold text-charcoal/80 uppercase tracking-wider mb-4">
-                      Features
-                    </h3>
-                    <div className="space-y-4">
-                      {featuresSubmenu.map((section) => (
-                        <div key={section.title} className="space-y-2">
-                          <h4 className="text-xs font-medium text-charcoal/60 uppercase tracking-wider">
-                            {section.title}
-                          </h4>
-                          <div className="space-y-1">
-                            {section.items.map((item) => (
-                              <Link
-                                key={item.label}
-                                href={item.href}
-                                className="block py-2 text-sm text-charcoal hover:text-forest-green transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                              >
-                                {item.label}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+
 
                   {/* Mobile CTA Buttons */}
                   <div className="space-y-3 px-4 pt-6 border-t border-stone-gray/20">

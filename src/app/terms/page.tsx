@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { TermsHero } from './components/terms-hero';
 import { TermsSection } from './components/terms-section';
 import { TermsTableOfContents } from './components/terms-table-of-contents';

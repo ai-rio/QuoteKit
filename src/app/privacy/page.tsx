@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { PrivacyHero } from './components/privacy-hero';
 import { PrivacySection } from './components/privacy-section';
 import { TableOfContents } from './components/table-of-contents';
@@ -23,7 +24,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-light-concrete">
+    <MarketingLayout>
+      <div className="min-h-screen bg-light-concrete">
       <PrivacyHero />
       
       {/* Privacy Policy Content */}
@@ -203,6 +205,7 @@ export default function PrivacyPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </MarketingLayout>
   );
 }

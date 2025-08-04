@@ -25,13 +25,13 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
   }
 
   return (
-    <section className='py-xl m-auto flex h-full max-w-lg items-center'>
+    <div className="min-h-screen bg-light-concrete flex items-center justify-center p-6">
       <AuthUI 
         mode='signup' 
         signInWithOAuth={signInWithOAuth} 
         signInWithEmail={signInWithEmail} 
         signUpWithEmail={signUpWithEmail}
       />
-    </section>
+    </div>
   );
 }
