@@ -29,3 +29,10 @@ export {
   PricingCalculator,
   SeasonalCalculator
 } from './PricingCalculator';
+
+// SEO/GEO Components for advanced blog features
+export { default as KeyTakeaways } from './KeyTakeaways';
+export { default as FAQAccordion } from './FAQAccordion';
+export { default as TableOfContents } from './TableOfContents';
+export { default as MaterialCostTable } from './MaterialCostTable';
+export { default as ArticleHero } from './ArticleHero';

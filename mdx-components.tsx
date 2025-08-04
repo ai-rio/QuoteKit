@@ -18,71 +18,114 @@ import {
   SQLCode,
   PricingCalculator,
   MowingCalculator,
-  SeasonalCalculator
+  SeasonalCalculator,
+  KeyTakeaways,
+  FAQAccordion,
+  MaterialCostTable
 } from '@/components/mdx';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     // Style default HTML elements with LawnQuote design system per style guide
+    // FIXED: Proper typography hierarchy with font-black for H1/H2, font-bold for H3
     h1: ({ children }) => (
-      <h1 className="text-4xl font-bold text-forest-green mb-6 mt-8 first:mt-0">
+      <h1 className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
         {children}
       </h1>
     ),
     h2: ({ children }) => (
-      <h2 className="text-3xl font-semibold text-forest-green mb-4 mt-8">
+      <h2 className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
         {children}
       </h2>
     ),
     h3: ({ children }) => (
-      <h3 className="text-2xl font-semibold text-forest-green mb-3 mt-6">
+      <h3 className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
         {children}
       </h3>
     ),
     h4: ({ children }) => (
-      <h4 className="text-xl font-semibold text-forest-green mb-2 mt-4">
+      <h4 className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
         {children}
       </h4>
     ),
+    // FIXED: Body text uses text-lg text-charcoal per style guide (not text-sm text-stone-gray)
     p: ({ children }) => (
-      <p className="text-lg text-charcoal mb-4 leading-relaxed">
+      <p className="text-lg text-charcoal mb-6 leading-relaxed">
         {children}
       </p>
     ),
     ul: ({ children }) => (
-      <ul className="list-disc list-inside text-lg text-charcoal mb-4 space-y-2">
+      <ul className="list-disc list-inside text-lg text-charcoal mb-6 space-y-2 ml-4">
         {children}
       </ul>
     ),
     ol: ({ children }) => (
-      <ol className="list-decimal list-inside text-lg text-charcoal mb-4 space-y-2">
+      <ol className="list-decimal list-inside text-lg text-charcoal mb-6 space-y-2 ml-4">
         {children}
       </ol>
     ),
     li: ({ children }) => (
-      <li className="text-lg text-charcoal">
+      <li className="text-lg text-charcoal leading-relaxed">
         {children}
       </li>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="border-l-4 border-equipment-yellow pl-6 py-2 mb-4 bg-light-concrete italic text-lg text-charcoal">
+      <blockquote className="
+        border-l-4 
+        border-equipment-yellow 
+        pl-8 
+        py-4 
+        mb-6 
+        bg-light-concrete 
+        italic 
+        text-lg 
+        text-charcoal
+        rounded-r-lg
+      ">
         {children}
       </blockquote>
     ),
     code: ({ children }) => (
-      <code className="bg-stone-gray px-2 py-1 rounded text-sm font-mono text-charcoal">
+      <code className="
+        bg-light-concrete 
+        px-2 
+        py-1 
+        rounded 
+        text-base 
+        font-mono 
+        text-charcoal
+        border
+        border-stone-gray/20
+      ">
         {children}
       </code>
     ),
     pre: ({ children }) => (
-      <pre className="bg-charcoal text-paper-white p-4 rounded-lg mb-4 overflow-x-auto">
+      <pre className="
+        bg-charcoal 
+        text-paper-white 
+        p-6 
+        rounded-2xl 
+        mb-6 
+        overflow-x-auto
+        border
+        border-stone-gray/20
+        shadow-lg
+      ">
         {children}
       </pre>
     ),
     a: ({ href, children }) => (
       <a 
         href={href} 
-        className="text-forest-green hover:text-equipment-yellow underline transition-colors font-medium"
+        className="
+          text-forest-green 
+          hover:text-equipment-yellow 
+          underline 
+          transition-colors 
+          duration-200
+          font-medium
+        "
         target={href?.startsWith('http') ? '_blank' : undefined}
         rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
       >
@@ -93,14 +136,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <img 
         src={src} 
         alt={alt} 
-        className="w-full rounded-lg mb-4 shadow-md"
+        className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
       />
     ),
     hr: () => (
-      <hr className="border-stone-gray my-8" />
+      <hr className="border-stone-gray/30 my-12" />
     ),
     strong: ({ children }) => (
-      <strong className="font-semibold text-charcoal">
+      <strong className="font-bold text-charcoal">
         {children}
       </strong>
     ),
@@ -109,8 +152,54 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {children}
       </em>
     ),
+    // Tables with proper styling
+    table: ({ children }) => (
+      <div className="overflow-x-auto mb-6">
+        <table className="
+          w-full 
+          bg-paper-white 
+          rounded-2xl 
+          border 
+          border-stone-gray/20 
+          shadow-lg 
+          overflow-hidden
+        ">
+          {children}
+        </table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead className="bg-light-concrete">
+        {children}
+      </thead>
+    ),
+    th: ({ children }) => (
+      <th className="
+        text-left 
+        p-4 
+        text-lg 
+        font-bold 
+        text-forest-green
+        border-b 
+        border-stone-gray/20
+      ">
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td className="
+        p-4 
+        text-lg 
+        text-charcoal 
+        border-b 
+        border-stone-gray/10 
+        last:border-b-0
+      ">
+        {children}
+      </td>
+    ),
 
-    // Custom MDX Components
+    // Original Custom MDX Components
     Callout,
     InfoCallout,
     WarningCallout,
@@ -125,6 +214,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     PricingCalculator,
     MowingCalculator,
     SeasonalCalculator,
+    
+    // New SEO/GEO Components
+    KeyTakeaways,
+    FAQAccordion,
+    MaterialCostTable,
     
     // Override any custom components passed in
     ...components,

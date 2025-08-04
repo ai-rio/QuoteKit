@@ -33,7 +33,8 @@
     "blog:draft": "npx tsx scripts/publishing-workflow.ts draft",
     "blog:schedule": "npx tsx scripts/publishing-workflow.ts schedule",
     "blog:status": "npx tsx scripts/publishing-workflow.ts status",
-    "blog:process-scheduled": "npx tsx scripts/publishing-workflow.ts process-scheduled"
+    "blog:process-scheduled": "npx tsx scripts/publishing-workflow.ts process-scheduled",
+    "blog:validate-seo": "npx tsx scripts/validate-seo-geo.ts"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",

@@ -17,6 +17,49 @@ export interface BlogPost {
 }
 
 /**
+ * SEO/GEO specific interfaces
+ */
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface MaterialCostItem {
+  item: string;
+  quantity: string;
+  unitCost: string;
+  totalCost: string;
+  notes?: string;
+}
+
+export interface AuthorInfo {
+  name: string;
+  avatar?: string;
+  url?: string;
+}
+
+export interface SEOData {
+  metaDescription?: string;
+  keywords?: string[];
+  canonicalUrl?: string;
+}
+
+export interface SchemaData {
+  author: AuthorInfo;
+  publisher: {
+    name: string;
+    logo: string;
+    url?: string;
+  };
+}
+
+export interface ContentStructure {
+  keyTakeaways?: string[];
+  faqs?: FAQItem[];
+  materialCostTable?: MaterialCostItem[];
+}
+
+/**
  * Extended frontmatter interface for MDX files
  * Maps to existing BlogPost interface with additional MDX-specific fields
  */
@@ -37,11 +80,12 @@ export interface BlogPostFrontmatter {
   tags?: string[];
   
   // SEO enhancements
-  seo?: {
-    description?: string;
-    keywords?: string[];
-  };
+  seo?: SEOData;
   imageAlt?: string;
+  
+  // SEO/GEO specific fields
+  schema?: SchemaData;
+  contentStructure?: ContentStructure;
 }
 
 /**
@@ -62,10 +106,25 @@ export interface ProcessedBlogPost extends BlogPost {
   content?: string;
   filepath?: string;
   tags?: string[];
-  seo?: {
-    description?: string;
-    keywords?: string[];
-  };
+  seo?: SEOData;
   imageAlt?: string;
   draft?: boolean;
+  schema?: SchemaData;
+  contentStructure?: ContentStructure;
+}
+
+/**
+ * Table of Contents heading interface
+ */
+export interface TOCHeading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+/**
+ * Blog post with extracted headings for TOC
+ */
+export interface BlogPostWithTOC extends ProcessedBlogPost {
+  headings: TOCHeading[];
 }
