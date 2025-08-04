@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Crown } from 'lucide-react';
+import { Plus, Crown, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 
-import { createTemplate, deleteQuotes, deleteTemplate, updateTemplate } from '../actions';
+import { createTemplate, deleteQuotes, deleteTemplate, updateTemplate, getAllQuotes } from '../actions';
 import { sendBulkQuoteEmails } from '../email-actions';
 import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions, QuoteStatus } from '../types';
@@ -38,6 +38,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filters, setFilters] = useState<QuoteFilters>({
     status: 'all',
     client: '',
@@ -48,6 +49,36 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     field: 'created_at',
     direction: 'desc'
   });
+
+  // Refresh quotes from database using server action
+  const refreshQuotes = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await getAllQuotes();
+      
+      if (response.error) {
+        console.error('Error refreshing quotes:', response.error.message);
+        // Silently fail - don't disrupt user experience for refresh failures
+        // The user can still see their initial quotes and use the manual refresh button
+      } else if (response.data) {
+        setQuotes(response.data);
+        console.log('✅ Refreshed quotes successfully:', response.data.length);
+      }
+    } catch (err) {
+      console.error('Error refreshing quotes:', err?.message || 'Unknown error');
+      // Silently fail - don't disrupt user experience for refresh failures
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Auto-refresh when component mounts, but only if we have no quotes or very few
+  useEffect(() => {
+    // Only refresh if we have no quotes (likely stale data)
+    if (quotes.length === 0) {
+      refreshQuotes();
+    }
+  }, []);
 
   // Separate templates from regular quotes
   const templates = useMemo(() => {
@@ -495,7 +526,18 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
             Manage all your quotes and templates in one place
           </p>
         </div>
-        <CreateQuoteButton />
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={refreshQuotes}
+            disabled={isRefreshing}
+            variant="outline"
+            className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <CreateQuoteButton />
+        </div>
       </div>
 
       {/* Tabs */}

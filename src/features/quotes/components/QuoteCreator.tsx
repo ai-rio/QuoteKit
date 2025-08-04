@@ -122,7 +122,12 @@ export function QuoteCreator({
 
   // Auto-save every 30 seconds if there are unsaved changes
   const autoSave = useCallback(async () => {
-    if (!hasUnsavedChanges || !clientName.trim()) return;
+    // Only auto-save if we have a client name and some content
+    if (!clientName.trim()) return;
+    
+    // For auto-save, only proceed if there are unsaved changes
+    // For manual save, this condition is bypassed
+    if (!hasUnsavedChanges) return;
     
     try {
       const draftData: SaveDraftData = {
@@ -140,6 +145,7 @@ export function QuoteCreator({
         setDraftId(response.data.id);
         setHasUnsavedChanges(false);
         setLastSaveTime(new Date());
+        console.log('Auto-saved draft:', response.data.id);
       } else {
         console.error('Auto-save failed:', response?.error);
       }
@@ -201,10 +207,44 @@ export function QuoteCreator({
       return;
     }
 
-    await autoSave();
-    toast({
-      description: 'Draft saved successfully',
-    });
+    try {
+      const draftData: SaveDraftData = {
+        id: draftId || undefined,
+        client_id: selectedClient?.id || null,
+        client_name: clientName,
+        client_contact: clientContact || null,
+        quote_data: quoteLineItems,
+        tax_rate: taxRate,
+        markup_rate: markupRate,
+      };
+
+      const response = await saveDraft(draftData);
+      if (response?.data) {
+        setDraftId(response.data.id);
+        setHasUnsavedChanges(false);
+        setLastSaveTime(new Date());
+        
+        toast({
+          description: 'Draft saved successfully',
+        });
+        
+        // Navigate to quotes page to show the saved draft
+        setTimeout(() => {
+          router.push('/quotes');
+        }, 1000);
+      } else {
+        toast({
+          variant: 'destructive',
+          description: response?.error?.message || 'Failed to save draft',
+        });
+      }
+    } catch (error) {
+      console.error('Manual save failed:', error);
+      toast({
+        variant: 'destructive',
+        description: 'Failed to save draft',
+      });
+    }
   }
 
   // Create final quote

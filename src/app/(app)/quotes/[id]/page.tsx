@@ -19,7 +19,7 @@ export default async function QuotePage({ params }: QuotePageProps) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    redirect('/auth/signin');
+    redirect('/login');
   }
 
   // Fetch quote and company data
@@ -33,7 +33,7 @@ export default async function QuotePage({ params }: QuotePageProps) {
     supabase
       .from('company_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', user.id) // Fixed: use 'id' instead of 'user_id'
       .single(),
   ]);
 

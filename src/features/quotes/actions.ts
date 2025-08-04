@@ -477,3 +477,54 @@ export async function getTemplateById(templateId: string): Promise<ActionRespons
     return { data: null, error: { message: 'Failed to fetch template' } };
   }
 }
+
+export async function getAllQuotes(): Promise<ActionResponse<Quote[]>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Fetch all quotes for the user
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    // Convert database quotes to application quotes
+    const quotes = (data || []).map(dbQuote => ({
+      id: dbQuote.id,
+      user_id: dbQuote.user_id,
+      client_id: dbQuote.client_id,
+      client_name: dbQuote.client_name,
+      client_contact: dbQuote.client_contact,
+      quote_data: dbQuote.quote_data as unknown as Quote['quote_data'],
+      subtotal: dbQuote.subtotal,
+      tax_rate: dbQuote.tax_rate,
+      markup_rate: dbQuote.markup_rate,
+      total: dbQuote.total,
+      created_at: dbQuote.created_at,
+      status: (dbQuote.status as Quote['status']) || 'draft',
+      quote_number: dbQuote.quote_number || undefined,
+      updated_at: dbQuote.updated_at || undefined,
+      sent_at: dbQuote.sent_at,
+      expires_at: dbQuote.expires_at,
+      follow_up_date: dbQuote.follow_up_date,
+      notes: dbQuote.notes,
+      is_template: dbQuote.is_template || false,
+      template_name: dbQuote.template_name,
+    }));
+
+    return { data: quotes, error: null };
+  } catch (error) {
+    console.error('Error fetching quotes:', error);
+    return { data: null, error: { message: 'Failed to fetch quotes' } };
+  }
+}

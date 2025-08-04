@@ -35,7 +35,7 @@ export async function GET(
     const { data: company, error: companyError } = await supabase
       .from('company_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', user.id) // Fixed: use 'id' instead of 'user_id'
       .single();
 
     // If no company settings, use defaults
