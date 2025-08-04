@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 
+import { getAllPosts } from '@/lib/blog/content';
 import { BlogGrid } from './components/blog-grid';
 import { BlogHero } from './components/blog-hero';
 import { BlogSearchAndFilter } from './components/blog-search-and-filter';
@@ -22,9 +23,6 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  // Import the content functions directly
-  const { getAllPosts } = await import('@/lib/blog/content');
-  
   try {
     const posts = await getAllPosts();
     console.log('Posts loaded successfully:', posts.length);

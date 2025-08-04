@@ -48,15 +48,20 @@ async function buildContentIndex(): Promise<void> {
   const files = await getAllMDXFiles();
   contentIndex.slugToFilepath.clear();
   
-  // Build slug-to-filepath mapping in parallel
+  // Build slug-to-filepath mapping by reading actual slugs from frontmatter
   const indexPromises = files.map(async (filepath) => {
-    const slug = path.basename(filepath, '.mdx').replace(/^\\d{2}-/, '');
-    return { slug, filepath };
+    const mdxPost = await readMDXFile(filepath);
+    if (mdxPost) {
+      return { slug: mdxPost.slug, filepath };
+    }
+    return null;
   });
   
   const mappings = await Promise.all(indexPromises);
-  mappings.forEach(({ slug, filepath }) => {
-    contentIndex.slugToFilepath.set(slug, filepath);
+  mappings.forEach((mapping) => {
+    if (mapping) {
+      contentIndex.slugToFilepath.set(mapping.slug, mapping.filepath);
+    }
   });
   
   contentIndex.lastUpdated = now;
@@ -158,7 +163,8 @@ export async function readMDXFile(filepath: string): Promise<MDXBlogPost | null>
     }
     
     const frontmatter = validationResult.data;
-    const slug = path.basename(filepath, '.mdx').replace(/^\\d{2}-/, ''); // Remove date prefix
+    // Use slug from frontmatter, fallback to filename-based slug if not provided
+    const slug = frontmatter.slug || path.basename(filepath, '.mdx').replace(/^\d{2}-/, ''); // Remove date prefix
     
     return {
       frontmatter,

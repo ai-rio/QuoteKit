@@ -10,6 +10,7 @@ import { KeyTakeaways } from '@/components/mdx/KeyTakeaways';
 import { FAQAccordion } from '@/components/mdx/FAQAccordion';
 import { MaterialCostTable } from '@/components/mdx/MaterialCostTable';
 
+import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/blog/content';
 import { BlogPostHeader } from '../components/blog-post-header';
 import { BlogPostNavigation } from '../components/blog-post-navigation';
 import { RelatedPosts } from '../components/related-posts';
@@ -21,7 +22,6 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  const { getAllPosts } = await import('@/lib/blog/content');
   const posts = await getAllPosts();
   
   return posts.map((post) => ({
@@ -30,7 +30,6 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { getPostBySlug } = await import('@/lib/blog/content');
   const resolvedParams = await params;
   const post = await getPostBySlug(resolvedParams.slug);
   
@@ -168,8 +167,6 @@ const MDXComponents = {
 };
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { getPostBySlug, getRelatedPosts } = await import('@/lib/blog/content');
-  
   const resolvedParams = await params;
   const post = await getPostBySlug(resolvedParams.slug);
   
