@@ -4,6 +4,22 @@
  */
 
 import type { MDXComponents } from 'mdx/types';
+import { 
+  Callout,
+  InfoCallout,
+  WarningCallout,
+  SuccessCallout,
+  ErrorCallout,
+  TipCallout,
+  CodeBlock,
+  JavaScriptCode,
+  TypeScriptCode,
+  BashCode,
+  SQLCode,
+  PricingCalculator,
+  MowingCalculator,
+  SeasonalCalculator
+} from '@/components/mdx';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
@@ -93,6 +109,22 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {children}
       </em>
     ),
+
+    // Custom MDX Components
+    Callout,
+    InfoCallout,
+    WarningCallout,
+    SuccessCallout,
+    ErrorCallout,
+    TipCallout,
+    CodeBlock,
+    JavaScriptCode,
+    TypeScriptCode,
+    BashCode,
+    SQLCode,
+    PricingCalculator,
+    MowingCalculator,
+    SeasonalCalculator,
     
     // Override any custom components passed in
     ...components,

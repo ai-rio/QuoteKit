@@ -171,27 +171,223 @@ export async function getFeaturedPosts(): Promise<ProcessedBlogPost[]> {
 }
 
 /**
- * Get related posts based on category
+ * Get related posts based on category and tags
  */
 export async function getRelatedPosts(currentSlug: string, category: string, limit: number = 3): Promise<ProcessedBlogPost[]> {
-  const categoryPosts = await getPostsByCategory(category as 'pricing' | 'operations' | 'tools');
-  return categoryPosts
+  // Get current post to access its tags
+  const currentPost = await getPostBySlug(currentSlug);
+  const tags = currentPost?.tags || [];
+  
+  return getRelatedPostsAdvanced(currentSlug, category, tags, limit);
+}
+
+/**
+ * Get posts by tags
+ */
+export async function getPostsByTags(tags: string[]): Promise<ProcessedBlogPost[]> {
+  const allPosts = await getAllPosts();
+  return allPosts.filter(post => 
+    post.tags && tags.some(tag => 
+      post.tags!.some(postTag => 
+        postTag.toLowerCase() === tag.toLowerCase()
+      )
+    )
+  );
+}
+
+/**
+ * Get all unique tags from all posts
+ */
+export async function getAllTags(): Promise<string[]> {
+  const allPosts = await getAllPosts();
+  const tagSet = new Set<string>();
+  
+  allPosts.forEach(post => {
+    if (post.tags) {
+      post.tags.forEach(tag => tagSet.add(tag));
+    }
+  });
+  
+  return Array.from(tagSet).sort();
+}
+
+/**
+ * Get all unique categories from all posts
+ */
+export async function getAllCategories(): Promise<string[]> {
+  const allPosts = await getAllPosts();
+  const categorySet = new Set<string>();
+  
+  allPosts.forEach(post => {
+    categorySet.add(post.category);
+  });
+  
+  return Array.from(categorySet).sort();
+}
+
+/**
+ * Advanced search with filters
+ */
+export interface SearchFilters {
+  query?: string;
+  category?: string;
+  tags?: string[];
+  featured?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export async function searchPostsAdvanced(filters: SearchFilters = {}): Promise<{
+  posts: ProcessedBlogPost[];
+  total: number;
+  hasMore: boolean;
+}> {
+  let posts = await getAllPosts();
+  
+  // Apply query filter
+  if (filters.query) {
+    const lowercaseQuery = filters.query.toLowerCase();
+    posts = posts.filter(post => 
+      post.title.toLowerCase().includes(lowercaseQuery) ||
+      post.summary.toLowerCase().includes(lowercaseQuery) ||
+      post.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+    );
+  }
+  
+  // Apply category filter
+  if (filters.category) {
+    posts = posts.filter(post => post.category === filters.category);
+  }
+  
+  // Apply tags filter
+  if (filters.tags && filters.tags.length > 0) {
+    posts = posts.filter(post => 
+      post.tags && filters.tags!.some(tag => 
+        post.tags!.some(postTag => 
+          postTag.toLowerCase() === tag.toLowerCase()
+        )
+      )
+    );
+  }
+  
+  // Apply featured filter
+  if (filters.featured !== undefined) {
+    posts = posts.filter(post => !!post.featured === filters.featured);
+  }
+  
+  const total = posts.length;
+  
+  // Apply pagination
+  const offset = filters.offset || 0;
+  const limit = filters.limit || posts.length;
+  const paginatedPosts = posts.slice(offset, offset + limit);
+  const hasMore = offset + limit < total;
+  
+  return {
+    posts: paginatedPosts,
+    total,
+    hasMore
+  };
+}
+
+/**
+ * Get improved related posts based on category and tags
+ */
+export async function getRelatedPostsAdvanced(
+  currentSlug: string, 
+  category: string, 
+  tags: string[] = [], 
+  limit: number = 3
+): Promise<ProcessedBlogPost[]> {
+  const allPosts = await getAllPosts();
+  const currentPost = allPosts.find(post => post.slug === currentSlug);
+  
+  if (!currentPost) return [];
+  
+  // Score posts based on relevance
+  const scoredPosts = allPosts
     .filter(post => post.slug !== currentSlug)
-    .slice(0, limit);
+    .map(post => {
+      let score = 0;
+      
+      // Same category gets high score
+      if (post.category === category) {
+        score += 10;
+      }
+      
+      // Shared tags get points
+      if (post.tags && tags.length > 0) {
+        const sharedTags = post.tags.filter(tag => 
+          tags.some(currentTag => 
+            currentTag.toLowerCase() === tag.toLowerCase()
+          )
+        );
+        score += sharedTags.length * 5;
+      }
+      
+      // Featured posts get bonus points
+      if (post.featured) {
+        score += 2;
+      }
+      
+      return { post, score };
+    })
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(item => item.post);
+  
+  return scoredPosts;
+}
+
+/**
+ * Get content analytics and insights
+ */
+export async function getContentAnalytics() {
+  const allPosts = await getAllPosts();
+  const categories = await getAllCategories();
+  const tags = await getAllTags();
+  
+  // Category distribution
+  const categoryDistribution = categories.map(category => ({
+    category,
+    count: allPosts.filter(post => post.category === category).length
+  }));
+  
+  // Tag usage
+  const tagUsage = tags.map(tag => ({
+    tag,
+    count: allPosts.filter(post => 
+      post.tags?.some(postTag => 
+        postTag.toLowerCase() === tag.toLowerCase()
+      )
+    ).length
+  })).sort((a, b) => b.count - a.count);
+  
+  // Reading time distribution
+  const readingTimes = allPosts.map(post => post.readTime);
+  const avgReadingTime = readingTimes.reduce((sum, time) => sum + time, 0) / readingTimes.length;
+  
+  // Featured posts ratio
+  const featuredCount = allPosts.filter(post => post.featured).length;
+  const featuredRatio = featuredCount / allPosts.length;
+  
+  return {
+    totalPosts: allPosts.length,
+    categories: categoryDistribution,
+    tags: tagUsage,
+    avgReadingTime: Math.round(avgReadingTime),
+    featuredRatio: Math.round(featuredRatio * 100),
+    recentPosts: allPosts.slice(0, 5)
+  };
 }
 
 /**
  * Search posts by title or summary
  */
 export async function searchPosts(query: string): Promise<ProcessedBlogPost[]> {
-  const allPosts = await getAllPosts();
-  const lowercaseQuery = query.toLowerCase();
-  
-  return allPosts.filter(post => 
-    post.title.toLowerCase().includes(lowercaseQuery) ||
-    post.summary.toLowerCase().includes(lowercaseQuery) ||
-    post.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery))
-  );
+  const result = await searchPostsAdvanced({ query });
+  return result.posts;
 }
 
 /**

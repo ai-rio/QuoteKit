@@ -148,6 +148,85 @@ Our voice reflects the "Pro-Grade Kit" identity. It is confident, clear, and dir
 * **Empathetic:** We acknowledge the user's pain points, using language from our market research. (e.g., "Built for the Trade," referencing r/landscaping)  
 * **Benefit-Oriented:** We always frame features in terms of their value to the user's business. (e.g., "Turn chaos into cashflow.")
 
+## **8.0 Common Typography & Contrast Mistakes**
+
+**⚠️ CRITICAL: These mistakes appear frequently and must be avoided for WCAG AAA compliance and brand consistency.**
+
+### **8.1 Typography Hierarchy Violations**
+
+❌ **WRONG:**
+```jsx
+<h1 className="text-4xl font-bold text-forest-green">
+<h2 className="text-3xl font-semibold text-forest-green">
+<h3 className="text-xl font-semibold text-forest-green">
+```
+
+✅ **CORRECT:**
+```jsx
+<h1 className="text-4xl md:text-6xl font-black text-forest-green">
+<h2 className="text-3xl md:text-4xl font-black text-forest-green">
+<h3 className="text-xl md:text-2xl font-bold text-forest-green">
+```
+
+### **8.2 Text Color & Contrast Issues**
+
+❌ **WRONG - Poor Contrast:**
+```jsx
+<p className="text-sm text-stone-gray">  {/* Fails WCAG AAA */}
+<span className="text-xs text-stone-gray"> {/* Too small + poor contrast */}
+<li className="text-stone-gray">         {/* Body text should be charcoal */}
+```
+
+✅ **CORRECT - WCAG AAA Compliant:**
+```jsx
+<p className="text-lg text-charcoal">    {/* Proper size + contrast */}
+<span className="text-sm text-charcoal"> {/* Minimum readable size */}
+<li className="text-lg text-charcoal">   {/* Body text in charcoal */}
+```
+
+### **8.3 Card & Component Styling**
+
+❌ **WRONG - Inconsistent Styling:**
+```jsx
+<div className="bg-paper-white rounded-lg shadow-sm p-6">
+```
+
+✅ **CORRECT - Brand Consistent:**
+```jsx
+<div className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8">
+```
+
+### **8.4 Text Size Guidelines**
+
+| Use Case | Minimum Size | Recommended | Class |
+|----------|-------------|-------------|-------|
+| **Body Text** | 16px | 18px | `text-lg` |
+| **Secondary Text** | 14px | 16px | `text-base` |
+| **Captions/Labels** | 14px | 14px | `text-sm` |
+| **Never Use** | 12px or smaller | - | `text-xs` ❌ |
+
+### **8.5 Color Usage Rules**
+
+| Element | Required Color | Never Use |
+|---------|---------------|-----------|
+| **Primary Text** | `text-charcoal` | `text-stone-gray` |
+| **Headings** | `text-forest-green` | `text-stone-gray` |
+| **Icons (Active)** | `text-charcoal` | `text-stone-gray` |
+| **Financial Data** | `text-forest-green` + `font-mono` | Any other combination |
+
+### **8.6 Quick Checklist**
+
+Before submitting any component, verify:
+
+- [ ] H1 uses `font-black` (not `font-bold`)
+- [ ] H2 uses `font-black` (not `font-bold` or `font-semibold`)
+- [ ] H3 uses `font-bold` (not `font-semibold`)
+- [ ] Body text uses `text-lg text-charcoal` (not `text-sm text-stone-gray`)
+- [ ] Cards use `rounded-2xl border border-stone-gray/20 shadow-lg p-8`
+- [ ] No text smaller than `text-sm` (14px)
+- [ ] Financial/numeric data uses `font-mono`
+- [ ] Icons use `text-charcoal` (not `text-stone-gray`)
+
 ## **7.0 Next.js Conversion Checklist**
 
 When converting the HTML mockups to a Next.js application, follow these steps:
