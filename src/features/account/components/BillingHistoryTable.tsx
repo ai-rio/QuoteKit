@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo,useState } from 'react';
 import { AlertCircle,Calendar, Download, FileText, Filter, RefreshCw, Search } from 'lucide-react';
+import { useEffect, useMemo,useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -186,7 +186,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
       case 'billing_record':
         return 'bg-green-500 text-paper-white hover:bg-green-500/90';
       default:
-        return 'bg-gray-500 text-paper-white hover:bg-gray-500/90';
+        return 'bg-stone-gray text-charcoal hover:bg-stone-gray/90';
     }
   };
 
@@ -306,7 +306,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
               ? 'bg-blue-50 border-blue-200 text-blue-800'
               : metadata.hasSubscriptionHistory
               ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-              : 'bg-gray-50 border-gray-200 text-gray-600'
+              : 'bg-light-concrete border-stone-gray text-charcoal/60'
           }`}>
             <div className="flex items-start gap-2">
               <div className="flex-shrink-0 mt-0.5">
@@ -317,7 +317,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                 ) : metadata.hasSubscriptionHistory ? (
                   <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                 ) : (
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <div className="w-2 h-2 bg-stone-gray rounded-full"></div>
                 )}
               </div>
               <p className="text-sm font-medium">{metadata.message}</p>

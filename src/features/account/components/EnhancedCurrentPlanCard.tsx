@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { AlertCircle, DollarSign, Loader2, RefreshCw, Settings, X } from 'lucide-react';
+import { useEffect,useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,6 @@ import { PriceWithProduct, ProductWithPrices, SubscriptionWithProduct } from '@/
 import { formatDate } from '@/utils/to-date-time';
 
 import { cancelSubscription, changePlan, reactivateSubscription } from '../actions/subscription-actions';
-
 import { AddPaymentMethodDialog } from './AddPaymentMethodDialog';
 import { CancellationDialog } from './CancellationDialog';
 import { PlanChangeDialog } from './PlanChangeDialog';
@@ -408,7 +407,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
               {/* Plan Details Debug Info (only in development) */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="p-2 bg-gray-100 text-xs text-gray-600 rounded border">
+                <div className="p-2 bg-light-concrete text-xs text-charcoal/60 rounded border border-stone-gray">
                   <p><strong>Debug Info:</strong></p>
                   <p>Has Subscription: {hasSubscription ? 'Yes' : 'No'}</p>
                   <p>Has Fallback Plan: {hasFallbackPlan ? 'Yes' : 'No'}</p>

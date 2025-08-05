@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { 
+  CardCvcElement, 
+  CardExpiryElement, 
+  CardNumberElement, 
+  useElements, 
+  useStripe 
+} from '@stripe/react-stripe-js';
 import { AlertCircle, CreditCard, Loader2, Plus, Shield } from 'lucide-react';
+import { useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -10,13 +17,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  CardNumberElement, 
-  CardExpiryElement, 
-  CardCvcElement, 
-  useElements, 
-  useStripe 
-} from '@stripe/react-stripe-js';
 
 interface AddPaymentMethodDialogProps {
   open: boolean;
@@ -303,7 +303,7 @@ export function AddPaymentMethodDialog({
                 placeholder="Enter the name on your card"
                 value={billingName}
                 onChange={(e) => setBillingName(e.target.value)}
-                className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green/20 bg-paper-white text-charcoal placeholder:text-charcoal/50"
+                className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green/20 bg-light-concrete text-charcoal placeholder:text-charcoal/50"
                 disabled={loading}
                 required
               />
