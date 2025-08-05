@@ -1,0 +1,45 @@
+name: Auto TypeScript Fix
+
+on:
+  push:
+    branches: [ main, develop, backend-polishing ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run ESLint auto-fix
+      run: npx eslint --fix --ext .ts,.tsx src/
+      
+    - name: Run Prettier
+      run: npx prettier --write "src/**/*.{ts,tsx}"
+      
+    - name: Check TypeScript
+      run: npm run type-check
+      
+    - name: Commit auto-fixes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --staged --quiet || git commit -m "fix: auto-fix TypeScript and ESLint errors [skip ci]"
+        
+    - name: Push changes
+      if: github.event_name == 'push'
+      run: git push
