@@ -173,8 +173,8 @@ export function generatePageSchema(data: BlogPostSchemaData) {
     { name: data.title, url: data.url }
   ];
   
-  schemas.push(generateBreadcrumbSchema(breadcrumbItems));
-  schemas.push(generateOrganizationSchema());
+  schemas.push(generateBreadcrumbSchema(breadcrumbItems) as any);
+  schemas.push(generateOrganizationSchema() as any);
 
   return schemas;
 }

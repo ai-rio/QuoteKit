@@ -117,9 +117,7 @@ export async function upsertUserSubscription({
         user_id: userId,
         metadata: subscription.metadata || {},
         status: subscription.status,
-        stripe_price_id: priceId,
         stripe_subscription_id: subscription.id,
-        stripe_customer_id: customerId,
         cancel_at_period_end: subscription.cancel_at_period_end,
         cancel_at: subscription.cancel_at ? toDateTime(subscription.cancel_at).toISOString() : null,
         canceled_at: subscription.canceled_at ? toDateTime(subscription.canceled_at).toISOString() : null,
@@ -127,8 +125,7 @@ export async function upsertUserSubscription({
         current_period_end: toDateTime(subscription.current_period_end).toISOString(),
         ended_at: subscription.ended_at ? toDateTime(subscription.ended_at).toISOString() : null,
         trial_start: subscription.trial_start ? toDateTime(subscription.trial_start).toISOString() : null,
-        trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null,
-        created_at: new Date().toISOString()
+        trial_end: subscription.trial_end ? toDateTime(subscription.trial_end).toISOString() : null
       };
 
       const { error: fallbackError } = await supabaseAdminClient.from('subscriptions').upsert([subscriptionData]);

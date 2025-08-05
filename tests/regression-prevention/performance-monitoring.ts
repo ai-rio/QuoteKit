@@ -489,11 +489,13 @@ export class PerformanceMonitor {
     const results: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const duration = await this.measureExecutionTime('test_subscription_creation', async () => {
+      const start = performance.now();
+      await this.measureExecutionTime('test_subscription_creation', async () => {
         // Simulate subscription creation workflow
         await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
         return true;
       });
+      const duration = performance.now() - start;
       results.push(duration);
     }
 
@@ -506,11 +508,13 @@ export class PerformanceMonitor {
     const results: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const duration = await this.measureExecutionTime('test_payment_method_sync', async () => {
+      const start = performance.now();
+      await this.measureExecutionTime('test_payment_method_sync', async () => {
         // Simulate payment method sync
         await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
         return true;
       });
+      const duration = performance.now() - start;
       results.push(duration);
     }
 
@@ -523,11 +527,13 @@ export class PerformanceMonitor {
     const results: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const duration = await this.measureExecutionTime('test_webhook_processing', async () => {
+      const start = performance.now();
+      await this.measureExecutionTime('test_webhook_processing', async () => {
         // Simulate webhook processing
         await new Promise(resolve => setTimeout(resolve, Math.random() * 200));
         return true;
       });
+      const duration = performance.now() - start;
       results.push(duration);
     }
 
@@ -540,13 +546,15 @@ export class PerformanceMonitor {
     const results: number[] = [];
 
     for (let i = 0; i < iterations; i++) {
-      const duration = await this.measureExecutionTime('test_database_query', async () => {
+      const start = performance.now();
+      const queryResult = await this.measureExecutionTime('test_database_query', async () => {
         const { data } = await this.supabase
           .from('subscriptions')
           .select('*')
           .limit(10);
         return data;
       });
+      const duration = performance.now() - start;
       results.push(duration);
     }
 

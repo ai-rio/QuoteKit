@@ -141,8 +141,8 @@ describe('Blog Content Functions', () => {
 
       const posts = await getAllPosts();
 
-      expect(posts[0].frontmatter.slug).toBe('new-post');
-      expect(posts[1].frontmatter.slug).toBe('old-post');
+      expect(posts[0]!.frontmatter!.slug).toBe('new-post');
+      expect(posts[1]!.frontmatter!.slug).toBe('old-post');
     });
   });
 
@@ -174,8 +174,8 @@ describe('Blog Content Functions', () => {
       const post = await getPostBySlug('test-post');
 
       expect(post).toBeDefined();
-      expect(post?.frontmatter.slug).toBe('test-post');
-      expect(post?.frontmatter.title).toBe('Test Post');
+      expect(post!.frontmatter!.slug).toBe('test-post');
+      expect(post!.frontmatter!.title).toBe('Test Post');
     });
 
     test('should return null for non-existent slug', async () => {
@@ -264,8 +264,8 @@ describe('Blog Content Functions', () => {
       const relatedPosts = await getRelatedPosts('current-post', 'pricing', 3);
 
       expect(relatedPosts).toHaveLength(1);
-      expect(relatedPosts[0].frontmatter.slug).toBe('related-post');
-      expect(relatedPosts[0].frontmatter.category).toBe('pricing');
+      expect(relatedPosts[0]!.frontmatter!.slug).toBe('related-post');
+      expect(relatedPosts[0]!.frontmatter!.category).toBe('pricing');
     });
 
     test('should respect limit parameter', async () => {
@@ -293,7 +293,7 @@ describe('Blog Content Functions', () => {
           data: {
             title: `Post ${index}`,
             slug: post.slug,
-            category: post.category as const,
+            category: post.category,
             author: 'Test Author',
             publishedAt: '2025-01-15',
             summary: `Summary ${index}`,
@@ -310,7 +310,7 @@ describe('Blog Content Functions', () => {
       const relatedPosts = await getRelatedPosts('current-post', 'pricing', 2);
 
       expect(relatedPosts).toHaveLength(2);
-      expect(relatedPosts.every(post => post.frontmatter.slug !== 'current-post')).toBe(true);
+      expect(relatedPosts.every(post => (post as any).frontmatter.slug !== 'current-post')).toBe(true);
     });
   });
 

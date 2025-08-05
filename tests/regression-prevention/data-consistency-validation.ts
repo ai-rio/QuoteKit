@@ -399,11 +399,12 @@ export class DataConsistencyValidator {
     }
 
     for (const orphan of orphanedSubs || []) {
+      const orphanData = orphan as any; // Type assertion for complex query result
       issues.push({
         type: 'orphaned_subscription',
-        description: `Subscription ${orphan.stripe_subscription_id || orphan.id} belongs to non-existent user ${orphan.user_id}`,
+        description: `Subscription ${orphanData.stripe_subscription_id || orphanData.id} belongs to non-existent user ${orphanData.user_id}`,
         severity: 'error',
-        affectedRecords: [orphan.stripe_subscription_id || orphan.id || ''],
+        affectedRecords: [orphanData.stripe_subscription_id || orphanData.id || ''],
         suggestedFix: 'Archive or delete orphaned subscription',
         autoFixable: true
       });
@@ -433,12 +434,13 @@ export class DataConsistencyValidator {
     for (const customer of localCustomers || []) {
       try {
         const stripeCustomer = await this.stripe.customers.retrieve(customer.stripe_customer_id!);
+        const customerData = stripeCustomer as any; // Type assertion for Stripe customer response
 
         // Compare email addresses
-        if (stripeCustomer.email !== customer.billing_email) {
+        if (customerData.email !== customer.billing_email) {
           issues.push({
             type: 'customer_email_mismatch',
-            description: `Customer ${customer.stripe_customer_id} email mismatch: Local(${customer.billing_email}) vs Stripe(${stripeCustomer.email})`,
+            description: `Customer ${customer.stripe_customer_id} email mismatch: Local(${customer.billing_email}) vs Stripe(${customerData.email})`,
             severity: 'warning',
             affectedRecords: [customer.stripe_customer_id!],
             suggestedFix: 'Sync email addresses between systems',
