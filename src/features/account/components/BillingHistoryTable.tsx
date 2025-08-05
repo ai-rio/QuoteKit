@@ -207,8 +207,8 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
   // Loading skeleton
   if (isLoading) {
     return (
-      <Card className={`bg-paper-white border-stone-gray ${className}`}>
-        <CardHeader>
+      <Card className={`bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg ${className}`}>
+        <CardHeader className="p-8">
           <div className="flex items-center justify-between">
             <div>
               <Skeleton className="h-6 w-32 mb-2" />
@@ -217,7 +217,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
             <Skeleton className="h-6 w-6" />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           <div className="space-y-4">
             <div className="flex gap-4">
               <Skeleton className="h-10 flex-1" />
@@ -238,30 +238,30 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
   // Error state
   if (error) {
     return (
-      <Card className={`bg-paper-white border-stone-gray ${className}`}>
-        <CardHeader>
+      <Card className={`bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg ${className}`}>
+        <CardHeader className="p-8">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl text-charcoal flex items-center gap-2">
+              <CardTitle className="text-xl md:text-2xl font-bold text-forest-green flex items-center gap-2">
                 <AlertCircle className="h-5 w-5 text-red-500" />
                 Billing History
               </CardTitle>
-              <CardDescription className="text-charcoal/70">
+              <CardDescription className="text-lg text-charcoal mt-2">
                 Failed to load billing history
               </CardDescription>
             </div>
-            <Calendar className="h-6 w-6 text-charcoal/60" />
+            <Calendar className="h-6 w-6 text-charcoal" />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           <div className="text-center py-8">
-            <p className="text-charcoal/70 mb-4">
+            <p className="text-lg text-charcoal mb-4">
               {error instanceof Error ? error.message : 'An error occurred while loading billing history'}
             </p>
             <Button 
               onClick={() => refetch()} 
               variant="outline"
-              className="border-stone-gray text-charcoal hover:bg-light-concrete"
+              className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-8 py-4 rounded-lg transition-all duration-200"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
@@ -273,12 +273,14 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
   }
 
   return (
-    <Card className={`bg-paper-white border-stone-gray ${className}`}>
-      <CardHeader>
+    <Card className={`bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg ${className}`}>
+      <CardHeader className="p-8">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl text-charcoal">Billing History</CardTitle>
-            <CardDescription className="text-charcoal/70">
+            <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">
+              Billing History
+            </CardTitle>
+            <CardDescription className="text-lg text-charcoal mt-2">
               Download your invoices and receipts
             </CardDescription>
           </div>
@@ -288,25 +290,25 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
               variant="ghost"
               size="sm"
               disabled={isRefetching}
-              className="text-charcoal hover:bg-light-concrete"
+              className="text-charcoal hover:bg-light-concrete font-bold px-4 py-2 rounded-lg transition-all duration-200"
             >
               <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             </Button>
-            <Calendar className="h-6 w-6 text-charcoal/60" />
+            <Calendar className="h-6 w-6 text-charcoal" />
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8 pt-0">
         {/* Enhanced Status Message */}
         {metadata?.message && (
-          <div className={`mb-4 p-3 rounded-lg border ${
+          <div className={`mb-4 p-4 rounded-lg border ${
             metadata.hasStripeInvoices 
               ? 'bg-green-50 border-green-200 text-green-800' 
               : metadata.hasBillingRecords
               ? 'bg-blue-50 border-blue-200 text-blue-800'
               : metadata.hasSubscriptionHistory
               ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-              : 'bg-light-concrete border-stone-gray text-charcoal/60'
+              : 'bg-light-concrete border-stone-gray text-charcoal'
           }`}>
             <div className="flex items-start gap-2">
               <div className="flex-shrink-0 mt-0.5">
@@ -320,7 +322,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                   <div className="w-2 h-2 bg-stone-gray rounded-full"></div>
                 )}
               </div>
-              <p className="text-sm font-medium">{metadata.message}</p>
+              <p className="text-base font-medium">{metadata.message}</p>
             </div>
           </div>
         )}
@@ -328,50 +330,51 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
         {billingHistory.length > 0 ? (
           <>
             {/* Filters and Search */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-charcoal/60" />
+            <div className="flex flex-col gap-4 mb-6">
+              <div className="w-full">
                 <Input
                   placeholder="Search invoices..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-stone-gray focus:border-forest-green"
+                  className="w-full border-stone-gray focus:border-forest-green text-base sm:text-lg text-charcoal bg-paper-white rounded-lg py-3 px-4 shadow-sm ring-1 ring-inset ring-stone-gray/50 placeholder:text-charcoal focus:ring-2 focus:ring-inset focus:ring-forest-green"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
-                <SelectTrigger className="w-full sm:w-32 border-stone-gray">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+                  <SelectTrigger className="w-full sm:w-40 border-stone-gray bg-paper-white text-charcoal font-bold px-4 py-3 rounded-lg">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-paper-white border-stone-gray">
+                    <SelectItem value="all" className="text-charcoal hover:bg-light-concrete text-sm">All Status</SelectItem>
+                    <SelectItem value="paid" className="text-charcoal hover:bg-light-concrete text-sm">Paid</SelectItem>
+                    <SelectItem value="pending" className="text-charcoal hover:bg-light-concrete text-sm">Pending</SelectItem>
+                    <SelectItem value="failed" className="text-charcoal hover:bg-light-concrete text-sm">Failed</SelectItem>
+                    <SelectItem value="draft" className="text-charcoal hover:bg-light-concrete text-sm">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Results Summary */}
-            <div className="flex justify-between items-center mb-4 text-sm text-charcoal/70">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 text-sm sm:text-base text-charcoal">
               <span>
                 Showing {paginatedData.length} of {filteredAndSortedData.length} invoices
               </span>
               {filteredAndSortedData.length !== billingHistory.length && (
-                <span>
+                <span className="text-sm">
                   (filtered from {billingHistory.length} total)
                 </span>
               )}
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden lg:block">
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-stone-gray">
                     <TableHead 
-                      className="text-charcoal cursor-pointer hover:text-forest-green"
+                      className="text-charcoal font-bold cursor-pointer hover:text-forest-green text-sm lg:text-base whitespace-nowrap"
                       onClick={() => handleSort('date')}
                     >
                       Date
@@ -382,7 +385,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                       )}
                     </TableHead>
                     <TableHead 
-                      className="text-charcoal cursor-pointer hover:text-forest-green"
+                      className="text-charcoal font-bold cursor-pointer hover:text-forest-green text-sm lg:text-base"
                       onClick={() => handleSort('description')}
                     >
                       Description
@@ -393,7 +396,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                       )}
                     </TableHead>
                     <TableHead 
-                      className="text-charcoal cursor-pointer hover:text-forest-green"
+                      className="text-charcoal font-bold cursor-pointer hover:text-forest-green text-sm lg:text-base whitespace-nowrap"
                       onClick={() => handleSort('amount')}
                     >
                       Amount
@@ -404,7 +407,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                       )}
                     </TableHead>
                     <TableHead 
-                      className="text-charcoal cursor-pointer hover:text-forest-green"
+                      className="text-charcoal font-bold cursor-pointer hover:text-forest-green text-sm lg:text-base whitespace-nowrap"
                       onClick={() => handleSort('status')}
                     >
                       Status
@@ -414,20 +417,20 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                         </span>
                       )}
                     </TableHead>
-                    <TableHead className="text-charcoal">Source</TableHead>
-                    <TableHead className="text-charcoal">Invoice</TableHead>
+                    <TableHead className="text-charcoal font-bold text-sm lg:text-base whitespace-nowrap">Source</TableHead>
+                    <TableHead className="text-charcoal font-bold text-sm lg:text-base whitespace-nowrap">Invoice</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedData.map((item) => (
                     <TableRow key={item.id} className="border-stone-gray">
-                      <TableCell className="text-charcoal">
+                      <TableCell className="text-charcoal text-sm lg:text-base whitespace-nowrap">
                         {formatDate(item.date)}
                       </TableCell>
-                      <TableCell className="text-charcoal max-w-xs truncate">
+                      <TableCell className="text-charcoal text-sm lg:text-base max-w-xs truncate">
                         {item.description}
                       </TableCell>
-                      <TableCell className="text-charcoal font-medium">
+                      <TableCell className="text-forest-green font-mono font-medium text-sm lg:text-base whitespace-nowrap">
                         ${(item.amount / 100).toFixed(2)}
                       </TableCell>
                       <TableCell>
@@ -445,14 +448,14 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                           <Button 
                             size="sm" 
                             variant="outline"
-                            className="border-stone-gray text-charcoal hover:bg-light-concrete w-10 h-10"
+                            className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-2 lg:px-3 py-2 lg:py-3 rounded-lg transition-all duration-200 w-10 lg:w-12 h-10 lg:h-12"
                             onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
                             title="Download Invoice"
                           >
-                            <Download className="h-4 w-4" />
+                            <Download className="h-6 lg:h-8 w-6 lg:w-8" />
                           </Button>
                         ) : (
-                          <span className="text-charcoal/40 text-sm">No invoice</span>
+                          <span className="text-charcoal text-sm lg:text-base">No invoice</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -462,20 +465,20 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
             </div>
 
             {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
+            <div className="md:hidden space-y-4">
               {paginatedData.map((item) => (
-                <Card key={item.id} className="bg-light-concrete border-stone-gray">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <p className="font-medium text-charcoal mb-1">
+                <Card key={item.id} className="bg-light-concrete rounded-2xl border border-stone-gray/20 shadow-lg">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-charcoal text-sm sm:text-base mb-1 truncate">
                           {item.description}
                         </p>
-                        <p className="text-sm text-charcoal/70">
+                        <p className="text-sm sm:text-base text-charcoal">
                           {formatDate(item.date)}
                         </p>
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0">
                         <Badge className={getStatusBadgeClass(item.status)}>
                           {item.status}
                         </Badge>
@@ -484,22 +487,22 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                         </Badge>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-charcoal text-lg">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                      <span className="font-mono font-medium text-forest-green text-lg sm:text-xl">
                         ${(item.amount / 100).toFixed(2)}
                       </span>
                       {hasDownloadableInvoice(item) ? (
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="border-stone-gray text-charcoal hover:bg-paper-white"
+                          className="bg-paper-white border-stone-gray text-charcoal hover:bg-paper-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
                           onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
                         >
-                          <Download className="h-4 w-4 mr-2" />
+                          <Download className="h-6 sm:h-8 w-6 sm:w-8 mr-2 sm:mr-3" />
                           Download
                         </Button>
                       ) : (
-                        <span className="text-charcoal/40 text-sm">No invoice available</span>
+                        <span className="text-charcoal text-sm sm:text-base">No invoice available</span>
                       )}
                     </div>
                   </CardContent>
@@ -509,18 +512,18 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-6">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="border-stone-gray text-charcoal hover:bg-light-concrete"
+                  className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 w-full sm:w-auto"
                 >
                   Previous
                 </Button>
                 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 order-first sm:order-none">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
                     if (totalPages <= 5) {
@@ -541,8 +544,8 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                         onClick={() => setCurrentPage(pageNum)}
                         className={
                           currentPage === pageNum
-                            ? "bg-forest-green text-paper-white hover:bg-forest-green/90"
-                            : "border-stone-gray text-charcoal hover:bg-light-concrete"
+                            ? "bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 shadow-lg"
+                            : "bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200"
                         }
                       >
                         {pageNum}
@@ -556,7 +559,7 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                   size="sm"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="border-stone-gray text-charcoal hover:bg-light-concrete"
+                  className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 w-full sm:w-auto"
                 >
                   Next
                 </Button>
@@ -565,9 +568,9 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
           </>
         ) : (
           <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-charcoal/30 mx-auto mb-4" />
-            <p className="text-charcoal/70 text-lg mb-2">No billing history available</p>
-            <p className="text-charcoal/50 text-sm">
+            <FileText className="h-12 w-12 text-charcoal mx-auto mb-4" />
+            <p className="text-charcoal text-lg mb-2 font-bold">No billing history available</p>
+            <p className="text-charcoal text-base">
               Your invoices and receipts will appear here once you have billing activity.
             </p>
           </div>

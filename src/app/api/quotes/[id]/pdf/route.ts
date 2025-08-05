@@ -1,9 +1,9 @@
+import { renderToBuffer } from '@react-pdf/renderer';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { QuotePDFTemplate } from '@/libs/pdf/quote-template';
 import { PDFGenerationOptions } from '@/libs/pdf/types';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
-import { renderToBuffer } from '@react-pdf/renderer';
 
 export async function GET(
   request: NextRequest,
@@ -79,7 +79,7 @@ export async function GET(
     const filename = `quote-${quote.client_name.replace(/[^a-zA-Z0-9]/g, '-')}-${quote.id.slice(0, 8)}.pdf`;
 
     // Return PDF with proper headers
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

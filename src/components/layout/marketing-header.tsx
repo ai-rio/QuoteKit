@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect,useState } from 'react'
-import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
+import Link from 'next/link'
+import React, { useEffect,useState } from 'react'
 
 import { LawnQuoteLogo } from '@/components/branding/lawn-quote-logo'
 import { Button } from '@/components/ui/button'
@@ -85,50 +85,38 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
           <NavigationMenu className="hidden lg:flex">
             <NavigationMenuList>
               <NavigationMenuItem>
-                <Link href="/" legacyBehavior passHref>
-                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
-                    Home
-                  </NavigationMenuLink>
+                <Link href="/" className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                  Home
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link href="/about" legacyBehavior passHref>
-                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
-                    About
-                  </NavigationMenuLink>
+                <Link href="/about" className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                  About
                 </Link>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <Link href="/features" legacyBehavior passHref>
-                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
-                    Features
-                  </NavigationMenuLink>
+                <Link href="/features" className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                  Features
                 </Link>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <Link href="/pricing" legacyBehavior passHref>
-                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
-                    Pricing
-                  </NavigationMenuLink>
+                <Link href="/pricing" className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                  Pricing
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link href="/blog" legacyBehavior passHref>
-                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
-                    Blog
-                  </NavigationMenuLink>
+                <Link href="/blog" className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                  Blog
                 </Link>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <Link href="/contact" legacyBehavior passHref>
-                  <NavigationMenuLink className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
-                    Contact
-                  </NavigationMenuLink>
+                <Link href="/contact" className="text-sm font-medium text-charcoal hover:text-forest-green transition-colors px-3 py-2 rounded-md hover:bg-light-concrete">
+                  Contact
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>

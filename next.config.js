@@ -69,10 +69,10 @@ const nextConfig = {
   },
   
   // Performance optimizations
+  turbopack: {
+    // Turbopack configuration for faster development builds
+  },
   experimental: {
-    turbo: {
-      // Turbopack configuration for faster development builds
-    },
     // Disable problematic optimizations for now
     // optimizeCss: true,
     scrollRestoration: true,

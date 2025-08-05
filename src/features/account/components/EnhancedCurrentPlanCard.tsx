@@ -316,31 +316,35 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
   return (
     <>
-      <Card className="bg-paper-white border-stone-gray">
-        <CardHeader>
+      <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+        <CardHeader className="p-8">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl text-charcoal">Current Plan</CardTitle>
-              <CardDescription className="text-charcoal/70">Your subscription details</CardDescription>
+              <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">
+                Current Plan
+              </CardTitle>
+              <CardDescription className="text-lg text-charcoal mt-2">
+                Your subscription details
+              </CardDescription>
             </div>
-            <DollarSign className="h-6 w-6 text-charcoal/60" />
+            <DollarSign className="h-6 w-6 text-charcoal" />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           {/* Success Banner */}
           {syncSuccess && (
-            <Card className="bg-green-50 border-green-200 mb-4">
-              <CardContent className="p-4">
+            <Card className="bg-green-50 border-green-200 mb-4 rounded-2xl">
+              <CardContent className="p-6">
                 <div className="flex items-start space-x-3">
                   <RefreshCw className="h-5 w-5 text-green-500 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-medium text-green-800">Sync Successful</p>
-                    <p className="text-sm text-green-600 mt-1">{syncSuccess}</p>
-                    <p className="text-xs text-green-600 mt-1">Page will refresh in 2 seconds...</p>
+                    <p className="font-bold text-green-800 text-base">Sync Successful</p>
+                    <p className="text-base text-green-600 mt-1">{syncSuccess}</p>
+                    <p className="text-sm text-green-600 mt-1">Page will refresh in 2 seconds...</p>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="mt-2 border-green-300 text-green-600 hover:bg-green-50"
+                      className="mt-2 bg-paper-white border-green-300 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-lg transition-all duration-200"
                       onClick={() => setSyncSuccess(null)}
                     >
                       Dismiss
@@ -353,17 +357,17 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
           {/* Error Banner */}
           {error && (
-            <Card className="bg-red-50 border-red-200 mb-4">
-              <CardContent className="p-4">
+            <Card className="bg-red-50 border-red-200 mb-4 rounded-2xl">
+              <CardContent className="p-6">
                 <div className="flex items-start space-x-3">
                   <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-medium text-red-800">Error</p>
-                    <p className="text-sm text-red-600 mt-1">{error}</p>
+                    <p className="font-bold text-red-800 text-base">Error</p>
+                    <p className="text-base text-red-600 mt-1">{error}</p>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="mt-2 border-red-300 text-red-600 hover:bg-red-50"
+                      className="mt-2 bg-paper-white border-red-300 text-red-600 hover:bg-red-50 font-bold px-4 py-2 rounded-lg transition-all duration-200"
                       onClick={() => setError(null)}
                     >
                       Dismiss
@@ -378,10 +382,10 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-charcoal">
+                  <h3 className="font-bold text-charcoal text-lg">
                     {planData.name}
                   </h3>
-                  <p className="text-sm text-charcoal/70">
+                  <p className="text-base text-charcoal font-mono text-forest-green">
                     {formatPrice(planData.price)}/{planData.interval}
                   </p>
                 </div>
@@ -390,13 +394,13 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
               {/* Free Plan Information Banner */}
               {hasFallbackPlan && (
-                <Card className="bg-blue-50 border-blue-200 mb-4">
-                  <CardContent className="p-4">
+                <Card className="bg-blue-50 border-blue-200 mb-4 rounded-2xl">
+                  <CardContent className="p-6">
                     <div className="flex items-start space-x-3">
                       <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
                       <div className="flex-1">
-                        <p className="font-medium text-blue-800">Using Free Plan</p>
-                        <p className="text-sm text-blue-600 mt-1">
+                        <p className="font-bold text-blue-800 text-base">Using Free Plan</p>
+                        <p className="text-base text-blue-600 mt-1">
                           You&apos;re currently on the free plan. Upgrade to unlock premium features.
                         </p>
                       </div>
@@ -407,7 +411,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
               {/* Plan Details Debug Info (only in development) */}
               {process.env.NODE_ENV === 'development' && (
-                <div className="p-2 bg-light-concrete text-xs text-charcoal/60 rounded border border-stone-gray">
+                <div className="p-4 bg-light-concrete text-sm text-charcoal rounded-lg border border-stone-gray">
                   <p><strong>Debug Info:</strong></p>
                   <p>Has Subscription: {hasSubscription ? 'Yes' : 'No'}</p>
                   <p>Has Fallback Plan: {hasFallbackPlan ? 'Yes' : 'No'}</p>
@@ -430,19 +434,19 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
 
               {/* Cancellation Notice - only for real subscriptions */}
               {hasSubscription && subscription.cancel_at_period_end && (
-                <Card className="bg-equipment-yellow/10 border-equipment-yellow">
-                  <CardContent className="p-4">
+                <Card className="bg-equipment-yellow/10 border-equipment-yellow rounded-2xl">
+                  <CardContent className="p-6">
                     <div className="flex items-start space-x-3">
                       <AlertCircle className="h-5 w-5 text-equipment-yellow mt-0.5" />
                       <div className="flex-1">
-                        <p className="font-medium text-charcoal">Subscription scheduled for cancellation</p>
-                        <p className="text-sm text-charcoal/70 mt-1">
+                        <p className="font-bold text-charcoal text-base">Subscription scheduled for cancellation</p>
+                        <p className="text-base text-charcoal mt-1">
                           Your subscription will end on {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}.
                           You&apos;ll retain access to all features until then.
                         </p>
                         <Button
                           size="sm"
-                          className="mt-3 bg-forest-green text-paper-white hover:bg-forest-green/90"
+                          className="mt-3 bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
                           onClick={handleReactivation}
                           disabled={isLoading}
                         >
@@ -458,14 +462,14 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
               {hasSubscription && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-gray">
                   <div>
-                    <p className="text-sm font-medium text-charcoal">Next billing date</p>
-                    <p className="text-sm text-charcoal/70">
+                    <p className="text-base font-bold text-charcoal">Next billing date</p>
+                    <p className="text-base text-charcoal">
                       {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-charcoal">Billing period</p>
-                    <p className="text-sm text-charcoal/70">
+                    <p className="text-base font-bold text-charcoal">Billing period</p>
+                    <p className="text-base text-charcoal">
                       {subscription.current_period_start ? formatDate(subscription.current_period_start) : 'N/A'} - {' '}
                       {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}
                     </p>
@@ -473,9 +477,9 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <div className="flex flex-col gap-3 pt-4">
                 <Button 
-                  className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                  className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 shadow-lg w-full sm:w-auto"
                   onClick={() => setShowPlanDialog(true)}
                   disabled={isLoading}
                 >
@@ -484,54 +488,56 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                     (planData.price === 0 ? 'Upgrade Plan' : 'Change Plan')}
                 </Button>
                 
-                {/* Only show Stripe management for real subscriptions */}
-                {hasSubscription && (
-                  <Button 
-                    variant="outline" 
-                    className="border-stone-gray text-charcoal hover:bg-light-concrete"
-                    asChild
-                  >
-                    <a href="/manage-subscription">Manage in Stripe</a>
-                  </Button>
-                )}
-                
-                {/* Only show cancel for real subscriptions */}
-                {hasSubscription && !subscription.cancel_at_period_end && (
-                  <Button 
-                    variant="outline" 
-                    className="border-error-red text-error-red hover:bg-error-red hover:text-paper-white"
-                    onClick={() => setShowCancelDialog(true)}
-                    disabled={isLoading}
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    {isLoading ? 'Loading...' : 'Cancel'}
-                  </Button>
-                )}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Only show Stripe management for real subscriptions */}
+                  {hasSubscription && (
+                    <Button 
+                      variant="outline" 
+                      className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                      asChild
+                    >
+                      <a href="/manage-subscription">Manage in Stripe</a>
+                    </Button>
+                  )}
+                  
+                  {/* Only show cancel for real subscriptions */}
+                  {hasSubscription && !subscription.cancel_at_period_end && (
+                    <Button 
+                      variant="outline" 
+                      className="bg-paper-white border-red-500 text-red-500 hover:bg-red-500 hover:text-paper-white font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                      onClick={() => setShowCancelDialog(true)}
+                      disabled={isLoading}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      {isLoading ? 'Loading...' : 'Cancel'}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+              <div className="p-6 bg-red-50 border border-red-200 rounded-2xl mb-4">
                 <div className="flex items-start space-x-3">
                   <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
                   <div className="flex-1 text-left">
-                    <p className="font-medium text-red-800">Plan Configuration Error</p>
-                    <p className="text-sm text-red-600 mt-1">
+                    <p className="font-bold text-red-800 text-base">Plan Configuration Error</p>
+                    <p className="text-base text-red-600 mt-1">
                       Unable to load subscription or free plan information. Please try syncing or contact support.
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-col gap-3 justify-center">
                 <Button 
-                  className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                  className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 shadow-lg w-full sm:w-auto"
                   asChild
                 >
                   <a href="/pricing">View Plans</a>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="border-equipment-yellow text-equipment-yellow hover:bg-equipment-yellow hover:text-charcoal"
+                  className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
                   onClick={handleSyncSubscription}
                   disabled={isSyncing || isLoading}
                 >

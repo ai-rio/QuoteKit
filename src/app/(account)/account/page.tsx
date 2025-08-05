@@ -1,6 +1,15 @@
-import { Suspense } from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
+import { 
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbPage, 
+  BreadcrumbSeparator 
+} from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAvailablePlans } from '@/features/account/actions/subscription-actions';
 import { BillingHistoryTable } from '@/features/account/components/BillingHistoryTable';
@@ -56,10 +65,34 @@ export default async function AccountPage() {
         {/* Handle success/error states from URL parameters */}
         <SuccessHandler />
         
-        <div className="container mx-auto px-4 py-8 space-y-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-charcoal">Account Dashboard</h1>
-            <p className="text-charcoal/70 mt-2">Manage your subscription and billing information</p>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/dashboard" className="text-charcoal/70 hover:text-charcoal text-sm sm:text-base">
+                    Dashboard
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-charcoal font-bold text-sm sm:text-base">
+                  Account
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          {/* Page Header - Following Style Guide Typography */}
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-forest-green mb-2">
+              Account Dashboard
+            </h1>
+            <p className="text-base sm:text-lg text-charcoal">
+              Manage your subscription and billing information
+            </p>
           </div>
 
           {/* Current Plan Section */}
@@ -93,13 +126,19 @@ export default async function AccountPage() {
             {stripePublishableKey ? (
               <PaymentMethodsManager stripePublishableKey={stripePublishableKey} />
             ) : (
-              <Card className="bg-paper-white border-stone-gray">
-                <CardHeader>
-                  <CardTitle className="text-xl text-charcoal">Payment Methods</CardTitle>
-                  <CardDescription className="text-charcoal/70">Stripe is not configured</CardDescription>
+              <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">
+                    Payment Methods
+                  </CardTitle>
+                  <CardDescription className="text-lg text-charcoal">
+                    Stripe is not configured
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-charcoal/60">Payment method management is not available.</p>
+                <CardContent className="p-8 pt-0">
+                  <p className="text-lg text-charcoal">
+                    Payment method management is not available.
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -112,12 +151,12 @@ export default async function AccountPage() {
 
 function CardSkeleton() {
   return (
-    <Card className="bg-paper-white border-stone-gray">
-      <CardHeader>
+    <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+      <CardHeader className="p-8">
         <div className="h-6 w-48 bg-light-concrete animate-pulse rounded"></div>
-        <div className="h-4 w-32 bg-light-concrete animate-pulse rounded"></div>
+        <div className="h-4 w-32 bg-light-concrete animate-pulse rounded mt-2"></div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8 pt-0">
         <div className="space-y-4">
           <div className="h-4 w-full bg-light-concrete animate-pulse rounded"></div>
           <div className="h-4 w-3/4 bg-light-concrete animate-pulse rounded"></div>

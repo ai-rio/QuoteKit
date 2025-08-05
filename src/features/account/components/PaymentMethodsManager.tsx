@@ -1,14 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw, RotateCcw } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 
 import { AddPaymentMethodDialog } from './AddPaymentMethodDialog';
 import { PaymentMethodCard } from './PaymentMethodCard';
@@ -257,16 +257,20 @@ function PaymentMethodsContent() {
 
   if (loading) {
     return (
-      <Card className="bg-paper-white border-stone-gray">
-        <CardHeader>
-          <CardTitle className="text-xl text-charcoal">Payment Methods</CardTitle>
-          <CardDescription className="text-charcoal/70">Manage your payment information</CardDescription>
+      <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+        <CardHeader className="p-8">
+          <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">
+            Payment Methods
+          </CardTitle>
+          <CardDescription className="text-lg text-charcoal mt-2">
+            Manage your payment information
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-charcoal/50 mx-auto mb-4" />
-              <p className="text-sm text-charcoal/60">Loading payment methods...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-charcoal mx-auto mb-4" />
+              <p className="text-base text-charcoal">Loading payment methods...</p>
             </div>
           </div>
         </CardContent>
@@ -275,25 +279,25 @@ function PaymentMethodsContent() {
   }
 
   return (
-    <Card className="bg-paper-white border-stone-gray">
-      <CardHeader>
-        <div className="flex items-center justify-between">
+    <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+      <CardHeader className="p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <CardTitle className="text-xl text-charcoal flex items-center space-x-2">
+            <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold text-forest-green flex items-center space-x-2">
               <CreditCard className="h-5 w-5 text-forest-green" />
               <span>Payment Methods</span>
             </CardTitle>
-            <CardDescription className="text-charcoal/70">
+            <CardDescription className="text-base sm:text-lg text-charcoal mt-2">
               Manage your payment information securely
             </CardDescription>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 self-start sm:self-auto">
             <Button
               size="sm"
               variant="outline"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+              className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200"
               title="Refresh payment methods"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -303,7 +307,7 @@ function PaymentMethodsContent() {
               variant="outline"
               onClick={handleForceSync}
               disabled={refreshing}
-              className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+              className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200"
               title="Force sync from Stripe"
             >
               <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -311,17 +315,17 @@ function PaymentMethodsContent() {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-8 pt-0">
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
+          <Alert className="mb-6 border-red-200 bg-red-50 rounded-2xl">
             <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
+            <AlertDescription className="text-red-800 text-base">
               {error}
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => fetchPaymentMethods()}
-                className="ml-2 h-6 text-xs"
+                className="ml-2 h-8 text-sm bg-paper-white border-red-300 text-red-600 hover:bg-red-50 font-bold px-3 py-1 rounded transition-all duration-200"
               >
                 Try Again
               </Button>
@@ -346,7 +350,7 @@ function PaymentMethodsContent() {
               <Button
                 variant="outline"
                 onClick={() => setShowAddDialog(true)}
-                className="w-full border-stone-gray text-charcoal hover:bg-stone-gray/10 h-12"
+                className="w-full bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-200 h-12"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Another Payment Method
@@ -354,17 +358,17 @@ function PaymentMethodsContent() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-stone-gray/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CreditCard className="h-8 w-8 text-charcoal/40" />
+          <div className="text-center py-8 sm:py-12">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-stone-gray/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-charcoal" />
             </div>
-            <h3 className="text-lg font-medium text-charcoal mb-2">No payment methods</h3>
-            <p className="text-charcoal/70 mb-6 max-w-sm mx-auto">
+            <h3 className="text-base sm:text-lg font-bold text-charcoal mb-2">No payment methods</h3>
+            <p className="text-charcoal text-sm sm:text-base mb-6 max-w-sm mx-auto px-4">
               Add a payment method to manage your subscriptions and make payments.
             </p>
             <Button 
               onClick={() => setShowAddDialog(true)}
-              className="bg-forest-green text-paper-white hover:bg-forest-green/90 h-10"
+              className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-10 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Payment Method
