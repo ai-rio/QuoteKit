@@ -1,11 +1,12 @@
 'use client'
 
-import { AlertCircle,Crown, Plus } from 'lucide-react'
+import { AlertCircle, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { useFeatureAccess } from '@/hooks/useFeatureAccess'
+import { UpgradePrompt } from '@/components/UpgradePrompt'
+import { useQuoteLimits } from '@/hooks/useFeatureAccess'
 
 interface CreateQuoteButtonProps {
   variant?: 'default' | 'outline' | 'secondary'
@@ -23,15 +24,21 @@ export function CreateQuoteButton({
   children
 }: CreateQuoteButtonProps) {
   const router = useRouter()
-  const { canAccess } = useFeatureAccess()
-
-  // Check quote creation access
-  const quoteAccess = canAccess('max_quotes')
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const { 
+    hasAccess, 
+    canCreateQuote, 
+    isAtLimit, 
+    limit, 
+    current, 
+    upgradeRequired,
+    loading 
+  } = useQuoteLimits()
 
   const handleCreateQuote = () => {
-    if (!quoteAccess.hasAccess) {
-      // For now, just show an alert - we can enhance this later
-      alert('You have reached your quote limit. Please upgrade to create more quotes.')
+    // If user can't create quotes, show upgrade prompt
+    if (!canCreateQuote || upgradeRequired) {
+      setShowUpgradePrompt(true)
       return
     }
 
@@ -41,18 +48,82 @@ export function CreateQuoteButton({
 
   const buttonText = children || (iconOnly ? '' : 'Create New Quote')
   
+  // Show different states based on quota
+  const getButtonState = () => {
+    if (loading) {
+      return {
+        disabled: true,
+        text: buttonText,
+        showAlert: false
+      }
+    }
+
+    if (isAtLimit) {
+      return {
+        disabled: false, // Allow click to show upgrade prompt
+        text: iconOnly ? '' : 'Upgrade to Create More',
+        showAlert: true
+      }
+    }
+
+    if (!hasAccess) {
+      return {
+        disabled: false, // Allow click to show upgrade prompt
+        text: iconOnly ? '' : 'Upgrade Required',
+        showAlert: true
+      }
+    }
+
+    return {
+      disabled: false,
+      text: buttonText,
+      showAlert: false
+    }
+  }
+
+  const buttonState = getButtonState()
+
   return (
-    <Button
-      onClick={handleCreateQuote}
-      variant={variant}
-      size={size}
-      className={`${className} bg-forest-green text-white hover:opacity-90 font-bold`}
-      disabled={quoteAccess.isAtLimit}
-    >
-      <Plus className="w-4 h-4 mr-2" />
-      {buttonText}
-      {quoteAccess.isAtLimit && <AlertCircle className="w-4 h-4 ml-2 text-error-red" />}
-    </Button>
+    <>
+      <Button
+        onClick={handleCreateQuote}
+        variant={variant}
+        size={size}
+        className={`${className} ${
+          buttonState.showAlert 
+            ? 'bg-amber-600 hover:bg-amber-700' 
+            : 'bg-forest-green hover:opacity-90'
+        } text-white font-bold`}
+        disabled={buttonState.disabled}
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        {buttonState.text}
+        {buttonState.showAlert && <AlertCircle className="w-4 h-4 ml-2" />}
+      </Button>
+
+      {/* Upgrade Prompt Modal */}
+      {showUpgradePrompt && (
+        <UpgradePrompt
+          feature="Quote Creation"
+          title="Quote Limit Reached"
+          description={
+            limit 
+              ? `You've used ${current} of ${limit} quotes this month. Upgrade to Pro for unlimited quotes.`
+              : "Upgrade to Pro to create unlimited quotes and access all premium features."
+          }
+          modal={true}
+          open={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          benefits={[
+            'Unlimited quotes per month',
+            'Professional PDF exports',
+            'Custom branding and logos',
+            'Advanced analytics dashboard',
+            'Priority customer support'
+          ]}
+        />
+      )}
+    </>
   )
 }
 

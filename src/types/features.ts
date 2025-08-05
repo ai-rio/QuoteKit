@@ -96,7 +96,9 @@ export interface FeatureAccess {
  */
 export interface FeatureUsage {
   quotes_count: number
-  // Add more usage counters as needed
+  pdf_exports_count?: number
+  api_calls_count?: number
+  bulk_operations_count?: number
 }
 
 // =====================================================

@@ -26,4 +26,6 @@ export interface PDFCompanyData {
 export interface PDFGenerationOptions {
   quote: PDFQuoteData;
   company: PDFCompanyData;
+  showWatermark?: boolean;
+  watermarkText?: string;
 }

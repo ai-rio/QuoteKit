@@ -193,6 +193,36 @@ export async function sendBulkQuoteEmails(quoteIds: string[]): Promise<{
   results: Array<{ quoteId: string; success: boolean; error?: string }>;
   timestamp: string;
 }> {
+  // Check bulk operations access for multiple emails
+  if (quoteIds.length > 1) {
+    const session = await getSession();
+    if (!session) {
+      return {
+        success: false,
+        results: quoteIds.map(id => ({ 
+          quoteId: id, 
+          success: false, 
+          error: 'User not authenticated' 
+        })),
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    const supabase = await createSupabaseServerClient();
+    const bulkAccess = await checkBulkOperationsAccess(session.user.id, supabase);
+    if (!bulkAccess.hasAccess) {
+      return {
+        success: false,
+        results: quoteIds.map(id => ({ 
+          quoteId: id, 
+          success: false, 
+          error: bulkAccess.message 
+        })),
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
   const results = [];
   
   for (const quoteId of quoteIds) {
@@ -211,4 +241,56 @@ export async function sendBulkQuoteEmails(quoteIds: string[]): Promise<{
     results,
     timestamp: new Date().toISOString(),
   };
+}
+
+/**
+ * Check if user has access to bulk operations feature
+ */
+async function checkBulkOperationsAccess(userId: string, supabase: any) {
+  try {
+    // Import here to avoid circular dependencies
+    const { parseStripeMetadata, FREE_PLAN_FEATURES } = await import('@/types/features');
+    
+    // Get user's subscription and features
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select(`
+        *,
+        stripe_prices!inner (
+          *,
+          stripe_products!inner (
+            metadata
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .single()
+
+    // Parse features from subscription or use free plan defaults
+    let features = FREE_PLAN_FEATURES
+    if (subscription?.stripe_prices?.stripe_products?.metadata) {
+      features = parseStripeMetadata(subscription.stripe_prices.stripe_products.metadata)
+    }
+
+    // Check bulk operations access
+    if (!features.bulk_operations) {
+      return {
+        hasAccess: false,
+        message: 'Bulk operations are a premium feature. Upgrade to Pro to send multiple emails at once.'
+      }
+    }
+
+    return {
+      hasAccess: true
+    }
+
+  } catch (error) {
+    console.error('Error checking bulk operations access:', error)
+    // On error, deny access to be safe
+    return {
+      hasAccess: false,
+      message: 'Unable to verify bulk operations access. Please try again.'
+    }
+  }
 }

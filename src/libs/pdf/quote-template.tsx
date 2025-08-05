@@ -138,9 +138,17 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
     paddingTop: 10,
   },
+  watermark: {
+    position: 'absolute',
+    bottom: 10,
+    right: 40,
+    fontSize: 8,
+    color: '#d1d5db',
+    opacity: 0.7,
+  },
 });
 
-export function QuotePDFTemplate({ quote, company }: PDFGenerationOptions) {
+export function QuotePDFTemplate({ quote, company, showWatermark = false, watermarkText = 'Created with QuoteKit' }: PDFGenerationOptions) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -246,6 +254,13 @@ export function QuotePDFTemplate({ quote, company }: PDFGenerationOptions) {
         <Text style={styles.footer}>
           This quote is valid for 30 days from the date above.
         </Text>
+
+        {/* Watermark for free users */}
+        {showWatermark && (
+          <Text style={styles.watermark}>
+            {watermarkText}
+          </Text>
+        )}
       </Page>
     </Document>
   );

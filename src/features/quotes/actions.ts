@@ -3,6 +3,7 @@
 import { updateItemLastUsed } from '@/features/items/actions';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
+import { FREE_PLAN_FEATURES,parseStripeMetadata } from '@/types/features';
 
 import { CreateQuoteData, Quote, SaveDraftData } from './types';
 import { calculateQuote } from './utils';
@@ -14,6 +15,54 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Check quote limits before creating
+    const { data: currentUsage } = await supabase
+      .rpc('get_current_usage', { p_user_id: user.id })
+      .single();
+
+    // Get user's subscription and features
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select(`
+        *,
+        stripe_prices!inner (
+          *,
+          stripe_products!inner (
+            metadata
+          )
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single();
+
+    // Parse features from subscription or default to free
+    let maxQuotes = 5; // Free plan default
+    if (subscription?.stripe_prices?.stripe_products?.metadata) {
+      try {
+        const metadata = subscription.stripe_prices.stripe_products.metadata;
+        if (metadata.max_quotes) {
+          maxQuotes = parseInt(metadata.max_quotes);
+        }
+      } catch (parseError) {
+        console.warn('Error parsing subscription metadata:', parseError);
+      }
+    }
+
+    // Check if user would exceed quote limit
+    const currentQuotes = (currentUsage as any)?.quotes_count || 0;
+    const isUnlimited = maxQuotes === -1;
+    
+    if (!isUnlimited && currentQuotes >= maxQuotes) {
+      return { 
+        data: null, 
+        error: { 
+          message: `Quote limit reached. You have used ${currentQuotes} of ${maxQuotes} quotes this month. Please upgrade to create more quotes.`,
+          code: 'QUOTA_EXCEEDED'
+        } 
+      };
     }
 
     // Validation - require either client_id or client_name
@@ -56,6 +105,18 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
 
     if (error) {
       return { data: null, error };
+    }
+
+    // Increment quote usage counter
+    try {
+      await supabase.rpc('increment_usage', {
+        p_user_id: user.id,
+        p_usage_type: 'quotes',
+        p_amount: 1
+      });
+    } catch (usageError) {
+      console.warn('Failed to increment quote usage:', usageError);
+      // Don't fail quote creation if usage tracking fails
     }
 
     // Update last_used_at for all items in the quote
@@ -284,6 +345,20 @@ export async function deleteQuotes(quoteIds: string[]): Promise<ActionResponse<{
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Check bulk operations feature access for multiple quotes
+    if (quoteIds.length > 1) {
+      const bulkAccess = await checkBulkOperationsAccess(user.id, supabase);
+      if (!bulkAccess.hasAccess) {
+        return { 
+          data: null, 
+          error: { 
+            message: bulkAccess.message,
+            code: 'FEATURE_NOT_AVAILABLE'
+          } 
+        };
+      }
     }
 
     // Delete the quotes
@@ -526,5 +601,54 @@ export async function getAllQuotes(): Promise<ActionResponse<Quote[]>> {
   } catch (error) {
     console.error('Error fetching quotes:', error);
     return { data: null, error: { message: 'Failed to fetch quotes' } };
+  }
+}
+
+/**
+ * Check if user has access to bulk operations feature
+ */
+async function checkBulkOperationsAccess(userId: string, supabase: any) {
+  try {
+    // Get user's subscription and features
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select(`
+        *,
+        stripe_prices!inner (
+          *,
+          stripe_products!inner (
+            metadata
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .single()
+
+    // Parse features from subscription or use free plan defaults
+    let features = FREE_PLAN_FEATURES
+    if (subscription?.stripe_prices?.stripe_products?.metadata) {
+      features = parseStripeMetadata(subscription.stripe_prices.stripe_products.metadata)
+    }
+
+    // Check bulk operations access
+    if (!features.bulk_operations) {
+      return {
+        hasAccess: false,
+        message: 'Bulk operations are a premium feature. Upgrade to Pro to perform bulk actions on multiple quotes.'
+      }
+    }
+
+    return {
+      hasAccess: true
+    }
+
+  } catch (error) {
+    console.error('Error checking bulk operations access:', error)
+    // On error, deny access to be safe
+    return {
+      hasAccess: false,
+      message: 'Unable to verify bulk operations access. Please try again.'
+    }
   }
 }
