@@ -10,7 +10,7 @@ import { Stripe } from 'stripe';
 /**
  * Type guard to check if an error is a Stripe error
  */
-export function isStripeError(error: unknown): error is Stripe.StripeError {
+export function isStripeError(error: unknown): error is Stripe.StripeRawError {
   return (
     error instanceof Error &&
     'type' in error &&
@@ -44,7 +44,7 @@ export function isStripeAPIError(error: unknown): error is Stripe.errors.StripeA
  * Type guard for Stripe connection errors
  */
 export function isStripeConnectionError(error: unknown): error is Stripe.errors.StripeConnectionError {
-  return isStripeError(error) && error.type === 'api_connection_error';
+  return isStripeError(error) && (error as any).type === 'api_connection_error';
 }
 
 /**

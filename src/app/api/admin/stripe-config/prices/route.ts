@@ -283,6 +283,7 @@ export async function POST(request: NextRequest) {
       const { data: dbPrice, error: dbError } = await supabaseAdminClient
         .from('stripe_prices')
         .insert({
+          id: price.id, // Use Stripe price ID as the database ID
           stripe_price_id: price.id,
           stripe_product_id: typeof price.product === 'string' ? price.product : price.product?.id,
           unit_amount: price.unit_amount || 0,

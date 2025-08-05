@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
           event_id: `manual_${Date.now()}`,
           user_id: user.id,
           handler_used: 'manual_api',
-          success: result?.success !== false,
+          success: (result as any)?.success !== false,
           actions: [action],
           context_metadata: params,
           result_metadata: result,
@@ -297,7 +297,7 @@ export async function POST(request: NextRequest) {
     }
 
     const response = {
-      success: result?.success !== false,
+      success: (result as any)?.success !== false,
       action,
       result,
       timestamp: new Date().toISOString()

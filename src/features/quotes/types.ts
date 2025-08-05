@@ -6,12 +6,12 @@ export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired'
 export interface DatabaseQuote {
   id: string;
   user_id: string;
-  quote_number: string;
-  status: QuoteStatus;
-  client_id: string;
+  quote_number: string | null;
+  status: QuoteStatus | null; // Allow null as per database schema
+  client_id: string | null; // Allow null as per database schema
   client_name: string;
-  client_contact: string;
-  title: string;
+  client_contact: string | null; // Allow null as per database schema
+  title: string | null;
   description?: string;
   quote_data: any; // JSON data containing line items
   subtotal: number;
@@ -124,7 +124,7 @@ export function convertDatabaseQuoteToQuote(dbQuote: DatabaseQuote): Quote {
     id: dbQuote.id,
     user_id: dbQuote.user_id,
     client_name: dbQuote.client_name,
-    client_contact: dbQuote.client_contact,
+    client_contact: dbQuote.client_contact || '', // Handle null client_contact
     quote_data: dbQuote.quote_data as unknown as QuoteLineItem[],
     subtotal: dbQuote.subtotal,
     tax_rate: dbQuote.tax_rate,

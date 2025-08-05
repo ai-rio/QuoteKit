@@ -218,13 +218,13 @@ export async function executePlanChangeWithProration(
     });
 
     // STEP 4: Get the next invoice to see immediate charges
-    let nextInvoicePreview: Stripe.Invoice | undefined;
+    let nextInvoicePreview: Stripe.UpcomingInvoice | undefined;
     try {
       nextInvoicePreview = await stripe.invoices.retrieveUpcoming({
         customer: updatedSubscription.customer as string,
         subscription: subscriptionId
       });
-      console.log(`✅ [STEP 4] Next invoice preview retrieved: ${nextInvoicePreview.total}`);
+      console.log(`✅ [STEP 4] Next invoice preview retrieved: ${nextInvoicePreview?.total}`);
     } catch (error) {
       console.warn(`⚠️ [STEP 4] Could not retrieve next invoice preview:`, error);
     }
@@ -270,7 +270,7 @@ export async function executePlanChangeWithProration(
  * Calculate detailed proration breakdown from invoice line items
  */
 function calculateProrationBreakdown(
-  invoice: Stripe.Invoice,
+  invoice: Stripe.Invoice | Stripe.UpcomingInvoice,
   currentPrice: Stripe.Price,
   newPrice: Stripe.Price
 ): ProrationLineItem[] {

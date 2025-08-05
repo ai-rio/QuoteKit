@@ -45,8 +45,8 @@ export type User = Tables<'users'>;
 export type Quote = Tables<'quotes'>;
 export type Subscription = Tables<'subscriptions'>;
 export type BillingHistory = Tables<'billing_history'>;
-export type Product = Tables<'stripe_products'>;
-export type Price = Tables<'stripe_prices'>;
+export type Product = Tables<'products'>;
+export type Price = Tables<'prices'>;
 
 /**
  * Insert type aliases
@@ -55,8 +55,8 @@ export type UserInsert = TablesInsert<'users'>;
 export type QuoteInsert = TablesInsert<'quotes'>;
 export type SubscriptionInsert = TablesInsert<'subscriptions'>;
 export type BillingHistoryInsert = TablesInsert<'billing_history'>;
-export type ProductInsert = TablesInsert<'stripe_products'>;
-export type PriceInsert = TablesInsert<'stripe_prices'>;
+export type ProductInsert = TablesInsert<'products'>;
+export type PriceInsert = TablesInsert<'prices'>;
 
 /**
  * Update type aliases
@@ -65,8 +65,8 @@ export type UserUpdate = TablesUpdate<'users'>;
 export type QuoteUpdate = TablesUpdate<'quotes'>;
 export type SubscriptionUpdate = TablesUpdate<'subscriptions'>;
 export type BillingHistoryUpdate = TablesUpdate<'billing_history'>;
-export type ProductUpdate = TablesUpdate<'stripe_products'>;
-export type PriceUpdate = TablesUpdate<'stripe_prices'>;
+export type ProductUpdate = TablesUpdate<'products'>;
+export type PriceUpdate = TablesUpdate<'prices'>;
 
 /**
  * Type guard to check if a Supabase response has data

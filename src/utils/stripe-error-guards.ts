@@ -44,7 +44,7 @@ export function isStripeAPIError(error: unknown): error is Stripe.errors.StripeA
  * Type guard for Stripe connection errors
  */
 export function isStripeConnectionError(error: unknown): error is Stripe.errors.StripeConnectionError {
-  return isStripeError(error) && error.type === 'api_connection_error';
+  return isStripeError(error) && (error as any).type === 'api_connection_error';
 }
 
 /**

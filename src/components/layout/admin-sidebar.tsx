@@ -295,8 +295,8 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                   </Link>
                   <button 
                     onClick={async () => {
-                      const { error } = await signOut()
-                      if (!error) {
+                      const result = await signOut()
+                      if (!result?.error) {
                         window.location.href = '/'
                       }
                     }}

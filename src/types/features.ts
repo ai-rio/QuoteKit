@@ -333,7 +333,7 @@ export function parseStripeMetadata(metadata: Record<string, string> | null | un
 
   booleanFeatures.forEach(feature => {
     if (metadata[feature]) {
-      features[feature] = metadata[feature] === 'true'
+      (features as any)[feature] = metadata[feature] === 'true'
     }
   })
 

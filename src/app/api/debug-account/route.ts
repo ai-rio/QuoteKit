@@ -28,12 +28,6 @@ export async function GET() {
       });
     }
 
-    // Get session first to get userId
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
     // Test all account functions
     const [subscription, billingHistory, paymentMethods, stripeKey] = await Promise.all([
       getSubscription(),

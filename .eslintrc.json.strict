@@ -1,0 +1,73 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "@typescript-eslint/recommended",
+    "@typescript-eslint/recommended-requiring-type-checking"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "simple-import-sort"
+  ],
+  "rules": {
+    // Import sorting (keep existing)
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
+    
+    // TypeScript-specific rules
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unsafe-assignment": "error",
+    "@typescript-eslint/no-unsafe-member-access": "error",
+    "@typescript-eslint/no-unsafe-call": "error",
+    "@typescript-eslint/no-unsafe-return": "error",
+    
+    // Async/Promise handling
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/require-await": "error",
+    
+    // Null safety
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/strict-boolean-expressions": "error",
+    "@typescript-eslint/prefer-nullish-coalescing": "error",
+    
+    // Payment system specific
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    
+    // Disable some overly strict rules for gradual adoption
+    "@typescript-eslint/no-unsafe-argument": "warn",
+    "@typescript-eslint/restrict-template-expressions": "warn",
+    "@typescript-eslint/no-misused-promises": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["pages/api/**/*.ts", "app/api/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "error",
+        "@typescript-eslint/no-unsafe-return": "error",
+        "@typescript-eslint/no-unsafe-assignment": "error"
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "tests/**/*"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off"
+      }
+    },
+    {
+      "files": ["src/features/**/*.tsx", "src/components/**/*.tsx"],
+      "rules": {
+        "react-hooks/exhaustive-deps": "warn",
+        "@typescript-eslint/no-misused-promises": "off"
+      }
+    }
+  ]
+}

@@ -107,25 +107,28 @@ export async function getUsersWithRoles() {
 // Get admin actions log
 export async function getAdminActions(limit: number = 100) {
   try {
-    const { data, error } = await supabaseAdminClient
-      .from('admin_actions')
-      .select(`
-        id,
-        action,
-        metadata,
-        created_at,
-        admin:admin_id(email),
-        target_user:target_user_id(email)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(limit)
+    console.log('Admin actions requested, but table not implemented yet');
+    // TODO: Implement admin_actions table in database schema
+    // const { data, error } = await supabaseAdminClient
+    //   .from('admin_actions')
+    //   .select(`
+    //     id,
+    //     action,
+    //     metadata,
+    //     created_at,
+    //     admin:admin_id(email),
+    //     target_user:target_user_id(email)
+    //   `)
+    //   .order('created_at', { ascending: false })
+    //   .limit(limit)
     
-    if (error) {
-      console.error('Error fetching admin actions:', error)
-      return []
-    }
+    // if (error) {
+    //   console.error('Error fetching admin actions:', error)
+    //   return []
+    // }
     
-    return data || []
+    // return data || []
+    return [];
   } catch (error) {
     console.error('Error fetching admin actions:', error)
     return []
@@ -140,18 +143,20 @@ export async function logAdminAction(
   metadata?: Record<string, any>
 ) {
   try {
-    const { error } = await supabaseAdminClient
-      .from('admin_actions')
-      .insert({
-        admin_id: adminId,
-        action,
-        target_user_id: targetUserId,
-        metadata: metadata || {}
-      })
+    console.log('Admin action logged:', { adminId, action, targetUserId, metadata });
+    // TODO: Implement admin_actions table in database schema
+    // const { error } = await supabaseAdminClient
+    //   .from('admin_actions')
+    //   .insert({
+    //     admin_id: adminId,
+    //     action,
+    //     target_user_id: targetUserId,
+    //     metadata: metadata || {}
+    //   })
     
-    if (error) {
-      console.error('Error logging admin action:', error)
-    }
+    // if (error) {
+    //   console.error('Error logging admin action:', error)
+    // }
   } catch (error) {
     console.error('Error logging admin action:', error)
   }

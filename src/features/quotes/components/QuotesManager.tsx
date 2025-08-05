@@ -56,16 +56,16 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     try {
       const response = await getAllQuotes();
       
-      if (response.error) {
-        console.error('Error refreshing quotes:', response.error.message);
+      if (response?.error) {
+        console.error('Error refreshing quotes:', response?.error?.message);
         // Silently fail - don't disrupt user experience for refresh failures
         // The user can still see their initial quotes and use the manual refresh button
-      } else if (response.data) {
-        setQuotes(response.data);
-        console.log('✅ Refreshed quotes successfully:', response.data.length);
+      } else if (response?.data) {
+        setQuotes(response?.data || []);
+        console.log('✅ Refreshed quotes successfully:', response?.data?.length || 0);
       }
     } catch (err) {
-      console.error('Error refreshing quotes:', err?.message || 'Unknown error');
+      console.error('Error refreshing quotes:', (err as Error)?.message || 'Unknown error');
       // Silently fail - don't disrupt user experience for refresh failures
     } finally {
       setIsRefreshing(false);

@@ -7,6 +7,7 @@ type StripeProduct = Database['public']['Tables']['stripe_products']['Row'];
 
 export async function upsertProduct(product: Stripe.Product) {
   const productData = {
+    id: product.id, // Use Stripe product ID as the database ID
     stripe_product_id: product.id,
     name: product.name,
     description: product.description ?? null,

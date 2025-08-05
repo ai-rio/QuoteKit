@@ -185,7 +185,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       const Icon = item.icon
                       const isHighlight = 'highlight' in item ? item.highlight : false
                       const hasAccess = hasFeatureAccess(item.featureKey)
-                      const showPremiumBadge = item.premiumOnly && isFreePlan() && !hasAccess
+                      const showPremiumBadge = (item as any).premiumOnly && isFreePlan() && !hasAccess
                       
                       return (
                         <SidebarMenuItem key={item.title}>
@@ -194,7 +194,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                               href={item.url} 
                               onClick={handleNavigation}
                               className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-all duration-150 ease-out active:scale-95 ml-4 ${
-                                !hasAccess && item.featureKey
+                                !hasAccess && (item as any).featureKey
                                   ? 'text-white/50 hover:bg-white/5 hover:text-white/70 border-l-2 border-transparent cursor-pointer'
                                   : isHighlight 
                                     ? 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200'

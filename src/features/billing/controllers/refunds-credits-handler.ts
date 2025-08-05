@@ -93,14 +93,30 @@ export async function processRefund(
 
     console.log(`✅ [STEP 3] Refund amount calculated: ${refundAmount}`);
 
+    // Map custom reasons to valid Stripe refund reasons
+    const mapRefundReason = (reason: string): 'duplicate' | 'fraudulent' | 'requested_by_customer' => {
+      switch (reason) {
+        case 'subscription_cancellation':
+        case 'requested_by_customer':
+          return 'requested_by_customer';
+        case 'duplicate':
+          return 'duplicate';
+        case 'fraudulent':
+          return 'fraudulent';
+        default:
+          return 'requested_by_customer';
+      }
+    };
+
     // STEP 4: Create the refund
     const refund = await stripe.refunds.create({
       [refundTarget.type]: refundTarget.id,
       amount: refundAmount,
-      reason: request.reason,
+      reason: mapRefundReason(request.reason),
       metadata: {
         user_id: userId,
         processed_by: 'system',
+        original_reason: request.reason, // Store original reason in metadata
         ...request.metadata
       }
     });
@@ -130,7 +146,7 @@ export async function processRefund(
       refundId: refund.id,
       amount: refund.amount,
       currency: refund.currency,
-      status: refund.status,
+      status: refund.status || 'pending',
       reason: refund.reason || request.reason
     };
 
@@ -197,7 +213,7 @@ export async function createCreditNote(
     const creditNote = await stripe.creditNotes.create({
       invoice: request.invoiceId,
       amount: creditAmount,
-      reason: 'general',
+      reason: 'product_unsatisfactory', // Valid Stripe credit note reason
       memo: request.memo,
       metadata: {
         user_id: userId,
@@ -271,7 +287,14 @@ async function validateRefundEligibility(
     if (request.paymentIntentId) {
       const paymentIntent = await stripe.paymentIntents.retrieve(request.paymentIntentId);
       chargeDate = new Date(paymentIntent.created * 1000);
-      maxRefundableAmount = paymentIntent.amount - (paymentIntent.amount_refunded || 0);
+      
+      // Get existing refunds for this payment intent
+      const refunds = await stripe.refunds.list({
+        payment_intent: request.paymentIntentId,
+        limit: 100
+      });
+      const totalRefunded = refunds.data.reduce((sum, refund) => sum + refund.amount, 0);
+      maxRefundableAmount = paymentIntent.amount - totalRefunded;
     } else if (request.chargeId) {
       const charge = await stripe.charges.retrieve(request.chargeId);
       chargeDate = new Date(charge.created * 1000);
@@ -335,10 +358,18 @@ async function determineRefundTarget(
 ): Promise<{ type: 'payment_intent' | 'charge'; id: string; maxRefundableAmount: number }> {
   if (request.paymentIntentId) {
     const paymentIntent = await stripe.paymentIntents.retrieve(request.paymentIntentId);
+    
+    // Get existing refunds for this payment intent
+    const refunds = await stripe.refunds.list({
+      payment_intent: request.paymentIntentId,
+      limit: 100
+    });
+    const totalRefunded = refunds.data.reduce((sum, refund) => sum + refund.amount, 0);
+    
     return {
       type: 'payment_intent',
       id: request.paymentIntentId,
-      maxRefundableAmount: paymentIntent.amount - (paymentIntent.amount_refunded || 0)
+      maxRefundableAmount: paymentIntent.amount - totalRefunded
     };
   }
 
@@ -359,10 +390,18 @@ async function determineRefundTarget(
           ? invoice.payment_intent 
           : invoice.payment_intent.id
       );
+      
+      // Get existing refunds for this payment intent
+      const refunds = await stripe.refunds.list({
+        payment_intent: paymentIntent.id,
+        limit: 100
+      });
+      const totalRefunded = refunds.data.reduce((sum, refund) => sum + refund.amount, 0);
+      
       return {
         type: 'payment_intent',
         id: paymentIntent.id,
-        maxRefundableAmount: paymentIntent.amount - (paymentIntent.amount_refunded || 0)
+        maxRefundableAmount: paymentIntent.amount - totalRefunded
       };
     } else if (invoice.charge) {
       const charge = await stripe.charges.retrieve(
@@ -626,11 +665,11 @@ export async function getRefundCreditHistory(userId: string): Promise<Array<{
     return (history || []).map(item => ({
       id: item.id,
       type: item.status === 'refund_processed' ? 'refund' : 'credit',
-      amount: Math.abs(item.amount),
-      currency: item.currency,
+      amount: Math.abs(item.amount || 0),
+      currency: item.currency || 'usd',
       reason: item.description || 'No reason provided',
-      date: new Date(item.created_at),
-      status: item.status
+      date: new Date(item.created_at || Date.now()),
+      status: item.status || 'unknown'
     }));
   } catch (error) {
     console.error(`❌ Failed to get refund/credit history:`, error);

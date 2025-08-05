@@ -73,8 +73,8 @@ const nextConfig = {
     turbo: {
       // Turbopack configuration for faster development builds
     },
-    // Optimize compilation
-    optimizeCss: true,
+    // Disable problematic optimizations for now
+    // optimizeCss: true,
     scrollRestoration: true,
   },
   
@@ -82,7 +82,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  // Enhanced webpack config for performance
+  // Simplified webpack config to avoid build issues
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Ensure prettier dependencies are resolved properly
@@ -92,28 +92,6 @@ const nextConfig = {
         'prettier/plugins/html': false,
       };
     }
-    
-    // Optimize bundle splitting
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          mdx: {
-            name: 'mdx',
-            test: /[\/]node_modules[\/](next-mdx-remote|gray-matter|mdx|@mdx-js)[\/]/,
-            priority: 30,
-            enforce: true,
-          },
-          vendors: {
-            name: 'vendors',
-            test: /[\/]node_modules[\/]/,
-            priority: 10,
-            enforce: true,
-          },
-        },
-      },
-    };
     
     return config;
   },

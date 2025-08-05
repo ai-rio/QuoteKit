@@ -95,7 +95,7 @@ export function PlanChangeDialog({
         availablePlans: availablePlans?.map(p => ({
           name: p.name,
           pricesCount: p.prices?.length || 0,
-          prices: p.prices?.map(price => ({
+          prices: p.prices?.map((price: any) => ({
             id: price.stripe_price_id,
             amount: price.unit_amount,
             interval: price.interval
@@ -581,7 +581,7 @@ export function PlanChangeDialog({
             {validPlans.length > 0 ? (
               <div className="grid gap-4">
                 {validPlans.map((product) => 
-                  product.prices?.map((price) => {
+                  product.prices?.map((price: any) => {
                     if (!price?.stripe_price_id || price.stripe_price_id === currentPlan.id) {
                       return null;
                     }

@@ -41,7 +41,7 @@ export function PricingCard({
     if (pricesArray.length === 0) return null;
 
     // For freemium: Include free prices regardless of active status, filter paid prices by active status
-    const availablePrices = pricesArray.filter(price => 
+    const availablePrices = pricesArray.filter((price: any) => 
       price.unit_amount === 0 || price.active !== false
     );
     
@@ -50,7 +50,7 @@ export function PricingCard({
         productId: product.stripe_product_id,
         totalPrices: pricesArray.length,
         freePrices: pricesArray.filter(p => (p.unit_amount ?? 0) === 0).length,
-        inactivePaidPrices: pricesArray.filter(p => (p.unit_amount ?? 0) > 0 && p.active === false).map(p => p.stripe_price_id)
+        inactivePaidPrices: pricesArray.filter((p: any) => (p.unit_amount ?? 0) > 0 && p.active === false).map((p: any) => p.stripe_price_id)
       });
       return null;
     }

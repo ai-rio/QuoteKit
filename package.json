@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
     "email:build": "email build",
     "email:dev": "email dev --dir ./src/features/emails --port 3001",
     "email:export": "email export",

@@ -7,6 +7,7 @@ type StripePrice = Database['public']['Tables']['stripe_prices']['Row'];
 
 export async function upsertPrice(price: Stripe.Price) {
   const priceData = {
+    id: price.id, // Use Stripe price ID as the database ID
     stripe_price_id: price.id,
     stripe_product_id: typeof price.product === 'string' ? price.product : '',
     unit_amount: price.unit_amount ?? 0,
@@ -221,6 +222,7 @@ export async function ensureFreePlanActive() {
  */
 export async function upsertProduct(product: Stripe.Product) {
   const productData = {
+    id: product.id, // Use Stripe product ID as the database ID
     stripe_product_id: product.id,
     name: product.name,
     description: product.description ?? null,

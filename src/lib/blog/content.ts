@@ -88,9 +88,7 @@ export async function getPostWithLazyContent(slug: string): Promise<ProcessedBlo
   
   // Return post metadata first, content can be loaded separately
   return {
-    ...post,
-    // Mark content as lazy-loaded
-    isContentLoaded: true
+    ...post
   };
 }
 

@@ -170,7 +170,7 @@ export async function GET(
       // Verify user owns this subscription
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
-        .select('id, user_id, stripe_price_id, prices:stripe_prices(unit_amount, products:stripe_products(name))')
+        .select('id, user_id, price_id, prices:prices(unit_amount, products:products(name))')
         .eq('id', subscriptionId)
         .eq('user_id', user.id)
         .single();
@@ -207,8 +207,8 @@ export async function GET(
           message: 'This is a subscription record. Real invoices will be available once Stripe invoicing is fully configured.',
           subscription: {
             id: subscription.id,
-            plan: subscription.prices?.products?.name || 'Unknown Plan',
-            amount: subscription.prices?.unit_amount || 0
+            plan: (subscription.prices as any)?.products?.name || 'Unknown Plan',
+            amount: (subscription.prices as any)?.unit_amount || 0
           }
         },
         { status: 404 }

@@ -62,6 +62,7 @@ export async function syncMissingPriceData(priceId: string) {
         const { data: syncedProduct } = await supabaseAdminClient
           .from('stripe_products')
           .upsert({
+            id: product.id, // Use Stripe product ID as the database ID
             stripe_product_id: product.id,
             name: product.name,
             description: product.description || null,
@@ -85,6 +86,7 @@ export async function syncMissingPriceData(priceId: string) {
     const { data: syncedPrice, error: priceError } = await supabaseAdminClient
       .from('stripe_prices')
       .upsert({
+        id: price.id, // Use Stripe price ID as the database ID
         stripe_price_id: price.id,
         stripe_product_id: typeof price.product === 'string' ? price.product : price.product?.id,
         unit_amount: price.unit_amount || 0,

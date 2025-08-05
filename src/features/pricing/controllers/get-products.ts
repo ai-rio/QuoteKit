@@ -29,7 +29,7 @@ export async function getProducts() {
 
     // Separate free and paid prices for different handling
     const freePrices = allPrices?.filter(price => price.unit_amount === 0) || [];
-    const paidPrices = allPrices?.filter(price => price.unit_amount > 0 && price.active === true) || [];
+    const paidPrices = allPrices?.filter(price => (price.unit_amount ?? 0) > 0 && price.active === true) || [];
     
     // For freemium model: Include free prices regardless of active status, paid prices only if active
     const availablePrices = [...freePrices, ...paidPrices];
@@ -43,7 +43,7 @@ export async function getProducts() {
     });
     
     // Log any inactive paid prices that might be causing issues
-    const inactivePaidPrices = allPrices?.filter(p => p.unit_amount > 0 && p.active === false) || [];
+    const inactivePaidPrices = allPrices?.filter(p => (p.unit_amount ?? 0) > 0 && p.active === false) || [];
     if (inactivePaidPrices.length > 0) {
       console.warn(`⚠️ Found ${inactivePaidPrices.length} inactive paid prices:`, 
         inactivePaidPrices.map(p => `${p.id} ($${(p.unit_amount || 0) / 100})`));

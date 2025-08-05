@@ -231,6 +231,7 @@ export async function POST(request: NextRequest) {
       const { data: dbProduct, error: dbError } = await supabaseAdminClient
         .from('stripe_products')
         .insert({
+          id: product.id, // Use Stripe product ID as the database ID
           stripe_product_id: product.id,
           name: product.name,
           description: product.description,

@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { getAllPosts, getPostBySlug, getRelatedPosts } from '../content';
-import { blogPostFrontmatterSchema } from '../validation';
+import { BlogPostFrontmatterSchema } from '../validation';
 
 // Mock fs module for testing
 jest.mock('fs', () => ({
@@ -72,7 +72,7 @@ describe('Blog Content Functions', () => {
 
     test('should filter out draft posts in production', async () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
 
       mockFs.readdirSync
         .mockReturnValueOnce(['2025'])
@@ -101,7 +101,7 @@ describe('Blog Content Functions', () => {
 
       expect(posts).toHaveLength(0);
 
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     test('should sort posts by publication date (newest first)', async () => {
@@ -327,7 +327,7 @@ describe('Blog Content Functions', () => {
         image: 'https://example.com/test.jpg',
       };
 
-      expect(() => blogPostFrontmatterSchema.parse(validFrontmatter)).not.toThrow();
+      expect(() => BlogPostFrontmatterSchema.parse(validFrontmatter)).not.toThrow();
     });
 
     test('should reject invalid slug format', () => {
@@ -342,7 +342,7 @@ describe('Blog Content Functions', () => {
         image: 'https://example.com/test.jpg',
       };
 
-      expect(() => blogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
+      expect(() => BlogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
     });
 
     test('should reject invalid category', () => {
@@ -357,7 +357,7 @@ describe('Blog Content Functions', () => {
         image: 'https://example.com/test.jpg',
       };
 
-      expect(() => blogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
+      expect(() => BlogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
     });
 
     test('should reject summary that is too short', () => {
@@ -372,7 +372,7 @@ describe('Blog Content Functions', () => {
         image: 'https://example.com/test.jpg',
       };
 
-      expect(() => blogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
+      expect(() => BlogPostFrontmatterSchema.parse(invalidFrontmatter)).toThrow();
     });
   });
 });
