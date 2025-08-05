@@ -134,7 +134,14 @@ export async function getDashboardData(): Promise<DashboardData> {
         color: 'stone-gray' as const
       },
       {
-        title: 'Settings',
+        title: 'Account & Billing',
+        description: 'Manage subscription and billing',
+        href: '/account',
+        icon: 'crown',
+        color: 'forest-green' as const
+      },
+      {
+        title: 'Company Settings',
         description: 'Configure your company settings',
         href: '/settings',
         icon: 'settings',

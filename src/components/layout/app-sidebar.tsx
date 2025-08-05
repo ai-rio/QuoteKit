@@ -1,10 +1,11 @@
 "use client"
 
-import * as React from "react"
+import { BarChart3, Crown,FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users, BarChart3, Crown } from "lucide-react"
+import * as React from "react"
 
+import { signOut } from "@/app/(auth)/auth-actions"
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -27,7 +28,6 @@ import {
 } from "@/components/ui/sidebar"
 import { useMobileSidebar } from "@/hooks/use-mobile"
 import { useFeatureAccess } from "@/hooks/useFeatureAccess"
-import { signOut } from "@/app/(auth)/auth-actions"
 
 // Navigation items organized into groups
 interface NavItem {
@@ -245,7 +245,15 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                     className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
                     <Settings className="h-4 w-4" />
-                    <span>Settings</span>
+                    <span>Company Settings</span>
+                  </Link>
+                  <Link 
+                    href="/account" 
+                    onClick={handleNavigation}
+                    className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Crown className="h-4 w-4" />
+                    <span>Account & Billing</span>
                   </Link>
                   <button 
                     onClick={async () => {

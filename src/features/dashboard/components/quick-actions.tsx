@@ -1,5 +1,5 @@
+import { Crown,FileText, Package, Plus, Settings } from "lucide-react"
 import Link from "next/link"
-import { Package, Plus, Settings } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,6 +18,10 @@ function getIcon(iconName: string) {
       return Package
     case 'settings':
       return Settings
+    case 'file-text':
+      return FileText
+    case 'crown':
+      return Crown
     default:
       return Plus
   }
@@ -38,7 +42,7 @@ function getColorClasses(color: string) {
 
 export function QuickActions({ actions }: QuickActionsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
       {actions.map((action) => {
         const Icon = getIcon(action.icon)
         const colorClasses = getColorClasses(action.color)
