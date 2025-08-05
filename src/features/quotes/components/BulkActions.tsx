@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { 
+  Crown,
   Download,
   Edit,
+  Lock,
   Mail,
   Trash2,
-  X,
-  Crown,
-  Lock
-} from 'lucide-react';
+  X} from 'lucide-react';
+import { useState } from 'react';
 
 import {
   AlertDialog,
@@ -35,8 +34,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { CompactUpgradePrompt,UpgradePrompt } from '@/components/UpgradePrompt';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
-import { UpgradePrompt, CompactUpgradePrompt } from '@/components/UpgradePrompt';
 
 import { BulkQuoteActions,QuoteStatus } from '../types';
 

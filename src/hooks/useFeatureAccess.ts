@@ -3,11 +3,10 @@
 import { useCallback, useState } from 'react'
 
 import { 
-  type PlanFeatures, 
-  type FeatureKey, 
   type FeatureAccess,
-  FREE_PLAN_FEATURES
-} from '@/types/features'
+  type FeatureKey, 
+  FREE_PLAN_FEATURES,
+  type PlanFeatures} from '@/types/features'
 
 /**
  * Simplified hook for checking feature access based on user's subscription

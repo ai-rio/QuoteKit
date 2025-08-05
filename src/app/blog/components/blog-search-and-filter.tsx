@@ -1,8 +1,10 @@
 'use client';
 
 import { Search } from 'lucide-react';
-import { useBlogFilter } from '../contexts/blog-filter-context';
+
 import { cn } from '@/utils/cn';
+
+import { useBlogFilter } from '../contexts/blog-filter-context';
 
 const categories = [
   { id: 'all', label: 'All' },

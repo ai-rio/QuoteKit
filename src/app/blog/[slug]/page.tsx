@@ -5,12 +5,12 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 // Import components individually to avoid chunk loading issues
 import { Callout } from '@/components/mdx/Callout';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
-import { PricingCalculator } from '@/components/mdx/PricingCalculator';
-import { KeyTakeaways } from '@/components/mdx/KeyTakeaways';
 import { FAQAccordion } from '@/components/mdx/FAQAccordion';
+import { KeyTakeaways } from '@/components/mdx/KeyTakeaways';
 import { MaterialCostTable } from '@/components/mdx/MaterialCostTable';
-
+import { PricingCalculator } from '@/components/mdx/PricingCalculator';
 import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/blog/content';
+
 import { BlogPostHeader } from '../components/blog-post-header';
 import { BlogPostNavigation } from '../components/blog-post-navigation';
 import { RelatedPosts } from '../components/related-posts';

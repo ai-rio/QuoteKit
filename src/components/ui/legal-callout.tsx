@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
 import { Info } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface LegalCalloutProps {
   children: ReactNode;

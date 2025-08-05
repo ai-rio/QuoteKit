@@ -1,9 +1,11 @@
 import { Metadata } from 'next';
+
+import { LegalCallout } from '@/components/ui/legal-callout';
+import { Separator } from '@/components/ui/separator';
+
 import { GdprHero } from './components/gdpr-hero';
 import { GdprSection } from './components/gdpr-section';
 import { GdprTableOfContents } from './components/gdpr-table-of-contents';
-import { LegalCallout } from '@/components/ui/legal-callout';
-import { Separator } from '@/components/ui/separator';
 
 export const metadata: Metadata = {
   title: 'GDPR Compliance - LawnQuote',

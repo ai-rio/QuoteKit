@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { 
   AlertCircle,
   CheckCircle2,
@@ -12,6 +11,7 @@ import {
   Search, 
   Star,
   Users} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,20 +39,14 @@ const TIER_CONFIG = {
   free: {
     icon: Users,
     label: 'Free',
-    color: 'bg-success-green text-paper-white',
+    color: 'bg-stone-gray text-paper-white',
     description: 'Available to all users'
   },
-  paid: {
-    icon: Star,
-    label: 'Paid',
-    color: 'bg-equipment-yellow text-charcoal',
-    description: 'Requires paid subscription'
-  },
-  premium: {
+  pro: {
     icon: Crown,
-    label: 'Premium',
+    label: 'Pro',
     color: 'bg-forest-green text-paper-white',
-    description: 'Premium subscribers only'
+    description: 'Pro subscribers only'
   }
 } as const;
 
@@ -129,7 +123,8 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
   };
 
   const canAccessItem = (itemTier: ItemAccessTier) => {
-    const tierHierarchy = { free: 0, paid: 1, premium: 2 };
+    // Two-tier system: free (0) and pro (1)
+    const tierHierarchy = { free: 0, pro: 1 };
     return tierHierarchy[userTier] >= tierHierarchy[itemTier];
   };
 

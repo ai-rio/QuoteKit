@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlobalItemsManagement } from '@/features/admin/components/GlobalItemsManagement';

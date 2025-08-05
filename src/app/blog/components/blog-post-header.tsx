@@ -1,8 +1,10 @@
+import { ArrowLeft,Calendar, Clock, User } from 'lucide-react';
 import Link from 'next/link';
-import { Calendar, Clock, User, ArrowLeft } from 'lucide-react';
+
+import { cn } from '@/utils/cn';
+
 import { BlogPost } from '../data/blog-posts';
 import { BlogImage } from './blog-image';
-import { cn } from '@/utils/cn';
 
 interface BlogPostHeaderProps {
   post: BlogPost;

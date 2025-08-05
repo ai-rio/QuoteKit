@@ -1,15 +1,14 @@
-import { PropsWithChildren } from 'react';
+import '@/styles/globals.css';
+
+import { Analytics } from '@vercel/analytics/react';
 import type { Metadata } from 'next';
-import { Inter, Roboto_Mono, Kalam } from 'next/font/google';
+import { Inter, Kalam,Roboto_Mono } from 'next/font/google';
+import { PropsWithChildren } from 'react';
 
-
+import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 import { Toaster } from '@/components/ui/toaster';
 import { CookieConsentProvider } from '@/contexts/cookie-consent-context';
-import { CookieConsentBanner } from '@/components/cookie-consent-banner';
 import { cn } from '@/utils/cn';
-import { Analytics } from '@vercel/analytics/react';
-
-import '@/styles/globals.css';
 
 export const dynamic = 'force-dynamic';
 

@@ -3,14 +3,15 @@
  * Showcases enhanced content organization features
  */
 
-import React from 'react';
 import { Metadata } from 'next';
+import React from 'react';
 
 import { 
   getAllCategories, 
   getAllTags, 
   getContentAnalytics 
 } from '@/lib/blog/content';
+
 import { ContentAnalyticsComponent } from '../components/content-analytics';
 
 export const metadata: Metadata = {

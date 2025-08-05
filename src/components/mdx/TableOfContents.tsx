@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { List, ChevronRight } from 'lucide-react';
+import { ChevronRight,List } from 'lucide-react';
+import React, { useEffect,useState } from 'react';
 
 interface TOCHeading {
   id: string;

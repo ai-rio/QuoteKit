@@ -1,5 +1,6 @@
-import React from 'react';
+import { renderToBuffer } from '@react-pdf/renderer';
 import { NextRequest, NextResponse } from 'next/server';
+import React from 'react';
 
 import { getSession } from '@/features/account/controllers/get-session';
 import QuoteEmail from '@/features/emails/quote-email';
@@ -7,7 +8,6 @@ import { getCompanySettings } from '@/features/settings/actions';
 import { emailService } from '@/libs/email/email-service';
 import { QuotePDFTemplate } from '@/libs/pdf/quote-template';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
-import { renderToBuffer } from '@react-pdf/renderer';
 
 interface EmailQuoteRequest {
   to?: string;

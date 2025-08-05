@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Cookie, RotateCcw } from 'lucide-react';
-import { useCookieConsent, CookiePreferences } from '@/contexts/cookie-consent-context';
+import { useState } from 'react';
+
+import { CookiePreferences,useCookieConsent } from '@/contexts/cookie-consent-context';
 import { cn } from '@/utils/cn';
 
 export function CookieSettings() {

@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { 
   AlertCircle,
   Archive,
@@ -12,6 +11,7 @@ import {
   Plus, 
   Search, 
   Users} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,15 +47,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { GlobalCategory, GlobalItem, ItemAccessTier } from '@/features/items/types';
 
 const TIER_COLORS = {
-  free: 'bg-success-green text-paper-white',
-  paid: 'bg-equipment-yellow text-charcoal',
-  premium: 'bg-forest-green text-paper-white'
+  free: 'bg-stone-gray text-paper-white',
+  pro: 'bg-forest-green text-paper-white'
 } as const;
 
 const TIER_LABELS = {
   free: 'Free',
-  paid: 'Paid',
-  premium: 'Premium'
+  pro: 'Pro'
 } as const;
 
 export function GlobalItemsManagement() {
@@ -255,8 +253,7 @@ export function GlobalItemsManagement() {
     const total = items.length;
     const byTier = {
       free: items.filter(item => item.access_tier === 'free').length,
-      paid: items.filter(item => item.access_tier === 'paid').length,
-      premium: items.filter(item => item.access_tier === 'premium').length,
+      pro: items.filter(item => item.access_tier === 'pro').length,
     };
     const active = items.filter(item => item.is_active).length;
     
@@ -320,8 +317,8 @@ export function GlobalItemsManagement() {
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-forest-green" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-charcoal/60">Paid/Premium</p>
-                <p className="text-2xl font-bold text-charcoal">{stats.byTier.paid + stats.byTier.premium}</p>
+                <p className="text-sm font-medium text-charcoal/60">Pro Tier</p>
+                <p className="text-2xl font-bold text-charcoal">{stats.byTier.pro}</p>
               </div>
             </div>
           </CardContent>
@@ -441,8 +438,7 @@ export function GlobalItemsManagement() {
                     <SelectContent className="bg-paper-white border-stone-gray">
                       <SelectItem value="all">All Tiers</SelectItem>
                       <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="pro">Pro</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -759,8 +755,7 @@ function AddItemForm({
           </SelectTrigger>
           <SelectContent className="bg-paper-white border-stone-gray">
             <SelectItem value="free">Free Tier</SelectItem>
-            <SelectItem value="paid">Paid Tier</SelectItem>
-            <SelectItem value="premium">Premium Tier</SelectItem>
+            <SelectItem value="pro">Pro Tier</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -975,8 +970,7 @@ function EditItemForm({
           </SelectTrigger>
           <SelectContent className="bg-paper-white border-stone-gray">
             <SelectItem value="free">Free Tier</SelectItem>
-            <SelectItem value="paid">Paid Tier</SelectItem>
-            <SelectItem value="premium">Premium Tier</SelectItem>
+            <SelectItem value="pro">Pro Tier</SelectItem>
           </SelectContent>
         </Select>
       </div>

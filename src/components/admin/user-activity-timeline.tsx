@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect,useState } from 'react'
 import { 
   Activity, 
   Calendar, 
@@ -11,6 +10,7 @@ import {
   MousePointer2,
   User
 } from 'lucide-react'
+import { useEffect,useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

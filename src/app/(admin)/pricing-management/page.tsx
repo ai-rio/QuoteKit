@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { 
   AlertCircle,
   CheckCircle, 
@@ -14,6 +13,7 @@ import {
   Settings,
   Trash2,
   Zap} from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -29,27 +29,25 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
-
 // Import feature management types
 import {
-  type PlanFeatures,
-  type FeatureKey,
-  type FeatureDefinition,
   FEATURE_DEFINITIONS,
+  type FeatureDefinition,
+  type FeatureKey,
   FREE_PLAN_FEATURES,
-  PREMIUM_PLAN_FEATURES,
-  parseStripeMetadata,
-  toStripeMetadata,
-  validateFeatureConfig,
   getFeaturesByCategory,
   getPlanTierName,
-  isPremiumFeature,
   isFreeplan,
-  isPremiumPlan
-} from '@/types/features'
+  isPremiumFeature,
+  isPremiumPlan,
+  parseStripeMetadata,
+  type PlanFeatures,
+  PREMIUM_PLAN_FEATURES,
+  toStripeMetadata,
+  validateFeatureConfig} from '@/types/features'
 
 interface StripeProduct {
   id: string | null

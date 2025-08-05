@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import {
   Activity,
   AlertTriangle,
@@ -11,6 +10,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react"
+import Link from "next/link"
 
 import { SystemMetricsCard } from "@/components/admin/system-metrics-card"
 import { Badge } from "@/components/ui/badge"

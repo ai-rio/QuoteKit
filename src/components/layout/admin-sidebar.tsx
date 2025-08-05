@@ -1,8 +1,5 @@
 "use client"
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { 
   ArrowLeft,
   BarChart3, 
@@ -19,7 +16,11 @@ import {
   Settings,
   TrendingUp,
   Users} from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import * as React from "react"
 
+import { signOut } from "@/app/(auth)/auth-actions"
 import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
 import {
   Popover,
@@ -40,7 +41,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { useMobileSidebar } from "@/hooks/use-mobile"
-import { signOut } from "@/app/(auth)/auth-actions"
 
 // Admin navigation items following the planned structure
 interface NavItem {

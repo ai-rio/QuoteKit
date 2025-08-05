@@ -1,8 +1,10 @@
-import Link from 'next/link';
 import { Calendar, Clock } from 'lucide-react';
+import Link from 'next/link';
+
+import { cn } from '@/utils/cn';
+
 import { BlogPost } from '../data/blog-posts';
 import { BlogImage } from './blog-image';
-import { cn } from '@/utils/cn';
 
 interface RelatedPostsProps {
   posts: BlogPost[];

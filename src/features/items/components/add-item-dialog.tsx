@@ -24,7 +24,6 @@ import { toast } from '@/components/ui/use-toast';
 
 import { createLineItem } from '../actions';
 import { ItemCategory } from '../types';
-
 import { GlobalItemsBrowser } from './GlobalItemsBrowser';
 
 interface AddItemDialogProps {

@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
+
 import { MarketingLayout } from '@/components/layout/marketing-layout';
-import { ContactHero } from './components/contact-hero';
+
 import { ContactForm } from './components/contact-form';
+import { ContactHero } from './components/contact-hero';
 
 export const metadata: Metadata = {
   title: 'Contact Us - LawnQuote',

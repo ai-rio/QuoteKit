@@ -1,9 +1,9 @@
 "use client"
 
+import { User } from "@supabase/supabase-js"
 import { useCallback, useEffect, useState } from "react"
 
 import { createSupabaseClientClient } from "@/libs/supabase/supabase-client-client"
-import { User } from "@supabase/supabase-js"
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null)

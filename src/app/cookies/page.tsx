@@ -1,9 +1,11 @@
 import { Metadata } from 'next';
+
+import { LegalCallout } from '@/components/ui/legal-callout';
+import { Separator } from '@/components/ui/separator';
+
 import { CookieHero } from './components/cookie-hero';
 import { CookieSection } from './components/cookie-section';
 import { CookieTableOfContents } from './components/cookie-table-of-contents';
-import { LegalCallout } from '@/components/ui/legal-callout';
-import { Separator } from '@/components/ui/separator';
 
 export const metadata: Metadata = {
   title: 'Cookie Policy - LawnQuote',

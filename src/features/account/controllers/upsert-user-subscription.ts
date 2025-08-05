@@ -1,10 +1,10 @@
+import { AddressParam } from '@stripe/stripe-js';
 import Stripe from 'stripe';
 
 import { stripeAdmin } from '@/libs/stripe/stripe-admin';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
 import type { Database } from '@/libs/supabase/types';
 import { toDateTime } from '@/utils/to-date-time';
-import { AddressParam } from '@stripe/stripe-js';
 
 export async function upsertUserSubscription({
   subscriptionId,

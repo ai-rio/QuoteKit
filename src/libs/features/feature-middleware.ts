@@ -3,10 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client'
 import { 
   type FeatureKey, 
-  type PlanFeatures,
+  FREE_PLAN_FEATURES, 
   parseStripeMetadata,
-  FREE_PLAN_FEATURES 
-} from '@/types/features'
+  type PlanFeatures} from '@/types/features'
 
 /**
  * Server-side feature access validation

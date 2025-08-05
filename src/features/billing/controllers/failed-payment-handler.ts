@@ -9,9 +9,10 @@
  * - Payment method validation and recovery
  */
 
+import Stripe from 'stripe';
+
 import { createStripeAdminClient } from '@/libs/stripe/stripe-admin';
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
-import Stripe from 'stripe';
 
 export interface FailedPaymentContext {
   invoiceId: string;

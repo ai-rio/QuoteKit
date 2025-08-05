@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import NumberFlow from '@number-flow/react';
 import { BadgeCheck } from 'lucide-react';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
-import NumberFlow from '@number-flow/react';
 
 const PAYMENT_FREQUENCIES: ('monthly' | 'yearly')[] = ['monthly', 'yearly'];
 

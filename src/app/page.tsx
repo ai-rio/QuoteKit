@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { MarketingLayout } from '@/components/layout/marketing-layout';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 import HomePageClient from './home-page-client';
 

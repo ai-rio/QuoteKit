@@ -1,21 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Crown, Plus, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Plus, Crown, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CompactUpgradePrompt,UpgradePrompt } from '@/components/UpgradePrompt';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 
-import { createTemplate, deleteQuotes, deleteTemplate, updateTemplate, getAllQuotes } from '../actions';
+import { createTemplate, deleteQuotes, deleteTemplate, getAllQuotes,updateTemplate } from '../actions';
 import { sendBulkQuoteEmails } from '../email-actions';
 import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { BulkQuoteActions, Quote, QuoteFilters, QuoteSortOptions, QuoteStatus } from '../types';
-import { useFeatureAccess } from '@/hooks/useFeatureAccess';
-import { UpgradePrompt, CompactUpgradePrompt } from '@/components/UpgradePrompt';
-
 import { BulkActions } from './BulkActions';
 import { CreateQuoteButton } from './CreateQuoteButton';
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';

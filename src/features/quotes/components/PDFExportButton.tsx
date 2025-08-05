@@ -1,7 +1,7 @@
 'use client'
 
+import { Crown, FileText, Loader2, Lock } from 'lucide-react'
 import { useState } from 'react'
-import { FileText, Loader2, Crown, Lock } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useFeatureAccess } from '@/hooks/useFeatureAccess'

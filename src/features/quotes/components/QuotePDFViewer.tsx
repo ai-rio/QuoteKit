@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { PDFViewer } from '@react-pdf/renderer';
 import { Download, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { CompanySettings } from '@/features/settings/types';
 import { QuotePDFTemplate } from '@/libs/pdf/quote-template';
-import { PDFViewer } from '@react-pdf/renderer';
 
 import { Quote } from '../types';
 

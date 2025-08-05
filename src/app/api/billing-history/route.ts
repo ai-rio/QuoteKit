@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
+
 import { getEnhancedBillingHistory } from '@/features/billing/api/enhanced-billing-history';
+import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 /**
  * GET /api/billing-history

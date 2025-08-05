@@ -1,8 +1,9 @@
 'use client';
 
+import { BarChart3, Cookie, Settings,Shield } from 'lucide-react';
+
 import { useCookieConsent } from '@/contexts/cookie-consent-context';
 import { useAnalytics } from '@/hooks/use-analytics';
-import { Cookie, Shield, BarChart3, Settings } from 'lucide-react';
 
 export function CookieConsentDemo() {
   const { hasConsent, preferences, resetConsent } = useCookieConsent();

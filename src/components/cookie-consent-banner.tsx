@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
 import { Cookie, Settings, X } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useCookieConsent, CookiePreferences } from '@/contexts/cookie-consent-context';
+import { Dialog, DialogContent, DialogDescription, DialogFooter,DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CookiePreferences,useCookieConsent } from '@/contexts/cookie-consent-context';
 import { cn } from '@/utils/cn';
 
 export function CookieConsentBanner() {

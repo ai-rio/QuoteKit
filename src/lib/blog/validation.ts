@@ -3,10 +3,10 @@
  * Ensures type safety and data validation for blog posts
  */
 
-import { z } from 'zod';
 import fs from 'fs';
-import path from 'path';
 import matter from 'gray-matter';
+import path from 'path';
+import { z } from 'zod';
 
 /**
  * Schema for blog post categories

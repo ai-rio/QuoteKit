@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef,useState } from 'react';
 import { 
   Check,
   ChevronDown,
@@ -9,6 +8,7 @@ import {
   Plus, 
   Search, 
   User} from 'lucide-react';
+import { useEffect, useRef,useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +22,6 @@ import { Label } from '@/components/ui/label';
 
 import { getClientOptions } from '../actions';
 import { Client,ClientOption } from '../types';
-
 import { ClientForm } from './ClientForm';
 
 interface ClientSelectorProps {

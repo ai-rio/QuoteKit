@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/table';
 
 import { LineItem } from '../types';
-
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemDialog } from './edit-item-dialog';
 

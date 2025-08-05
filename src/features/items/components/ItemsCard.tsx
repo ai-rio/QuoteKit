@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { MoreHorizontal, Star, StarOff } from 'lucide-react';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,6 @@ import { toast } from '@/components/ui/use-toast';
 
 import { toggleItemFavorite } from '../actions';
 import { ItemCategory, LineItem } from '../types';
-
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemDialog } from './edit-item-dialog';
 

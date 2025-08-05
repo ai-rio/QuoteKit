@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { Check } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
 import { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface LawnQuotePricingProps {
   onSelectPlan: (stripePriceId: string, planName: string) => void;

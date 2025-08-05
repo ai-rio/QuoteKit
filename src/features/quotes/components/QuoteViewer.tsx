@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { ArrowLeft, Download, Edit, FileText, Mail, MoreHorizontal, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Download, Edit, FileText, Mail, MoreHorizontal, Trash } from 'lucide-react';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ import type { CompanySettings } from '@/features/settings/types';
 import { deleteQuotes } from '../actions';
 import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { Quote } from '../types';
-
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import { QuotePDFViewer } from './QuotePDFViewer';
 import { SendEmailDialog } from './SendEmailDialog';

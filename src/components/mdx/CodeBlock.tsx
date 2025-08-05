@@ -5,8 +5,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
+import React, { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';

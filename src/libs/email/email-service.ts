@@ -1,7 +1,6 @@
 import { render } from '@react-email/components';
 
 import { resendClient } from '../resend/resend-client';
-
 import { getEmailConfig } from './email-config';
 import { SMTPClient, type SMTPEmailData, type SMTPResponse } from './smtp-client';
 

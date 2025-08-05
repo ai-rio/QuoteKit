@@ -3,8 +3,9 @@
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import { EnhancedCurrentPlanCard } from './EnhancedCurrentPlanCard';
 import { PriceWithProduct, ProductWithPrices, SubscriptionWithProduct } from '@/features/pricing/types';
+
+import { EnhancedCurrentPlanCard } from './EnhancedCurrentPlanCard';
 
 interface StripeEnhancedCurrentPlanCardProps {
   subscription: SubscriptionWithProduct | null;

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 import { upsertUserSubscription } from '@/features/account/controllers/upsert-user-subscription'
+import { handleBillingEdgeCase } from '@/features/billing/controllers/edge-case-coordinator'
 import { createStripeAdminClient, stripeAdmin } from '@/libs/stripe/stripe-admin'
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
-import { handleBillingEdgeCase } from '@/features/billing/controllers/edge-case-coordinator'
 
 // Helper function to convert Unix timestamp to Date
 const toDateTime = (secs: number): Date => {

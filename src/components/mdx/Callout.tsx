@@ -3,7 +3,6 @@
  * Provides styled callout boxes with different variants (info, warning, success, error)
  */
 
-import React from 'react';
 import { 
   AlertTriangleIcon, 
   CheckCircleIcon, 
@@ -11,6 +10,7 @@ import {
   LightbulbIcon,
   XCircleIcon 
 } from 'lucide-react';
+import React from 'react';
 
 import { cn } from '@/utils/cn';
 

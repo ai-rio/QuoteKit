@@ -1,6 +1,6 @@
+import { getOrCreateCustomerForUser } from '@/features/account/controllers/get-or-create-customer';
 import { stripeAdmin } from '@/libs/stripe/stripe-admin';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
-import { getOrCreateCustomerForUser } from '@/features/account/controllers/get-or-create-customer';
 
 interface BillingHistoryItem {
   id: string;

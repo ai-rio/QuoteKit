@@ -1,8 +1,9 @@
 'use client'
 
+import { ArrowRight,Crown, Zap } from 'lucide-react'
 import { useState } from 'react'
-import { Crown, Zap, ArrowRight } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
 
 interface UpgradePromptProps {
   /** Feature that requires upgrade */

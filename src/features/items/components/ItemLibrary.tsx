@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
 import { Plus, Search, Star, StarOff } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,6 @@ import {
 import { toast } from '@/components/ui/use-toast';
 
 import { ItemCategory, ItemSearchFilters, LineItem } from '../types';
-
 import { AddItemDialog } from './add-item-dialog';
 import { BulkActions } from './BulkActions';
 import { EmptyState } from './EmptyState';

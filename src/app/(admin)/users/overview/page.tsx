@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { 
   Activity,
   Calendar,
@@ -11,6 +10,7 @@ import {
   Settings,
   UserPlus
 } from 'lucide-react'
+import { useState } from 'react'
 
 import { AddUserModal } from '@/components/admin/add-user-modal'
 import { Pagination } from '@/components/admin/pagination'

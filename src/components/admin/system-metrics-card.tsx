@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from 'react'
 import { 
   Activity,
   AlertTriangle,
@@ -11,6 +10,7 @@ import {
   TrendingUp,
   Users
 } from "lucide-react"
+import { useEffect, useState } from 'react'
 
 import { Badge } from "@/components/ui/badge"
 import { 

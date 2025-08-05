@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { 
   ArrowDown,
   ArrowUp,
@@ -12,6 +11,7 @@ import {
   MoreHorizontal,
   RefreshCw,
   Trash} from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/table';
 
 import { Quote, QuoteSortOptions, QuoteStatus } from '../types';
-
 import { QuoteStatusBadge } from './QuoteStatusBadge';
 import { StatusUpdateDropdown } from './StatusUpdateDropdown';
 

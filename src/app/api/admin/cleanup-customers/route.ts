@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { cleanupDuplicateCustomers, checkAndCleanupDuplicates } from '@/features/account/controllers/cleanup-duplicate-customers';
+import { checkAndCleanupDuplicates,cleanupDuplicateCustomers } from '@/features/account/controllers/cleanup-duplicate-customers';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 export async function POST(request: NextRequest) {

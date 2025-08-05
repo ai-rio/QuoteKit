@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
 import { 
   DollarSign,
   Edit, 
@@ -13,6 +12,7 @@ import {
   Trash2, 
   TrendingUp,
   User} from 'lucide-react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,6 @@ import {
 
 import { deleteClient,getClientsWithAnalytics } from '../actions';
 import { Client, ClientSearchFilters,ClientWithAnalytics } from '../types';
-
 import { ClientForm } from './ClientForm';
 
 interface ClientListProps {

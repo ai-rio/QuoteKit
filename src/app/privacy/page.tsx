@@ -1,10 +1,12 @@
 import { Metadata } from 'next';
+
 import { MarketingLayout } from '@/components/layout/marketing-layout';
+import { LegalCallout } from '@/components/ui/legal-callout';
+import { Separator } from '@/components/ui/separator';
+
 import { PrivacyHero } from './components/privacy-hero';
 import { PrivacySection } from './components/privacy-section';
 import { TableOfContents } from './components/table-of-contents';
-import { LegalCallout } from '@/components/ui/legal-callout';
-import { Separator } from '@/components/ui/separator';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - LawnQuote',

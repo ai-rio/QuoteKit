@@ -5,8 +5,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { CalculatorIcon, DollarSignIcon } from 'lucide-react';
+import React, { useEffect,useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

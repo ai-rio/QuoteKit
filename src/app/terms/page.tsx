@@ -1,10 +1,12 @@
 import { Metadata } from 'next';
+
 import { MarketingLayout } from '@/components/layout/marketing-layout';
+import { LegalCallout } from '@/components/ui/legal-callout';
+import { Separator } from '@/components/ui/separator';
+
 import { TermsHero } from './components/terms-hero';
 import { TermsSection } from './components/terms-section';
 import { TermsTableOfContents } from './components/terms-table-of-contents';
-import { LegalCallout } from '@/components/ui/legal-callout';
-import { Separator } from '@/components/ui/separator';
 
 export const metadata: Metadata = {
   title: 'Terms of Service - LawnQuote',

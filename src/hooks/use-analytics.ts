@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+
 import { useCookieConsent } from '@/contexts/cookie-consent-context';
 
 export function useAnalytics() {

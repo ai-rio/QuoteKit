@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Calendar, Clock, User, Tag } from 'lucide-react';
+import { Calendar, Clock, Tag,User } from 'lucide-react';
 import Image from 'next/image';
+import React from 'react';
 
 interface ArticleHeroProps {
   category: string;

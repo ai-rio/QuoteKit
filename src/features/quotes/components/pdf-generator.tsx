@@ -1,8 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 
 import { PDFExportButton } from './PDFExportButton';
 

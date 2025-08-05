@@ -1,10 +1,12 @@
 import { Metadata } from 'next';
+
 import { MarketingLayout } from '@/components/layout/marketing-layout';
+import { getAllPosts } from '@/lib/blog/content';
+
+import { BlogGrid } from './components/blog-grid';
 import { BlogHero } from './components/blog-hero';
 import { BlogSearchAndFilter } from './components/blog-search-and-filter';
-import { BlogGrid } from './components/blog-grid';
 import { BlogFilterProvider } from './contexts/blog-filter-context';
-import { getAllPosts } from '@/lib/blog/content';
 
 export const metadata: Metadata = {
   title: 'Blog - LawnQuote | The Pro-Grade Resource Hub',

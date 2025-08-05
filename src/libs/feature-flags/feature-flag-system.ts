@@ -3,8 +3,9 @@
  * Enables safe, controlled deployment of payment features
  */
 
-import { Database } from '@/libs/supabase/types';
 import { createClient } from '@supabase/supabase-js';
+
+import { Database } from '@/libs/supabase/types';
 
 export interface FeatureFlag {
   key: string;
