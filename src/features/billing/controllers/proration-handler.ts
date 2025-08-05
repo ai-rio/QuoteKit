@@ -242,7 +242,7 @@ export async function executePlanChangeWithProration(
       subscriptionId: updatedSubscription.id,
       prorationAmount: preview.prorationDetails.netAmount,
       immediateCharge: (nextInvoicePreview?.total || 0) > 0,
-      nextInvoicePreview
+      nextInvoicePreview: nextInvoicePreview as Stripe.Invoice | undefined
     };
 
     console.log(`🎉 [SUCCESS] ===== PLAN CHANGE EXECUTION COMPLETED =====`);

@@ -119,7 +119,7 @@ const PricingCard = ({
   const isFree = tier.id === 'free';
 
   const handleSelectPlan = () => {
-    const finalPriceId = typeof stripePriceId === 'string' ? stripePriceId : stripePriceId;
+    const finalPriceId = typeof stripePriceId === 'string' ? stripePriceId : (stripePriceId as any)[paymentFrequency] || (stripePriceId as any).monthly;
     
     console.log('💳 FreemiumPricing: Plan selection triggered:', {
       tier_name: tier.name,

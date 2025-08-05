@@ -184,7 +184,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                       const Icon = item.icon
                       const isHighlight = 'highlight' in item ? item.highlight : false
-                      const hasAccess = hasFeatureAccess(item.featureKey)
+                      const hasAccess = hasFeatureAccess((item as any).featureKey)
                       const showPremiumBadge = (item as any).premiumOnly && isFreePlan() && !hasAccess
                       
                       return (
@@ -249,8 +249,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   </Link>
                   <button 
                     onClick={async () => {
-                      const { error } = await signOut()
-                      if (!error) {
+                      const result = await signOut()
+                      if (!(result as any).error) {
                         window.location.href = '/'
                       }
                     }}

@@ -229,7 +229,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             mb-8
           ">
             {/* Pass our custom components to MDXRemote */}
-            <MDXRemote source={post.content} components={components} />
+            <MDXRemote source={post.content || ''} components={components} />
           </article>
         </div>
         

@@ -251,7 +251,7 @@ function mapFailureType(stripeFailureType: string): PaymentMethodFailure['failur
     'issuer_not_available': 'processing_error',
     'lost_card': 'declined',
     'merchant_blacklist': 'declined',
-    'new_account_information_available': 'requires_action',
+    'new_account_information_available': 'authentication_required',
     'no_action_taken': 'processing_error',
     'not_permitted': 'declined',
     'pickup_card': 'declined',
@@ -596,8 +596,8 @@ async function handleExpiringPaymentMethod(
       await supabaseAdminClient
         .from('payment_methods')
         .update({
-          card_exp_month: stripePaymentMethod.card.exp_month,
-          card_exp_year: stripePaymentMethod.card.exp_year,
+          card_exp_month: stripePaymentMethod.card?.exp_month,
+          card_exp_year: stripePaymentMethod.card?.exp_year,
           updated_at: new Date().toISOString()
         })
         .eq('id', paymentMethod.id);

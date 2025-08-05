@@ -254,7 +254,6 @@ export function AnalyticsDashboard({ hasAccess, analyticsData }: AnalyticsDashbo
             <Progress 
               value={stats?.acceptance_rate_percent || 0} 
               className="mt-2 h-2"
-              indicatorClassName="bg-equipment-yellow"
             />
           </CardContent>
         </Card>

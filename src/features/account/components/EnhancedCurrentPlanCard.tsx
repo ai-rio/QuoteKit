@@ -415,7 +415,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                   {hasSubscription ? (
                     <>
                       <p>Subscription ID: {subscription.id}</p>
-                      <p>Price ID: {subscription.stripe_price_id || 'None'}</p>
+                      <p>Price ID: {(subscription as any).stripe_price_id || 'None'}</p>
                       <p>Has Price Data: {subscription.prices ? 'Yes' : 'No'}</p>
                       <p>Has Product Data: {subscription.prices?.products ? 'Yes' : 'No'}</p>
                       <p>Product Name: {subscription.prices?.products?.name || 'None'}</p>
@@ -438,7 +438,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                       <div className="flex-1">
                         <p className="font-medium text-charcoal">Subscription scheduled for cancellation</p>
                         <p className="text-sm text-charcoal/70 mt-1">
-                          Your subscription will end on {formatDate(subscription.current_period_end)}.
+                          Your subscription will end on {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}.
                           You&apos;ll retain access to all features until then.
                         </p>
                         <Button
@@ -461,14 +461,14 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                   <div>
                     <p className="text-sm font-medium text-charcoal">Next billing date</p>
                     <p className="text-sm text-charcoal/70">
-                      {formatDate(subscription.current_period_end)}
+                      {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-charcoal">Billing period</p>
                     <p className="text-sm text-charcoal/70">
-                      {formatDate(subscription.current_period_start)} - {' '}
-                      {formatDate(subscription.current_period_end)}
+                      {subscription.current_period_start ? formatDate(subscription.current_period_start) : 'N/A'} - {' '}
+                      {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -594,8 +594,8 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
             paymentMethods={paymentMethods}
             isLoadingPaymentMethods={isLoadingPaymentMethods}
             onPaymentMethodRequired={handlePaymentMethodRequired}
-            stripeCustomerId={hasSubscription ? subscription.stripe_customer_id : undefined}
-            stripeSubscriptionId={hasSubscription ? subscription.stripe_subscription_id : undefined}
+            stripeCustomerId={hasSubscription ? (subscription as any).stripe_customer_id : undefined}
+            stripeSubscriptionId={hasSubscription ? subscription.stripe_subscription_id || undefined : undefined}
           />
         </>
       )}
@@ -609,7 +609,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
             name: subscription.prices?.products?.name || '',
             price: (subscription.prices?.unit_amount || 0) / 100,
             interval: subscription.prices?.interval || 'month',
-            nextBillingDate: formatDate(subscription.current_period_end),
+            nextBillingDate: subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A',
           }}
           onCancel={handleCancellation}
           isLoading={isLoading}

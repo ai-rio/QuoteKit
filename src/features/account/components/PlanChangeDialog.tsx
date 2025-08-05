@@ -418,10 +418,13 @@ export function PlanChangeDialog({
 
   // Check if user has valid payment methods for upgrades
   const hasValidPaymentMethods = paymentMethods.length > 0;
-  const requiresPaymentMethod = selectedPriceId && availablePlans
+  const requiresPaymentMethod = Boolean(selectedPriceId && availablePlans
     .flatMap(p => p.prices || [])
     .find(price => price?.stripe_price_id === selectedPriceId)
-    ?.unit_amount > currentPlan.price * 100;
+    ?.unit_amount && availablePlans
+    .flatMap(p => p.prices || [])
+    .find(price => price?.stripe_price_id === selectedPriceId)
+    ?.unit_amount! > currentPlan.price * 100);
 
   // Filter out current plan and ensure we have valid data
   const validPlans = availablePlans?.filter(product => 
@@ -670,11 +673,11 @@ export function PlanChangeDialog({
           <Button
             onClick={handlePlanChange}
             disabled={
-              !selectedPriceId || 
+              selectedPriceId === '' || 
               isChanging || 
               isLoadingPreview ||
               isLoadingPaymentMethods ||
-              (requiresPaymentMethod && (!hasValidPaymentMethods || !selectedPaymentMethodId))
+              (requiresPaymentMethod && (!hasValidPaymentMethods || selectedPaymentMethodId === ''))
             }
             className="bg-forest-green text-paper-white hover:bg-forest-green/90"
           >

@@ -161,7 +161,7 @@ export async function submitDisputeEvidence(
     console.log(`✅ [STEP 3] Evidence submitted to Stripe:`, {
       disputeId: updatedDispute.id,
       status: updatedDispute.status,
-      evidenceSubmissionCount: updatedDispute.evidence.submission_count
+      evidenceSubmissionCount: (updatedDispute.evidence as any).submission_count
     });
 
     // STEP 4: Record evidence submission
@@ -211,7 +211,7 @@ function extractDisputeContext(dispute: Stripe.Dispute): DisputeContext {
     currency: dispute.currency,
     reason: dispute.reason,
     status: dispute.status,
-    evidenceDueBy: new Date(dispute.evidence_details.due_by * 1000),
+    evidenceDueBy: dispute.evidence_details?.due_by ? new Date(dispute.evidence_details.due_by * 1000) : new Date(),
     created: new Date(dispute.created * 1000)
   };
 }
@@ -664,12 +664,14 @@ async function cancelSubscriptionsAfterDisputeLoss(
 
     for (const subscription of subscriptions || []) {
       try {
-        await stripe.subscriptions.cancel(subscription.stripe_subscription_id, {
+        // Update subscription with metadata first, then cancel
+        await stripe.subscriptions.update(subscription.stripe_subscription_id, {
           metadata: {
             cancellation_reason: 'dispute_lost',
             cancelled_at: new Date().toISOString()
           }
         });
+        await stripe.subscriptions.cancel(subscription.stripe_subscription_id);
 
         console.log(`❌ Subscription ${subscription.stripe_subscription_id} cancelled after dispute loss`);
       } catch (error) {

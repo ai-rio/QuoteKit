@@ -2,7 +2,9 @@ import { Metadata } from 'next';
 import { MarketingLayout } from '@/components/layout/marketing-layout';
 import { BlogHero } from './components/blog-hero';
 import { BlogSearchAndFilter } from './components/blog-search-and-filter';
+import { BlogGrid } from './components/blog-grid';
 import { BlogFilterProvider } from './contexts/blog-filter-context';
+import { getAllPosts } from '@/lib/blog/content';
 
 export const metadata: Metadata = {
   title: 'Blog - LawnQuote | The Pro-Grade Resource Hub',
@@ -20,14 +22,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getAllPosts();
+  
   return (
     <MarketingLayout>
       <BlogFilterProvider>
         <div className="min-h-screen bg-light-concrete">
           <BlogHero />
           <BlogSearchAndFilter />
-          <BlogGrid />
+          <BlogGrid posts={posts} />
         </div>
       </BlogFilterProvider>
     </MarketingLayout>

@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { createCheckoutAction } from '@/features/pricing/actions/create-checkout-action';
+import { transformPriceRow } from '@/features/pricing/types';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 export const metadata: Metadata = {
@@ -24,12 +25,12 @@ export default async function CheckoutPage({
 
   // Get the price details from database
   const { data: priceData, error } = await supabase
-    .from('stripe_prices')
+    .from('prices')
     .select(`
       *,
-      stripe_products (*)
+      products (*)
     `)
-    .eq('stripe_price_id', price_id)
+    .eq('id', price_id)
     .single();
 
   if (error || !priceData) {
@@ -37,25 +38,8 @@ export default async function CheckoutPage({
     redirect('/pricing');
   }
 
-  // Transform the price data to match the expected format
-  // CRITICAL: Ensure both recurring_interval and interval are properly set
-  const price = {
-    stripe_price_id: priceData.stripe_price_id,
-    stripe_product_id: priceData.stripe_product_id,
-    unit_amount: priceData.unit_amount,
-    currency: priceData.currency,
-    recurring_interval: priceData.recurring_interval,
-    recurring_interval_count: priceData.recurring_interval_count,
-    active: priceData.active,
-    metadata: priceData.metadata || {},
-    created_at: priceData.created_at,
-    updated_at: priceData.updated_at,
-    // CRITICAL FIX: Set interval field for compatibility
-    interval: priceData.recurring_interval,
-    // CRITICAL FIX: Determine type based on recurring_interval presence
-    type: priceData.recurring_interval ? 'recurring' as const : 'one_time' as const,
-    products: priceData.stripe_products
-  };
+  // Transform the database row to the Price type using our helper
+  const price = transformPriceRow(priceData);
 
   // DEBUG: Log the transformed price object for troubleshooting
   console.log('🔍 CHECKOUT PAGE: Transformed price object:', {

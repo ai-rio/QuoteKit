@@ -79,7 +79,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { getPostBySlug, getRelatedPosts } = await import('@/lib/blog/content');
+  const { getPostBySlug, getRelatedPosts, getAllPosts } = await import('@/lib/blog/content');
   
   const resolvedParams = await params;
   const post = await getPostBySlug(resolvedParams.slug);
@@ -89,6 +89,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const relatedPosts = await getRelatedPosts(post.slug, post.category, 3);
+  const allPosts = await getAllPosts();
   
   // Define components for MDX
   const components = {
@@ -236,11 +237,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <div className="container mx-auto px-4 py-8 max-w-3xl">
           <article className="bg-paper-white rounded-lg shadow-sm p-8 mb-8">
             {/* Pass our custom components to MDXRemote */}
-            <MDXRemote source={post.content} components={components} />
+            <MDXRemote source={post.content || ''} components={components} />
           </article>
         </div>
         
-        <BlogPostNavigation />
+        <BlogPostNavigation currentSlug={post.slug} allPosts={allPosts} />
         <RelatedPosts posts={relatedPosts} />
       </div>
     </>

@@ -49,7 +49,7 @@ export function PricingCard({
       console.warn(`No available prices found for product ${product.name}`, { 
         productId: product.stripe_product_id,
         totalPrices: pricesArray.length,
-        freePrices: pricesArray.filter(p => (p.unit_amount ?? 0) === 0).length,
+        freePrices: pricesArray.filter((p: any) => (p.unit_amount ?? 0) === 0).length,
         inactivePaidPrices: pricesArray.filter((p: any) => (p.unit_amount ?? 0) > 0 && p.active === false).map((p: any) => p.stripe_price_id)
       });
       return null;
@@ -59,7 +59,7 @@ export function PricingCard({
     if (availablePrices.length === 1) return availablePrices[0];
 
     // Lastly we can assume the product is a subscription one with a month and year price, so we get the price according to the select billingInterval
-    const selectedPrice = availablePrices.find((price) => price.interval === billingInterval);
+    const selectedPrice = availablePrices.find((price: any) => price.interval === billingInterval);
     
     if (!selectedPrice) {
       console.warn(`No available price found for interval ${billingInterval} on product ${product.name}`);
@@ -72,11 +72,11 @@ export function PricingCard({
 
   const pricesArray = product.prices || [];
   // Use available prices (free + active paid) for month/year calculations
-  const availablePrices = pricesArray.filter(price => 
+  const availablePrices = pricesArray.filter((price: any) => 
     price.unit_amount === 0 || price.active !== false
   );
-  const monthPrice = availablePrices.find((price) => price.interval === 'month')?.unit_amount;
-  const yearPrice = availablePrices.find((price) => price.interval === 'year')?.unit_amount;
+  const monthPrice = availablePrices.find((price: any) => price.interval === 'month')?.unit_amount;
+  const yearPrice = availablePrices.find((price: any) => price.interval === 'year')?.unit_amount;
   const isBillingIntervalYearly = billingInterval === 'year';
   // Handle missing or invalid metadata with safe parsing and defaults
   // Note: stripe_products table doesn't have metadata field, so we use fallback defaults

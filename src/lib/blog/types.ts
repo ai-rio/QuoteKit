@@ -111,6 +111,7 @@ export interface ProcessedBlogPost extends BlogPost {
   draft?: boolean;
   schema?: SchemaData;
   contentStructure?: ContentStructure;
+  frontmatter?: BlogPost; // Add frontmatter property for test compatibility
 }
 
 /**

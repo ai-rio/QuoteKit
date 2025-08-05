@@ -670,7 +670,7 @@ export async function manuallyProcessRefund(
     chargeId?: string;
     invoiceId?: string;
     amount?: number;
-    reason: string;
+    reason: 'requested_by_customer' | 'duplicate' | 'fraudulent' | 'subscription_cancellation';
   },
   stripeConfig: any
 ) {

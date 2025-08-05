@@ -180,7 +180,9 @@ export function createFeatureGatedHandler(
 
   Object.entries(handlers).forEach(([method, handler]) => {
     if (handler) {
-      gatedHandlers[method] = withFeatureGate(featureKey)(handler)
+      gatedHandlers[method] = async (request: NextRequest) => {
+        return withFeatureGate(featureKey)(request, handler)
+      }
     }
   })
 

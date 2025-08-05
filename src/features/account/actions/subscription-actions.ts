@@ -156,7 +156,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         // Create a development subscription record
         const devSubscription = {
           id: `sub_dev_${Date.now()}`,
-          user_id: session.user.id,
+          user_id: session!.user.id,
           status: 'active' as const, // Use const assertion for proper typing
           stripe_price_id: priceId,
           quantity: 1,
@@ -204,7 +204,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         // Create billing history entry for new subscription
         const billingEntry = {
           id: `bill_${subscription.id}_${Date.now()}`,
-          user_id: session.user.id,
+          user_id: session!.user.id,
           subscription_id: subscription.id,
           amount: newPrice.unit_amount || 0,
           currency: 'usd',
@@ -257,7 +257,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           const customer = await stripe.customers.create({
             email: session.user.email!,
             metadata: {
-              user_id: session.user.id
+              user_id: session!.user.id
             }
           });
           stripeCustomerId = customer.id;
@@ -296,7 +296,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         // Create local subscription record
         const subscriptionRecord = {
           id: stripeSubscription.id,
-          user_id: session.user.id,
+          user_id: session!.user.id,
           status: stripeSubscription.status as any,
           stripe_price_id: priceId,
           stripe_subscription_id: stripeSubscription.id,
@@ -456,14 +456,14 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
         id: enhancedSubscription.id,
         old_price_id: enhancedSubscription.stripe_price_id,
         new_price_id: priceId,
-        user_id: session.user.id
+        user_id: session!.user.id
       });
 
       const { data: updatedSubscription, error: updateError } = await supabase
         .from('subscriptions')
         .update(subscriptionUpdate)
         .eq('id', enhancedSubscription.id)
-        .eq('user_id', session.user.id) // Ensure user can only update their own subscription
+        .eq('user_id', session!.user.id) // Ensure user can only update their own subscription
         .select()
         .single();
 
@@ -472,10 +472,10 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
           error: updateError,
           code: updateError!.code,
           message: updateError!.message,
-          details: updateError.details,
-          hint: updateError.hint
+          details: updateError!.details,
+          hint: updateError!.hint
         });
-        throw new Error(`Failed to update subscription: ${updateError.message} (Code: ${updateError.code})`);
+        throw new Error(`Failed to update subscription: ${updateError!.message} (Code: ${updateError!.code})`);
       }
 
       console.log('✅ Subscription updated successfully:', {
@@ -488,7 +488,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       // Create billing history entry for subscription change
       const billingEntry = {
         id: `bill_change_${updatedSubscription.id}_${Date.now()}`,
-        user_id: session.user.id,
+        user_id: session!.user.id,
         subscription_id: updatedSubscription.id,
         amount: existingPrice.unit_amount || 0,
         currency: 'usd',
@@ -545,7 +545,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       // For upgrades, validate payment method if provided
       if (isUpgrade && paymentMethodId) {
         console.log('💳 Validating payment method for upgrade...');
-        const isValidPaymentMethod = await validatePaymentMethod(stripeCustomerId, paymentMethodId);
+        const isValidPaymentMethod = await validatePaymentMethod(stripeCustomerId!, paymentMethodId!);
         if (!isValidPaymentMethod) {
           throw new Error('Invalid or expired payment method. Please add a valid payment method.');
         }
@@ -553,7 +553,7 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       
       // Execute the plan change with Stripe
       const result = await executeStripePlanChange(
-        session.user.id,
+        session!.user.id,
         stripeCustomerId,
         stripeSubscriptionId,
         priceId,
@@ -586,15 +586,16 @@ export async function changePlan(priceId: string, isUpgrade: boolean, paymentMet
       
       // Handle specific payment errors
       if (isStripeError(error)) {
-        if (error.code === 'card_declined') {
+        const stripeError = error as any; // Type assertion after isStripeError check
+        if (stripeError.code === 'card_declined') {
           throw new Error('Your card was declined. Please try a different payment method or contact your bank.');
-        } else if (error.code === 'insufficient_funds') {
+        } else if (stripeError.code === 'insufficient_funds') {
           throw new Error('Insufficient funds. Please check your account balance or try a different payment method.');
-        } else if (error.code === 'expired_card') {
+        } else if (stripeError.code === 'expired_card') {
           throw new Error('Your card has expired. Please update your payment method.');
-        } else if (error.code === 'incorrect_cvc') {
+        } else if (stripeError.code === 'incorrect_cvc') {
           throw new Error('Incorrect security code. Please check your card details.');
-        } else if (error.type === 'card_error') {
+        } else if (stripeError.type === 'card_error') {
           throw new Error(`Payment failed: ${errorInfo.message}`);
         } else {
           throw new Error(`Failed to update subscription: ${errorInfo.message}`);
