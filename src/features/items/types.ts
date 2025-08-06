@@ -31,7 +31,7 @@ export interface ItemSearchFilters {
 }
 
 // Global (prepopulated) item types
-export type ItemAccessTier = 'free' | 'pro';
+export type ItemAccessTier = 'free' | 'premium' | 'pro';
 
 export interface GlobalCategory {
   id: string;

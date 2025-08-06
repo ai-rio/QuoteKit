@@ -48,11 +48,13 @@ import { GlobalCategory, GlobalItem, ItemAccessTier } from '@/features/items/typ
 
 const TIER_COLORS = {
   free: 'bg-stone-gray text-paper-white',
+  premium: 'bg-forest-green text-paper-white',
   pro: 'bg-forest-green text-paper-white'
 } as const;
 
 const TIER_LABELS = {
   free: 'Free',
+  premium: 'Premium',
   pro: 'Pro'
 } as const;
 

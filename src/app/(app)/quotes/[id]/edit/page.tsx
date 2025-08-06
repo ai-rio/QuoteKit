@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
+import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getLineItems } from '@/features/items/actions';
 import { QuoteCreator } from '@/features/quotes/components/QuoteCreator';
@@ -50,6 +51,7 @@ export default async function EditQuotePage({ params }: EditQuotePageProps) {
   return (
     <div className="min-h-screen bg-light-concrete py-4 sm:py-6 lg:py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBreadcrumbs customQuoteName={typedQuote.client_name ? `Edit Quote for ${typedQuote.client_name}` : 'Edit Quote'} />
         <QuoteCreator 
           availableItems={items || []} 
           defaultSettings={settings || null}

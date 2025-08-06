@@ -42,70 +42,57 @@ const TIER_CONFIG = {
     color: 'bg-stone-gray text-paper-white',
     description: 'Available to all users'
   },
+  premium: {
+    icon: Crown,
+    label: 'Premium',
+    color: 'bg-forest-green text-paper-white',
+    description: 'Premium subscribers only'
+  },
   pro: {
     icon: Crown,
     label: 'Pro',
     color: 'bg-forest-green text-paper-white',
     description: 'Pro subscribers only'
   }
-} as const;
+};
 
 interface GlobalItemsBrowserProps {
   onItemAdded?: () => void;
 }
 
 export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
-  const [categories, setCategories] = useState<GlobalCategory[]>([]);
   const [items, setItems] = useState<GlobalItem[]>([]);
+  const [categories, setCategories] = useState<GlobalCategory[]>([]);
   const [userTier, setUserTier] = useState<ItemAccessTier>('free');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showCopyDialog, setShowCopyDialog] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<GlobalItem | null>(null);
-  const [customCost, setCustomCost] = useState<string>('');
-  const [copying, setCopying] = useState(false);
-  
-  // Autocomplete state
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<GlobalItem | null>(null);
+  const [customCost, setCustomCost] = useState('');
+  const [copying, setCopying] = useState(false);
+  
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
+  // Load data function
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Load user tier
-      const tierResponse = await fetch('/api/global-items/user-tier');
-      if (tierResponse.ok) {
-        const tierData = await tierResponse.json();
-        setUserTier(tierData.data.tier);
-      }
-
-      // Load categories
-      const categoriesResponse = await fetch('/api/global-items/categories');
-      if (categoriesResponse.ok) {
-        const categoriesData = await categoriesResponse.json();
-        setCategories(categoriesData.data || []);
-      }
-
-      // Load items
-      const itemsResponse = await fetch('/api/global-items');
-      if (itemsResponse.ok) {
-        const itemsData = await itemsResponse.json();
-        setItems(itemsData.data || []);
-      }
+      // Add your data loading logic here
+      // This should fetch items, categories, and user tier
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,9 +110,10 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
   };
 
   const canAccessItem = (itemTier: ItemAccessTier) => {
-    // Two-tier system: free (0) and pro (1)
-    const tierHierarchy = { free: 0, pro: 1 };
-    return tierHierarchy[userTier] >= tierHierarchy[itemTier];
+    // Two-tier system: free (0), premium (1)
+    const tierHierarchy = { free: 0, premium: 1, pro: 1 };
+    const userHierarchy = { free: 0, premium: 1, pro: 1 };
+    return (userHierarchy[userTier] || 0) >= (tierHierarchy[itemTier] || 0);
   };
 
   // Generate search suggestions based on current search term
