@@ -17,19 +17,19 @@ export function WelcomeMessage({ userName, progress }: WelcomeMessageProps) {
 
   if (isNewUser) {
     return (
-      <Alert className="border-forest-green bg-forest-green/5">
-        <Lightbulb className="h-4 w-4 text-forest-green" />
-        <AlertTitle className="text-forest-green font-bold">Welcome to LawnQuote, {userName}!</AlertTitle>
+      <Alert className="border-stone-gray/20 bg-paper-white">
+        <Lightbulb className="h-4 w-4 text-charcoal" />
+        <AlertTitle className="text-xl md:text-2xl font-bold text-charcoal">Welcome to LawnQuote, {userName}!</AlertTitle>
         <AlertDescription className="mt-2 space-y-3">
-          <p className="text-charcoal/70">
+          <p className="text-lg text-charcoal/70">
             Let&apos;s get your account set up. Complete these steps to start creating professional quotes:
           </p>
           <div className="space-y-2">
             <Progress value={progress.completionPercentage} className="w-full" />
-            <div className="text-sm text-charcoal/60">
+            <div className="text-base text-charcoal/60">
               {progress.completionPercentage}% complete
             </div>
-            <div className="space-y-1 text-sm">
+            <div className="space-y-1 text-base">
               <div className="flex items-center gap-2">
                 {progress.hasCompanySettings ? (
                   <CheckCircle2 className="h-4 w-4 text-forest-green" />
@@ -68,10 +68,10 @@ export function WelcomeMessage({ userName, progress }: WelcomeMessageProps) {
   }
 
   return (
-    <Alert className="border-forest-green bg-forest-green/5">
+    <Alert className="border-stone-gray/20 bg-paper-white">
       <CheckCircle2 className="h-4 w-4 text-forest-green" />
-      <AlertTitle className="text-forest-green font-bold">Welcome back, {userName}!</AlertTitle>
-      <AlertDescription className="text-charcoal/70">
+      <AlertTitle className="text-xl md:text-2xl font-bold text-charcoal">Welcome back, {userName}!</AlertTitle>
+      <AlertDescription className="text-lg text-charcoal/70">
         Your account is fully set up. Ready to create professional quotes for your clients.
       </AlertDescription>
     </Alert>
