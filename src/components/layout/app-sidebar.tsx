@@ -27,7 +27,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { useMobileSidebar } from "@/hooks/use-mobile"
-import { useFeatureAccess } from "@/hooks/useFeatureAccess"
+import { useFeatureAccessFixed } from "@/hooks/useFeatureAccessFixed"
 
 // Navigation items organized into groups
 interface NavItem {
@@ -95,7 +95,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname()
   const { expandedSections, toggleSection, handleNavigation, isMobile } = useMobileSidebar()
-  const { canAccess, isFreePlan } = useFeatureAccess()
+  const { canAccess, isFreePlan } = useFeatureAccessFixed()
 
   const isInSection = (sectionItems: NavItem[], currentPath: string) => {
     return sectionItems.some(item => 
