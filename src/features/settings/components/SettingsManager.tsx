@@ -134,7 +134,7 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
       {/* Header with Save Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-charcoal">Settings</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-charcoal">Settings</h1>
           <p className="text-sm sm:text-base text-charcoal/70">
             Manage your company information and quote settings.
           </p>

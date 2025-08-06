@@ -13,7 +13,7 @@ export function LibraryHeader({ onAddItem, itemCount }: LibraryHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <div>
-        <h1 className="text-3xl font-bold text-charcoal mb-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-charcoal mb-2">
           Item Library
         </h1>
         <p className="text-charcoal/70">

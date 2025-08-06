@@ -195,7 +195,7 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
     <div className="space-y-6">
       {/* Header with Create Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-quote-header text-charcoal font-bold">Client Management</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-charcoal">Client Management</h1>
         <Button
           onClick={() => setShowCreateDialog(true)}
           className="bg-equipment-yellow text-charcoal hover:brightness-110 font-bold px-6 py-3 rounded-lg transition-all duration-200"

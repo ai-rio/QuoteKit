@@ -172,14 +172,42 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
   // Bulk actions implementation
   const bulkActions: BulkQuoteActions = {
     updateStatus: async (quoteIds: string[], status) => {
-      // TODO: Implement API call to update quote statuses
-      console.log('Update status for quotes:', quoteIds, 'to', status);
-      // Mock update for now
-      setQuotes(prev => 
-        prev.map(quote => 
-          quoteIds.includes(quote.id) ? { ...quote, status } : quote
-        )
-      );
+      try {
+        const response = await fetch('/api/quotes/bulk-status', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ quoteIds, status }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          if (result.upgradeRequired) {
+            setShowUpgradeModal(true);
+            return;
+          }
+          throw new Error(result.message || result.error || 'Failed to update statuses');
+        }
+
+        // Update local state with server response
+        if (result.updatedQuotes) {
+          setQuotes(prev => 
+            prev.map(quote => {
+              const updated = result.updatedQuotes.find((u: any) => u.id === quote.id);
+              return updated ? { ...quote, ...updated } : quote;
+            })
+          );
+        }
+
+        const successMsg = `Successfully updated ${result.updatedCount} quote${result.updatedCount === 1 ? '' : 's'} to ${status}`;
+        alert(successMsg);
+        
+      } catch (error) {
+        console.error('Error updating quote statuses:', error);
+        alert(`Failed to update statuses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     },
     delete: async (quoteIds: string[]) => {
       try {
@@ -205,51 +233,39 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
     },
     export: async (quoteIds: string[]) => {
       try {
-        // Get the selected quotes
-        const quotesToExport = quotes.filter(quote => quoteIds.includes(quote.id));
-        
-        if (quotesToExport.length === 0) {
-          alert('No quotes selected for export.');
-          return;
-        }
+        const response = await fetch('/api/quotes/bulk-export', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ quoteIds }),
+        });
 
-        // Download each quote PDF individually
-        for (const quote of quotesToExport) {
-          try {
-            const response = await fetch(`/api/quotes/${quote.id}/pdf`, {
-              method: 'GET',
-              headers: {
-                'Cache-Control': 'no-cache',
-              },
-            });
-
-            if (!response.ok) {
-              console.error(`Failed to generate PDF for quote ${quote.id}`);
-              continue;
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `quote-${quote.client_name.replace(/[^a-zA-Z0-9]/g, '-')}-${quote.id.slice(0, 8)}.pdf`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            
-            // Small delay between downloads to avoid overwhelming the browser
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } catch (error) {
-            console.error(`Error downloading PDF for quote ${quote.id}:`, error);
+        if (!response.ok) {
+          const result = await response.json();
+          if (result.upgradeRequired) {
+            setShowUpgradeModal(true);
+            return;
           }
+          throw new Error(result.message || result.error || 'Failed to export quotes');
         }
+
+        // Download the ZIP file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `quotes-export-${Date.now()}.zip`;
         
-        alert(`Successfully exported ${quotesToExport.length} quote PDFs.`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        alert(`Successfully exported ${quoteIds.length} quotes as ZIP file.`);
       } catch (error) {
         console.error('Error during bulk export:', error);
-        alert('Error occurred during bulk export. Please try again.');
+        alert(`Failed to export quotes: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     },
     sendEmails: async (quoteIds: string[]) => {
@@ -520,7 +536,7 @@ export function QuotesManager({ initialQuotes }: QuotesManagerProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-charcoal">My Quotes</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-charcoal">My Quotes</h1>
           <p className="text-charcoal/60 mt-1">
             Manage all your quotes and templates in one place
           </p>

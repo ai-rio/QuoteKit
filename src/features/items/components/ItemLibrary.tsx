@@ -162,7 +162,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-charcoal">Item Library</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-charcoal">Item Library</h1>
             <p className="text-charcoal/70">
               Manage your services and materials database for quick quote creation.
             </p>
@@ -189,7 +189,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-charcoal">Item Library</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-charcoal">Item Library</h1>
           <p className="text-charcoal/70">
             Manage your services and materials database for quick quote creation.
           </p>
