@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawnQuote Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5; /* light-concrete */
+            color: #1C1C1C; /* charcoal */
+        }
+        .font-sans { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        
+        /* Custom animation for the shiny button */
+        @keyframes subtle-pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(42, 61, 47, 0.7);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 10px 5px rgba(42, 61, 47, 0.4);
+            }
+        }
+        .animate-subtle-pulse {
+            animation: subtle-pulse 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'forest-green': '#2A3D2F',
+                        'equipment-yellow': '#F2B705',
+                        'light-concrete': '#F5F5F5',
+                        'stone-gray': '#D7D7DD',
+                        'charcoal': '#1C1C1C',
+                        'paper-white': '#FFFFFF',
+                        'success-green': '#16a34a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+
+    <!-- This is a static HTML preview of the React Dashboard component -->
+    <!-- It assumes it would be placed inside the main app shell with a sidebar -->
+    <div class="flex">
+        <!-- Mock Sidebar -->
+        <div class="hidden lg:block w-64 bg-forest-green h-screen">
+            <!-- This is just a placeholder to simulate the layout -->
+        </div>
+
+        <!-- Main Dashboard Content -->
+        <div class="w-full">
+            <div class="p-4 md:p-8 bg-light-concrete">
+                <div class="bg-forest-green text-paper-white p-6 rounded-2xl shadow-lg mb-8">
+                    <h1 class="text-3xl font-black">Good morning, Carlos!</h1>
+                    <p class="mt-1 text-stone-gray">Your account is fully set up. Ready to create professional quotes for your clients.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Main Content Column -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- StatCard: Total Quotes -->
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-500">
+                                    <svg class="w-6 h-6 text-paper-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-charcoal/70 font-medium">Total Quotes</p>
+                                    <div class="flex items-baseline space-x-2"><p class="text-3xl font-black font-mono text-charcoal">1</p></div>
+                                </div>
+                            </div>
+                            <!-- StatCard: Quotes Sent -->
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-purple-500">
+                                    <svg class="w-6 h-6 text-paper-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-charcoal/70 font-medium">Quotes Sent</p>
+                                    <div class="flex items-baseline space-x-2"><p class="text-3xl font-black font-mono text-charcoal">0</p></div>
+                                </div>
+                            </div>
+                            <!-- StatCard: Quotes Accepted -->
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-success-green">
+                                    <svg class="w-6 h-6 text-paper-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-charcoal/70 font-medium">Quotes Accepted</p>
+                                    <div class="flex items-baseline space-x-2"><p class="text-3xl font-black font-mono text-charcoal">0</p></div>
+                                </div>
+                            </div>
+                            <!-- StatCard: Total Revenue -->
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-forest-green">
+                                    <svg class="w-6 h-6 text-paper-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-charcoal/70 font-medium">Total Revenue</p>
+                                    <div class="flex items-baseline space-x-2"><p class="text-3xl font-black font-mono text-charcoal">$0</p><div class="flex items-center text-sm font-bold text-success-green"><svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>+15%</div></div>
+                                </div>
+                            </div>
+                            <!-- StatCard: Items in Library -->
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-charcoal">
+                                    <svg class="w-6 h-6 text-paper-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-charcoal/70 font-medium">Items in Library</p>
+                                    <div class="flex items-baseline space-x-2"><p class="text-3xl font-black font-mono text-charcoal">4</p></div>
+                                </div>
+                            </div>
+                            <!-- StatCard: Quote Templates -->
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-stone-gray">
+                                    <svg class="w-6 h-6 text-paper-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-charcoal/70 font-medium">Quote Templates</p>
+                                    <div class="flex items-baseline space-x-2"><p class="text-3xl font-black font-mono text-charcoal">0</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+                                <h2 class="text-xl font-bold text-charcoal mb-4">Usage Analytics</h2>
+                                <div class="flex flex-col items-center text-center">
+                                    <div class="relative w-32 h-32 flex items-center justify-center">
+                                        <svg class="absolute w-full h-full" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="45" stroke="#F5F5F5" stroke-width="10" fill="none"></circle>
+                                            <circle cx="50" cy="50" r="45" stroke="#2A3D2F" stroke-width="10" fill="none" stroke-linecap="round" transform="rotate(-90 50 50)" stroke-dasharray="282.74" stroke-dashoffset="226.19"></circle>
+                                        </svg>
+                                        <div class="text-center">
+                                            <p class="text-3xl font-black font-mono text-charcoal">1</p>
+                                            <p class="text-sm text-charcoal/60">/ 5</p>
+                                        </div>
+                                    </div>
+                                    <p class="font-bold mt-4">Quotes Created This Month</p>
+                                    <p class="text-sm text-charcoal/70">Your free plan includes 5 quotes per month.</p>
+                                </div>
+                            </div>
+                            <div class="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center bg-forest-green/80 mb-4">
+                                    <svg class="w-6 h-6 text-equipment-yellow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                </div>
+                                <h2 class="text-xl font-bold text-charcoal">Unlock Advanced Analytics</h2>
+                                <p class="mt-2 text-sm text-charcoal/80 flex-grow">Get detailed usage trends, export capabilities, and unlimited features.</p>
+                                <button class="w-full mt-6 bg-forest-green text-paper-white font-bold py-3 rounded-lg hover:bg-green-800 transition-all duration-300 transform hover:scale-105 shadow-[0_4px_20px_rgba(42,61,47,0.4)] hover:shadow-[0_6px_25px_rgba(42,61,47,0.6)] animate-subtle-pulse flex items-center justify-center space-x-2">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                    <span>Unlock Your Growth</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+                            <h2 class="text-xl font-bold text-charcoal mb-2">Recent Activity</h2>
+                            <div class="divide-y divide-stone-gray/20">
+                                <div class="grid grid-cols-12 gap-4 items-center py-4 px-2 hover:bg-light-concrete rounded-lg transition-colors">
+                                    <div class="col-span-12 md:col-span-5"><p class="font-bold text-charcoal">Sample Client</p><p class="text-sm text-charcoal/60 md:hidden">Aug 5, 2025</p></div>
+                                    <div class="hidden md:block col-span-3 text-sm text-charcoal/70">Aug 5, 2025</div>
+                                    <div class="col-span-6 md:col-span-2"><span class="text-xs font-bold px-2 py-1 rounded-full bg-stone-gray/60 text-charcoal">Draft</span></div>
+                                    <div class="col-span-6 md:col-span-2 text-right font-mono font-bold text-charcoal">$242.78</div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-6">
+                                <button class="font-bold text-forest-green hover:underline">View All Quotes</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Sidebar Column -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8">
+                            <h2 class="text-xl font-bold text-charcoal mb-4">Quick Actions</h2>
+                            <div class="space-y-3">
+                                <a href="#" class="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-colors"><svg class="w-6 h-6 text-forest-green" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span class="ml-4 font-bold text-charcoal">Create New Quote</span></a>
+                                <a href="#" class="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-colors"><svg class="w-6 h-6 text-forest-green" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg><span class="ml-4 font-bold text-charcoal">Manage Quotes</span></a>
+                                <a href="#" class="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-colors"><svg class="w-6 h-6 text-forest-green" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg><span class="ml-4 font-bold text-charcoal">Item Library</span></a>
+                                <a href="#" class="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-colors"><svg class="w-6 h-6 text-forest-green" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="ml-4 font-bold text-charcoal">Account & Billing</span></a>
+                                <a href="#" class="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-colors"><svg class="w-6 h-6 text-forest-green" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg><span class="ml-4 font-bold text-charcoal">Company Settings</span></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
