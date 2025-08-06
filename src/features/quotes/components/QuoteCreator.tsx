@@ -1,5 +1,6 @@
 'use client';
 
+import { HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback,useEffect, useState } from 'react';
 
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { ClientOption } from '@/features/clients/types';
@@ -311,14 +313,29 @@ export function QuoteCreator({
       <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader className="pb-4">
           <div className="space-y-3">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-charcoal">
-              {status === 'draft' ? 'New Quote' : 'Quote Details'}
-              {templateData && (
-                <span className="text-sm font-normal text-charcoal/60 block">
-                  From template: {templateData.template_name || 'Unnamed Template'}
-                </span>
-              )}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-xl sm:text-2xl font-bold text-charcoal">
+                {status === 'draft' ? 'New Quote' : 'Quote Details'}
+                {templateData && (
+                  <span className="text-sm font-normal text-charcoal/60 block">
+                    From template: {templateData.template_name || 'Unnamed Template'}
+                  </span>
+                )}
+              </CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                    <p className="text-xs">
+                      Create professional quotes step by step: 1) Select client, 2) Add items, 3) Set tax/markup, 4) Generate PDF. 
+                      Quotes are automatically numbered when finalized.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <QuoteNumbering 
@@ -335,19 +352,45 @@ export function QuoteCreator({
                 )}
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
-                <SaveDraftButton 
-                  onSave={handleSaveDraft}
-                  hasUnsavedChanges={hasUnsavedChanges}
-                  lastSaveTime={lastSaveTime}
-                  disabled={!clientName.trim()}
-                />
-                <Button
-                  onClick={handleCreateFinalQuote}
-                  disabled={!canSave || isLoading}
-                  className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold min-h-[44px] touch-manipulation"
-                >
-                  {isLoading ? 'Creating...' : 'Generate PDF'}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <SaveDraftButton 
+                          onSave={handleSaveDraft}
+                          hasUnsavedChanges={hasUnsavedChanges}
+                          lastSaveTime={lastSaveTime}
+                          disabled={!clientName.trim()}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                      <p className="text-xs">
+                        Save your work as a draft to continue later. Auto-saves every 30 seconds when client is selected. 
+                        Drafts can be found in your quotes list.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={handleCreateFinalQuote}
+                        disabled={!canSave || isLoading}
+                        className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold min-h-[44px] touch-manipulation"
+                      >
+                        {isLoading ? 'Creating...' : 'Generate PDF'}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                      <p className="text-xs">
+                        Create final quote PDF for client. Requires client selection and at least one item. 
+                        Quote will be marked as &ldquo;sent&rdquo; and assigned a number.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </div>
@@ -357,7 +400,22 @@ export function QuoteCreator({
       {/* Client Details */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Client Details</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Client Details</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Select a client to start your quote. Client information appears on the final PDF and is required for saving drafts. 
+                    You can search existing clients or add new ones from the client management page.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           <ClientSelector
@@ -371,18 +429,8 @@ export function QuoteCreator({
 
       {/* Line Items Section */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-3 sm:pb-4">
+        <CardHeader className="pb-3 sm:pb-4">
           <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Line Items</CardTitle>
-          <Button
-            variant="default"
-            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80 font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
-            onClick={() => {
-              // TODO: Open item selector dialog
-              console.log('Opening item selector');
-            }}
-          >
-            Add Item
-          </Button>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           <EnhancedLineItemsTable
@@ -398,14 +446,43 @@ export function QuoteCreator({
       {/* Quote Summary */}
       <Card className="bg-paper-white border-stone-gray shadow-sm">
         <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Quote Summary</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Quote Summary</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Set your tax and markup rates to calculate the final quote total. All calculations update automatically as you make changes.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
             {/* Tax and Markup Controls */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="tax-rate" className="text-sm font-medium text-charcoal">Tax Rate (%)</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="tax-rate" className="text-sm font-medium text-charcoal">Tax Rate (%)</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                        <p className="text-xs">
+                          Enter tax percentage (e.g., 8.25 for 8.25%). This will be added to your subtotal. 
+                          Check local tax requirements for your area.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="tax-rate"
                   type="number"
@@ -418,7 +495,22 @@ export function QuoteCreator({
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="markup-rate" className="text-sm font-medium text-charcoal">Markup Rate (%)</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="markup-rate" className="text-sm font-medium text-charcoal">Markup Rate (%)</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                        <p className="text-xs">
+                          Your profit margin percentage (e.g., 20 for 20% markup). This covers overhead, profit, and business expenses. 
+                          Typical ranges: 15-30% for services, 20-50% for products.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="markup-rate"
                   type="number"
@@ -449,7 +541,21 @@ export function QuoteCreator({
                     <span className="font-mono text-charcoal">${calculation.markupAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-xl sm:text-2xl font-bold text-forest-green pt-2 border-t border-stone-gray">
-                    <span>Total</span>
+                    <div className="flex items-center gap-2">
+                      <span>Total</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="w-4 h-4 text-forest-green/60 hover:text-forest-green cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                            <p className="text-xs">
+                              Final quote total: Subtotal + Tax + Markup. Updates automatically as you change items, quantities, tax, or markup rates.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <span className="font-mono text-forest-green">${calculation.total.toFixed(2)}</span>
                   </div>
                 </div>
@@ -462,10 +568,25 @@ export function QuoteCreator({
       {/* Auto-save status */}
       {lastSaveTime && (
         <Alert className="text-xs sm:text-sm">
-          <AlertDescription>
-            Last saved: {lastSaveTime.toLocaleTimeString()}
-            {hasUnsavedChanges && ' (unsaved changes)'}
-          </AlertDescription>
+          <div className="flex items-center gap-2">
+            <AlertDescription>
+              Last saved: {lastSaveTime.toLocaleTimeString()}
+              {hasUnsavedChanges && ' (unsaved changes)'}
+            </AlertDescription>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Your quote automatically saves every 30 seconds when you have a client selected. 
+                    You can also manually save using the Save Draft button.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </Alert>
       )}
 

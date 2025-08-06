@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LineItem } from '@/features/items/types';
 
 import { QuoteLineItem } from '../types';
@@ -57,14 +58,25 @@ export function EnhancedLineItemsTable({
       <div className="border-2 border-dashed border-stone-gray rounded-lg p-6 sm:p-8 text-center">
         <div className="text-charcoal/60 text-base sm:text-lg mb-4">No items added yet</div>
         <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Item
-            </Button>
-          </DialogTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button
+                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Your First Item
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                <p className="text-xs">
+                  Choose from your {availableItems.length} personal items or add new ones to your library
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ItemSelectorDialog
             availableItems={availableItems.filter(item =>
               item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -191,14 +203,25 @@ export function EnhancedLineItemsTable({
       {/* Add Item Button */}
       <div className="flex justify-center pt-4">
         <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Another Item
-            </Button>
-          </DialogTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button
+                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Another Item
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                <p className="text-xs">
+                  Browse your {availableItems.length} items or search by name, category, or unit type
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ItemSelectorDialog
             availableItems={availableItems.filter(item =>
               item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -225,42 +248,172 @@ function ItemSelectorDialog({
   onSearchChange: (value: string) => void;
   onAddItem: (item: LineItem) => void;
 }) {
+  const filteredItems = availableItems.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalItemsCount = availableItems.length;
+  const hasSearchResults = filteredItems.length > 0;
+  const isSearching = searchTerm.trim().length > 0;
+
   return (
     <DialogContent className="max-w-md bg-paper-white border-stone-gray sm:max-w-lg w-[calc(100%-32px)] p-4 sm:p-6">
       <DialogHeader className="pb-3 sm:pb-4">
-        <DialogTitle className="text-base sm:text-lg text-charcoal font-bold">Select Item to Add</DialogTitle>
+        <div className="flex items-center justify-between">
+          <DialogTitle className="text-base sm:text-lg text-charcoal font-bold">
+            Select Item to Add
+          </DialogTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 text-xs text-charcoal/60 bg-light-concrete px-2 py-1 rounded-md">
+                  <span className="font-mono font-bold">{totalItemsCount}</span>
+                  <span>items</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal">
+                <p className="text-xs">
+                  You have {totalItemsCount} items in your personal library
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </DialogHeader>
+      
       <div className="space-y-3 sm:space-y-4">
-        <Input
-          placeholder="Search items..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
-        />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative">
+                <Input
+                  placeholder="Search items..."
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+              <p className="text-xs">
+                Search by item name, category, or unit type. Try &ldquo;mulch&rdquo;, &ldquo;labor&rdquo;, or &ldquo;sq ft&rdquo;
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <div className="max-h-[50vh] sm:max-h-60 overflow-y-auto space-y-2">
-          {availableItems.filter(item =>
-            item.name.toLowerCase().includes(searchTerm.toLowerCase())
-          ).length === 0 ? (
-            <div className="text-center text-charcoal/60 py-4">
-              No items found
+          {!hasSearchResults ? (
+            <div className="text-center text-charcoal/60 py-6 space-y-3">
+              {isSearching ? (
+                <>
+                  <div className="text-sm">
+                    No items found for &ldquo;{searchTerm}&rdquo;
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs text-charcoal/50">
+                      Can&apos;t find what you&apos;re looking for?
+                    </p>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs border-stone-gray text-charcoal hover:bg-light-concrete"
+                            onClick={() => {
+                              // Navigate to items library to add new item
+                              window.open('/items', '_blank');
+                            }}
+                          >
+                            Add New Item to Library
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                          <p className="text-xs">
+                            Opens your Item Library in a new tab where you can add new services, materials, or labor items
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm">
+                  Start typing to search your {totalItemsCount} items
+                </div>
+              )}
             </div>
           ) : (
-            availableItems.filter(item =>
-              item.name.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete cursor-pointer min-h-[44px] touch-manipulation"
-                onClick={() => onAddItem(item)}
-              >
-                <div className="flex-1 mr-2">
-                  <div className="font-medium text-charcoal text-sm sm:text-base">{item.name}</div>
-                  <div className="text-xs sm:text-sm text-charcoal/60">{item.unit || 'unit'}</div>
+            <>
+              {isSearching && (
+                <div className="text-xs text-charcoal/60 pb-2 border-b border-stone-gray/50">
+                  Found {filteredItems.length} of {totalItemsCount} items
                 </div>
-                <div className="font-mono font-bold text-charcoal text-sm sm:text-base whitespace-nowrap">${item.cost.toFixed(2)}</div>
-              </div>
-            ))
+              )}
+              {filteredItems.map((item) => (
+                <TooltipProvider key={item.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="flex items-center justify-between p-3 border border-stone-gray rounded-lg hover:bg-light-concrete cursor-pointer min-h-[44px] touch-manipulation transition-colors"
+                        onClick={() => onAddItem(item)}
+                      >
+                        <div className="flex-1 mr-2">
+                          <div className="font-medium text-charcoal text-sm sm:text-base">{item.name}</div>
+                          <div className="text-xs sm:text-sm text-charcoal/60">
+                            {item.unit || 'unit'}
+                            {item.category && (
+                              <span className="ml-2 text-charcoal/40">• {item.category}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="font-mono font-bold text-charcoal text-sm sm:text-base whitespace-nowrap">
+                          ${item.cost.toFixed(2)}
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                      <div className="text-xs space-y-1">
+                        <p className="font-medium">{item.name}</p>
+                        <p>Cost: ${item.cost.toFixed(2)} per {item.unit || 'unit'}</p>
+                        {item.category && <p>Category: {item.category}</p>}
+                        <p className="text-paper-white/70 italic">Click to add to quote</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </>
           )}
+        </div>
+
+        {/* Help section at bottom */}
+        <div className="pt-3 border-t border-stone-gray/50">
+          <div className="flex items-center justify-between text-xs text-charcoal/50">
+            <span>Need help organizing items?</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-charcoal/50 hover:text-charcoal p-1 h-auto"
+                    onClick={() => {
+                      window.open('/items', '_blank');
+                    }}
+                  >
+                    Manage Library →
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Visit your Item Library to organize items by category, set favorites, and add new services or materials
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
     </DialogContent>
