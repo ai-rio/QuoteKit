@@ -85,6 +85,11 @@ const navGroups = [
         icon: BarChart3,
         featureKey: "analytics_access",
         premiumOnly: true,
+      },
+      {
+        title: "Usage",
+        url: "/usage",
+        icon: BarChart3,
       }
     ]
   }

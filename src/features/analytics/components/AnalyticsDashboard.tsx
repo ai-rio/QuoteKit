@@ -77,7 +77,7 @@ export function AnalyticsDashboard({ hasAccess, analyticsData }: AnalyticsDashbo
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-quote-header text-charcoal font-bold flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-charcoal flex items-center gap-3">
               <BarChart3 className="w-8 h-8" />
               Analytics Dashboard
               <Badge variant="outline" className="bg-equipment-yellow/10 text-equipment-yellow border-equipment-yellow">
@@ -203,7 +203,7 @@ export function AnalyticsDashboard({ hasAccess, analyticsData }: AnalyticsDashbo
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-quote-header text-charcoal font-bold flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-charcoal flex items-center gap-3">
             <BarChart3 className="w-8 h-8" />
             Analytics Dashboard
           </h1>
