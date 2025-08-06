@@ -1,7 +1,7 @@
 'use client';
 
-import { Plus, Trash2 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { Crown, Lock, Plus, Trash2, Users } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +18,9 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 
 import { createCategory, deleteCategory } from '../actions';
-import { ItemCategory } from '../types';
+import { getAllPresetCategories } from '../data/preset-categories';
+import { ItemAccessTier, ItemCategory } from '../types';
+import { getUserTier } from '../utils/category-utils';
 
 interface CategoryManagerProps {
   categories: ItemCategory[];
@@ -44,6 +46,26 @@ export function CategoryManager({ categories, onCategoriesChange }: CategoryMana
   const [pending, setPending] = useState(false);
   const [selectedColor, setSelectedColor] = useState(CATEGORY_COLORS[0]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [userTier, setUserTier] = useState<ItemAccessTier>('free');
+  const [loadingTier, setLoadingTier] = useState(true);
+
+  // Load user tier on component mount
+  useEffect(() => {
+    async function loadUserTier() {
+      try {
+        const tier = await getUserTier();
+        setUserTier(tier);
+      } catch (error) {
+        console.error('Failed to load user tier:', error);
+        setUserTier('free');
+      } finally {
+        setLoadingTier(false);
+      }
+    }
+    loadUserTier();
+  }, []);
+
+  const presetCategories = getAllPresetCategories();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -155,38 +177,134 @@ export function CategoryManager({ categories, onCategoriesChange }: CategoryMana
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {categories.length === 0 ? (
-          <div className="text-center py-8 text-charcoal/60">
-            <p className="mb-2">No categories yet</p>
-            <p className="text-sm">Create your first category to organize your items</p>
+      <CardContent className="space-y-6">
+        {loadingTier ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-forest-green mx-auto"></div>
+            <p className="text-charcoal/60 mt-2">Loading categories...</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="flex items-center justify-between p-3 bg-light-concrete rounded-md border border-stone-gray"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: category.color || '#64748b' }}
-                  />
-                  <span className="font-medium text-charcoal">{category.name}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(category.id)}
-                  disabled={deletingId === category.id}
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+          <>
+            {/* Professional Categories Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-stone-gray">
+                <Users className="h-4 w-4 text-charcoal/60" />
+                <h3 className="font-semibold text-charcoal">Professional Categories</h3>
+                <span className="text-xs text-charcoal/50 bg-stone-gray/20 px-2 py-1 rounded">
+                  Preset
+                </span>
               </div>
-            ))}
-          </div>
+              
+              <div className="space-y-2">
+                {presetCategories.map((preset) => {
+                  const hasAccess = userTier === 'premium' || userTier === 'pro' || preset.access_tier === 'free';
+                  const tierConfig = {
+                    free: { icon: Users, label: 'FREE', color: 'bg-stone-gray text-paper-white' },
+                    premium: { icon: Crown, label: 'PRO', color: 'bg-forest-green text-paper-white' },
+                    pro: { icon: Crown, label: 'PRO', color: 'bg-forest-green text-paper-white' }
+                  };
+                  const config = tierConfig[preset.access_tier];
+                  
+                  return (
+                    <div
+                      key={preset.id}
+                      className={`flex items-center justify-between p-3 rounded-md border transition-all ${
+                        hasAccess 
+                          ? 'bg-light-concrete border-stone-gray' 
+                          : 'bg-stone-gray/10 border-stone-gray/50 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: preset.color }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`font-medium ${hasAccess ? 'text-charcoal' : 'text-charcoal/50'}`}>
+                              {preset.icon} {preset.name}
+                            </span>
+                            <div className={`text-xs px-2 py-0.5 rounded font-medium ${config.color}`}>
+                              {(() => {
+                                const IconComponent = config.icon;
+                                return <IconComponent className="w-3 h-3 mr-1 inline" />;
+                              })()}
+                              {config.label}
+                            </div>
+                          </div>
+                          {preset.description && (
+                            <p className={`text-xs mt-1 ${hasAccess ? 'text-charcoal/60' : 'text-charcoal/40'}`}>
+                              {preset.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {!hasAccess && (
+                        <div className="flex items-center gap-2">
+                          <Lock className="h-4 w-4 text-charcoal/40" />
+                          <Button
+                            size="sm"
+                            className="bg-forest-green text-white hover:opacity-90 text-xs"
+                            onClick={() => {
+                              // TODO: Implement upgrade flow
+                              alert('Upgrade to Premium to access this category!');
+                            }}
+                          >
+                            Upgrade
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Personal Categories Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-stone-gray">
+                <Plus className="h-4 w-4 text-charcoal/60" />
+                <h3 className="font-semibold text-charcoal">Your Personal Categories</h3>
+                <span className="text-xs text-charcoal/50 bg-stone-gray/20 px-2 py-1 rounded">
+                  Custom
+                </span>
+              </div>
+              
+              {categories.length === 0 ? (
+                <div className="text-center py-6 text-charcoal/60 bg-stone-gray/10 rounded-lg border-2 border-dashed border-stone-gray/30">
+                  <p className="mb-2">No personal categories yet</p>
+                  <p className="text-sm">Create your first custom category to organize your items</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center justify-between p-3 bg-light-concrete rounded-md border border-stone-gray"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: category.color || '#64748b' }}
+                        />
+                        <span className="font-medium text-charcoal">{category.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(category.id)}
+                        disabled={deletingId === category.id}
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700 active:bg-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

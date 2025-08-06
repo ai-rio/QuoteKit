@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, Search, Star, StarOff } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 
-import { ItemCategory, ItemSearchFilters, LineItem } from '../types';
+import { ItemAccessTier, ItemCategory, ItemSearchFilters, LineItem } from '../types';
+import { getUsableCategories, getUserTier } from '../utils/category-utils';
 import { AddItemDialog } from './add-item-dialog';
 import { BulkActions } from './BulkActions';
 import { EmptyState } from './EmptyState';
@@ -39,6 +40,24 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
   });
   
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [userTier, setUserTier] = useState<ItemAccessTier>('free');
+  const [usableCategories, setUsableCategories] = useState<any[]>([]);
+
+  // Load user tier and merge categories
+  useEffect(() => {
+    async function loadCategoriesWithTier() {
+      try {
+        const tier = await getUserTier();
+        setUserTier(tier);
+        const merged = getUsableCategories(categories, tier);
+        setUsableCategories(merged);
+      } catch (error) {
+        console.error('Failed to load categories with tier:', error);
+        setUsableCategories(categories.map(cat => ({ ...cat, is_preset: false })));
+      }
+    }
+    loadCategoriesWithTier();
+  }, [categories]);
 
   // Filter and sort items based on current filters
   const filteredAndSortedItems = useMemo(() => {
@@ -224,9 +243,20 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
                   </SelectTrigger>
                   <SelectContent className="bg-paper-white border-stone-gray">
                     <SelectItem value="all" className="text-charcoal">All Categories</SelectItem>
-                    {categories.map((category) => (
+                    {usableCategories.map((category) => (
                       <SelectItem key={category.id} value={category.name} className="text-charcoal">
-                        {category.name}
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: category.color }}
+                          />
+                          {category.name}
+                          {category.is_preset && (
+                            <span className="text-xs text-charcoal/50 bg-stone-gray/20 px-1 py-0.5 rounded">
+                              {category.access_tier === 'free' ? 'FREE' : 'PRO'}
+                            </span>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

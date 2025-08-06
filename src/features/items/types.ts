@@ -22,6 +22,21 @@ export interface ItemCategory {
   updated_at?: string | null;
 }
 
+// Extended category interface that includes preset categories
+export interface MergedCategory {
+  id: string;
+  name: string;
+  color: string;
+  is_preset: boolean;
+  access_tier?: ItemAccessTier;
+  user_id?: string;
+  description?: string;
+  icon?: string;
+  sort_order?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 export interface ItemSearchFilters {
   searchTerm: string;
   category: string;

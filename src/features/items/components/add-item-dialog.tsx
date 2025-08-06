@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +23,8 @@ import {
 import { toast } from '@/components/ui/use-toast';
 
 import { createLineItem } from '../actions';
-import { ItemCategory } from '../types';
+import { ItemAccessTier, ItemCategory } from '../types';
+import { getUsableCategories, getUserTier } from '../utils/category-utils';
 import { GlobalItemsBrowser } from './GlobalItemsBrowser';
 
 interface AddItemDialogProps {
@@ -37,6 +38,22 @@ export function AddItemDialog({ onItemAdded, children, categories }: AddItemDial
   const [pending, setPending] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'create' | 'browse'>('browse');
+  const [usableCategories, setUsableCategories] = useState<any[]>([]);
+
+  // Load user tier and merge categories
+  useEffect(() => {
+    async function loadCategoriesWithTier() {
+      try {
+        const tier = await getUserTier();
+        const merged = getUsableCategories(categories, tier);
+        setUsableCategories(merged);
+      } catch (error) {
+        console.error('Failed to load categories with tier:', error);
+        setUsableCategories(categories.map(cat => ({ ...cat, is_preset: false })));
+      }
+    }
+    loadCategoriesWithTier();
+  }, [categories]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -165,7 +182,7 @@ export function AddItemDialog({ onItemAdded, children, categories }: AddItemDial
                       </SelectTrigger>
                       <SelectContent className="bg-paper-white border-stone-gray">
                         <SelectItem value="none">None</SelectItem>
-                        {categories.map((category) => (
+                        {usableCategories.map((category) => (
                           <SelectItem key={category.id} value={category.name}>
                             <div className="flex items-center gap-2">
                               <div 
@@ -173,6 +190,11 @@ export function AddItemDialog({ onItemAdded, children, categories }: AddItemDial
                                 style={{ backgroundColor: category.color || undefined }}
                               />
                               {category.name}
+                              {category.is_preset && (
+                                <span className="text-xs text-charcoal/50 bg-stone-gray/20 px-1 py-0.5 rounded">
+                                  {category.access_tier === 'free' ? 'FREE' : 'PRO'}
+                                </span>
+                              )}
                             </div>
                           </SelectItem>
                         ))}
