@@ -1,6 +1,6 @@
 'use client';
 
-import { Upload, X } from 'lucide-react';
+import { HelpCircle, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CompanyProfileCardProps {
   companyName: string;
@@ -83,14 +84,44 @@ export function CompanyProfileCard({
   return (
     <Card className="bg-paper-white border border-stone-gray shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-section-title text-charcoal">Company Profile</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-section-title text-charcoal">Company Profile</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                <p className="text-xs">
+                  Company information that appears on all generated quote PDFs and client communications. 
+                  Keep professional and up-to-date for best client impression.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Company Name */}
         <div className="grid gap-3">
-          <Label htmlFor="company-name" className="text-label text-charcoal font-medium">
-            Company Name *
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="company-name" className="text-label text-charcoal font-medium">
+              Company Name *
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Your business name as it appears on quote headers and client communications. 
+                    This should match your legal business name for professional credibility.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Input
             id="company-name"
             name="company_name"
@@ -104,9 +135,24 @@ export function CompanyProfileCard({
 
         {/* Company Address */}
         <div className="grid gap-3">
-          <Label htmlFor="company-address" className="text-label text-charcoal font-medium">
-            Business Address
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="company-address" className="text-label text-charcoal font-medium">
+              Business Address
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Your business address appears on quote PDFs and invoices. Include street, city, state, and ZIP. 
+                    This helps establish credibility and provides clients with your location.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Textarea
             id="company-address"
             name="company_address"
@@ -121,9 +167,24 @@ export function CompanyProfileCard({
         {/* Contact Information - Improved Mobile Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="grid gap-3">
-            <Label htmlFor="company-phone" className="text-label text-charcoal font-medium">
-              Phone Number
-            </Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="company-phone" className="text-label text-charcoal font-medium">
+                Phone Number
+              </Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                    <p className="text-xs">
+                      Primary contact number for your business. Appears on quotes and allows clients to reach you 
+                      for questions or follow-ups. Use your main business line for professionalism.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               id="company-phone"
               name="company_phone"
@@ -138,9 +199,24 @@ export function CompanyProfileCard({
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="company-email" className="text-label text-charcoal font-medium">
-              Business Email
-            </Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="company-email" className="text-label text-charcoal font-medium">
+                Business Email
+              </Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                    <p className="text-xs">
+                      Professional email address for client communications. Appears on quotes and invoices. 
+                      Use your business domain email (e.g., contact@yourbusiness.com) for credibility.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               id="company-email"
               name="company_email"
@@ -157,7 +233,22 @@ export function CompanyProfileCard({
 
         {/* Logo Upload Section - Mobile Optimized */}
         <div className="grid gap-3">
-          <Label className="text-label text-charcoal font-medium">Company Logo</Label>
+          <div className="flex items-center gap-2">
+            <Label className="text-label text-charcoal font-medium">Company Logo</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Upload your business logo to appear on quote PDFs. Use high-quality PNG, JPG, or GIF files 
+                    under 5MB. Square or horizontal layouts work best. Professional branding enhances credibility.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-start gap-4">
             {/* Logo Preview - Centered on Mobile */}
             <div className="flex justify-center sm:justify-start">

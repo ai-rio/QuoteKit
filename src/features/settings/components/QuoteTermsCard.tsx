@@ -1,7 +1,10 @@
+import { HelpCircle } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface QuoteTermsCardProps {
   preferredCurrency: string;
@@ -39,14 +42,44 @@ export function QuoteTermsCard({
   return (
     <Card className="bg-paper-white border border-stone-gray shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-section-title text-charcoal">Business Preferences</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-section-title text-charcoal">Business Preferences</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                <p className="text-xs">
+                  Default business preferences for quotes. Currency affects number formatting and symbols. 
+                  Terms provide legal protection and set client expectations.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Preferred Currency */}
         <div className="grid gap-3">
-          <Label htmlFor="preferred-currency" className="text-label text-charcoal font-medium">
-            Preferred Currency
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="preferred-currency" className="text-label text-charcoal font-medium">
+              Preferred Currency
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Default currency for all quotes. Affects number formatting, currency symbols, and decimal places. 
+                    Choose the currency most commonly used in your business region and client transactions.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Select
             value={preferredCurrency}
             onValueChange={(value) => onFieldChange('preferred_currency', value)}
@@ -71,9 +104,24 @@ export function QuoteTermsCard({
         {/* Quote Terms */}
         <div className="grid gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <Label htmlFor="quote-terms" className="text-label text-charcoal font-medium">
-              Default Quote Terms & Conditions
-            </Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="quote-terms" className="text-label text-charcoal font-medium">
+                Default Quote Terms & Conditions
+              </Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                    <p className="text-xs">
+                      Standard terms that appear on all quotes. Include payment terms, project scope, timeline expectations, 
+                      and legal protections. Can be customized per quote but provides consistent baseline protection.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <button
               type="button"
               onClick={handleUseDefaultTerms}

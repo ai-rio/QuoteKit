@@ -1,8 +1,11 @@
 'use client';
 
+import { HelpCircle } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FinancialDefaultsCardProps {
   taxRate: string;
@@ -44,14 +47,44 @@ export function FinancialDefaultsCard({
   return (
     <Card className="bg-paper-white border border-stone-gray shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-section-title text-charcoal">Financial Defaults</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-section-title text-charcoal">Financial Defaults</CardTitle>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                <p className="text-xs">
+                  Default financial settings for new quotes. These pre-populate quote calculations but can be 
+                  adjusted per quote as needed. Essential for consistent pricing and profitability.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Tax Rate */}
         <div className="grid gap-3">
-          <Label htmlFor="tax-rate" className="text-label text-charcoal font-medium">
-            Default Tax Rate (%)
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="tax-rate" className="text-label text-charcoal font-medium">
+              Default Tax Rate (%)
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Your local sales tax percentage (e.g., 8.25 for 8.25%). Check your state and local tax 
+                    requirements. This pre-fills new quotes but can be adjusted per quote for different tax zones.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Input
             id="tax-rate"
             name="default_tax_rate"
@@ -75,9 +108,24 @@ export function FinancialDefaultsCard({
 
         {/* Markup Rate */}
         <div className="grid gap-3">
-          <Label htmlFor="markup-rate" className="text-label text-charcoal font-medium">
-            Default Profit Markup (%)
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="markup-rate" className="text-label text-charcoal font-medium">
+              Default Profit Markup (%)
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3 h-3 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                  <p className="text-xs">
+                    Your profit margin percentage added to base costs. Covers overhead, labor, profit, and business 
+                    expenses. Industry standards: 15-30% for services, 20-50% for products. Higher for specialized work.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Input
             id="markup-rate"
             name="default_markup_rate"
