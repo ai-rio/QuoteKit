@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
+import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getCompanySettings } from '@/features/settings/actions';
 import { SettingsManager } from '@/features/settings/components/SettingsManager';
@@ -17,6 +18,7 @@ export default async function SettingsPage() {
   return (
     <div className="bg-light-concrete min-h-screen">
       <div className="container mx-auto max-w-4xl py-8">
+        <PageBreadcrumbs />
         <SettingsManager 
           initialSettings={settings || null} 
           userId={session.user.id}

@@ -1,12 +1,14 @@
 import { Suspense } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { ClientList } from '@/features/clients/components/ClientList';
 
 export default function ClientsPage() {
   return (
     <div className="min-h-screen bg-light-concrete p-4 sm:p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
+        <PageBreadcrumbs />
         <Suspense fallback={<ClientsLoadingSkeleton />}>
           <ClientList />
         </Suspense>

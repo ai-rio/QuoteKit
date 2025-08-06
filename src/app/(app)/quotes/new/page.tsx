@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
+import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { getSession } from '@/features/account/controllers/get-session';
 import { getLineItems } from '@/features/items/actions';
 import { getTemplateById } from '@/features/quotes/actions';
@@ -46,6 +47,7 @@ export default async function NewQuotePage({ searchParams }: NewQuotePageProps) 
   return (
     <div className="min-h-screen bg-light-concrete py-4 sm:py-6 lg:py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <PageBreadcrumbs />
         <QuoteCreator 
           availableItems={items || []} 
           defaultSettings={settings || null}

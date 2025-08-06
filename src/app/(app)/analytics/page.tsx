@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs'
 import { AnalyticsDashboard } from '@/features/analytics/components/AnalyticsDashboard'
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client'
 
@@ -63,9 +64,12 @@ export default async function AnalyticsPage() {
   }
 
   return (
-    <AnalyticsDashboard 
-      hasAccess={hasAnalyticsAccess}
-      analyticsData={analyticsData}
-    />
+    <div className="space-y-6">
+      <PageBreadcrumbs />
+      <AnalyticsDashboard 
+        hasAccess={hasAnalyticsAccess}
+        analyticsData={analyticsData}
+      />
+    </div>
   )
 }
