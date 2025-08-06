@@ -174,13 +174,13 @@ export async function copyGlobalItemToPersonal(
     }
 
     console.log('Calling database function copy_global_item_to_personal with params:', {
-      global_item_id: globalItemId,
+      p_global_item_id: globalItemId,
       custom_cost: customCost || null
     });
 
     // Call the database function to copy the item
     const { data, error } = await supabase.rpc('copy_global_item_to_personal', {
-      global_item_id: globalItemId,
+      p_global_item_id: globalItemId,
       custom_cost: customCost || undefined
     });
 

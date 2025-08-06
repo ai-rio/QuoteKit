@@ -81,8 +81,38 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Add your data loading logic here
-      // This should fetch items, categories, and user tier
+      
+      // Fetch user tier
+      const tierResponse = await fetch('/api/global-items/user-tier');
+      if (tierResponse.ok) {
+        const tierData = await tierResponse.json();
+        console.log('User tier data:', tierData);
+        setUserTier(tierData.data?.tier || 'free');
+      } else {
+        console.error('Failed to fetch user tier');
+        setUserTier('free'); // Default to free on error
+      }
+      
+      // Fetch categories
+      const categoriesResponse = await fetch('/api/global-items/categories');
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        console.log('Categories data:', categoriesData);
+        setCategories(categoriesData.data || []);
+      } else {
+        console.error('Failed to fetch categories');
+      }
+      
+      // Fetch items
+      const itemsResponse = await fetch('/api/global-items');
+      if (itemsResponse.ok) {
+        const itemsData = await itemsResponse.json();
+        console.log('Items data:', itemsData);
+        setItems(itemsData.data || []);
+      } else {
+        console.error('Failed to fetch items');
+      }
+      
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
