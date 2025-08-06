@@ -34,6 +34,7 @@ export interface PlanFeatures {
   bulk_operations: boolean
   
   // Analytics & Reporting  
+  analytics: boolean  // Alias for analytics_access
   analytics_access: boolean
   advanced_reporting: boolean
   
@@ -115,6 +116,7 @@ export const FREE_PLAN_FEATURES: PlanFeatures = {
   bulk_operations: false,
   
   // No analytics access
+  analytics: false,
   analytics_access: false,
   advanced_reporting: false,
   
@@ -142,6 +144,7 @@ export const PREMIUM_PLAN_FEATURES: PlanFeatures = {
   bulk_operations: true,
   
   // Full analytics access
+  analytics: true,
   analytics_access: true,
   advanced_reporting: true,
   

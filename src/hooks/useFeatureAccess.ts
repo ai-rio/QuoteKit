@@ -13,6 +13,7 @@ interface FeatureUsage {
 interface PlanFeatures {
   max_quotes: number
   pdf_export: boolean
+  analytics: boolean  // Alias for analytics_access
   analytics_access: boolean
   custom_branding: boolean
   bulk_operations: boolean
@@ -29,6 +30,7 @@ interface FeatureAccess {
 const FREE_PLAN_FEATURES: PlanFeatures = {
   max_quotes: 5,
   pdf_export: false,
+  analytics: false,  // Alias for analytics_access
   analytics_access: false,
   custom_branding: false,
   bulk_operations: false
@@ -153,15 +155,44 @@ export function useFeatureAccess() {
     return features.max_quotes === -1 || features.pdf_export
   }, [features])
 
+  const getUsagePercentage = useCallback((featureKey: keyof PlanFeatures): number => {
+    if (featureKey === 'max_quotes') {
+      const limit = features.max_quotes
+      if (limit === -1) return 0 // Unlimited
+      const current = usage.quotes_count || 0
+      return Math.min((current / limit) * 100, 100)
+    }
+    return 0
+  }, [features, usage])
+
   return {
     user,
     features,
     usage,
     canAccess,
+    getUsagePercentage,
     isFreePlan,
     isPremiumPlan,
     loading,
     error,
     refresh: fetchUserData
+  }
+}
+
+// Export useQuoteLimits as a specialized hook for quote limits
+export function useQuoteLimits() {
+  const { canAccess, loading, error } = useFeatureAccess()
+  
+  const quoteLimits = canAccess('max_quotes')
+  
+  return {
+    hasAccess: quoteLimits.hasAccess,
+    canCreateQuote: quoteLimits.hasAccess,
+    isAtLimit: quoteLimits.isAtLimit || false,
+    limit: quoteLimits.limit,
+    current: quoteLimits.current,
+    upgradeRequired: quoteLimits.upgradeRequired,
+    loading,
+    error
   }
 }
