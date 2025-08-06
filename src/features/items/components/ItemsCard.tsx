@@ -16,6 +16,7 @@ import { toast } from '@/components/ui/use-toast';
 
 import { toggleItemFavorite } from '../actions';
 import { ItemCategory, LineItem } from '../types';
+import { CategoryBadge } from './CategoryBadge';
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemDialog } from './edit-item-dialog';
 
@@ -58,11 +59,7 @@ export function ItemsCard({
     }
   };
 
-  const getCategoryColor = (categoryName: string | null | undefined) => {
-    if (!categoryName) return '#D7D7D7';
-    const category = categories.find(c => c.name === categoryName);
-    return category?.color || '#D7D7D7';
-  };
+
 
   const formatLastUsed = (lastUsedAt: string | null | undefined) => {
     if (!lastUsedAt) return 'Never';
@@ -191,19 +188,12 @@ export function ItemsCard({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-charcoal/60 font-medium block mb-1">Category</span>
-                {item.category ? (
-                  <Badge 
-                    className="text-charcoal border-0" 
-                    style={{ 
-                      backgroundColor: `${getCategoryColor(item.category)}20`,
-                      color: getCategoryColor(item.category)
-                    }}
-                  >
-                    {item.category}
-                  </Badge>
-                ) : (
-                  <span className="text-charcoal/50">Uncategorized</span>
-                )}
+                <CategoryBadge 
+                  categoryName={item.category}
+                  categories={categories}
+                  variant="solid"
+                  size="sm"
+                />
               </div>
               
               <div>

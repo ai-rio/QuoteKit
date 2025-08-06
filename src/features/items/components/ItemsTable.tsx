@@ -24,6 +24,7 @@ import { toast } from '@/components/ui/use-toast';
 
 import { toggleItemFavorite } from '../actions';
 import { ItemCategory, LineItem } from '../types';
+import { CategoryBadge } from './CategoryBadge';
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemDialog } from './edit-item-dialog';
 
@@ -71,11 +72,7 @@ export function ItemsTable({
     }
   };
 
-  const getCategoryColor = (categoryName: string | null | undefined) => {
-    if (!categoryName) return '#D7D7D7';
-    const category = categories.find(c => c.name === categoryName);
-    return category?.color || '#D7D7D7';
-  };
+
 
   const formatLastUsed = (lastUsedAt: string | null | undefined) => {
     if (!lastUsedAt) return 'Never';
@@ -185,19 +182,12 @@ export function ItemsTable({
                   )}
                 </TableCell>
                 <TableCell>
-                  {item.category ? (
-                    <Badge 
-                      className="text-charcoal border-0" 
-                      style={{ 
-                        backgroundColor: `${getCategoryColor(item.category)}20`,
-                        color: getCategoryColor(item.category)
-                      }}
-                    >
-                      {item.category}
-                    </Badge>
-                  ) : (
-                    <span className="text-charcoal/50 text-sm">Uncategorized</span>
-                  )}
+                  <CategoryBadge 
+                    categoryName={item.category}
+                    categories={categories}
+                    variant="solid"
+                    size="sm"
+                  />
                 </TableCell>
                 <TableCell className="text-charcoal">{item.unit || '—'}</TableCell>
                 <TableCell className="font-mono text-charcoal text-right">

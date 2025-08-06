@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select';
 
 import { GlobalCategory, GlobalItem, ItemAccessTier } from '../types';
+import { CategoryBadge } from './CategoryBadge';
 
 const TIER_CONFIG = {
   free: {
@@ -471,8 +472,13 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
                             )}
                           </div>
                         </td>
-                        <td className="p-3 text-charcoal">
-                          {getCategoryName(item.category_id)}
+                        <td className="p-3">
+                          <CategoryBadge 
+                            categoryName={getCategoryName(item.category_id)}
+                            categories={categories}
+                            variant="solid"
+                            size="sm"
+                          />
                         </td>
                         <td className="p-3">
                           <Badge className={tierConfig.color}>
@@ -598,7 +604,14 @@ export function GlobalItemsBrowser({ onItemAdded }: GlobalItemsBrowserProps) {
                   <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="text-charcoal/60">Category:</span>
-                      <p className="text-charcoal font-medium">{getCategoryName(item.category_id)}</p>
+                      <div className="mt-1">
+                        <CategoryBadge 
+                          categoryName={getCategoryName(item.category_id)}
+                          categories={categories}
+                          variant="solid"
+                          size="sm"
+                        />
+                      </div>
                     </div>
                     <div>
                       <span className="text-charcoal/60">Tier:</span>
