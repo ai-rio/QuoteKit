@@ -1,21 +1,41 @@
 'use client'
 
+import { User } from '@supabase/supabase-js'
 import { useCallback, useEffect, useState } from 'react'
 
 import { createSupabaseClientClient } from '@/libs/supabase/supabase-client-client'
-import { 
-  type FeatureAccess,
-  type FeatureKey, 
-  type FeatureUsage,
-  FREE_PLAN_FEATURES,
-  parseStripeMetadata,
-  type PlanFeatures} from '@/types/features'
 
-/**
- * Enhanced hook for checking feature access based on user's subscription
- * Connects to real Supabase data and Stripe metadata
- */
+// Simplified types
+interface FeatureUsage {
+  quotes_count: number
+}
+
+interface PlanFeatures {
+  max_quotes: number
+  pdf_export: boolean
+  analytics_access: boolean
+  custom_branding: boolean
+  bulk_operations: boolean
+}
+
+interface FeatureAccess {
+  hasAccess: boolean
+  upgradeRequired: boolean
+  limit?: number
+  current?: number
+  isAtLimit?: boolean
+}
+
+const FREE_PLAN_FEATURES: PlanFeatures = {
+  max_quotes: 5,
+  pdf_export: false,
+  analytics_access: false,
+  custom_branding: false,
+  bulk_operations: false
+}
+
 export function useFeatureAccess() {
+  const [user, setUser] = useState<User | null>(null)
   const [features, setFeatures] = useState<PlanFeatures>(FREE_PLAN_FEATURES)
   const [usage, setUsage] = useState<FeatureUsage>({ quotes_count: 0 })
   const [loading, setLoading] = useState(true)
@@ -23,126 +43,56 @@ export function useFeatureAccess() {
 
   const supabase = createSupabaseClientClient()
 
-  /**
-   * Fetch subscription data and usage from Supabase with robust error handling
-   */
-  const fetchSubscriptionData = useCallback(async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Get current user with timeout and retry logic
-      let user = null
-      let userError = null
+      // Get user session with timeout
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
-      try {
-        const userResult = await Promise.race([
-          supabase.auth.getUser(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Auth timeout')), 5000)
-          )
-        ]) as any
-        
-        user = userResult.data?.user
-        userError = userResult.error
-      } catch (authError) {
-        console.warn('Auth service unavailable, using fallback:', authError)
-        // Fallback: assume no user and use free features
+      if (sessionError) {
+        console.warn('Session error:', sessionError)
+        setUser(null)
         setFeatures(FREE_PLAN_FEATURES)
         setUsage({ quotes_count: 0 })
-        setLoading(false)
         return
       }
 
-      if (userError) {
-        console.warn('User authentication error:', userError)
+      setUser(session?.user || null)
+
+      if (!session?.user) {
+        // No user - use free features
         setFeatures(FREE_PLAN_FEATURES)
         setUsage({ quotes_count: 0 })
-        setLoading(false)
         return
       }
 
-      if (!user) {
-        setFeatures(FREE_PLAN_FEATURES)
+      // For now, just use free features for all authenticated users
+      // TODO: Implement subscription checking later
+      setFeatures(FREE_PLAN_FEATURES)
+      
+      // Get quote count for the user
+      try {
+        const { count, error: countError } = await supabase
+          .from('quotes')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+
+        if (countError) {
+          console.warn('Count error:', countError)
+          setUsage({ quotes_count: 0 })
+        } else {
+          setUsage({ quotes_count: count || 0 })
+        }
+      } catch (countErr) {
+        console.warn('Quote count fetch failed:', countErr)
         setUsage({ quotes_count: 0 })
-        setLoading(false)
-        return
       }
-
-      // Fetch active subscription with timeout
-      let subscription = null
-      try {
-        const subscriptionResult = await Promise.race([
-          supabase
-            .from('subscriptions')
-            .select(`
-              *,
-              stripe_prices!stripe_price_id (
-                *,
-                stripe_products!stripe_product_id (
-                  *
-                )
-              )
-            `)
-            .eq('user_id', user.id)
-            .eq('status', 'active')
-            .single(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Subscription query timeout')), 5000)
-          )
-        ]) as any
-
-        subscription = subscriptionResult.data
-        
-        if (subscriptionResult.error && subscriptionResult.error.code !== 'PGRST116') {
-          console.warn('Error fetching subscription:', subscriptionResult.error)
-        }
-      } catch (subError) {
-        console.warn('Subscription service unavailable, using free features:', subError)
-        // Continue with free features as fallback
-      }
-
-      // Parse features from Stripe product metadata
-      let planFeatures = FREE_PLAN_FEATURES
-      if (subscription?.stripe_prices?.stripe_products?.metadata) {
-        try {
-          planFeatures = parseStripeMetadata(subscription.stripe_prices.stripe_products.metadata)
-        } catch (parseError) {
-          console.warn('Error parsing Stripe metadata:', parseError)
-          // Fallback to free features if parsing fails
-        }
-      }
-
-      setFeatures(planFeatures)
-
-      // Fetch current usage with timeout
-      let usageData = null
-      try {
-        const usageResult = await Promise.race([
-          supabase.rpc('get_current_usage', { p_user_id: user.id }).single(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Usage query timeout')), 5000)
-          )
-        ]) as any
-
-        usageData = usageResult.data
-        
-        if (usageResult.error) {
-          console.warn('Error fetching usage:', usageResult.error)
-        }
-      } catch (usageError) {
-        console.warn('Usage service unavailable, using zero usage:', usageError)
-        // Continue with zero usage as fallback
-      }
-
-      setUsage({
-        quotes_count: (usageData as any)?.quotes_count || 0
-      })
 
     } catch (err) {
-      console.error('Error in fetchSubscriptionData:', err)
+      console.error('Error in fetchUserData:', err)
       setError(err as Error)
-      // Fallback to free features on error
       setFeatures(FREE_PLAN_FEATURES)
       setUsage({ quotes_count: 0 })
     } finally {
@@ -150,37 +100,20 @@ export function useFeatureAccess() {
     }
   }, [supabase])
 
-  // Fetch data on mount and when user changes
   useEffect(() => {
-    fetchSubscriptionData()
+    fetchUserData()
 
-    // Listen for auth changes with error handling
-    let subscription: any = null
-    try {
-      const authSubscription = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-          fetchSubscriptionData()
-        }
-      })
-      subscription = authSubscription.data
-    } catch (authError) {
-      console.warn('Auth state change listener failed:', authError)
-      // Continue without auth listener - data will still be fetched on mount
-    }
-
-    return () => {
-      try {
-        subscription?.subscription?.unsubscribe()
-      } catch (unsubError) {
-        console.warn('Error unsubscribing from auth changes:', unsubError)
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        fetchUserData()
       }
-    }
-  }, [fetchSubscriptionData, supabase.auth])
+    })
 
-  /**
-   * Check if user has access to a specific feature
-   */
-  const canAccess = useCallback((featureKey: FeatureKey): FeatureAccess => {
+    return () => subscription.unsubscribe()
+  }, [fetchUserData, supabase.auth])
+
+  const canAccess = useCallback((featureKey: keyof PlanFeatures): FeatureAccess => {
     const featureValue = features[featureKey]
 
     // Handle boolean features
@@ -206,163 +139,29 @@ export function useFeatureAccess() {
       }
     }
 
-    // Default fallback
     return {
       hasAccess: false,
       upgradeRequired: true
     }
   }, [features, usage])
 
-  /**
-   * Check if user is at or near a feature limit
-   */
-  const isAtLimit = useCallback((featureKey: FeatureKey, threshold = 1): boolean => {
-    const access = canAccess(featureKey)
-    
-    if (access.limit === undefined || access.current === undefined) {
-      return false
-    }
-
-    return access.current >= (access.limit - threshold)
-  }, [canAccess])
-
-  /**
-   * Get usage percentage for a feature
-   */
-  const getUsagePercentage = useCallback((featureKey: FeatureKey): number => {
-    const access = canAccess(featureKey)
-    
-    if (access.limit === undefined || access.current === undefined) {
-      return 0
-    }
-
-    return Math.min(100, (access.current / access.limit) * 100)
-  }, [canAccess])
-
-  /**
-   * Check if user is on free plan
-   */
-  const isFreePlan = useCallback((): boolean => {
-    return features.max_quotes <= 5 && 
-           !features.pdf_export && 
-           !features.analytics_access
+  const isFreePlan = useCallback(() => {
+    return features.max_quotes <= 5 && !features.pdf_export
   }, [features])
 
-  /**
-   * Check if user is on premium plan
-   */
-  const isPremiumPlan = useCallback((): boolean => {
-    return features.max_quotes === -1 || 
-           features.pdf_export || 
-           features.analytics_access ||
-           features.custom_branding
+  const isPremiumPlan = useCallback(() => {
+    return features.max_quotes === -1 || features.pdf_export
   }, [features])
-
-  /**
-   * Increment usage for a specific feature with error handling
-   */
-  const incrementUsage = useCallback(async (featureType: 'quotes' | 'pdf_exports' | 'api_calls' | 'bulk_operations', amount = 1) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { error } = await supabase.rpc('increment_usage', {
-        p_user_id: user.id,
-        p_usage_type: featureType,
-        p_amount: amount
-      })
-
-      if (error) {
-        console.error('Error incrementing usage:', error)
-        return
-      }
-
-      // Refresh usage data after incrementing
-      const { data: usageData } = await supabase
-        .rpc('get_current_usage', { p_user_id: user.id })
-        .single()
-
-      if (usageData) {
-        setUsage({
-          quotes_count: (usageData as any).quotes_count || 0
-        })
-      }
-    } catch (err) {
-      console.error('Error in incrementUsage:', err)
-      // Don't throw - just log the error and continue
-    }
-  }, [supabase])
-
-  /**
-   * Check if user would exceed limit with additional usage
-   */
-  const wouldExceedLimit = useCallback((featureKey: FeatureKey, additionalUsage = 1): boolean => {
-    const access = canAccess(featureKey)
-    
-    if (access.limit === undefined || access.current === undefined) {
-      return false
-    }
-
-    return (access.current + additionalUsage) > access.limit
-  }, [canAccess])
 
   return {
-    // Feature configuration
+    user,
     features,
-    
-    // Usage data
     usage,
-    
-    // Access checking functions
     canAccess,
-    isAtLimit,
-    getUsagePercentage,
-    wouldExceedLimit,
-    
-    // Plan type helpers
     isFreePlan,
     isPremiumPlan,
-    
-    // State
     loading,
     error,
-    
-    // Actions
-    refresh: fetchSubscriptionData,
-    incrementUsage
-  }
-}
-
-/**
- * Simplified hook for checking a single feature
- */
-export function useFeature(featureKey: FeatureKey) {
-  const { canAccess, loading, error } = useFeatureAccess()
-  
-  const access = canAccess(featureKey)
-  
-  return {
-    ...access,
-    loading,
-    error
-  }
-}
-
-/**
- * Hook for checking quote limits specifically
- */
-export function useQuoteLimits() {
-  const { canAccess, usage, incrementUsage, wouldExceedLimit, loading, error } = useFeatureAccess()
-  
-  const quotesAccess = canAccess('max_quotes')
-  
-  return {
-    ...quotesAccess,
-    usage: usage.quotes_count,
-    canCreateQuote: quotesAccess.hasAccess && !wouldExceedLimit('max_quotes'),
-    incrementQuoteUsage: () => incrementUsage('quotes'),
-    wouldExceedWithOne: wouldExceedLimit('max_quotes', 1),
-    loading,
-    error
+    refresh: fetchUserData
   }
 }
