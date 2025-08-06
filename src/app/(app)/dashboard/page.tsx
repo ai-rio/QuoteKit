@@ -44,6 +44,24 @@ export default async function DashboardPage() {
   // Get dashboard data
   const dashboardData = await getDashboardData()
   
+  // Check if user is on premium plan
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select(`
+      *,
+      stripe_prices!inner (
+        *,
+        stripe_products!inner (
+          metadata
+        )
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  const isPremium = subscription?.stripe_prices?.stripe_products?.metadata?.analytics_access === 'true'
+  
   // Extract user name from email or metadata
   const userName = user.user_metadata?.full_name || 
                   user.email?.split('@')[0] || 
@@ -140,51 +158,96 @@ export default async function DashboardPage() {
             })}
           </div>
           
-          {/* Usage Analytics & Upgrade Prompt */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Usage Analytics Card */}
-            <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
-              <h2 className="text-xl font-bold text-charcoal mb-4">Usage Analytics</h2>
-              <div className="flex flex-col items-center text-center">
-                <div className="relative w-32 h-32 flex items-center justify-center">
-                  <svg className="absolute w-full h-full" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" stroke="#F5F5F5" strokeWidth="10" fill="none"></circle>
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="45" 
-                      stroke="#2A3D2F" 
-                      strokeWidth="10" 
-                      fill="none" 
-                      strokeLinecap="round" 
-                      transform="rotate(-90 50 50)" 
-                      strokeDasharray="282.74" 
-                      strokeDashoffset="226.19"
-                    ></circle>
-                  </svg>
-                  <div className="text-center">
-                    <p className="text-3xl font-black font-mono text-charcoal">{dashboardData.stats.totalQuotes}</p>
-                    <p className="text-sm text-charcoal/60">/ 5</p>
+          {/* Usage Analytics & Upgrade Prompt - Only for Free Users */}
+          {!isPremium && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Usage Analytics Card */}
+              <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+                <h2 className="text-xl font-bold text-charcoal mb-4">Usage Analytics</h2>
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg className="absolute w-full h-full" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" stroke="#F5F5F5" strokeWidth="10" fill="none"></circle>
+                      <circle 
+                        cx="50" 
+                        cy="50" 
+                        r="45" 
+                        stroke="#2A3D2F" 
+                        strokeWidth="10" 
+                        fill="none" 
+                        strokeLinecap="round" 
+                        transform="rotate(-90 50 50)" 
+                        strokeDasharray="282.74" 
+                        strokeDashoffset="226.19"
+                      ></circle>
+                    </svg>
+                    <div className="text-center">
+                      <p className="text-3xl font-black font-mono text-charcoal">{dashboardData.stats.totalQuotes}</p>
+                      <p className="text-sm text-charcoal/60">/ 5</p>
+                    </div>
                   </div>
+                  <p className="font-bold mt-4">Quotes Created This Month</p>
+                  <p className="text-sm text-charcoal/70">Your free plan includes 5 quotes per month.</p>
                 </div>
-                <p className="font-bold mt-4">Quotes Created This Month</p>
-                <p className="text-sm text-charcoal/70">Your free plan includes 5 quotes per month.</p>
+              </div>
+              
+              {/* Upgrade Prompt Card */}
+              <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-forest-green/80 mb-4">
+                  <Zap className="w-6 h-6 text-equipment-yellow" />
+                </div>
+                <h2 className="text-xl font-bold text-charcoal">Unlock Advanced Analytics</h2>
+                <p className="mt-2 text-sm text-charcoal/80 flex-grow">Get detailed usage trends, export capabilities, and unlimited features.</p>
+                <Button className="w-full mt-6 bg-forest-green text-paper-white font-bold py-3 rounded-lg hover:bg-green-800 transition-all duration-300 transform hover:scale-105 shadow-[0_4px_20px_rgba(42,61,47,0.4)] hover:shadow-[0_6px_25px_rgba(42,61,47,0.6)] flex items-center justify-center space-x-2">
+                  <TrendingUp className="w-5 h-5" />
+                  <span>Unlock Your Growth</span>
+                </Button>
               </div>
             </div>
-            
-            {/* Upgrade Prompt Card */}
-            <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-forest-green/80 mb-4">
-                <Zap className="w-6 h-6 text-equipment-yellow" />
+          )}
+
+          {/* Premium Analytics Card - Only for Premium Users */}
+          {isPremium && (
+            <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
+                  <Crown className="w-6 h-6 text-equipment-yellow" />
+                  Premium Analytics
+                </h2>
+                <Button asChild variant="outline" className="text-forest-green border-forest-green hover:bg-forest-green hover:text-white">
+                  <Link href="/analytics">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    View Full Analytics
+                  </Link>
+                </Button>
               </div>
-              <h2 className="text-xl font-bold text-charcoal">Unlock Advanced Analytics</h2>
-              <p className="mt-2 text-sm text-charcoal/80 flex-grow">Get detailed usage trends, export capabilities, and unlimited features.</p>
-              <Button className="w-full mt-6 bg-forest-green text-paper-white font-bold py-3 rounded-lg hover:bg-green-800 transition-all duration-300 transform hover:scale-105 shadow-[0_4px_20px_rgba(42,61,47,0.4)] hover:shadow-[0_6px_25px_rgba(42,61,47,0.6)] flex items-center justify-center space-x-2">
-                <TrendingUp className="w-5 h-5" />
-                <span>Unlock Your Growth</span>
-              </Button>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-light-concrete rounded-lg">
+                  <p className="text-2xl font-bold text-charcoal">{dashboardData.stats.totalQuotes}</p>
+                  <p className="text-sm text-charcoal/70">Total Quotes</p>
+                </div>
+                <div className="text-center p-4 bg-light-concrete rounded-lg">
+                  <p className="text-2xl font-bold text-charcoal">{dashboardData.stats.acceptedQuotes}</p>
+                  <p className="text-sm text-charcoal/70">Accepted</p>
+                </div>
+                <div className="text-center p-4 bg-light-concrete rounded-lg">
+                  <p className="text-2xl font-bold text-charcoal">{formatCurrency(dashboardData.stats.totalRevenue)}</p>
+                  <p className="text-sm text-charcoal/70">Revenue</p>
+                </div>
+                <div className="text-center p-4 bg-light-concrete rounded-lg">
+                  <p className="text-2xl font-bold text-charcoal">
+                    {dashboardData.stats.totalQuotes > 0 
+                      ? Math.round((dashboardData.stats.acceptedQuotes / dashboardData.stats.totalQuotes) * 100)
+                      : 0}%
+                  </p>
+                  <p className="text-sm text-charcoal/70">Success Rate</p>
+                </div>
+              </div>
+              <p className="text-sm text-charcoal/60 mt-4 text-center">
+                Unlimited quotes • Advanced analytics • Premium features enabled
+              </p>
             </div>
-          </div>
+          )}
 
           {/* Recent Activity Section */}
           <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">

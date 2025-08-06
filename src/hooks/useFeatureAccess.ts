@@ -70,9 +70,44 @@ export function useFeatureAccess() {
         return
       }
 
-      // For now, just use free features for all authenticated users
-      // TODO: Implement subscription checking later
-      setFeatures(FREE_PLAN_FEATURES)
+      // Get user's subscription to determine features
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select(`
+          *,
+          stripe_prices!inner (
+            *,
+            stripe_products!inner (
+              metadata
+            )
+          )
+        `)
+        .eq('user_id', session.user.id)
+        .eq('status', 'active')
+        .single()
+
+      let userFeatures = FREE_PLAN_FEATURES
+
+      if (!subError && subscription?.stripe_prices?.stripe_products?.metadata) {
+        const metadata = subscription.stripe_prices.stripe_products.metadata
+        
+        // Check if user has premium features
+        const hasAnalytics = metadata.analytics_access === 'true'
+        
+        if (hasAnalytics) {
+          // Premium plan features
+          userFeatures = {
+            max_quotes: -1, // Unlimited
+            pdf_export: true,
+            analytics: true,
+            analytics_access: true,
+            custom_branding: true,
+            bulk_operations: true
+          }
+        }
+      }
+
+      setFeatures(userFeatures)
       
       // Get quote count for the user
       try {

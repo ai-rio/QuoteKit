@@ -19,6 +19,28 @@ export default async function UsagePage() {
     redirect("/auth/login")
   }
 
+  // Check if user is on premium plan - if so, redirect to analytics
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select(`
+      *,
+      stripe_prices!inner (
+        *,
+        stripe_products!inner (
+          metadata
+        )
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  // If user has premium subscription, redirect to analytics instead
+  const isPremium = subscription?.stripe_prices?.stripe_products?.metadata?.analytics_access === 'true'
+  if (isPremium) {
+    redirect("/analytics?from=usage")
+  }
+
   return (
     <div className="space-y-8">
       <PageBreadcrumbs />

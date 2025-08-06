@@ -68,10 +68,6 @@ const nextConfig = {
     ];
   },
   
-  // Performance optimizations
-  turbopack: {
-    // Turbopack configuration for faster development builds
-  },
   experimental: {
     // Disable problematic optimizations for now
     // optimizeCss: true,

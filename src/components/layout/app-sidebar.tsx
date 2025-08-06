@@ -37,6 +37,7 @@ interface NavItem {
   highlight?: boolean;
   featureKey?: string; // Feature key for gating
   premiumOnly?: boolean; // Show premium badge
+  freeOnly?: boolean; // Only show to free users
 }
 
 interface NavGroup {
@@ -90,6 +91,7 @@ const navGroups = [
         title: "Usage",
         url: "/usage",
         icon: BarChart3,
+        freeOnly: true, // Only show to free users who need usage tracking
       }
     ]
   }
@@ -150,7 +152,22 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         {navGroups.map((group) => {
           const sectionId = group.title.toLowerCase().replace(/\s+/g, '-')
           const isExpanded = expandedSections.has(sectionId)
-          const isActiveSection = isInSection(group.items, pathname)
+          
+          // Filter items based on user's plan
+          const filteredItems = group.items.filter(item => {
+            // If item is freeOnly, only show to free users
+            if ((item as any).freeOnly && !isFreePlan()) {
+              return false
+            }
+            return true
+          })
+          
+          const isActiveSection = isInSection(filteredItems, pathname)
+          
+          // Don't render the group if no items are visible
+          if (filteredItems.length === 0) {
+            return null
+          }
           
           return (
             <SidebarGroup key={group.title}>
@@ -185,7 +202,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
               {isExpanded && (
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
-                    {group.items.map((item) => {
+                    {filteredItems.map((item) => {
                       const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                       const Icon = item.icon
                       const isHighlight = 'highlight' in item ? item.highlight : false
