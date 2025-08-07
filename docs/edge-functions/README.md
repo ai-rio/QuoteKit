@@ -186,9 +186,9 @@ graph TB
 - [`implementation-guide.md`](./implementation-guide.md) - Development standards and best practices
 - [`api-specs.md`](./api-specs.md) - Edge Function API documentation and schemas
 - [`cost-analysis.md`](./cost-analysis.md) - Detailed cost projections and ROI analysis
-- [`performance-benchmarks.md`](./performance-benchmarks.md) - Performance targets and optimization strategies
+- [`performance-benchmarks.md`](./performance-benchmarks.md) - Measurable performance targets and validation procedures *(Complete)*
+- [`testing-strategy.md`](./testing-strategy.md) - Comprehensive testing methodology with success metrics validation *(Complete)*
 - [`migration-strategy.md`](./migration-strategy.md) - Zero-downtime migration approach
-- [`testing-strategy.md`](./testing-strategy.md) - Comprehensive testing methodology
 
 ## Epic Timeline
 
