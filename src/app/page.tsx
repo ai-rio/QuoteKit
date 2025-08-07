@@ -25,9 +25,9 @@ export default async function HomePage({ searchParams }: Props) {
     }
   }
 
-  // Show the public marketing page
+  // Show the public marketing page without breadcrumbs (it's the home page)
   return (
-    <MarketingLayout>
+    <MarketingLayout showBreadcrumbs={false}>
       <HomePageClient />
     </MarketingLayout>
   );

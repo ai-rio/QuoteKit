@@ -7,8 +7,9 @@ import { createFreeSubscription } from '@/features/pricing/actions/create-free-s
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
 export const metadata: Metadata = {
-  title: 'Pricing - LawnQuote',
-  description: 'Simple, transparent pricing for LawnQuote. Start free and upgrade when you\'re ready to grow your landscaping business.',
+  title: 'Pricing - LawnQuote | Professional Plans for Every Business',
+  description: 'Choose the perfect LawnQuote plan for your landscaping business. From free starter plans to enterprise solutions.',
+  keywords: 'landscaping software pricing, quoting tool plans, professional landscaping pricing',
 };
 
 // Server action to handle plan selection
@@ -72,7 +73,10 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
 
 export default async function PricingPage() {
   return (
-    <MarketingLayout>
+    <MarketingLayout 
+      showBreadcrumbs={true}
+      breadcrumbClassName="container mx-auto px-4 pt-4 pb-2"
+    >
       <LawnQuotePricing onSelectPlan={handlePlanSelection} />
     </MarketingLayout>
   );

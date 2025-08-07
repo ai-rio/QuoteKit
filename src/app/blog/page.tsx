@@ -28,7 +28,10 @@ export default async function BlogPage() {
   const posts = await getAllPosts();
   
   return (
-    <MarketingLayout>
+    <MarketingLayout 
+      showBreadcrumbs={true}
+      breadcrumbClassName="container mx-auto px-4 pt-4 pb-2"
+    >
       <BlogFilterProvider>
         <div className="min-h-screen bg-light-concrete">
           <BlogHero />

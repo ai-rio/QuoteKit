@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 
+import { BlogBreadcrumb } from '@/components/blog-breadcrumb';
 // Import components individually to avoid chunk loading issues
 import { Callout } from '@/components/mdx/Callout';
 import { CodeBlock } from '@/components/mdx/CodeBlock';
@@ -137,10 +139,10 @@ const MDXComponents = {
     </a>
   ),
   img: ({ src, alt }: { src?: string; alt?: string }) => (
-    <img 
+    <Image 
       src={src} 
       alt={alt} 
-      className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
+      width={800} height={400} className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
     />
   ),
   hr: () => (
@@ -215,6 +217,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <div className="min-h-screen bg-light-concrete">
+        {/* Add breadcrumbs at the top */}
+        <BlogBreadcrumb 
+          post={{
+            title: post.title,
+            category: post.category,
+            slug: post.slug
+          }}
+          className="container mx-auto px-4 pt-4 pb-2"
+        />
+        
         <BlogPostHeader post={post} />
         
         {/* Main Content Area with proper styling */}
