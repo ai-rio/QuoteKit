@@ -67,7 +67,7 @@ export default async function DashboardPage() {
                   user.email?.split('@')[0] || 
                   'Carlos'
   
-  // Define stat cards data matching HTML mock
+    // Define stat cards data matching HTML mock
   const statCards = [
     {
       title: "Total Quotes",
@@ -92,7 +92,8 @@ export default async function DashboardPage() {
       value: formatCurrency(dashboardData.stats.totalRevenue),
       icon: DollarSign,
       bgColor: "bg-forest-green",
-      trend: "+15%"
+      trend: "+15%",
+      isRevenue: true // Special flag for revenue card
     },
     {
       title: "Items in Library",
@@ -123,7 +124,7 @@ export default async function DashboardPage() {
       
       {/* Welcome Banner */}
       <div className="bg-forest-green text-paper-white p-6 rounded-2xl shadow-lg mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-paper-white">{getGreeting()}, {userName}!</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-paper-white leading-tight">{getGreeting()}, {userName}!</h1>
         <p className="mt-1 text-stone-gray">
           Your account is fully set up. Ready to create professional quotes for your clients.
         </p>
@@ -133,25 +134,28 @@ export default async function DashboardPage() {
         {/* Main Content Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Stat Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {statCards.map((stat) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                        {statCards.map((stat) => {
               const Icon = stat.icon
+              const isRevenue = stat.isRevenue
               return (
-                <div key={stat.title} className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${stat.bgColor}`}>
-                    <Icon className="w-6 h-6 text-paper-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-charcoal/70 font-medium">{stat.title}</p>
-                    <div className="flex items-baseline space-x-2">
-                      <p className="text-3xl font-black font-mono text-charcoal">{stat.value}</p>
-                      {stat.trend && (
-                        <div className="flex items-center text-sm font-bold text-green-600">
-                          <TrendingUp className="w-4 h-4 mr-1" />
-                          {stat.trend}
-                        </div>
-                      )}
+                <div key={stat.title} className={`bg-paper-white p-6 rounded-2xl border shadow-sm hover:shadow-md transition-shadow duration-200 ${isRevenue ? 'border-forest-green/30 ring-1 ring-forest-green/10' : 'border-stone-gray/20'}`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${stat.bgColor}`}>
+                      <Icon className="w-6 h-6 text-paper-white" />
                     </div>
+                    {stat.trend && (
+                      <div className="flex items-center text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        {stat.trend}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-charcoal/70 font-medium">{stat.title}</p>
+                    <p className={`font-black font-mono text-charcoal leading-tight ${isRevenue ? 'text-3xl md:text-4xl text-forest-green' : 'text-2xl md:text-3xl'}`}>
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
               )
@@ -214,14 +218,14 @@ export default async function DashboardPage() {
                   <Crown className="w-6 h-6 text-equipment-yellow" />
                   Premium Analytics
                 </h2>
-                <Button asChild variant="outline" className="text-forest-green border-forest-green hover:bg-forest-green hover:text-white">
+                <Button asChild variant="outline" className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200">
                   <Link href="/analytics">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     View Full Analytics
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="text-center p-4 bg-light-concrete rounded-lg">
                   <p className="text-2xl font-bold text-charcoal">{dashboardData.stats.totalQuotes}</p>
                   <p className="text-sm text-charcoal/70">Total Quotes</p>
@@ -253,9 +257,9 @@ export default async function DashboardPage() {
           <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
             <h2 className="text-xl font-bold text-charcoal mb-2">Recent Activity</h2>
             <div className="divide-y divide-stone-gray/20">
-              {dashboardData.recentQuotes.length > 0 ? (
+              {dashboardData.recentQuotes && dashboardData.recentQuotes.length > 0 ? (
                 dashboardData.recentQuotes.map((quote) => (
-                  <div key={quote.id} className="grid grid-cols-12 gap-4 items-center py-4 px-2 hover:bg-light-concrete rounded-lg transition-colors">
+                  <div key={quote.id} className="grid grid-cols-12 gap-2 sm:gap-4 items-center py-3 sm:py-4 px-2 hover:bg-light-concrete rounded-lg transition-colors duration-150">
                     <div className="col-span-12 md:col-span-5">
                       <p className="font-bold text-charcoal">{quote.clientName}</p>
                       <p className="text-sm text-charcoal/60 md:hidden">{formatDate(quote.createdAt)}</p>
@@ -264,14 +268,7 @@ export default async function DashboardPage() {
                       {formatDate(quote.createdAt)}
                     </div>
                     <div className="col-span-6 md:col-span-2">
-                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-stone-gray/60 text-charcoal">
-                        {quote.status === 'draft' ? 'Draft' : 
-                         quote.status === 'sent' ? 'Sent' :
-                         quote.status === 'accepted' ? 'Accepted' :
-                         quote.status === 'declined' ? 'Declined' :
-                         quote.status === 'expired' ? 'Expired' :
-                         quote.status === 'converted' ? 'Converted' : 'Draft'}
-                      </span>
+                      <QuoteStatusBadge status={quote.status || 'draft'} />
                     </div>
                     <div className="col-span-6 md:col-span-2 text-right font-mono font-bold text-charcoal">
                       {formatCurrency(quote.total)}
@@ -286,7 +283,7 @@ export default async function DashboardPage() {
                   </div>
                   <div className="hidden md:block col-span-3 text-sm text-charcoal/70">Aug 5, 2025</div>
                   <div className="col-span-6 md:col-span-2">
-                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-stone-gray/60 text-charcoal">Draft</span>
+                    <QuoteStatusBadge status="draft" />
                   </div>
                   <div className="col-span-6 md:col-span-2 text-right font-mono font-bold text-charcoal">$242.78</div>
                 </div>
@@ -311,7 +308,7 @@ export default async function DashboardPage() {
                   <Link 
                     key={action.href}
                     href={action.href} 
-                    className="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-colors"
+                    className="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
                   >
                     <Icon className="w-6 h-6 text-forest-green" />
                     <span className="ml-4 font-bold text-charcoal">{action.label}</span>

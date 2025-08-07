@@ -105,8 +105,18 @@ export function QuotesFilters({
           placeholder="Search quotes by client name, quote number..."
           value={filters.searchTerm || ''}
           onChange={(e) => updateFilter('searchTerm', e.target.value)}
-          className="pl-10 bg-light-concrete border-stone-gray text-charcoal placeholder:text-charcoal/60 focus:border-forest-green focus:ring-forest-green"
+          className="pl-10 pr-10 bg-light-concrete border-stone-gray text-charcoal placeholder:text-charcoal/60 focus:border-forest-green focus:ring-forest-green"
         />
+        {filters.searchTerm && (
+          <button
+            onClick={() => updateFilter('searchTerm', '')}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-charcoal/60 hover:text-charcoal transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-1 rounded-sm"
+            aria-label="Clear search"
+            type="button"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Filters Row */}

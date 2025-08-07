@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Search, Star, StarOff } from 'lucide-react';
+import { Plus, Search, Star, StarOff, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -228,8 +228,18 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
                   placeholder="Search items..."
                   value={filters.searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-10 border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                  className="w-full pl-10 pr-10 border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
                 />
+                {filters.searchTerm && (
+                  <button
+                    onClick={() => handleSearchChange('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-charcoal/60 hover:text-charcoal transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-1 rounded-sm"
+                    aria-label="Clear search"
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 

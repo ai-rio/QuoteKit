@@ -11,7 +11,7 @@ import {
   Search, 
   Trash2, 
   TrendingUp,
-  User} from 'lucide-react';
+  User, X} from 'lucide-react';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -216,8 +216,18 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
                 placeholder="Search clients by name, email, or phone..."
                 value={filters.search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
+                className="pl-10 pr-10 bg-light-concrete text-charcoal border-stone-gray focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60"
               />
+              {filters.search && (
+                <button
+                  onClick={() => handleSearchChange('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-charcoal/60 hover:text-charcoal transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-1 rounded-sm"
+                  aria-label="Clear search"
+                  type="button"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Filter Controls */}
