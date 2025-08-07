@@ -39,7 +39,7 @@ export default function GdprPage() {
                   title="Our Commitment to GDPR"
                   description="Our approach to data protection"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>LawnQuote is committed to protecting your personal data and respecting your privacy rights under the General Data Protection Regulation (GDPR).</p>
                     
                     <p>We have implemented comprehensive measures to ensure compliance with GDPR requirements and to give you control over your personal data.</p>
@@ -63,7 +63,7 @@ export default function GdprPage() {
                   title="Your Rights Under GDPR"
                   description="Your data protection rights"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>Under GDPR, you have several rights regarding your personal data:</p>
                     
                     <h4>Right to Information</h4>
@@ -95,7 +95,7 @@ export default function GdprPage() {
                   title="Legal Basis for Processing"
                   description="Why we process your data"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We process your personal data based on the following legal grounds:</p>
                     
                     <h4>Contract Performance</h4>
@@ -123,7 +123,7 @@ export default function GdprPage() {
                   title="International Data Transfers"
                   description="How we handle cross-border data transfers"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We may transfer your personal data outside the European Economic Area (EEA) to provide our services.</p>
                     
                     <h4>Safeguards:</h4>
@@ -143,7 +143,7 @@ export default function GdprPage() {
                   title="Data Retention"
                   description="How long we keep your data"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected.</p>
                     
                     <h4>Retention Periods:</h4>
@@ -162,7 +162,7 @@ export default function GdprPage() {
                   title="How to Exercise Your Rights"
                   description="Making data protection requests"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>To exercise any of your GDPR rights, please contact us using the following methods:</p>
                     
                     <h4>Contact Information:</h4>
@@ -189,7 +189,7 @@ export default function GdprPage() {
                   title="Contact Our Data Protection Officer"
                   description="Direct contact for data protection matters"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>If you have any questions about our GDPR compliance or data protection practices, you can contact our Data Protection Officer:</p>
                     
                     <ul>

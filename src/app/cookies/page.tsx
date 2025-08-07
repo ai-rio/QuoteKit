@@ -39,7 +39,7 @@ export default function CookiesPage() {
                   title="What Are Cookies"
                   description="Understanding cookies and how they work"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>Cookies are small text files that are stored on your device when you visit our website. They help us provide you with a better experience by remembering your preferences and improving our services.</p>
                     
                     <h4>Types of Cookies:</h4>
@@ -58,7 +58,7 @@ export default function CookiesPage() {
                   title="How We Use Cookies"
                   description="Our specific cookie usage practices"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We use cookies for various purposes to enhance your experience on our platform:</p>
                     
                     <h4>Authentication & Security</h4>
@@ -90,7 +90,7 @@ export default function CookiesPage() {
                   title="Cookie Categories"
                   description="Different types of cookies we use"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <h4>Strictly Necessary Cookies</h4>
                     <p>These cookies are essential for the website to function and cannot be switched off. They are usually set in response to actions you take, such as logging in or filling out forms.</p>
                     
@@ -111,7 +111,7 @@ export default function CookiesPage() {
                   title="Managing Cookies"
                   description="How to control your cookie preferences"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>You have several options for managing cookies:</p>
                     
                     <h4>Browser Settings</h4>
@@ -136,7 +136,7 @@ export default function CookiesPage() {
                   title="Third-Party Cookies"
                   description="External services that use cookies"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We may use third-party services that set their own cookies. These include:</p>
                     
                     <h4>Analytics Services</h4>
@@ -165,7 +165,7 @@ export default function CookiesPage() {
                   title="Contact Us"
                   description="Get in touch about cookie questions"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>If you have any questions about our use of cookies, please contact us:</p>
                     
                     <ul>

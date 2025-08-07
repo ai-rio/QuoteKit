@@ -47,7 +47,7 @@ export function TableOfContents() {
         <CardTitle className="text-2xl font-bold text-forest-green">
           Table of Contents
         </CardTitle>
-        <p className="text-charcoal">
+        <p className="text-charcoal/70">
           Jump to any section to find what you&apos;re looking for
         </p>
       </CardHeader>
@@ -64,7 +64,7 @@ export function TableOfContents() {
                   {index + 1}
                 </span>
                 <div>
-                  <h3 className="font-semibold text-charcoal group-hover:text-forest-green transition-colors">
+                  <h3 className="font-semibold text-charcoal/70 group-hover:text-forest-green transition-colors">
                     {section.title}
                   </h3>
                   <p className="text-sm text-charcoal/80 mt-1">

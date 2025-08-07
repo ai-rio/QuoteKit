@@ -25,7 +25,7 @@ export function CookieSection({
         <h2 className="text-2xl font-bold text-forest-green">
           {sectionNumber}. {title}
         </h2>
-        <p className="mt-2 text-charcoal text-sm">
+        <p className="mt-2 text-charcoal/70 text-sm">
           {description}
         </p>
       </div>

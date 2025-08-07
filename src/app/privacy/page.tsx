@@ -39,7 +39,7 @@ export default function PrivacyPage() {
                   title="Information We Collect"
                   description="What data we gather and why"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We collect information you provide directly to us, such as when you create an account, use our services, or contact us for support.</p>
                     
                     <h4>Personal Information</h4>
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
                   title="How We Use Your Information"
                   description="Our data usage practices"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We use the information we collect to provide, maintain, and improve our services.</p>
                     
                     <h4>Service Provision</h4>
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
                   title="Information Sharing"
                   description="When and how we share your data"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.</p>
                     
                     <h4>Service Providers</h4>
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
                   title="Data Security"
                   description="How we protect your information"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
                     
                     <h4>Security Measures</h4>
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
                   title="Your Rights"
                   description="Your control over your data"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>You have certain rights regarding your personal information, including:</p>
                     
                     <ul>
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
                   title="Contact Us"
                   description="Get in touch about privacy questions"
                 >
-                  <div className="prose prose-lg max-w-none">
+                  <div className="prose prose-lg max-w-none text-charcoal">
                     <p>If you have any questions about this Privacy Policy, please contact us:</p>
                     
                     <ul>

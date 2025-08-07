@@ -5,7 +5,7 @@ export function CookieHero() {
         <h1 className="text-4xl md:text-6xl font-black text-charcoal leading-tight">
           Our Cookie Policy.
         </h1>
-        <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal">
+        <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal/70">
           Cookies help us make LawnQuote work better for you. Here&apos;s a straightforward explanation of what cookies we use, why we need them, and how you can control them. No confusing technical jargon, just the facts.
         </p>
         <p className="mt-4 text-sm text-charcoal/80">
