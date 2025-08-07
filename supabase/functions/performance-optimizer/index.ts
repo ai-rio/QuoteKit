@@ -7,9 +7,9 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-import { corsHeaders } from '../_shared/cors.ts';
-import { recordPerformance, PerformanceMonitor } from '../_shared/performance.ts';
 import { authenticateRequest } from '../_shared/auth.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+import { PerformanceMonitor,recordPerformance } from '../_shared/performance.ts';
 import {
   ApiResponse,
   EdgeFunctionContext,
@@ -262,8 +262,8 @@ async function preloadCriticalModules(): Promise<void> {
     if (!optimizationState.moduleCache.has(moduleName)) {
       try {
         // Simulate module preloading
-        const module = await import(`../_shared/${moduleName}.ts`);
-        optimizationState.moduleCache.set(moduleName, module);
+        const moduleRef = await import(`../_shared/${moduleName}.ts`);
+        optimizationState.moduleCache.set(moduleName, moduleRef);
         optimizationState.preloadedResources.add(moduleName);
       } catch (error) {
         console.warn(`Failed to preload module ${moduleName}:`, error);
