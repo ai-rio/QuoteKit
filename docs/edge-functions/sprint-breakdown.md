@@ -1,39 +1,52 @@
-# Sprint Breakdown - Edge Functions Cost Optimization
+# Sprint Breakdown - Edge Functions Cost Optimization (Updated for QuoteKit Reality)
 
-## Epic Sprint Planning
+## IMPORTANT: Realistic Sprint Planning Based on Current QuoteKit Analysis
 
-**Epic Duration**: 10 weeks (5 sprints)  
-**Team Velocity**: ~18-20 story points per sprint  
-**Total Story Points**: 93 points  
+**⚠️ This sprint breakdown has been updated after analyzing the actual QuoteKit codebase complexity.**
+
+### Key Adjustments Made:
+
+1. **Extended Timeline**: 12 weeks (6 sprints) instead of 10 weeks
+2. **Reduced Scope**: Focus on highest-impact consolidations first
+3. **Integration Complexity**: Account for existing auth, admin, and feature systems
+4. **Migration Strategy**: More gradual approach with existing API patterns
+5. **Realistic Savings**: 45-60% cost reduction instead of 60-80%
+
+## Revised Epic Sprint Planning
+
+**Epic Duration**: 12 weeks (6 sprints)  
+**Team Velocity**: ~15-18 story points per sprint (reduced due to complexity)  
+**Total Story Points**: 95 points (revised)  
 
 ---
 
-## Sprint 1: Foundation & Subscription Optimization (Weeks 1-2)
-**Sprint Goal**: Establish Edge Functions foundation and implement subscription consolidation  
+## Sprint 1: Foundation & Current Architecture Integration (Weeks 1-2)
+**Sprint Goal**: Establish Edge Functions foundation with QuoteKit authentication integration  
 **Duration**: 2 weeks  
-**Story Points**: 18  
+**Story Points**: 16  
 
 ### Stories Included:
 | Story | Title | Points | Priority | Dependencies |
 |-------|-------|---------|----------|--------------|
-| US-001 | Subscription Management Edge Function | 8 | Must Have | Supabase Edge Functions setup |
-| US-010 | Real-time Cost Dashboard | 5 | Must Have | Cost tracking infrastructure |
-| Foundation | Edge Functions Environment Setup | 5 | Must Have | Supabase CLI, Deno runtime |
+| Foundation | Edge Functions Environment + Auth Integration | 8 | Must Have | Analyze current auth patterns |
+| US-001A | Basic Subscription Status Edge Function | 5 | Must Have | Foundation complete |
+| Monitoring | Basic Function Monitoring Setup | 3 | Must Have | Edge Functions deployed |
 
-### Sprint 1 Deliverables:
-- [ ] Supabase Edge Functions development environment configured
-- [ ] `subscription-manager` function deployed and operational
-- [ ] Cost tracking dashboard showing real-time function costs
-- [ ] Subscription API calls reduced from 7 to 1 (85% reduction)
-- [ ] Function performance monitoring baseline established
-- [ ] CI/CD pipeline for Edge Functions deployment
+### Critical Reality Check Deliverables:
+- [ ] **Authentication Integration**: Edge Functions working with existing Supabase Auth patterns
+- [ ] **Feature Access Integration**: Connect with current `checkFeatureAccess` patterns  
+- [ ] **Database RPC Integration**: Successfully call existing `generate_quote_number`, `increment_usage` functions
+- [ ] **Admin Role Support**: Proper admin user detection via `admin_users` table
+- [ ] **Basic Subscription Function**: Simple status check consolidating 3-4 current API calls
+- [ ] **Error Response Compatibility**: Match existing API error formats for frontend compatibility
 
-### Sprint 1 Acceptance Criteria:
-- Subscription operations response time under 400ms (50% improvement)
-- Function successfully handles authentication and authorization
-- Cost dashboard accurately tracks function invocations and costs
-- Zero production incidents during deployment
-- All function logs properly integrated with monitoring
+### Sprint 1 Adjusted Acceptance Criteria:
+- Edge Functions can authenticate users using existing JWT tokens
+- Functions can check feature access using current subscription + metadata patterns
+- Functions can call database RPC functions (no query rewriting needed)
+- Admin functions work with existing role system
+- Basic subscription status works with current frontend (no breaking changes)
+- Error responses match existing API patterns
 
 ### Technical Tasks:
 - [ ] Install and configure Supabase CLI and Deno runtime
