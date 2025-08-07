@@ -47,7 +47,7 @@ export function TermsTableOfContents() {
         <CardTitle className="text-2xl font-bold text-forest-green">
           Table of Contents
         </CardTitle>
-        <p className="text-charcoal/70">
+        <p className="text-charcoal">
           Navigate to any section of our terms of service
         </p>
       </CardHeader>
@@ -67,7 +67,7 @@ export function TermsTableOfContents() {
                   <h3 className="font-semibold text-charcoal group-hover:text-forest-green transition-colors">
                     {section.title}
                   </h3>
-                  <p className="text-sm text-charcoal/60 mt-1">
+                  <p className="text-sm text-charcoal/80 mt-1">
                     {section.description}
                   </p>
                 </div>
