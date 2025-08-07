@@ -226,7 +226,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             category: post.category,
             slug: post.slug
           }}
-          className="container mx-auto px-4 pt-4 pb-2"
+          
         />
         
         <BlogPostHeader post={post} />

@@ -16,7 +16,7 @@ export default function PrivacyPage() {
   return (
     <MarketingLayout 
       showBreadcrumbs={true}
-      breadcrumbClassName="container mx-auto px-4 pt-4 pb-2"
+      
     >
       <div className="min-h-screen bg-light-concrete">
         <PrivacyHero />

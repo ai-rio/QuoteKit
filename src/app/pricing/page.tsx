@@ -75,7 +75,7 @@ export default async function PricingPage() {
   return (
     <MarketingLayout 
       showBreadcrumbs={true}
-      breadcrumbClassName="container mx-auto px-4 pt-4 pb-2"
+      
     >
       <LawnQuotePricing onSelectPlan={handlePlanSelection} />
     </MarketingLayout>

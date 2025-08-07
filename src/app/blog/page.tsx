@@ -30,7 +30,7 @@ export default async function BlogPage() {
   return (
     <MarketingLayout 
       showBreadcrumbs={true}
-      breadcrumbClassName="container mx-auto px-4 pt-4 pb-2"
+      
     >
       <BlogFilterProvider>
         <div className="min-h-screen bg-light-concrete">
