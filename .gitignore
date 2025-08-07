@@ -26,9 +26,74 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# local env files
-.env*.local
+# =====================================================
+# SECURITY: Environment Files & Credentials
+# =====================================================
+# CRITICAL: Never commit these files!
+
+# Environment files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.test
+.env.production
+.env.staging
+
+# Edge Functions testing credentials (NEVER commit these!)
+.env.test
+.env.test.local
+.env.test.production
+test-credentials.json
+test-credentials.*.json
+credentials.json
+**/test-jwt-token*
+**/service-role-key*
+**/supabase-key*
+**/stripe-key*
+**/api-key*
+
+# Supabase credentials and config
+supabase/.env
+supabase/.env.*
+supabase/config.local.toml
+**/supabase-service-role-key*
+**/supabase-anon-key*
+
+# JWT tokens and auth files
+jwt-token*
+*.jwt
+auth-token*
+bearer-token*
+access-token*
+refresh-token*
+
+# =====================================================
+# TESTING & PERFORMANCE FILES
+# =====================================================
+
+# Performance test results
+performance-test-*.json
+connection-pool-test-*.json
+load-test-*.json
+benchmark-*.json
+test-results-*.json
+
+# Deployment logs
+deployment-*.log
+migration-*.log
+rollback-*.log
+
+# Test artifacts
+test-output/
+test-reports/
+coverage-reports/
+*.test.log
+
+# =====================================================
+# DEVELOPMENT & BUILD FILES
+# =====================================================
 
 # vercel
 .vercel
@@ -40,12 +105,18 @@ next-env.d.ts
 # supabase
 /supabase/.temp/
 /supabase/.branches/
+/supabase/logs/
+/supabase/volumes/
 
 # IDEs and editors
 .idea/
-.vscode/
+.vscode/settings.json
+.vscode/launch.json
 *.swp
 *~
+.project
+.classpath
+.settings/
 
 # Logs
 logs
@@ -65,12 +136,26 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.temp/
+temp/
+tmp/
 
 # Misc
 .npm
 .eslintcache
 *.tgz
 *.zip
+*.tar.gz
+
+# =====================================================
+# PROJECT-SPECIFIC EXCLUSIONS
+# =====================================================
 
 #BMAD
 .bmad-core/
@@ -79,15 +164,11 @@ Thumbs.db
 .claude/
 
 #TRAE
-
 .trae/
 
 .serena/
 
 /docs/images/
-
-
-
 
 # Claude Flow generated files
 .claude/settings.local.json
@@ -118,3 +199,21 @@ hive-mind-prompt-*.txt
 mcp-server/*
 .serena/
 .amazonq/
+
+# =====================================================
+# SECURITY NOTES
+# =====================================================
+# This .gitignore protects:
+# 1. All environment files (.env*)
+# 2. JWT tokens and API keys
+# 3. Test credentials and auth files
+# 4. Performance test results
+# 5. Deployment logs and artifacts
+# 6. Temporary and cache files
+#
+# NEVER commit files containing:
+# - JWT tokens
+# - API keys
+# - Database credentials
+# - Service role keys
+# - Production secrets

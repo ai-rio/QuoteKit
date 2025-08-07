@@ -1,0 +1,32 @@
+          <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+            {featuredPosts.map((post, index) => (
+              <Link 
+                key={post.id} 
+                href={`/blog/${post.slug}`} 
+                className={`group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 ${index === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
+              >
+                <div className="h-40 sm:h-48 bg-stone-gray/50">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    width={600}
+                    height={400}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-4 sm:p-6">
+                  <p className="text-xs sm:text-sm font-bold text-forest-green uppercase">
+                    {post.category === 'pricing' && 'PRICING STRATEGY'}
+                    {post.category === 'operations' && 'BUSINESS OPERATIONS'}
+                    {post.category === 'tools' && 'TOOLBOX TALK'}
+                  </p>
+                  <h3 className="mt-2 text-lg sm:text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="mt-2 sm:mt-3 text-charcoal/70 text-sm line-clamp-3">
+                    {post.summary}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>

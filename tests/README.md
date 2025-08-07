@@ -1,394 +1,338 @@
-# QuoteKit Integration Test Suite
+# Edge Functions Testing Implementation
 
-## Overview
+## 🚀 **COMPREHENSIVE TESTING SUITE IMPLEMENTED**
 
-This comprehensive integration test suite covers the complete subscription management flow from payment initiation to account page display. The tests ensure robust functionality across all critical paths, error scenarios, and performance requirements.
+This directory contains the complete implementation of the Edge Functions testing strategy as documented in `docs/edge-functions/testing-strategy.md`.
 
-## Test Structure
+### **📁 File Structure**
 
 ```
 tests/
-├── integration/
-│   ├── subscription-flow-integration-tests.md      # Comprehensive test plan
-│   ├── payment-method-integration-tests.spec.ts    # Payment method tests
-│   ├── webhook-processing-tests.spec.ts            # Webhook event tests
-│   ├── account-page-integration-tests.spec.ts      # UI integration tests
-│   └── manual-sync-tests.spec.ts                   # Sync functionality tests
-├── helpers/
-│   ├── test-utils.ts                                # Test utilities and factories
-│   ├── supabase-mocks.ts                           # Supabase mock helpers
-│   └── stripe-mocks.ts                             # Stripe mock helpers
-└── README.md                                        # This file
+├── README.md                           # This file
+├── realistic-local-tests.ts            # Comprehensive local testing
+└── ../scripts/
+    ├── setup-edge-functions-testing.sh # Quick setup script
+    ├── deploy-all-functions.sh         # Deploy all 14 functions
+    ├── production-integration-test.ts   # Production testing
+    ├── realistic-performance-test.sh    # Load testing
+    └── connection-pool-test.ts          # Connection pool testing
+
+src/app/test-edge-functions/
+└── page.tsx                            # Visual testing dashboard
 ```
 
-## Test Categories
+---
 
-### 1. Payment Method Integration Tests
-**File**: `payment-method-integration-tests.spec.ts`
+## 🎯 **QUICK START**
 
-Tests the complete payment method lifecycle:
-- Payment method addition flow
-- Default payment method management
-- Payment method deletion
-- UI integration with PaymentMethodsManager
-- Error handling and validation
-
-### 2. Webhook Processing Tests
-**File**: `webhook-processing-tests.spec.ts`
-
-Tests webhook event processing:
-- Webhook signature validation
-- Event idempotency handling
-- Subscription lifecycle webhooks
-- Checkout session processing
-- Error handling and retry logic
-- Performance under load
-
-### 3. Account Page Integration Tests
-**File**: `account-page-integration-tests.spec.ts`
-
-Tests account page functionality:
-- Authentication and authorization
-- Subscription display logic
-- Billing history display
-- Payment methods display
-- Real-time updates
-- Mobile responsiveness
-
-### 4. Manual Sync Tests
-**File**: `manual-sync-tests.spec.ts`
-
-Tests manual synchronization functionality:
-- Sync API endpoints
-- Data consistency validation
-- Error recovery mechanisms
-- Performance with large datasets
-- Audit trail logging
-
-## Test Utilities
-
-### Test Factories
-Located in `helpers/test-utils.ts`:
-- `createMockUser()` - Generate mock user data
-- `createMockSubscription()` - Generate mock subscription data
-- `createMockProduct()` - Generate mock product data
-- `createMockPrice()` - Generate mock price data
-- `createMockRequest()` - Generate mock Next.js requests
-
-### Mock Clients
-Located in `helpers/supabase-mocks.ts` and `helpers/stripe-mocks.ts`:
-- Complete Supabase client mocking
-- Complete Stripe API mocking
-- Helper functions for common scenarios
-- Error simulation utilities
-
-## Running Tests
-
-### Prerequisites
+### **1. One-Command Setup**
 ```bash
-npm install
-npm install --save-dev @jest/globals @testing-library/react @testing-library/user-event
+# Run the setup script to configure everything
+./scripts/setup-edge-functions-testing.sh
 ```
 
-### Individual Test Suites
+### **2. Run Local Tests**
 ```bash
-# Payment method tests
-npm test payment-method-integration-tests
-
-# Webhook processing tests
-npm test webhook-processing-tests
-
-# Account page tests
-npm test account-page-integration-tests
-
-# Manual sync tests
-npm test manual-sync-tests
+# Test all 14 Edge Functions locally
+npm run edge-functions:test:local
 ```
 
-### All Integration Tests
+### **3. Visual Testing Dashboard**
 ```bash
-npm test integration/
+# Start the Next.js app and visit:
+npm run dev
+# Then go to: http://localhost:3000/test-edge-functions
 ```
 
-### Test Coverage
+---
+
+## 📊 **TESTING PHASES**
+
+### **Phase 1: Local Development Testing (30 minutes)**
+
+**File**: `tests/realistic-local-tests.ts`
+
 ```bash
-npm run test:coverage
+# Test all functions with comprehensive payloads
+deno run --allow-all tests/realistic-local-tests.ts
+
+# Quick health check only
+deno run --allow-all tests/realistic-local-tests.ts --health-check
+
+# Via npm scripts
+npm run edge-functions:test:local
+npm run edge-functions:test:health
 ```
 
-## Test Configuration
+**Features**:
+- ✅ Tests all 14 Edge Functions
+- ✅ Realistic payloads matching actual function signatures
+- ✅ Performance timing and error tracking
+- ✅ Critical vs non-critical function classification
+- ✅ Comprehensive reporting with color-coded output
 
-### Jest Configuration
-Add to `jest.config.js`:
-```javascript
-module.exports = {
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  testMatch: [
-    '**/__tests__/**/*.(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)'
-  ],
-  moduleNameMapping: {
-    '@/(.*)': '<rootDir>/src/$1'
-  },
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.{ts,tsx}'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 75,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    }
-  }
-};
-```
+### **Phase 2: Frontend Integration Testing (20 minutes)**
 
-### Test Setup
-Create `tests/setup.ts`:
-```typescript
-import '@testing-library/jest-dom';
-import { setupTestEnvironment } from './helpers/test-utils';
+**File**: `src/app/test-edge-functions/page.tsx`
 
-beforeAll(() => {
-  setupTestEnvironment();
-});
-
-afterAll(() => {
-  cleanupTestEnvironment();
-});
-```
-
-## Test Data Management
-
-### Database Setup
-For integration tests with real database:
-```typescript
-beforeEach(async () => {
-  await truncateTable('subscriptions');
-  await truncateTable('stripe_customers');
-  await truncateTable('stripe_webhook_events');
-  await seedTestData();
-});
-```
-
-### Mock Data Consistency
-All mock factories ensure consistent data relationships:
-- User IDs reference valid users
-- Subscription IDs match Stripe format
-- Price IDs reference existing products
-- Customer IDs are properly mapped
-
-## Error Testing Scenarios
-
-### Stripe API Errors
-```typescript
-// Test Stripe API failures
-mockStripeError(mockStripe, 'subscriptions.retrieve', StripeErrors.RESOURCE_NOT_FOUND);
-mockStripeTimeout(mockStripe, 'customers.list', 5000);
-```
-
-### Database Errors
-```typescript
-// Test database constraint violations
-mockDatabaseError(mockSupabase, 'subscriptions', 'insert', {
-  code: '23505',
-  message: 'duplicate key value violates unique constraint'
-});
-```
-
-### Network Errors
-```typescript
-// Test network timeouts
-mockSupabase.from('subscriptions').select.mockImplementation(() =>
-  simulateError('Network timeout', 10000)
-);
-```
-
-## Performance Testing
-
-### Load Testing
-```typescript
-describe('Performance Tests', () => {
-  it('should handle 1000 concurrent webhook events', async () => {
-    const events = Array.from({ length: 1000 }, createMockStripeEvent);
-    const promises = events.map(event => processWebhookEvent(event));
-    
-    const startTime = Date.now();
-    await Promise.all(promises);
-    const duration = Date.now() - startTime;
-    
-    expect(duration).toBeLessThan(30000); // Complete within 30 seconds
-  });
-});
-```
-
-### Memory Testing
-```typescript
-it('should not leak memory during large operations', () => {
-  const initialMemory = process.memoryUsage().heapUsed;
-  
-  // Perform memory-intensive operation
-  processLargeDataset();
-  
-  global.gc(); // Force garbage collection
-  const finalMemory = process.memoryUsage().heapUsed;
-  const memoryIncrease = finalMemory - initialMemory;
-  
-  expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024); // Less than 50MB
-});
-```
-
-## Continuous Integration
-
-### GitHub Actions
-Add to `.github/workflows/test.yml`:
-```yaml
-name: Integration Tests
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - run: npm ci
-      - run: npm run test:integration
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
-          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_TEST_PUBLISHABLE_KEY }}
-          
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-```
-
-## Debugging Tests
-
-### Verbose Output
 ```bash
-npm test -- --verbose --detectOpenHandles
+# Start the development server
+npm run dev
+
+# Visit the visual testing dashboard
+open http://localhost:3000/test-edge-functions
 ```
 
-### Debug Specific Test
+**Features**:
+- ✅ Visual dashboard for all 14 functions
+- ✅ Real-time testing with progress indicators
+- ✅ Category filtering (Core Business, Webhook System, etc.)
+- ✅ Individual function testing
+- ✅ Response time monitoring
+- ✅ Error display and debugging
+- ✅ Success rate tracking
+
+### **Phase 3: Production Deployment Testing (30 minutes)**
+
+**File**: `scripts/production-integration-test.ts`
+
 ```bash
-npm test -- --testNamePattern="should process subscription webhook"
+# Deploy all functions to production
+npm run edge-functions:deploy:production
+
+# Test production deployment
+npm run edge-functions:test:production
+
+# Deploy and test in one command
+npm run edge-functions:deploy:test
 ```
 
-### Test with Debugger
+**Features**:
+- ✅ Tests all 14 functions in production
+- ✅ Critical function prioritization
+- ✅ Comprehensive error reporting
+- ✅ Performance analysis
+- ✅ Category-based results breakdown
+
+### **Phase 4: Performance & Load Testing (20 minutes)**
+
+**File**: `scripts/realistic-performance-test.sh`
+
 ```bash
-node --inspect-brk ./node_modules/.bin/jest --runInBand
+# Run performance tests with default settings
+npm run edge-functions:test:performance
+
+# Custom load testing
+./scripts/realistic-performance-test.sh --concurrent 20 --duration 60
+
+# Local performance testing
+./scripts/realistic-performance-test.sh --local --concurrent 10
 ```
 
-## Best Practices
+**Features**:
+- ✅ Load testing for critical functions
+- ✅ Configurable concurrent requests and duration
+- ✅ Response time percentiles (95th, 99th)
+- ✅ Requests per second measurement
+- ✅ JSON report generation
+- ✅ Performance assessment and recommendations
 
-### Test Isolation
-- Each test should be completely independent
-- Use beforeEach/afterEach for setup/cleanup
-- Mock all external dependencies
-- Avoid shared state between tests
+### **Phase 5: Connection Pool Testing**
 
-### Descriptive Test Names
-```typescript
-// Good
-it('should update subscription display after successful plan change', () => {});
+**File**: `scripts/connection-pool-test.ts`
 
-// Bad
-it('should work', () => {});
+```bash
+# Test connection pooling performance
+npm run edge-functions:test:connection-pool
+
+# Local connection pool testing
+deno run --allow-all scripts/connection-pool-test.ts --local
 ```
 
-### Comprehensive Assertions
-```typescript
-// Test all aspects of the result
-expect(result.success).toBe(true);
-expect(result.subscription).toBeDefined();
-expect(result.subscription.status).toBe('active');
-expect(result.subscription.stripe_price_id).toBe('price_new');
+**Features**:
+- ✅ Multiple load levels (Light, Medium, Heavy, Burst)
+- ✅ Connection pool statistics
+- ✅ Error rate analysis
+- ✅ Performance recommendations
+- ✅ Detailed JSON reporting
+
+---
+
+## 🛠 **AVAILABLE NPM SCRIPTS**
+
+### **Local Development**
+```bash
+npm run edge-functions:test:local           # Test all functions locally
+npm run edge-functions:test:health          # Quick health check
+npm run edge-functions:deploy:local         # Deploy all functions locally
 ```
 
-### Error Message Testing
-```typescript
-// Verify error messages are user-friendly
-expect(result.error).toBe('No payment methods found. Please add a payment method.');
-expect(result.error).not.toContain('PGRST116'); // Don't expose internal codes
+### **Production Testing**
+```bash
+npm run edge-functions:test:production      # Test production deployment
+npm run edge-functions:deploy:production    # Deploy to production
+npm run edge-functions:deploy:test          # Deploy + test production
 ```
 
-## Monitoring and Alerts
+### **Performance Testing**
+```bash
+npm run edge-functions:test:performance     # Load testing
+npm run edge-functions:test:connection-pool # Connection pool testing
+```
 
-### Test Metrics
-Track key metrics:
-- Test execution time
-- Test failure rates
-- Coverage percentages
-- Flaky test detection
+### **Comprehensive Testing**
+```bash
+npm run edge-functions:test:full            # Full test suite
+npm run edge-functions:test:critical        # Critical functions only
+```
 
-### Alerts
-Set up alerts for:
-- Test suite failure
-- Coverage drop below threshold
-- Performance regression
-- High flaky test rate
+---
 
-## Contributing
+## 📋 **TESTING CHECKLIST**
 
-### Adding New Tests
-1. Follow existing patterns in test structure
-2. Use provided mock factories
-3. Include both happy path and error scenarios
-4. Add performance considerations
-5. Update this README if adding new test categories
+### **✅ Ready to Launch When:**
 
-### Test Review Checklist
-- [ ] Tests are independent and isolated
-- [ ] All code paths are covered
-- [ ] Error scenarios are tested
-- [ ] Performance implications considered
-- [ ] Mock data is realistic
-- [ ] Test names are descriptive
-- [ ] Documentation is updated
+**Local Development (30 minutes):**
+- [ ] All 14 functions deploy locally without errors
+- [ ] `npm run edge-functions:test:local` passes (10+ functions responding)
+- [ ] No critical errors in function logs
+- [ ] Visual dashboard shows 13/13 functions passing
 
-## Troubleshooting
+**Frontend Integration (20 minutes):**
+- [ ] Test page shows 13/13 functions passing at `/test-edge-functions`
+- [ ] Core user journeys work (subscription, quotes, webhooks)
+- [ ] Response times under 3 seconds locally
+- [ ] No console errors in browser
 
-### Common Issues
+**Production Deployment (30 minutes):**
+- [ ] All 14 functions deploy to production successfully
+- [ ] `npm run edge-functions:test:production` passes
+- [ ] Production health checks pass
+- [ ] No deployment errors or timeouts
 
-**Tests timing out:**
-- Increase Jest timeout: `jest.setTimeout(30000)`
-- Check for unresolved promises
-- Verify all mocks are properly configured
+**Performance Validation (20 minutes):**
+- [ ] Critical functions handle 10 concurrent requests
+- [ ] Average response times under 2 seconds
+- [ ] `npm run edge-functions:test:performance` passes
+- [ ] Connection pooling working correctly
 
-**Mock not working:**
-- Ensure mocks are imported before the modules they mock
-- Check mock reset/clear in beforeEach/afterEach
-- Verify mock function signatures match real implementations
+---
 
-**Database connection errors:**
-- Ensure test database is running
-- Check environment variables
-- Verify database permissions
+## 🔧 **CONFIGURATION**
 
-**Memory leaks:**
-- Use `--detectOpenHandles` flag
-- Ensure all async operations complete
-- Clean up timers, intervals, and event listeners
+### **Environment Variables**
 
-For additional help, see the test-specific documentation in each spec file or contact the development team.
+For production testing, set these environment variables:
+
+```bash
+# Required for production testing
+export SUPABASE_PROJECT_ID="your-project-id"
+export SUPABASE_ANON_KEY="your-anon-key"
+
+# Optional: Alternative variable names
+export NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+export NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+```
+
+### **Test Configuration**
+
+The setup script creates `.env.test` with default configuration:
+
+```bash
+# Test timeouts and concurrency
+TEST_TIMEOUT_MS=10000
+TEST_CONCURRENT_REQUESTS=10
+TEST_DURATION_SECONDS=30
+```
+
+---
+
+## 📊 **REPORTING**
+
+### **Test Reports Generated**
+
+1. **Console Output**: Real-time colored output with progress
+2. **JSON Reports**: Detailed performance data
+   - `performance-test-YYYYMMDD-HHMMSS.json`
+   - `connection-pool-test-YYYYMMDD-HHMMSS.json`
+3. **Deployment Logs**: Complete deployment history
+   - `deployment-YYYYMMDD-HHMMSS.log`
+
+### **Visual Dashboard**
+
+The frontend testing dashboard provides:
+- Real-time function status
+- Response time monitoring
+- Error tracking and display
+- Category-based filtering
+- Individual function testing
+- Success rate calculation
+
+---
+
+## 🚨 **TROUBLESHOOTING**
+
+### **Common Issues**
+
+1. **Functions not deploying locally**:
+   ```bash
+   supabase stop
+   supabase start
+   ./scripts/setup-edge-functions-testing.sh
+   ```
+
+2. **Test timeouts**:
+   - Check if local Supabase is running: `supabase status`
+   - Increase timeout in test configuration
+   - Check function logs: `supabase functions logs`
+
+3. **Production tests failing**:
+   - Verify environment variables are set
+   - Check Supabase project status
+   - Ensure functions are deployed: `supabase functions list`
+
+4. **Performance tests showing poor results**:
+   - Check system resources
+   - Reduce concurrent requests
+   - Test individual functions first
+
+### **Debug Commands**
+
+```bash
+# Check Supabase status
+supabase status
+
+# View function logs
+supabase functions logs --function-name subscription-status
+
+# Test individual function
+curl -X POST http://localhost:54321/functions/v1/subscription-status \
+  -H "Content-Type: application/json" \
+  -d '{"action": "health-check"}'
+```
+
+---
+
+## 🎯 **SUCCESS CRITERIA**
+
+### **Launch Ready When:**
+- ✅ All local tests pass (`npm run edge-functions:test:local`)
+- ✅ Visual dashboard shows 13/13 functions working
+- ✅ Production deployment succeeds
+- ✅ Performance tests meet targets (<2s avg response time)
+- ✅ Connection pool handles load effectively
+- ✅ No critical function failures
+
+**Total testing time: 1-2 hours for comprehensive validation**
+
+---
+
+## 📚 **RELATED DOCUMENTATION**
+
+- [`docs/edge-functions/testing-strategy.md`](../docs/edge-functions/testing-strategy.md) - Complete testing strategy
+- [`docs/edge-functions/README.md`](../docs/edge-functions/README.md) - Edge Functions overview
+- [`supabase/functions/`](../supabase/functions/) - Function implementations
+
+---
+
+**This testing implementation provides production-ready validation for all 14 Edge Functions with comprehensive coverage, performance monitoring, and visual feedback.**

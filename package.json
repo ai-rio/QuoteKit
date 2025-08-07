@@ -43,7 +43,19 @@
     "analyze": "ANALYZE=true npm run build",
     "blog:perf-test": "npx tsx scripts/performance-benchmark.ts",
     "blog:test-essential": "npx tsx scripts/essential-tests.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "edge-functions:test:local": "deno run --allow-all tests/realistic-local-tests.ts",
+    "edge-functions:test:production": "deno run --allow-all scripts/production-integration-test.ts",
+    "edge-functions:test:performance": "bash scripts/realistic-performance-test.sh",
+    "edge-functions:test:connection-pool": "deno run --allow-all scripts/connection-pool-test.ts",
+    "edge-functions:test:health": "deno run --allow-all tests/realistic-local-tests.ts --health-check",
+    "edge-functions:deploy:local": "bash scripts/deploy-all-functions.sh --local",
+    "edge-functions:deploy:production": "bash scripts/deploy-all-functions.sh --project-ref $SUPABASE_PROJECT_ID",
+    "edge-functions:deploy:test": "npm run edge-functions:deploy:production && npm run edge-functions:test:production",
+    "edge-functions:test:full": "npm run edge-functions:test:local && npm run edge-functions:deploy:local && npm run edge-functions:test:performance && npm run edge-functions:test:connection-pool",
+    "edge-functions:test:critical": "npm run edge-functions:test:health && npm run edge-functions:test:production --health-check",
+    "security:audit": "bash scripts/security-audit-simple.sh",
+    "security:setup": "bash scripts/setup-secure-testing.sh"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.10",
