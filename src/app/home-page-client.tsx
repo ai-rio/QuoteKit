@@ -247,7 +247,7 @@ export default function HomePageClient() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-charcoal">From Messy Notes to Professional Bids.</h2>
-            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-charcoal/70 max-w-2xl mx-auto">Stop looking unprofessional. Start winning clients' trust before the job even begins.</p>
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-charcoal/70 max-w-2xl mx-auto">Stop looking unprofessional. Start winning clients&apos; trust before the job even begins.</p>
           </div>
           <div className="grid gap-6 sm:gap-8 lg:gap-12 md:grid-cols-2 items-center max-w-6xl mx-auto">
             {/* Before */}
@@ -398,19 +398,19 @@ export default function HomePageClient() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-charcoal">Built for the Trade.</h2>
           <p className="mt-3 sm:mt-4 text-base sm:text-lg text-charcoal/70 max-w-3xl mx-auto">
-            We've seen the discussions on <span className="font-bold text-forest-green">r/landscaping</span> and <span className="font-bold text-forest-green">r/hardscape</span>. We know you're asking for advice on pricing and client contracts. We built LawnQuote to solve those exact problems.
+            We&apos;ve seen the discussions on <span className="font-bold text-forest-green">r/landscaping</span> and <span className="font-bold text-forest-green">r/hardscape</span>. We know you&apos;re asking for advice on pricing and client contracts. We built LawnQuote to solve those exact problems.
           </p>
           <div className="mt-8 sm:mt-12 grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
             <div className="bg-paper-white p-6 sm:p-8 rounded-2xl shadow-sm">
-              <p className="text-sm sm:text-base text-charcoal/80 italic">"How much should I charge for a paver patio? I'm worried about underbidding."</p>
+              <p className="text-sm sm:text-base text-charcoal/80 italic">&quot;How much should I charge for a paver patio? I&apos;m worried about underbidding.&quot;</p>
               <p className="mt-3 sm:mt-4 text-sm sm:text-base font-bold text-forest-green">- A real question from r/hardscape</p>
             </div>
             <div className="bg-paper-white p-6 sm:p-8 rounded-2xl shadow-sm">
-              <p className="text-sm sm:text-base text-charcoal/80 italic">"My quotes are just a list in an email. How can I look more professional to win bigger jobs?"</p>
+              <p className="text-sm sm:text-base text-charcoal/80 italic">&quot;My quotes are just a list in an email. How can I look more professional to win bigger jobs?&quot;</p>
               <p className="mt-3 sm:mt-4 text-sm sm:text-base font-bold text-forest-green">- Inspired by r/landscaping</p>
             </div>
             <div className="bg-paper-white p-6 sm:p-8 rounded-2xl shadow-sm sm:col-span-2 lg:col-span-1">
-              <p className="text-sm sm:text-base text-charcoal/80 italic">"I spend hours on quotes after working all day. There has to be a faster way."</p>
+              <p className="text-sm sm:text-base text-charcoal/80 italic">&quot;I spend hours on quotes after working all day. There has to be a faster way.&quot;</p>
               <p className="mt-3 sm:mt-4 text-sm sm:text-base font-bold text-forest-green">- The reason we exist</p>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function HomePageClient() {
       <section id="pricing" className="bg-forest-green text-paper-white py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-center">A Better ROI Than Any Tool in Your Truck.</h2>
-          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-stone-gray max-w-2xl mx-auto text-center">For just $12 a month, LawnQuote pays for itself the first time you don't leave money on the table.</p>
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-stone-gray max-w-2xl mx-auto text-center">For just $12 a month, LawnQuote pays for itself the first time you don&apos;t leave money on the table.</p>
           
           <PricingToggle />
         </div>
