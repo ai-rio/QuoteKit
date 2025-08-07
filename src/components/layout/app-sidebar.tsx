@@ -47,17 +47,6 @@ interface NavGroup {
 
 const navGroups = [
   {
-    title: "Core",
-    items: [
-      {
-        title: "New Quote",
-        url: "/quotes/new",
-        icon: Plus,
-        highlight: true, // Special styling for primary action
-      }
-    ]
-  },
-  {
     title: "Management", 
     items: [
       {
@@ -102,7 +91,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {}
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname()
   const { expandedSections, toggleSection, handleNavigation, isMobile } = useMobileSidebar()
-  const { canAccess, isFreePlan } = useFeatureAccess()
+  const { canAccess, isFreePlan, loading } = useFeatureAccess()
 
   const isInSection = (sectionItems: NavItem[], currentPath: string) => {
     return sectionItems.some(item => 
@@ -146,6 +135,27 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+        </SidebarGroup>        
+        {/* New Quote - Standalone primary action button */}
+        <SidebarGroup>
+          <SidebarMenu className="space-y-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link 
+                  href="/quotes/new" 
+                  onClick={handleNavigation}
+                  className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-all duration-150 ease-out active:scale-95 ${
+                    pathname === '/quotes/new' || pathname.startsWith('/quotes/new/')
+                      ? 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200' 
+                      : 'bg-equipment-yellow text-charcoal font-bold hover:bg-equipment-yellow/90 hover:text-charcoal transform transition-all duration-200'
+                  }`}
+                >
+                  <Plus className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="text-sm">New Quote</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroup>
         
         {/* Other expandable sections */}
@@ -155,8 +165,17 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
           
           // Filter items based on user's plan
           const filteredItems = group.items.filter(item => {
+            // During loading, don't show plan-specific items to avoid flashing
+            if (loading) {
+              return !(item as any).freeOnly && !(item as any).premiumOnly
+            }
+            
             // If item is freeOnly, only show to free users
             if ((item as any).freeOnly && !isFreePlan()) {
+              return false
+            }
+            // If item is premiumOnly (Analytics with Pro badge), only show to free users
+            if ((item as any).premiumOnly && !isFreePlan()) {
               return false
             }
             return true
@@ -181,7 +200,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    {group.title === 'Core' && <Home className="w-4 h-4" />}
+                    
                     {group.title === 'Management' && <Package className="w-4 h-4" />}
                     {group.title === 'Analytics' && <BarChart3 className="w-4 h-4" />}
                     {group.title}

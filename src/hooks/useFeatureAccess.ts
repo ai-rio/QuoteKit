@@ -50,15 +50,13 @@ export function useFeatureAccess() {
       setLoading(true)
       setError(null)
 
-      // Get user session with timeout
+      // Get user session with better error handling
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {
         console.warn('Session error:', sessionError)
-        setUser(null)
-        setFeatures(FREE_PLAN_FEATURES)
-        setUsage({ quotes_count: 0 })
-        return
+        // Don't immediately fail - user might still be authenticated
+        // Just log the error and continue with current session state
       }
 
       setUser(session?.user || null)
@@ -70,21 +68,33 @@ export function useFeatureAccess() {
         return
       }
 
-      // Get user's subscription to determine features
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select(`
-          *,
-          stripe_prices!inner (
+      // Get user's subscription to determine features with network error handling
+      let subscription = null;
+      let subError = null;
+      
+      try {
+        const result = await supabase
+          .from('subscriptions')
+          .select(`
             *,
-            stripe_products!inner (
-              metadata
+            stripe_prices!inner (
+              *,
+              stripe_products!inner (
+                metadata
+              )
             )
-          )
-        `)
-        .eq('user_id', session.user.id)
-        .eq('status', 'active')
-        .single()
+          `)
+          .eq('user_id', session.user.id)
+          .eq('status', 'active')
+          .single();
+        
+        subscription = result.data;
+        subError = result.error;
+      } catch (networkError) {
+        console.warn('Network error fetching subscription:', networkError);
+        // Continue with free features if network fails
+        subError = networkError;
+      }
 
       let userFeatures = FREE_PLAN_FEATURES
 
