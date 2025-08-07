@@ -582,10 +582,7 @@ ALTER TABLE global_deployment_status ENABLE ROW LEVEL SECURITY;
 -- Admin-only access policies for global optimization
 CREATE POLICY "Admins can manage global optimization reports" ON global_optimization_reports
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage global optimization" ON global_optimization_reports
@@ -611,8 +608,7 @@ BEGIN
       CREATE POLICY "Admins can manage %1$s" ON %1$s
         FOR ALL USING (
           EXISTS (
-            SELECT 1 FROM user_roles 
-            WHERE user_id = auth.uid() AND role = ''admin''
+            SELECT 1 WHERE public.is_admin()
           )
         );
       

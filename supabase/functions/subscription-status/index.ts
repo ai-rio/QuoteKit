@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
               `)
               .eq('user_id', user!.id)
               .eq('status', 'active')
-              .order('created_at', { ascending: false })
+              .order('created', { ascending: false })
               .limit(1);
 
             if (error) throw error;

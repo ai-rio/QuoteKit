@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Realistic Performance Testing for Edge Functions
-# Tests critical functions under load with proper monitoring
-# Usage: ./scripts/realistic-performance-test.sh [--local] [--concurrent N] [--duration N]
+# Realistic Performance Testing Script for Edge Functions
+# Tests performance under realistic load conditions
+# Usage: ./scripts/realistic-performance-test.sh [--local|--production]
 
 set -e
 
@@ -13,18 +13,29 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Default configuration
-LOCAL_MODE=false
+# Configuration
+ENVIRONMENT="local"
+BASE_URL="http://127.0.0.1:54321/functions/v1"
 CONCURRENT_REQUESTS=10
 TEST_DURATION=30
-PROJECT_ID=""
-ANON_KEY=""
+WARMUP_REQUESTS=5
+RESULTS_DIR="test-results"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
     --local)
-      LOCAL_MODE=true
+      ENVIRONMENT="local"
+      BASE_URL="http://127.0.0.1:54321/functions/v1"
+      shift
+      ;;
+    --production)
+      ENVIRONMENT="production"
+      if [[ -z "$SUPABASE_PROJECT_ID" ]]; then
+        echo -e "${RED}❌ Error: SUPABASE_PROJECT_ID environment variable is required for production testing${NC}"
+        exit 1
+      fi
+      BASE_URL="https://$SUPABASE_PROJECT_ID.functions.supabase.co"
       shift
       ;;
     --concurrent)
@@ -35,246 +46,442 @@ while [[ $# -gt 0 ]]; do
       TEST_DURATION="$2"
       shift 2
       ;;
-    -h|--help)
-      echo "Usage: $0 [--local] [--concurrent N] [--duration N]"
-      echo "  --local           Test local Supabase instance"
-      echo "  --concurrent N    Number of concurrent requests (default: 10)"
-      echo "  --duration N      Test duration in seconds (default: 30)"
-      echo "  -h, --help        Show this help message"
+    --help)
+      echo "Usage: $0 [OPTIONS]"
+      echo ""
+      echo "Options:"
+      echo "  --local                Test against local Supabase instance"
+      echo "  --production           Test against production (requires SUPABASE_PROJECT_ID)"
+      echo "  --concurrent N         Number of concurrent requests (default: 10)"
+      echo "  --duration N           Test duration in seconds (default: 30)"
+      echo "  --help                 Show this help message"
       exit 0
       ;;
     *)
-      echo "Unknown option $1"
+      echo "Unknown option: $1"
       exit 1
       ;;
   esac
 done
 
-# Set up URLs and keys based on mode
-if [[ "$LOCAL_MODE" == true ]]; then
-  BASE_URL="http://localhost:54321/functions/v1"
-  ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzM5NDk2MDAwLCJpYXQiOjE3Mzk0MDk2MDAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQzMjEvYXV0aC92MSIsInN1YiI6IjBhOGI4Y2U3LTNjYzMtNDc2ZS1iODIwLTIyOTZkZjIxMTljZiIsImVtYWlsIjoiY2FybG9zQGFpLnJpby5iciIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnt9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzM5NDA5NjAwfV0sInNlc3Npb25faWQiOiIwYThiOGNlNy0zY2MzLTQ3NmUtYjgyMC0yMjk2ZGYyMTE5Y2YifQ.test-jwt-token"
-else
-  PROJECT_ID="${SUPABASE_PROJECT_ID:-$(echo $NEXT_PUBLIC_SUPABASE_URL | cut -d'/' -f3 | cut -d'.' -f1)}"
-  ANON_KEY="${SUPABASE_ANON_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
-  
-  if [[ -z "$PROJECT_ID" || -z "$ANON_KEY" ]]; then
-    echo -e "${RED}❌ Missing environment variables for production testing${NC}"
-    echo "Set SUPABASE_PROJECT_ID and SUPABASE_ANON_KEY"
-    exit 1
+# Create results directory
+mkdir -p "$RESULTS_DIR"
+
+# Get authentication token
+get_auth_token() {
+  if [[ "$ENVIRONMENT" == "local" ]]; then
+    echo "$SUPABASE_ANON_KEY"
+  else
+    echo "$SUPABASE_ANON_KEY"
   fi
+}
+
+AUTH_TOKEN=$(get_auth_token)
+
+# Logging functions
+log_info() {
+  echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+log_success() {
+  echo -e "${GREEN}✅ $1${NC}"
+}
+
+log_warning() {
+  echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+log_error() {
+  echo -e "${RED}❌ $1${NC}"
+}
+
+# Function to test a single endpoint
+test_function_performance() {
+  local func_name=$1
+  local payload=$2
+  local test_type=$3
+  local results_file="$RESULTS_DIR/${func_name}_${test_type}_results.txt"
   
-  BASE_URL="https://$PROJECT_ID.functions.supabase.co"
-fi
-
-# Critical functions to test under load
-CRITICAL_FUNCTIONS=(
-  "subscription-status"
-  "quote-processor"
-  "webhook-handler"
-  "batch-processor"
-)
-
-# Test payloads for each function
-declare -A PAYLOADS
-PAYLOADS["subscription-status"]='{"action": "get-subscription"}'
-PAYLOADS["quote-processor"]='{"operation": "create", "quote": {"client_name": "Load Test Client", "client_email": "loadtest@example.com", "line_items": [{"name": "Load Test Service", "quantity": 1, "unit_price": 100, "total": 100}], "tax_rate": 8.25}, "operations": {"generate_pdf": false, "send_email": false, "update_usage": false, "auto_save": false}}'
-PAYLOADS["webhook-handler"]='{"type": "customer.subscription.created", "data": {"object": {"id": "sub_loadtest", "customer": "cus_loadtest", "status": "active"}}, "livemode": false, "created": '$(date +%s)'}'
-PAYLOADS["batch-processor"]='{"operation": "bulk-status-update", "items": ["load-test-1", "load-test-2"], "status": "sent", "options": {"notify_clients": false, "update_analytics": false}}'
-
-# Create temporary directory for results
-TEMP_DIR=$(mktemp -d)
-RESULTS_FILE="$TEMP_DIR/performance_results.txt"
-SUMMARY_FILE="performance-test-$(date +%Y%m%d-%H%M%S).json"
-
-echo -e "${BLUE}⚡ Realistic Performance Testing${NC}"
-echo "==============================="
-echo "Mode: $(if [[ "$LOCAL_MODE" == true ]]; then echo "Local Development"; else echo "Production"; fi)"
-echo "Target: $BASE_URL"
-echo "Concurrent Requests: $CONCURRENT_REQUESTS"
-echo "Test Duration: ${TEST_DURATION}s"
-echo "Functions: ${#CRITICAL_FUNCTIONS[@]}"
-echo "Results: $SUMMARY_FILE"
-echo "==============================="
-
-# Initialize results
-echo "{" > "$SUMMARY_FILE"
-echo "  \"test_config\": {" >> "$SUMMARY_FILE"
-echo "    \"mode\": \"$(if [[ "$LOCAL_MODE" == true ]]; then echo "local"; else echo "production"; fi)\"," >> "$SUMMARY_FILE"
-echo "    \"concurrent_requests\": $CONCURRENT_REQUESTS," >> "$SUMMARY_FILE"
-echo "    \"test_duration\": $TEST_DURATION," >> "$SUMMARY_FILE"
-echo "    \"timestamp\": \"$(date -Iseconds)\"" >> "$SUMMARY_FILE"
-echo "  }," >> "$SUMMARY_FILE"
-echo "  \"results\": {" >> "$SUMMARY_FILE"
-
-FIRST_FUNCTION=true
-
-# Test each critical function
-for func in "${CRITICAL_FUNCTIONS[@]}"; do
-  echo -e "\n${BLUE}🔄 Load Testing: $func${NC}"
-  echo "================================"
+  log_info "Testing $func_name ($test_type)..."
   
-  payload="${PAYLOADS[$func]}"
-  url="$BASE_URL/$func"
-  
-  # Create temporary files for this function's results
-  FUNC_RESULTS="$TEMP_DIR/${func}_results.txt"
-  FUNC_TIMES="$TEMP_DIR/${func}_times.txt"
-  
-  echo "Starting $CONCURRENT_REQUESTS concurrent requests for ${TEST_DURATION}s..."
-  
-  # Start background processes for concurrent requests
-  pids=()
-  start_time=$(date +%s)
-  end_time=$((start_time + TEST_DURATION))
-  
-  for ((i=1; i<=CONCURRENT_REQUESTS; i++)); do
-    (
-      request_count=0
-      success_count=0
-      total_time=0
-      
-      while [[ $(date +%s) -lt $end_time ]]; do
-        request_start=$(date +%s%3N)  # milliseconds
-        
-        if curl -s -X POST "$url" \
-            -H "Authorization: Bearer $ANON_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$payload" \
-            --max-time 10 \
-            --output /dev/null \
-            --write-out "%{http_code}" > "$TEMP_DIR/response_$i.txt" 2>/dev/null; then
-          
-          request_end=$(date +%s%3N)
-          response_time=$((request_end - request_start))
-          http_code=$(cat "$TEMP_DIR/response_$i.txt")
-          
-          if [[ "$http_code" == "200" ]]; then
-            ((success_count++))
-            echo "$response_time" >> "$FUNC_TIMES"
-          fi
-          
-          ((request_count++))
-          total_time=$((total_time + response_time))
-        fi
-        
-        # Small delay to prevent overwhelming
-        sleep 0.1
-      done
-      
-      echo "Worker $i: $request_count requests, $success_count successful" >> "$FUNC_RESULTS"
-    ) &
-    pids+=($!)
+  # Warmup requests
+  log_info "Warming up $func_name with $WARMUP_REQUESTS requests..."
+  for ((i=1; i<=WARMUP_REQUESTS; i++)); do
+    curl -s -o /dev/null \
+      -X POST "$BASE_URL/$func_name" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $AUTH_TOKEN" \
+      -d "$payload" \
+      --max-time 30 &
   done
+  wait
   
-  # Show progress
+  # Clear results file
+  > "$results_file"
+  
+  # Performance test
+  log_info "Running performance test: $CONCURRENT_REQUESTS concurrent requests for ${TEST_DURATION}s..."
+  
+  local start_time=$(date +%s)
+  local end_time=$((start_time + TEST_DURATION))
+  local request_count=0
+  local success_count=0
+  local error_count=0
+  
+  # Array to store response times
+  declare -a response_times=()
+  
   while [[ $(date +%s) -lt $end_time ]]; do
-    remaining=$((end_time - $(date +%s)))
-    echo -ne "\r   Progress: $((TEST_DURATION - remaining))/${TEST_DURATION}s"
-    sleep 1
-  done
-  echo ""
-  
-  # Wait for all background processes to complete
-  for pid in "${pids[@]}"; do
-    wait "$pid"
+    # Launch concurrent requests
+    for ((i=1; i<=CONCURRENT_REQUESTS; i++)); do
+      (
+        local req_start=$(date +%s%3N)
+        local http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+          -X POST "$BASE_URL/$func_name" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $AUTH_TOKEN" \
+          -d "$payload" \
+          --max-time 30)
+        local req_end=$(date +%s%3N)
+        local response_time=$((req_end - req_start))
+        
+        echo "$response_time,$http_code" >> "$results_file"
+        
+        if [[ "$http_code" == "200" || "$http_code" == "201" ]]; then
+          echo "SUCCESS:$response_time" >> "${results_file}.status"
+        else
+          echo "ERROR:$http_code:$response_time" >> "${results_file}.status"
+        fi
+      ) &
+      
+      ((request_count++))
+    done
+    
+    # Wait for current batch to complete
+    wait
+    
+    # Small delay to prevent overwhelming
+    sleep 0.1
   done
   
   # Calculate statistics
-  if [[ -f "$FUNC_TIMES" ]]; then
-    total_requests=$(wc -l < "$FUNC_RESULTS")
-    successful_requests=$(wc -l < "$FUNC_TIMES")
+  if [[ -f "$results_file" ]]; then
+    local total_requests=$(wc -l < "$results_file")
+    local successful_requests=$(grep -c "^[0-9]*,200$\|^[0-9]*,201$" "$results_file" || echo 0)
+    local failed_requests=$((total_requests - successful_requests))
     
-    if [[ $successful_requests -gt 0 ]]; then
-      # Calculate response time statistics
-      avg_time=$(awk '{sum+=$1} END {print sum/NR}' "$FUNC_TIMES")
-      min_time=$(sort -n "$FUNC_TIMES" | head -1)
-      max_time=$(sort -n "$FUNC_TIMES" | tail -1)
-      
-      # Calculate percentiles
-      p95_time=$(sort -n "$FUNC_TIMES" | awk -v p=95 'BEGIN{c=0} {a[c++]=$1} END{print a[int(c*p/100)]}')
-      p99_time=$(sort -n "$FUNC_TIMES" | awk -v p=99 'BEGIN{c=0} {a[c++]=$1} END{print a[int(c*p/100)]}')
-      
-      success_rate=$(echo "scale=2; $successful_requests * 100 / $total_requests" | bc)
-      rps=$(echo "scale=2; $successful_requests / $TEST_DURATION" | bc)
-      
-      # Display results
-      echo "   Total Requests: $total_requests"
-      echo "   Successful: $successful_requests"
-      echo -e "   Success Rate: ${GREEN}${success_rate}%${NC}"
-      echo -e "   Requests/sec: ${GREEN}${rps}${NC}"
-      echo "   Response Times:"
-      echo "     Average: ${avg_time}ms"
-      echo "     Min: ${min_time}ms"
-      echo "     Max: ${max_time}ms"
-      echo "     95th percentile: ${p95_time}ms"
-      echo "     99th percentile: ${p99_time}ms"
-      
-      # Performance assessment
-      if (( $(echo "$avg_time < 1000" | bc -l) )); then
-        echo -e "   Performance: ${GREEN}Excellent (<1s avg)${NC}"
-      elif (( $(echo "$avg_time < 2000" | bc -l) )); then
-        echo -e "   Performance: ${YELLOW}Good (<2s avg)${NC}"
-      else
-        echo -e "   Performance: ${RED}Needs Improvement (>2s avg)${NC}"
-      fi
-      
-      # Add to JSON results
-      if [[ "$FIRST_FUNCTION" == false ]]; then
-        echo "," >> "$SUMMARY_FILE"
-      fi
-      FIRST_FUNCTION=false
-      
-      echo "    \"$func\": {" >> "$SUMMARY_FILE"
-      echo "      \"total_requests\": $total_requests," >> "$SUMMARY_FILE"
-      echo "      \"successful_requests\": $successful_requests," >> "$SUMMARY_FILE"
-      echo "      \"success_rate\": $success_rate," >> "$SUMMARY_FILE"
-      echo "      \"requests_per_second\": $rps," >> "$SUMMARY_FILE"
-      echo "      \"response_times\": {" >> "$SUMMARY_FILE"
-      echo "        \"average_ms\": $avg_time," >> "$SUMMARY_FILE"
-      echo "        \"min_ms\": $min_time," >> "$SUMMARY_FILE"
-      echo "        \"max_ms\": $max_time," >> "$SUMMARY_FILE"
-      echo "        \"p95_ms\": $p95_time," >> "$SUMMARY_FILE"
-      echo "        \"p99_ms\": $p99_time" >> "$SUMMARY_FILE"
-      echo "      }" >> "$SUMMARY_FILE"
-      echo "    }" >> "$SUMMARY_FILE"
-    else
-      echo -e "   ${RED}❌ No successful requests${NC}"
-    fi
-  else
-    echo -e "   ${RED}❌ No response data collected${NC}"
-  fi
-done
-
-# Finalize JSON
-echo "  }" >> "$SUMMARY_FILE"
-echo "}" >> "$SUMMARY_FILE"
-
-# Overall summary
-echo -e "\n${BLUE}📊 Performance Test Summary${NC}"
-echo "============================"
-
-# Parse results for overall assessment
-if command -v jq &> /dev/null; then
-  echo "Overall Results:"
-  jq -r '.results | to_entries[] | "  \(.key): \(.value.success_rate)% success, \(.value.requests_per_second) RPS, \(.value.response_times.average_ms)ms avg"' "$SUMMARY_FILE"
-  
-  # Check if any function failed performance targets
-  failed_functions=$(jq -r '.results | to_entries[] | select(.value.response_times.average_ms > 2000 or .value.success_rate < 95) | .key' "$SUMMARY_FILE")
-  
-  if [[ -n "$failed_functions" ]]; then
-    echo -e "\n${YELLOW}⚠️  Functions needing attention:${NC}"
-    echo "$failed_functions" | while read -r func; do
-      echo "  - $func"
+    # Calculate response time statistics
+    local response_times=($(awk -F',' '{print $1}' "$results_file" | sort -n))
+    local min_time=${response_times[0]}
+    local max_time=${response_times[-1]}
+    
+    # Calculate percentiles
+    local count=${#response_times[@]}
+    local p50_index=$((count * 50 / 100))
+    local p95_index=$((count * 95 / 100))
+    local p99_index=$((count * 99 / 100))
+    
+    local p50_time=${response_times[$p50_index]}
+    local p95_time=${response_times[$p95_index]}
+    local p99_time=${response_times[$p99_index]}
+    
+    # Calculate average
+    local sum=0
+    for time in "${response_times[@]}"; do
+      sum=$((sum + time))
     done
+    local avg_time=$((sum / count))
+    
+    # Calculate requests per second
+    local actual_duration=$(($(date +%s) - start_time))
+    local rps=$((total_requests / actual_duration))
+    
+    # Calculate success rate
+    local success_rate=$(echo "scale=2; $successful_requests * 100 / $total_requests" | bc -l)
+    
+    # Display results
+    echo ""
+    echo "📊 Performance Results for $func_name ($test_type):"
+    echo "─────────────────────────────────────────────────"
+    echo "Total Requests:     $total_requests"
+    echo "Successful:         $successful_requests"
+    echo "Failed:             $failed_requests"
+    echo "Success Rate:       ${success_rate}%"
+    echo "Requests/sec:       $rps"
+    echo "Response Times (ms):"
+    echo "  Min:              $min_time"
+    echo "  Average:          $avg_time"
+    echo "  P50 (Median):     $p50_time"
+    echo "  P95:              $p95_time"
+    echo "  P99:              $p99_time"
+    echo "  Max:              $max_time"
+    echo ""
+    
+    # Performance assessment
+    if [[ $avg_time -lt 1000 && $success_rate > 95 ]]; then
+      log_success "$func_name performance: EXCELLENT"
+    elif [[ $avg_time -lt 2000 && $success_rate > 90 ]]; then
+      log_success "$func_name performance: GOOD"
+    elif [[ $avg_time -lt 5000 && $success_rate > 80 ]]; then
+      log_warning "$func_name performance: ACCEPTABLE"
+    else
+      log_error "$func_name performance: POOR"
+    fi
+    
+    # Save summary to file
+    cat > "$RESULTS_DIR/${func_name}_${test_type}_summary.json" << EOF
+{
+  "function": "$func_name",
+  "test_type": "$test_type",
+  "environment": "$ENVIRONMENT",
+  "timestamp": "$(date -Iseconds)",
+  "total_requests": $total_requests,
+  "successful_requests": $successful_requests,
+  "failed_requests": $failed_requests,
+  "success_rate": $success_rate,
+  "requests_per_second": $rps,
+  "response_times": {
+    "min_ms": $min_time,
+    "avg_ms": $avg_time,
+    "p50_ms": $p50_time,
+    "p95_ms": $p95_time,
+    "p99_ms": $p99_time,
+    "max_ms": $max_time
+  },
+  "test_config": {
+    "concurrent_requests": $CONCURRENT_REQUESTS,
+    "test_duration_seconds": $TEST_DURATION,
+    "warmup_requests": $WARMUP_REQUESTS
+  }
+}
+EOF
+  else
+    log_error "No results file found for $func_name"
   fi
-else
-  echo "Install 'jq' for detailed JSON analysis"
-fi
+}
 
-echo -e "\nDetailed results saved to: $SUMMARY_FILE"
+# Test critical functions with realistic payloads
+test_critical_functions() {
+  log_info "Testing critical Edge Functions under load..."
+  
+  # Subscription Status - Core business function
+  test_function_performance "subscription-status" \
+    '{"action": "get-subscription"}' \
+    "core_business"
+  
+  # Quote Processor - Heavy computation
+  test_function_performance "quote-processor" \
+    '{
+      "operation": "create",
+      "quote": {
+        "client_name": "Performance Test Client",
+        "client_email": "perf@test.com",
+        "line_items": [
+          {"name": "Service 1", "quantity": 2, "unit_price": 50.00, "total": 100.00},
+          {"name": "Service 2", "quantity": 1, "unit_price": 75.00, "total": 75.00}
+        ],
+        "subtotal": 175.00,
+        "tax_rate": 8.25,
+        "tax_amount": 14.44,
+        "total": 189.44
+      }
+    }' \
+    "heavy_computation"
+  
+  # Webhook Handler - High frequency
+  test_function_performance "webhook-handler" \
+    '{
+      "type": "customer.subscription.updated",
+      "data": {"object": {"id": "sub_perf_test", "status": "active"}},
+      "livemode": false
+    }' \
+    "high_frequency"
+  
+  # Batch Processor - Bulk operations
+  test_function_performance "batch-processor" \
+    '{
+      "operation": "bulk-status-update",
+      "items": ["item1", "item2", "item3", "item4", "item5"],
+      "status": "processed",
+      "options": {"validate": false}
+    }' \
+    "bulk_operations"
+}
 
-# Cleanup
-rm -rf "$TEMP_DIR"
+# Test monitoring functions
+test_monitoring_functions() {
+  log_info "Testing monitoring and optimization functions..."
+  
+  # Performance Optimizer
+  test_function_performance "performance-optimizer" \
+    '{"action": "analyze", "scope": "quick"}' \
+    "monitoring"
+  
+  # Connection Pool Manager
+  test_function_performance "connection-pool-manager" \
+    '{"action": "status"}' \
+    "monitoring"
+  
+  # Monitoring Alerting
+  test_function_performance "monitoring-alerting" \
+    '{"action": "health-check"}' \
+    "monitoring"
+}
 
-echo -e "\n${GREEN}✅ Performance testing completed${NC}"
+# Generate comprehensive report
+generate_performance_report() {
+  local report_file="$RESULTS_DIR/performance_report_$(date +%Y%m%d_%H%M%S).html"
+  
+  log_info "Generating comprehensive performance report..."
+  
+  cat > "$report_file" << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edge Functions Performance Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .function-result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .excellent { border-left: 5px solid #4CAF50; }
+        .good { border-left: 5px solid #8BC34A; }
+        .acceptable { border-left: 5px solid #FF9800; }
+        .poor { border-left: 5px solid #F44336; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .metric { background: #f9f9f9; padding: 10px; border-radius: 3px; }
+        .metric-value { font-size: 1.5em; font-weight: bold; color: #333; }
+        .metric-label { font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Edge Functions Performance Report</h1>
+        <p><strong>Environment:</strong> ENVIRONMENT_PLACEHOLDER</p>
+        <p><strong>Test Date:</strong> DATE_PLACEHOLDER</p>
+        <p><strong>Test Configuration:</strong> CONCURRENT_REQUESTS concurrent requests, TEST_DURATION seconds duration</p>
+    </div>
+EOF
+
+  # Add results for each function
+  for summary_file in "$RESULTS_DIR"/*_summary.json; do
+    if [[ -f "$summary_file" ]]; then
+      local func_name=$(jq -r '.function' "$summary_file")
+      local test_type=$(jq -r '.test_type' "$summary_file")
+      local success_rate=$(jq -r '.success_rate' "$summary_file")
+      local avg_time=$(jq -r '.response_times.avg_ms' "$summary_file")
+      local rps=$(jq -r '.requests_per_second' "$summary_file")
+      
+      # Determine performance class
+      local perf_class="poor"
+      if (( $(echo "$avg_time < 1000 && $success_rate > 95" | bc -l) )); then
+        perf_class="excellent"
+      elif (( $(echo "$avg_time < 2000 && $success_rate > 90" | bc -l) )); then
+        perf_class="good"
+      elif (( $(echo "$avg_time < 5000 && $success_rate > 80" | bc -l) )); then
+        perf_class="acceptable"
+      fi
+      
+      cat >> "$report_file" << EOF
+    <div class="function-result $perf_class">
+        <h3>$func_name ($test_type)</h3>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">$success_rate%</div>
+                <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">${avg_time}ms</div>
+                <div class="metric-label">Avg Response Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">$rps</div>
+                <div class="metric-label">Requests/sec</div>
+            </div>
+        </div>
+    </div>
+EOF
+    fi
+  done
+  
+  cat >> "$report_file" << 'EOF'
+</body>
+</html>
+EOF
+
+  # Replace placeholders
+  sed -i "s/ENVIRONMENT_PLACEHOLDER/$ENVIRONMENT/g" "$report_file"
+  sed -i "s/DATE_PLACEHOLDER/$(date)/g" "$report_file"
+  sed -i "s/CONCURRENT_REQUESTS/$CONCURRENT_REQUESTS/g" "$report_file"
+  sed -i "s/TEST_DURATION/$TEST_DURATION/g" "$report_file"
+  
+  log_success "Performance report generated: $report_file"
+}
+
+# Main execution
+main() {
+  echo -e "${BLUE}"
+  echo "⚡ Edge Functions Performance Testing"
+  echo "====================================="
+  echo -e "${NC}"
+  
+  log_info "Environment: $ENVIRONMENT"
+  log_info "Base URL: $BASE_URL"
+  log_info "Concurrent Requests: $CONCURRENT_REQUESTS"
+  log_info "Test Duration: ${TEST_DURATION}s"
+  log_info "Results Directory: $RESULTS_DIR"
+  echo ""
+  
+  # Check dependencies
+  if ! command -v curl &> /dev/null; then
+    log_error "curl is required but not installed"
+    exit 1
+  fi
+  
+  if ! command -v bc &> /dev/null; then
+    log_error "bc is required but not installed"
+    exit 1
+  fi
+  
+  if ! command -v jq &> /dev/null; then
+    log_error "jq is required but not installed"
+    exit 1
+  fi
+  
+  # Run performance tests
+  test_critical_functions
+  test_monitoring_functions
+  
+  # Generate report
+  generate_performance_report
+  
+  # Final summary
+  echo ""
+  echo "🎯 Performance Testing Complete!"
+  echo "Results saved to: $RESULTS_DIR"
+  echo ""
+  
+  # Check if any functions performed poorly
+  local poor_performance=false
+  for summary_file in "$RESULTS_DIR"/*_summary.json; do
+    if [[ -f "$summary_file" ]]; then
+      local avg_time=$(jq -r '.response_times.avg_ms' "$summary_file")
+      local success_rate=$(jq -r '.success_rate' "$summary_file")
+      
+      if (( $(echo "$avg_time > 5000 || $success_rate < 80" | bc -l) )); then
+        poor_performance=true
+        break
+      fi
+    fi
+  done
+  
+  if [[ "$poor_performance" == "true" ]]; then
+    log_error "Some functions showed poor performance. Review results before production deployment."
+    exit 1
+  else
+    log_success "All functions performed within acceptable limits!"
+    exit 0
+  fi
+}
+
+# Run main function
+main "$@"

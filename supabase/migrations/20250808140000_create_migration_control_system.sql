@@ -468,10 +468,7 @@ ALTER TABLE migration_performance_benchmarks ENABLE ROW LEVEL SECURITY;
 -- Admin-only policies for migration control
 CREATE POLICY "Admins can manage migration config" ON migration_config
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage migration config" ON migration_config
@@ -479,10 +476,7 @@ CREATE POLICY "Service role can manage migration config" ON migration_config
 
 CREATE POLICY "Admins can view migration metrics" ON migration_metrics
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage migration metrics" ON migration_metrics
@@ -491,10 +485,7 @@ CREATE POLICY "Service role can manage migration metrics" ON migration_metrics
 -- Similar policies for other tables
 CREATE POLICY "Admins can view edge function health" ON edge_function_health
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage edge function health" ON edge_function_health
@@ -502,10 +493,7 @@ CREATE POLICY "Service role can manage edge function health" ON edge_function_he
 
 CREATE POLICY "Admins can view migration rollbacks" ON migration_rollbacks
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage migration rollbacks" ON migration_rollbacks
@@ -513,10 +501,7 @@ CREATE POLICY "Service role can manage migration rollbacks" ON migration_rollbac
 
 CREATE POLICY "Admins can manage traffic routing" ON traffic_routing_config
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage traffic routing" ON traffic_routing_config
@@ -524,10 +509,7 @@ CREATE POLICY "Service role can manage traffic routing" ON traffic_routing_confi
 
 CREATE POLICY "Admins can manage feature flags" ON feature_flags
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Users can read enabled feature flags" ON feature_flags
@@ -538,10 +520,7 @@ CREATE POLICY "Service role can manage feature flags" ON feature_flags
 
 CREATE POLICY "Admins can view performance benchmarks" ON migration_performance_benchmarks
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage performance benchmarks" ON migration_performance_benchmarks
@@ -614,10 +593,9 @@ COMMENT ON TABLE feature_flags IS 'Feature flag management for controlled rollou
 COMMENT ON TABLE migration_performance_benchmarks IS 'Performance tracking against Sprint 3 targets';
 
 -- Create initial indexes for optimal query performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_migration_status_lookup 
+CREATE INDEX IF NOT EXISTS idx_migration_status_lookup 
   ON migration_config(current_state, created_at DESC) 
   WHERE current_state NOT IN ('completed', 'failed', 'rolled_back');
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_health_check_recent 
-  ON edge_function_health(last_checked DESC, status) 
-  WHERE last_checked >= NOW() - INTERVAL '1 hour';
+CREATE INDEX IF NOT EXISTS idx_health_check_recent 
+  ON edge_function_health(last_checked DESC, status);

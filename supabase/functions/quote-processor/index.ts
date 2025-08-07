@@ -253,7 +253,7 @@ async function createQuote(
     
     const { data: quoteNumber, error: numberError } = await supabase.rpc(
       'generate_quote_number',
-      { p_user_id: user.id }
+      { user_uuid: user.id }
     );
     monitor.incrementDbQueries();
 
@@ -269,28 +269,30 @@ async function createQuote(
     }
     completedOperations.push('quote_number_generation');
 
-    // 4. Create final quote object
-    const newQuote: Quote = {
-      id: crypto.randomUUID(),
-      user_id: user.id,
-      quote_number: quoteNumber,
-      client_name: calculatedQuote.client_name,
-      client_id: calculatedQuote.client_id || null,
+    // 4. Create final quote object matching database schema
+    const quoteData = {
       client_email: calculatedQuote.client_email || null,
       client_phone: calculatedQuote.client_phone || null,
       client_address: calculatedQuote.client_address || null,
-      notes: calculatedQuote.notes || null,
-      status: 'draft',
       line_items: calculatedQuote.line_items,
+      valid_until: calculatedQuote.valid_until || null
+    };
+
+    const newQuote = {
+      user_id: user.id,
+      client_id: calculatedQuote.client_id || null,
+      client_name: calculatedQuote.client_name,
+      client_contact: calculatedQuote.client_email || calculatedQuote.client_phone || null,
+      quote_number: quoteNumber,
+      quote_data: quoteData,
       subtotal: calculatedQuote.subtotal,
       tax_rate: calculatedQuote.tax_rate,
-      tax_amount: calculatedQuote.tax_amount,
+      markup_rate: 0, // Default markup rate
       total: calculatedQuote.total,
-      valid_until: calculatedQuote.valid_until || null,
+      status: 'draft',
+      notes: calculatedQuote.notes || null,
       is_template: calculatedQuote.is_template || false,
-      template_name: calculatedQuote.template_name || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      template_name: calculatedQuote.template_name || null
     };
 
     // 5. Save quote to database
@@ -321,8 +323,8 @@ async function createQuote(
           'increment_usage',
           { 
             p_user_id: user.id,
-            p_feature: 'quotes',
-            p_increment: 1
+            p_usage_type: 'quotes',
+            p_amount: 1
           }
         );
         monitor.incrementDbQueries();

@@ -655,10 +655,7 @@ ALTER TABLE connection_pool_recommendations ENABLE ROW LEVEL SECURITY;
 -- Admin-only access policies
 CREATE POLICY "Admins can manage connection pool config" ON connection_pool_config
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage connection pool data" ON connection_pool_config
@@ -683,8 +680,7 @@ BEGIN
       CREATE POLICY "Admins can manage %1$s" ON %1$s
         FOR ALL USING (
           EXISTS (
-            SELECT 1 FROM user_roles 
-            WHERE user_id = auth.uid() AND role = ''admin''
+            SELECT 1 WHERE public.is_admin()
           )
         );
       

@@ -107,3 +107,52 @@ export async function requireAdmin(request: Request) {
   
   return { response: null, user };
 }
+
+/**
+ * Legacy alias for getUser - returns user and admin status
+ * @deprecated Use getUser and isAdmin separately for better error handling
+ */
+export async function getAuthenticatedUser(request: Request) {
+  const { user, error } = await getUser(request);
+  
+  if (!user) {
+    return { user: null, error, isAdmin: false };
+  }
+  
+  const userIsAdmin = await isAdmin(user.id);
+  
+  return { user, error: null, isAdmin: userIsAdmin };
+}
+
+/**
+ * Legacy alias for requireAuth with simplified return format
+ * @deprecated Use requireAuth for better consistency
+ */
+export async function authenticateUser(request: Request, supabase?: any) {
+  const { response, user } = await requireAuth(request);
+  
+  if (response) {
+    return { 
+      success: false, 
+      user: null, 
+      error: 'Authentication required',
+      response 
+    };
+  }
+  
+  const userIsAdmin = await isAdmin(user!.id);
+  
+  return { 
+    success: true, 
+    user, 
+    isAdmin: userIsAdmin,
+    error: null,
+    response: null 
+  };
+}
+
+/**
+ * Legacy alias for requireAuth 
+ * @deprecated Use requireAuth instead
+ */
+export const authenticateRequest = requireAuth;

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Secure Edge Functions Testing Setup
-# Sets up testing environment with proper credential management
+# Setup Secure Testing Environment
+# Prepares the environment for secure Edge Functions testing
 # Usage: ./scripts/setup-secure-testing.sh
 
 set -e
@@ -13,189 +13,415 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🔐 Secure Edge Functions Testing Setup${NC}"
-echo "========================================"
-echo "Setting up secure testing environment with proper credential management..."
-echo "========================================"
+# Logging functions
+log_info() {
+  echo -e "${BLUE}ℹ️  $1${NC}"
+}
 
-# Check if .env.test already exists
-if [[ -f ".env.test" ]]; then
-    echo -e "${YELLOW}⚠️  .env.test file already exists${NC}"
-    read -p "Do you want to overwrite it? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}Keeping existing .env.test file${NC}"
-        SKIP_ENV_CREATION=true
-    fi
-fi
+log_success() {
+  echo -e "${GREEN}✅ $1${NC}"
+}
 
-# Create .env.test file with secure defaults
-if [[ "$SKIP_ENV_CREATION" != true ]]; then
-    echo -e "\n${YELLOW}📝 Creating secure .env.test configuration...${NC}"
-    
-    # Copy from example
-    if [[ -f ".env.test.example" ]]; then
-        cp .env.test.example .env.test
-        echo -e "${GREEN}✅ Created .env.test from example${NC}"
-    else
-        # Create basic .env.test
-        cat > .env.test << 'EOF'
-# Edge Functions Testing Environment Variables
-# NEVER commit this file to git!
+log_warning() {
+  echo -e "${YELLOW}⚠️  $1${NC}"
+}
 
-# ==============================================
-# LOCAL DEVELOPMENT CREDENTIALS
-# ==============================================
+log_error() {
+  echo -e "${RED}❌ $1${NC}"
+}
 
-# Local Supabase Configuration
-LOCAL_SUPABASE_URL=http://localhost:54321
-LOCAL_FUNCTIONS_URL=http://localhost:54321/functions/v1
+# Check if running in development environment
+check_environment() {
+  log_info "Checking environment..."
+  
+  if [[ -f ".env.local" ]]; then
+    log_warning ".env.local found - ensure it contains only development credentials"
+  fi
+  
+  if [[ -f ".env" ]]; then
+    log_error ".env file found in repository - this should be removed"
+    return 1
+  fi
+  
+  log_success "Environment check passed"
+}
 
-# Test User JWT Token (Local Development Only)
-# Get this from Supabase Studio > Authentication > Users > [User] > Copy JWT
-TEST_JWT_TOKEN=your-local-test-jwt-here
+# Setup secure environment variables
+setup_env_variables() {
+  log_info "Setting up secure environment variables..."
+  
+  # Create .env.local.example if it doesn't exist
+  if [[ ! -f ".env.local.example" ]]; then
+    cat > .env.local.example << 'EOF'
+# Local Development Environment Variables
+# Copy this file to .env.local and update with your actual values
 
-# Alternative: Use service role key for testing (more secure)
-# Get from Supabase Studio > Settings > API > service_role key
-LOCAL_SERVICE_ROLE_KEY=your-local-service-role-key-here
+# Supabase Configuration (Local Development)
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
 
-# ==============================================
-# PRODUCTION TESTING CREDENTIALS
-# ==============================================
+# Production Environment Variables (Update for production testing)
+# NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+# SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# SUPABASE_PROJECT_ID=your-project-id
 
-# Production Supabase Configuration
-SUPABASE_PROJECT_ID=your-production-project-id
-SUPABASE_ANON_KEY=your-production-anon-key
+# Stripe Configuration (Development)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 
-# Production Service Role (for admin testing)
-SUPABASE_SERVICE_ROLE_KEY=your-production-service-role-key
+# Email Configuration (Optional)
+RESEND_API_KEY=re_your_resend_api_key
 
-# ==============================================
-# TESTING CONFIGURATION
-# ==============================================
-
-# Test timeouts and limits
-TEST_TIMEOUT_MS=10000
-TEST_CONCURRENT_REQUESTS=10
-TEST_DURATION_SECONDS=30
-
-# Security settings
-ENABLE_CREDENTIAL_VALIDATION=true
-MASK_CREDENTIALS_IN_LOGS=true
-REQUIRE_HTTPS_IN_PRODUCTION=true
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 EOF
-        echo -e "${GREEN}✅ Created basic .env.test file${NC}"
-    fi
-fi
+    log_success "Created .env.local.example template"
+  fi
+  
+  # Check if .env.local exists
+  if [[ ! -f ".env.local" ]]; then
+    log_warning ".env.local not found. Creating from template..."
+    cp .env.local.example .env.local
+    log_warning "Please update .env.local with your actual credentials"
+  else
+    log_success ".env.local already exists"
+  fi
+}
 
-# Check if Supabase is running and get local credentials
-echo -e "\n${YELLOW}🔍 Checking local Supabase status...${NC}"
-if supabase status &> /dev/null; then
-    echo -e "${GREEN}✅ Local Supabase is running${NC}"
-    
-    # Try to get service role key from Supabase status
-    SERVICE_ROLE_KEY=$(supabase status | grep "service_role key" | awk '{print $NF}' || echo "")
-    if [[ -n "$SERVICE_ROLE_KEY" && "$SERVICE_ROLE_KEY" != "service_role" ]]; then
-        echo -e "${GREEN}✅ Found local service role key${NC}"
-        
-        # Update .env.test with the actual service role key
-        if [[ -f ".env.test" ]]; then
-            sed -i.bak "s/your-local-service-role-key-here/$SERVICE_ROLE_KEY/" .env.test
-            rm -f .env.test.bak
-            echo -e "${GREEN}✅ Updated .env.test with local service role key${NC}"
-        fi
+# Setup secure .gitignore
+setup_gitignore() {
+  log_info "Setting up secure .gitignore..."
+  
+  # Ensure sensitive files are ignored
+  local gitignore_additions=(
+    "# Environment variables"
+    ".env"
+    ".env.local"
+    ".env.*.local"
+    ""
+    "# Test results and logs"
+    "test-results/"
+    "*.log"
+    "security-audit-*.txt"
+    ""
+    "# Temporary files"
+    "*.tmp"
+    "*.temp"
+    ".DS_Store"
+    "Thumbs.db"
+  )
+  
+  local needs_update=false
+  
+  for item in "${gitignore_additions[@]}"; do
+    if [[ -n "$item" ]] && ! grep -Fxq "$item" .gitignore 2>/dev/null; then
+      needs_update=true
+      break
     fi
-    
-    # Get anon key as well
-    ANON_KEY=$(supabase status | grep "anon key" | awk '{print $NF}' || echo "")
-    if [[ -n "$ANON_KEY" && "$ANON_KEY" != "anon" ]]; then
-        echo -e "${GREEN}✅ Found local anon key${NC}"
-    fi
-    
-else
-    echo -e "${YELLOW}⚠️  Local Supabase not running. Starting it now...${NC}"
-    supabase start
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}✅ Local Supabase started${NC}"
-    else
-        echo -e "${RED}❌ Failed to start local Supabase${NC}"
-        exit 1
-    fi
-fi
+  done
+  
+  if [[ "$needs_update" == "true" ]]; then
+    echo "" >> .gitignore
+    echo "# Added by setup-secure-testing.sh" >> .gitignore
+    for item in "${gitignore_additions[@]}"; do
+      echo "$item" >> .gitignore
+    done
+    log_success "Updated .gitignore with security patterns"
+  else
+    log_success ".gitignore already contains security patterns"
+  fi
+}
 
-# Validate .env.test file
-echo -e "\n${YELLOW}🔍 Validating credential configuration...${NC}"
+# Setup test directories
+setup_test_directories() {
+  log_info "Setting up test directories..."
+  
+  local directories=(
+    "test-results"
+    "logs"
+    "temp"
+  )
+  
+  for dir in "${directories[@]}"; do
+    if [[ ! -d "$dir" ]]; then
+      mkdir -p "$dir"
+      echo "# Test artifacts directory" > "$dir/.gitkeep"
+      log_success "Created $dir directory"
+    fi
+  done
+  
+  # Add to .gitignore but keep .gitkeep files
+  if ! grep -q "test-results/*" .gitignore 2>/dev/null; then
+    cat >> .gitignore << 'EOF'
 
-if [[ -f ".env.test" ]]; then
-    # Check for placeholder values
-    if grep -q "your-.*-here" .env.test; then
-        echo -e "${YELLOW}⚠️  Found placeholder values in .env.test${NC}"
-        echo -e "${YELLOW}   Please update the following placeholders:${NC}"
-        grep "your-.*-here" .env.test | sed 's/^/   - /'
-        echo ""
-        echo -e "${BLUE}💡 To get your credentials:${NC}"
-        echo "   Local JWT Token: Supabase Studio > Authentication > Users > [User] > Copy JWT"
-        echo "   Service Role Key: Supabase Studio > Settings > API > service_role key"
-        echo "   Production Keys: Your production Supabase project settings"
+# Test artifacts (keep .gitkeep files)
+test-results/*
+!test-results/.gitkeep
+logs/*
+!logs/.gitkeep
+temp/*
+!temp/.gitkeep
+EOF
+    log_success "Added test directories to .gitignore"
+  fi
+}
+
+# Validate Supabase setup
+validate_supabase_setup() {
+  log_info "Validating Supabase setup..."
+  
+  # Check if Supabase CLI is installed
+  if ! command -v supabase &> /dev/null; then
+    log_error "Supabase CLI is not installed. Install with: npm install -g supabase"
+    return 1
+  fi
+  
+  local version=$(supabase --version)
+  log_success "Supabase CLI installed: $version"
+  
+  # Check if local Supabase can be started
+  if supabase status &> /dev/null; then
+    log_success "Local Supabase is running"
+  else
+    log_info "Starting local Supabase..."
+    if supabase start; then
+      log_success "Local Supabase started successfully"
     else
-        echo -e "${GREEN}✅ No placeholder values found${NC}"
+      log_error "Failed to start local Supabase"
+      return 1
     fi
-    
-    # Test credential loading
-    echo -e "\n${YELLOW}🧪 Testing credential loading...${NC}"
-    if deno run --allow-all -e "
-        import { localCredentialManager } from './tests/utils/credential-manager.ts';
-        try {
-            await localCredentialManager.initialize();
-            console.log('✅ Local credentials loaded successfully');
-            const summary = localCredentialManager.getCredentialSummary();
-            console.log('📊 Credential summary:', summary);
-        } catch (error) {
-            console.error('❌ Credential loading failed:', error.message);
-            Deno.exit(1);
-        }
-    "; then
-        echo -e "${GREEN}✅ Credential manager working correctly${NC}"
+  fi
+  
+  # Check if migrations are up to date
+  log_info "Checking database migrations..."
+  if supabase migration list --local | grep -q "Applied"; then
+    log_success "Database migrations are applied"
+  else
+    log_warning "Database migrations may need to be applied"
+    log_info "Run: supabase migration up"
+  fi
+}
+
+# Setup development certificates (for HTTPS testing)
+setup_dev_certificates() {
+  log_info "Setting up development certificates..."
+  
+  if command -v mkcert &> /dev/null; then
+    if [[ ! -f "localhost.pem" ]]; then
+      mkcert localhost 127.0.0.1 ::1
+      log_success "Development certificates created"
     else
-        echo -e "${RED}❌ Credential manager test failed${NC}"
-        echo -e "${YELLOW}💡 Check your .env.test file and ensure credentials are valid${NC}"
+      log_success "Development certificates already exist"
     fi
-else
-    echo -e "${RED}❌ .env.test file not found${NC}"
+  else
+    log_warning "mkcert not installed - HTTPS testing will not be available"
+    log_info "Install mkcert for HTTPS testing: https://github.com/FiloSottile/mkcert"
+  fi
+}
+
+# Create test configuration file
+create_test_config() {
+  log_info "Creating test configuration..."
+  
+  cat > test-config.json << 'EOF'
+{
+  "testing": {
+    "local": {
+      "baseUrl": "http://127.0.0.1:54321/functions/v1",
+      "timeout": 30000,
+      "retries": 3
+    },
+    "production": {
+      "baseUrl": "https://PROJECT_ID.functions.supabase.co",
+      "timeout": 15000,
+      "retries": 2
+    }
+  },
+  "performance": {
+    "concurrentRequests": 10,
+    "testDuration": 30,
+    "warmupRequests": 5,
+    "thresholds": {
+      "responseTime": 5000,
+      "successRate": 90,
+      "errorRate": 5
+    }
+  },
+  "security": {
+    "enableCorsCheck": true,
+    "enableAuthCheck": true,
+    "enableInputValidation": true,
+    "enableRateLimitCheck": true
+  },
+  "functions": {
+    "critical": [
+      "subscription-status",
+      "quote-processor",
+      "webhook-handler",
+      "batch-processor"
+    ],
+    "monitoring": [
+      "monitoring-alerting",
+      "performance-optimizer",
+      "connection-pool-manager"
+    ],
+    "deployment": [
+      "migration-controller",
+      "production-validator",
+      "security-hardening",
+      "global-deployment-optimizer"
+    ]
+  }
+}
+EOF
+  
+  log_success "Test configuration created: test-config.json"
+}
+
+# Setup NPM scripts for testing
+setup_npm_scripts() {
+  log_info "Verifying NPM scripts for testing..."
+  
+  local required_scripts=(
+    "edge-functions:test:local"
+    "edge-functions:test:production"
+    "edge-functions:test:performance"
+    "edge-functions:deploy:local"
+    "security:audit"
+  )
+  
+  local missing_scripts=()
+  
+  for script in "${required_scripts[@]}"; do
+    if ! npm run "$script" --silent 2>/dev/null | grep -q "Missing script"; then
+      continue
+    else
+      missing_scripts+=("$script")
+    fi
+  done
+  
+  if [[ ${#missing_scripts[@]} -eq 0 ]]; then
+    log_success "All required NPM scripts are available"
+  else
+    log_warning "Some NPM scripts may be missing: ${missing_scripts[*]}"
+    log_info "Check package.json for the complete script definitions"
+  fi
+}
+
+# Create testing checklist
+create_testing_checklist() {
+  log_info "Creating testing checklist..."
+  
+  cat > TESTING_CHECKLIST.md << 'EOF'
+# Edge Functions Testing Checklist
+
+## Pre-Testing Setup
+- [ ] Environment variables configured in `.env.local`
+- [ ] Local Supabase running (`supabase start`)
+- [ ] Database migrations applied (`supabase migration up`)
+- [ ] All Edge Functions deployed locally
+- [ ] Admin user created and accessible
+
+## Local Testing
+- [ ] Run local tests: `npm run edge-functions:test:local`
+- [ ] All critical functions responding (subscription-status, quote-processor, webhook-handler, batch-processor)
+- [ ] No authentication errors
+- [ ] Response times under 5 seconds
+- [ ] Error rates under 5%
+
+## Security Testing
+- [ ] Run security audit: `npm run security:audit`
+- [ ] No hardcoded credentials found
+- [ ] Proper authentication checks in place
+- [ ] Input validation implemented
+- [ ] CORS configuration secure
+
+## Performance Testing
+- [ ] Run performance tests: `npm run edge-functions:test:performance`
+- [ ] All functions handle concurrent requests
+- [ ] Average response times acceptable
+- [ ] No memory leaks or crashes
+- [ ] Connection pooling working correctly
+
+## Production Deployment Testing
+- [ ] Deploy to production: `npm run edge-functions:deploy:production`
+- [ ] Run production tests: `npm run edge-functions:test:production`
+- [ ] All functions accessible in production
+- [ ] Production environment variables configured
+- [ ] Monitoring and alerting functional
+
+## Final Validation
+- [ ] All tests passing
+- [ ] No critical security issues
+- [ ] Performance within acceptable limits
+- [ ] Documentation updated
+- [ ] Team notified of deployment
+
+## Rollback Plan
+- [ ] Previous version tagged
+- [ ] Rollback procedure documented
+- [ ] Database migration rollback tested
+- [ ] Monitoring alerts configured for issues
+
+---
+
+**Note**: Complete all checklist items before production deployment.
+EOF
+  
+  log_success "Testing checklist created: TESTING_CHECKLIST.md"
+}
+
+# Main execution
+main() {
+  echo -e "${BLUE}"
+  echo "🔒 Secure Testing Environment Setup"
+  echo "==================================="
+  echo -e "${NC}"
+  
+  # Run all setup steps
+  if ! check_environment; then
+    log_error "Environment check failed. Please fix issues before continuing."
     exit 1
-fi
+  fi
+  
+  setup_env_variables
+  setup_gitignore
+  setup_test_directories
+  
+  if ! validate_supabase_setup; then
+    log_error "Supabase setup validation failed"
+    exit 1
+  fi
+  
+  setup_dev_certificates
+  create_test_config
+  setup_npm_scripts
+  create_testing_checklist
+  
+  # Final summary
+  echo ""
+  echo "========================================"
+  echo -e "${BLUE}📊 SETUP COMPLETE${NC}"
+  echo "========================================"
+  log_success "Secure testing environment is ready!"
+  echo ""
+  echo "Next steps:"
+  echo "1. Update .env.local with your actual credentials"
+  echo "2. Run: npm run edge-functions:test:local"
+  echo "3. Follow the TESTING_CHECKLIST.md for complete validation"
+  echo "4. Run security audit: npm run security:audit"
+  echo ""
+  echo "Files created:"
+  echo "- .env.local.example (template)"
+  echo "- test-config.json (test configuration)"
+  echo "- TESTING_CHECKLIST.md (testing checklist)"
+  echo ""
+  
+  log_success "Setup completed successfully! 🎉"
+}
 
-# Security reminders
-echo -e "\n${BLUE}🔒 Security Reminders${NC}"
-echo "===================="
-echo ""
-echo -e "${RED}🚨 IMPORTANT SECURITY NOTES:${NC}"
-echo ""
-echo "1. ✅ .env.test is in .gitignore (never committed)"
-echo "2. ✅ Credentials are masked in logs"
-echo "3. ✅ Use different credentials for testing vs production"
-echo "4. ✅ Rotate test credentials regularly"
-echo "5. ✅ Never use production service role keys in client code"
-echo ""
-echo -e "${YELLOW}⚠️  NEVER commit .env.test to git!${NC}"
-echo -e "${YELLOW}⚠️  Use service role keys only for testing!${NC}"
-echo -e "${YELLOW}⚠️  Rotate credentials if they're ever exposed!${NC}"
-
-# Test the secure setup
-echo -e "\n${YELLOW}🧪 Running secure credential test...${NC}"
-if npm run edge-functions:test:health &> /dev/null; then
-    echo -e "${GREEN}✅ Secure testing setup successful!${NC}"
-else
-    echo -e "${YELLOW}⚠️  Health check failed - this may be normal if functions aren't deployed${NC}"
-fi
-
-# Display next steps
-echo -e "\n${BLUE}📋 Next Steps${NC}"
-echo "============="
-echo ""
-echo "1. Review and update .env.test with your actual credentials"
-echo "2. Test local functions: npm run edge-functions:test:local"
-echo "3. Use visual dashboard: http://localhost:3000/test-edge-functions"
-echo "4. For production testing, add production credentials to .env.test"
-echo ""
-echo -e "${GREEN}🎉 Secure testing environment ready!${NC}"
+# Run main function
+main "$@"

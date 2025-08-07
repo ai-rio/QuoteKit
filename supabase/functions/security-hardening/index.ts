@@ -7,9 +7,9 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+import { requireAdmin } from '../_shared/auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-import { recordPerformance, PerformanceMonitor } from '../_shared/performance.ts';
-import { authenticateRequest } from '../_shared/auth.ts';
+import { PerformanceMonitor,recordPerformance } from '../_shared/performance.ts';
 import {
   ApiResponse,
   EdgeFunctionContext,
@@ -156,8 +156,8 @@ serve(async (req: Request): Promise<Response> => {
     );
 
     // Authenticate admin request
-    const authResult = await authenticateRequest(req, supabase);
-    if (!authResult.success || !authResult.isAdmin) {
+    const { response: authResponse, user } = await requireAdmin(req);
+    if (authResponse) {
       // Log failed authentication attempt
       await logSecurityEvent(supabase, {
         eventType: 'failed_authentication',
@@ -169,10 +169,10 @@ serve(async (req: Request): Promise<Response> => {
         responseAction: 'blocked'
       });
       
-      return createErrorResponse('Admin access required', 403);
+      return authResponse;
     }
 
-    context.user = authResult.user;
+    context.user = user;
     
     // Check rate limiting
     const rateLimitCheck = await checkRateLimit(supabase, clientIp, metrics);
@@ -182,7 +182,7 @@ serve(async (req: Request): Promise<Response> => {
         threatLevel: 'medium',
         sourceIp: clientIp,
         userAgent,
-        userId: authResult.user?.id,
+        userId: user?.id,
         functionName: 'security-hardening',
         requestPath: req.url,
         responseAction: 'rate_limited'
@@ -200,7 +200,7 @@ serve(async (req: Request): Promise<Response> => {
       threatLevel: 'low',
       sourceIp: clientIp,
       userAgent,
-      userId: authResult.user?.id,
+      userId: user?.id,
       functionName: 'security-hardening',
       requestPath: req.url,
       responseAction: 'allowed'

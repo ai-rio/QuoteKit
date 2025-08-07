@@ -7,7 +7,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-import { authenticateRequest } from '../_shared/auth.ts';
+import { requireAdmin } from '../_shared/auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { PerformanceMonitor,recordPerformance } from '../_shared/performance.ts';
 import {
@@ -115,12 +115,12 @@ serve(async (req: Request): Promise<Response> => {
     const supabase = await getOptimizedSupabaseClient();
 
     // Authenticate admin request
-    const authResult = await authenticateRequest(req, supabase);
-    if (!authResult.success || !authResult.isAdmin) {
-      return createErrorResponse('Admin access required', 403);
+    const { response: authResponse, user } = await requireAdmin(req);
+    if (authResponse) {
+      return authResponse;
     }
 
-    context.user = authResult.user;
+    context.user = user;
     const url = new URL(req.url);
     const operation = url.pathname.split('/').pop();
 

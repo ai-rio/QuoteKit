@@ -566,10 +566,7 @@ ALTER TABLE security_metrics ENABLE ROW LEVEL SECURITY;
 -- Admin-only access policies for security data
 CREATE POLICY "Admins can manage security scan reports" ON security_scan_reports
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage security data" ON security_scan_reports
@@ -595,8 +592,7 @@ BEGIN
       CREATE POLICY "Admins can manage %1$s" ON %1$s
         FOR ALL USING (
           EXISTS (
-            SELECT 1 FROM user_roles 
-            WHERE user_id = auth.uid() AND role = ''admin''
+            SELECT 1 WHERE public.is_admin()
           )
         );
       

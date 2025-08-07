@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS performance_recommendations (
 );
 
 -- Performance baseline data
-CREATE TABLE IF NOT EXISTS performance_baselines (
+CREATE TABLE IF NOT EXISTS performance_optimization_baselines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   function_name TEXT NOT NULL,
   environment TEXT NOT NULL CHECK (environment IN ('development', 'staging', 'production')),
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS performance_baselines (
 );
 
 -- Performance test results
-CREATE TABLE IF NOT EXISTS performance_test_results (
+CREATE TABLE IF NOT EXISTS performance_optimization_test_results (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   test_id TEXT NOT NULL UNIQUE,
   function_name TEXT NOT NULL,
@@ -275,7 +275,7 @@ DECLARE
   baseline_value REAL;
 BEGIN
   SELECT baseline_value INTO baseline_value
-  FROM performance_baselines
+  FROM performance_optimization_baselines
   WHERE function_name = p_function_name
     AND environment = p_environment
     AND baseline_type = p_baseline_type;
@@ -294,7 +294,7 @@ CREATE OR REPLACE FUNCTION update_performance_baseline(
   p_sample_size INTEGER DEFAULT 1
 ) RETURNS VOID AS $$
 BEGIN
-  INSERT INTO performance_baselines (
+  INSERT INTO performance_optimization_baselines (
     function_name,
     environment,
     baseline_type,
@@ -430,7 +430,7 @@ BEGIN
     COUNT(*) as total_requests,
     COUNT(*) FILTER (WHERE efp.error_count > 0) as error_requests
   INTO performance_data
-  FROM edge_function_performance efp
+  FROM edge_function_metrics efp
   WHERE efp.function_name = p_function_name
     AND efp.created_at >= NOW() - INTERVAL '24 hours';
   
@@ -593,7 +593,7 @@ BEGIN
     AND implemented_at < NOW() - INTERVAL '1 year';
   
   -- Clean up old test results (keep 6 months)
-  DELETE FROM performance_test_results 
+  DELETE FROM performance_optimization_test_results 
   WHERE created_at < NOW() - INTERVAL '6 months';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -665,13 +665,13 @@ CREATE INDEX IF NOT EXISTS idx_performance_recommendations_priority ON performan
 CREATE INDEX IF NOT EXISTS idx_performance_recommendations_status ON performance_recommendations(status);
 
 -- Performance baselines indexes
-CREATE INDEX IF NOT EXISTS idx_performance_baselines_function_env ON performance_baselines(function_name, environment);
-CREATE INDEX IF NOT EXISTS idx_performance_baselines_type ON performance_baselines(baseline_type);
+CREATE INDEX IF NOT EXISTS idx_performance_optimization_baselines_function_env ON performance_optimization_baselines(function_name, environment);
+CREATE INDEX IF NOT EXISTS idx_performance_optimization_baselines_type ON performance_optimization_baselines(baseline_type);
 
 -- Performance test results indexes
-CREATE INDEX IF NOT EXISTS idx_performance_test_results_function ON performance_test_results(function_name);
-CREATE INDEX IF NOT EXISTS idx_performance_test_results_type ON performance_test_results(test_type);
-CREATE INDEX IF NOT EXISTS idx_performance_test_results_passed ON performance_test_results(test_passed);
+CREATE INDEX IF NOT EXISTS idx_performance_optimization_test_results_function ON performance_optimization_test_results(function_name);
+CREATE INDEX IF NOT EXISTS idx_performance_optimization_test_results_type ON performance_optimization_test_results(test_type);
+CREATE INDEX IF NOT EXISTS idx_performance_optimization_test_results_passed ON performance_optimization_test_results(test_passed);
 
 -- Function warmup tracking indexes
 CREATE INDEX IF NOT EXISTS idx_function_warmup_tracking_next ON function_warmup_tracking(next_warmup) WHERE enabled = true;
@@ -688,17 +688,14 @@ ALTER TABLE cold_start_optimizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memory_optimizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE performance_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE performance_recommendations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE performance_baselines ENABLE ROW LEVEL SECURITY;
-ALTER TABLE performance_test_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE performance_optimization_baselines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE performance_optimization_test_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE function_warmup_tracking ENABLE ROW LEVEL SECURITY;
 
 -- Admin-only access policies for performance data
 CREATE POLICY "Admins can manage performance optimizations" ON performance_optimizations
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage performance data" ON performance_optimizations
@@ -714,8 +711,8 @@ DECLARE
     'memory_optimizations',
     'performance_alerts',
     'performance_recommendations',
-    'performance_baselines',
-    'performance_test_results',
+    'performance_optimization_baselines',
+    'performance_optimization_test_results',
     'function_warmup_tracking'
   ];
 BEGIN
@@ -724,8 +721,7 @@ BEGIN
       CREATE POLICY "Admins can manage %1$s" ON %1$s
         FOR ALL USING (
           EXISTS (
-            SELECT 1 FROM user_roles 
-            WHERE user_id = auth.uid() AND role = ''admin''
+            SELECT 1 WHERE public.is_admin()
           )
         );
       
@@ -773,7 +769,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER trigger_performance_threshold_check
-  AFTER INSERT ON edge_function_performance
+  AFTER INSERT ON edge_function_metrics
   FOR EACH ROW
   EXECUTE FUNCTION trigger_check_performance_thresholds();
 
@@ -791,7 +787,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER trigger_performance_recommendations
-  AFTER INSERT ON edge_function_performance
+  AFTER INSERT ON edge_function_metrics
   FOR EACH ROW
   WHEN (NEW.execution_time_ms > 1000 OR NEW.error_count > 0)
   EXECUTE FUNCTION trigger_generate_recommendations();
@@ -801,7 +797,7 @@ CREATE TRIGGER trigger_performance_recommendations
 -- =====================================================
 
 -- Insert default performance baselines for common functions
-INSERT INTO performance_baselines (
+INSERT INTO performance_optimization_baselines (
   function_name, 
   environment, 
   baseline_type, 
@@ -839,6 +835,6 @@ COMMENT ON TABLE cold_start_optimizations IS 'Cold start optimization tracking a
 COMMENT ON TABLE memory_optimizations IS 'Memory optimization tracking and efficiency metrics';
 COMMENT ON TABLE performance_alerts IS 'Performance alerts and threshold violations';
 COMMENT ON TABLE performance_recommendations IS 'Automated performance optimization recommendations';
-COMMENT ON TABLE performance_baselines IS 'Performance baseline measurements for comparison';
-COMMENT ON TABLE performance_test_results IS 'Load testing and performance test results';
+COMMENT ON TABLE performance_optimization_baselines IS 'Performance baseline measurements for comparison';
+COMMENT ON TABLE performance_optimization_test_results IS 'Load testing and performance test results';
 COMMENT ON TABLE function_warmup_tracking IS 'Function warm-up scheduling and tracking';

@@ -7,9 +7,16 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+import { requireAdmin } from '../_shared/auth.ts';
+// Import connection pool functionality
+import {
+  ConnectionPoolMonitor,
+  DatabaseConnectionPool,
+  getConnectionPool,
+  getPoolStats,
+  PooledSupabaseClient} from '../_shared/connection-pool.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-import { recordPerformance, PerformanceMonitor } from '../_shared/performance.ts';
-import { authenticateRequest } from '../_shared/auth.ts';
+import { PerformanceMonitor,recordPerformance } from '../_shared/performance.ts';
 import {
   ApiResponse,
   EdgeFunctionContext,
@@ -20,15 +27,6 @@ import {
   createSuccessResponse,
   generateRequestId,
   getErrorMessage} from '../_shared/utils.ts';
-
-// Import connection pool functionality
-import {
-  getConnectionPool,
-  getPoolStats,
-  PooledSupabaseClient,
-  ConnectionPoolMonitor,
-  DatabaseConnectionPool
-} from '../_shared/connection-pool.ts';
 
 // Connection pool configurations for different environments
 const POOL_CONFIGS = {
@@ -98,12 +96,12 @@ serve(async (req: Request): Promise<Response> => {
     );
 
     // Authenticate admin request
-    const authResult = await authenticateRequest(req, supabase);
-    if (!authResult.success || !authResult.isAdmin) {
-      return createErrorResponse('Admin access required', 403);
+    const { response: authResponse, user } = await requireAdmin(req);
+    if (authResponse) {
+      return authResponse;
     }
 
-    context.user = authResult.user;
+    context.user = user;
     const url = new URL(req.url);
     const operation = url.pathname.split('/').pop();
 

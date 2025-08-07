@@ -410,10 +410,7 @@ CREATE POLICY "Users can update own batch jobs" ON batch_jobs
 -- Admin policies for webhook monitoring
 CREATE POLICY "Admins can view webhook logs" ON webhook_processing_logs
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage webhook logs" ON webhook_processing_logs
@@ -421,10 +418,7 @@ CREATE POLICY "Service role can manage webhook logs" ON webhook_processing_logs
 
 CREATE POLICY "Admins can view dead letter queue" ON webhook_dead_letter_queue
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage dead letter queue" ON webhook_dead_letter_queue
@@ -432,10 +426,7 @@ CREATE POLICY "Service role can manage dead letter queue" ON webhook_dead_letter
 
 CREATE POLICY "Admins can view audit trail" ON webhook_audit_trail
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Users can view own audit entries" ON webhook_audit_trail
@@ -446,10 +437,7 @@ CREATE POLICY "Service role can manage audit trail" ON webhook_audit_trail
 
 CREATE POLICY "Admins can view performance benchmarks" ON webhook_performance_benchmarks
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 -- =====================================================

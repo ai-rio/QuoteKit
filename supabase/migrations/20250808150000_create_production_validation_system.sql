@@ -543,10 +543,7 @@ ALTER TABLE business_metrics_validation ENABLE ROW LEVEL SECURITY;
 -- Admin-only access policies
 CREATE POLICY "Admins can manage validation reports" ON production_validation_reports
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Service role can manage validation reports" ON production_validation_reports
@@ -568,12 +565,7 @@ BEGIN
   FOREACH table_name IN ARRAY table_names LOOP
     EXECUTE format('
       CREATE POLICY "Admins can view %1$s" ON %1$s
-        FOR SELECT USING (
-          EXISTS (
-            SELECT 1 FROM user_roles 
-            WHERE user_id = auth.uid() AND role = ''admin''
-          )
-        );
+        FOR SELECT USING (public.is_admin());
       
       CREATE POLICY "Service role can manage %1$s" ON %1$s
         FOR ALL USING (auth.role() = ''service_role'');
@@ -584,6 +576,33 @@ END $$;
 -- =====================================================
 -- INITIAL DATA AND VALIDATION TEMPLATES
 -- =====================================================
+
+-- Insert template validation report first
+INSERT INTO production_validation_reports (
+  validation_id,
+  overall_status,
+  overall_score,
+  deployment_ready,
+  estimated_risk,
+  total_tests,
+  passed_tests,
+  failed_tests,
+  warning_tests,
+  skipped_tests,
+  critical_issues_count
+) VALUES (
+  'template',
+  'pass',
+  95,
+  true,
+  'low',
+  20,
+  18,
+  0,
+  2,
+  0,
+  0
+) ON CONFLICT (validation_id) DO NOTHING;
 
 -- Insert default performance benchmarks
 INSERT INTO performance_test_results (

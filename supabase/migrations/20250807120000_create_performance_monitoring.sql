@@ -213,10 +213,7 @@ ALTER TABLE cost_metrics ENABLE ROW LEVEL SECURITY;
 -- Admin users can view all performance metrics
 CREATE POLICY "Admin users can view performance metrics" ON edge_function_metrics
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 -- Users can view their own performance metrics
@@ -226,18 +223,12 @@ CREATE POLICY "Users can view own performance metrics" ON edge_function_metrics
 -- Admin users can view all baselines and costs
 CREATE POLICY "Admin users can view baselines" ON performance_baselines
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 CREATE POLICY "Admin users can view cost metrics" ON cost_metrics
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
+    public.is_admin()
   );
 
 -- Grant execute permissions on functions
