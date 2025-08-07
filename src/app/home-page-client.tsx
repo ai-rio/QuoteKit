@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { blogPosts } from '@/app/blog/data/blog-posts';
 import { Button } from '@/components/ui/button';
 
 // Interactive Quote Sandbox Component
@@ -206,6 +207,8 @@ function PricingToggle() {
 }
 
 export default function HomePageClient() {
+  // Get the featured blog posts (first 3 posts from the blog data)
+  const featuredPosts = blogPosts.slice(0, 3);
   return (
     <div className="w-full overflow-x-hidden">
       {/* Hero Section */}
@@ -336,59 +339,36 @@ export default function HomePageClient() {
             <p className="mt-3 sm:mt-4 text-base sm:text-lg text-charcoal/70 max-w-2xl mx-auto">Insights and strategies to help you grow your landscaping company and increase your profits.</p>
           </div>
           <div className="grid gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-            {/* Blog Post 1 */}
-            <Link href="#" className="group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
-              <div className="h-40 sm:h-48 bg-stone-gray/50">
-                <Image
-                  src="https://placehold.co/600x400/2A3D2F/F2B705?text=Pricing+Guide"
-                  alt="Pricing guide for paver patios"
-                  width={600}
-                  height={400}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-4 sm:p-6">
-                <p className="text-xs sm:text-sm font-bold text-forest-green">PRICING STRATEGY</p>
-                <h3 className="mt-2 text-lg sm:text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors line-clamp-2">The 5-Minute Quote: How to Price a Paver Patio Accurately</h3>
-                <p className="mt-2 sm:mt-3 text-charcoal/70 text-sm line-clamp-3">Stop guessing. Learn the formula for calculating materials, labor, and profit to create bids that win.</p>
-              </div>
-            </Link>
-
-            {/* Blog Post 2 */}
-            <Link href="#" className="group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
-              <div className="h-40 sm:h-48 bg-stone-gray/50">
-                <Image
-                  src="https://placehold.co/600x400/2A3D2F/F2B705?text=Pro+Tips"
-                  alt="Professional quote template"
-                  width={600}
-                  height={400}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-4 sm:p-6">
-                <p className="text-xs sm:text-sm font-bold text-forest-green">BUSINESS OPERATIONS</p>
-                <h3 className="mt-2 text-lg sm:text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors line-clamp-2">From Messy Notes to Pro-Grade Bids: 3 Things Your Quote Must Include</h3>
-                <p className="mt-2 sm:mt-3 text-charcoal/70 text-sm line-clamp-3">Elevate your brand and protect yourself with a professional quote structure that builds client trust.</p>
-              </div>
-            </Link>
-
-            {/* Blog Post 3 */}
-            <Link href="#" className="group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 sm:col-span-2 lg:col-span-1">
-              <div className="h-40 sm:h-48 bg-stone-gray/50">
-                <Image
-                  src="https://placehold.co/600x400/2A3D2F/F2B705?text=ROI"
-                  alt="A tool with better ROI"
-                  width={600}
-                  height={400}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-4 sm:p-6">
-                <p className="text-xs sm:text-sm font-bold text-forest-green">TOOLBOX TALK</p>
-                <h3 className="mt-2 text-lg sm:text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors line-clamp-2">The $12 Tool with a Better ROI Than a New Mower</h3>
-                <p className="mt-2 sm:mt-3 text-charcoal/70 text-sm line-clamp-3">How a small software investment can save you more time and make you more money than expensive hardware.</p>
-              </div>
-            </Link>
+            {featuredPosts.map((post, index) => (
+              <Link 
+                key={post.id} 
+                href={`/blog/${post.slug}`} 
+                className={`group block bg-light-concrete rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 ${index === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
+              >
+                <div className="h-40 sm:h-48 bg-stone-gray/50">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    width={600}
+                    height={400}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-4 sm:p-6">
+                  <p className="text-xs sm:text-sm font-bold text-forest-green uppercase">
+                    {post.category === 'pricing' && 'PRICING STRATEGY'}
+                    {post.category === 'operations' && 'BUSINESS OPERATIONS'}
+                    {post.category === 'tools' && 'TOOLBOX TALK'}
+                  </p>
+                  <h3 className="mt-2 text-lg sm:text-xl font-bold text-charcoal group-hover:text-equipment-yellow transition-colors line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="mt-2 sm:mt-3 text-charcoal/70 text-sm line-clamp-3">
+                    {post.summary}
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
