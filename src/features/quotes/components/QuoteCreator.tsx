@@ -70,9 +70,24 @@ export function QuoteCreator({
   );
   
   // Quote line items state - prioritize initialDraft, then templateData, then empty
-  const [quoteLineItems, setQuoteLineItems] = useState<QuoteLineItem[]>(
-    initialDraft?.quote_data || templateData?.quote_data || []
-  );
+  const [quoteLineItems, setQuoteLineItems] = useState<QuoteLineItem[]>(() => {
+    // Defensive programming: ensure we always get a proper array
+    const draftData = initialDraft?.quote_data;
+    const templateQuoteData = templateData?.quote_data;
+    
+    // Check if we have valid array data from draft first
+    if (Array.isArray(draftData)) {
+      return draftData;
+    }
+    
+    // Then check template data
+    if (Array.isArray(templateQuoteData)) {
+      return templateQuoteData;
+    }
+    
+    // Fallback to empty array
+    return [];
+  });
   
   // Tax and markup state - prioritize initialDraft, then templateData, then settings defaults
   const [taxRate, setTaxRate] = useState(

@@ -1,20 +1,88 @@
 /**
  * Performance monitoring utilities for Edge Functions
  * Tracks execution metrics and improvements
+ * Enhanced for Sprint 3 webhook monitoring and batch processing
  */
 
 import { getSupabaseAdmin } from './auth.ts';
+import { EdgeFunctionContext,PerformanceMetrics } from './types.ts';
 
-interface PerformanceMetrics {
-  functionName: string;
-  operationType: string;
-  executionTimeMs: number;
-  databaseQueries?: number;
-  apiCallsMade?: number;
-  memoryUsageMb?: number;
-  errorCount?: number;
-  userId?: string;
-  metadata?: Record<string, any>;
+// Webhook-specific performance tracking
+interface WebhookPerformanceStage {
+  stage: string;
+  startTime: number;
+  endTime?: number;
+  executionTimeMs?: number;
+  databaseQueries: number;
+  apiCalls: number;
+  errorMessage?: string;
+}
+
+/**
+ * Record performance metrics using the existing system
+ */
+export async function recordPerformance(
+  supabase: any,
+  context: EdgeFunctionContext,
+  metrics: PerformanceMetrics
+): Promise<void> {
+  try {
+    await supabase.rpc('record_edge_function_performance', {
+      p_function_name: context.functionName,
+      p_operation_type: context.operationType,
+      p_execution_time_ms: metrics.executionTimeMs,
+      p_database_queries: metrics.databaseQueries,
+      p_api_calls_made: metrics.apiCalls,
+      p_memory_usage_mb: metrics.memoryUsageMb || 0,
+      p_error_count: metrics.errorCount,
+      p_user_id: context.user?.id || null,
+      p_metadata: {
+        request_id: context.requestId,
+        is_admin: context.isAdmin,
+        ...metrics
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to record performance metrics:', error);
+  }
+}
+
+/**
+ * Record webhook processing stage for detailed monitoring
+ */
+export async function recordWebhookStage(
+  supabase: any,
+  eventId: string,
+  eventType: string,
+  stage: string,
+  status: 'started' | 'completed' | 'failed' | 'timeout' | 'retrying',
+  options: {
+    handlerName?: string;
+    executionTimeMs?: number;
+    databaseQueries?: number;
+    apiCalls?: number;
+    errorMessage?: string;
+    retryAttempt?: number;
+    metadata?: any;
+  } = {}
+): Promise<void> {
+  try {
+    await supabase.rpc('record_webhook_stage', {
+      p_stripe_event_id: eventId,
+      p_event_type: eventType,
+      p_stage: stage,
+      p_status: status,
+      p_handler_name: options.handlerName || null,
+      p_execution_time_ms: options.executionTimeMs || null,
+      p_database_queries: options.databaseQueries || 0,
+      p_api_calls: options.apiCalls || 0,
+      p_error_message: options.errorMessage || null,
+      p_retry_attempt: options.retryAttempt || 0,
+      p_metadata: options.metadata || {}
+    });
+  } catch (error) {
+    console.warn('Failed to record webhook stage:', error);
+  }
 }
 
 /**

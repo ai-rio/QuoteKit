@@ -253,7 +253,7 @@ class BaselineMetricsCollector {
 export { BaselineMetricsCollector };
 
 // Run if called directly
-if (import.meta.main) {
+if (require.main === module) {
   const collector = new BaselineMetricsCollector();
   collector.run().catch(error => {
     console.error('Fatal error:', error);

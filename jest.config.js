@@ -55,7 +55,10 @@ const config = {
         '<rootDir>/tests/integration/checkout-flow-comprehensive.test.ts',
         '<rootDir>/tests/integration/invoice-generation.test.ts',
         '<rootDir>/tests/integration/enhanced-billing-history.test.ts',
-        '<rootDir>/tests/integration/edge-case-handling.test.ts'
+        '<rootDir>/tests/integration/edge-case-handling.test.ts',
+        '<rootDir>/tests/integration/quote-calculation-simple.test.ts',
+        '<rootDir>/tests/integration/quote-management.test.ts',
+        '<rootDir>/tests/integration/end-to-end-workflow.test.ts'
       ],
       testEnvironment: 'node',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],

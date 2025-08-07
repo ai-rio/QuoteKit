@@ -5,8 +5,8 @@
  * These tests focus on the pure calculation functions that are the heart of LawnQuote.
  */
 
-import { calculateQuote } from '@/features/quotes/utils';
 import { QuoteLineItem } from '@/features/quotes/types';
+import { calculateQuote } from '@/features/quotes/utils';
 
 describe('Quote Calculation Tests (Working)', () => {
   const sampleLineItems: QuoteLineItem[] = [
@@ -219,6 +219,51 @@ describe('Quote Calculation Tests (Working)', () => {
       expect(result.markupAmount).toBe(1.25);
       expect(result.taxAmount).toBeCloseTo(0.95625, 5);
       expect(result.total).toBeCloseTo(12.20625, 5);
+    });
+
+    test('should handle non-array lineItems input (defensive programming)', () => {
+      // Test various non-array inputs that could cause "reduce is not a function" error
+      
+      // @ts-ignore - Intentionally testing invalid input types
+      const resultNull = calculateQuote(null, 8.5, 20);
+      expect(resultNull.subtotal).toBe(0);
+      expect(resultNull.total).toBe(0);
+      
+      // @ts-ignore - Intentionally testing invalid input types  
+      const resultUndefined = calculateQuote(undefined, 8.5, 20);
+      expect(resultUndefined.subtotal).toBe(0);
+      expect(resultUndefined.total).toBe(0);
+      
+      // @ts-ignore - Intentionally testing invalid input types
+      const resultString = calculateQuote("invalid", 8.5, 20);
+      expect(resultString.subtotal).toBe(0);
+      expect(resultString.total).toBe(0);
+      
+      // @ts-ignore - Intentionally testing invalid input types
+      const resultObject = calculateQuote({ cost: 100, quantity: 2 }, 8.5, 20);
+      expect(resultObject.subtotal).toBe(0);
+      expect(resultObject.total).toBe(0);
+    });
+
+    test('should handle lineItems with missing or invalid properties', () => {
+      // Test items with missing or invalid cost/quantity properties
+      const invalidItems = [
+        { id: '1', name: 'Valid Item', unit: 'each', cost: 50, quantity: 2 },
+        { id: '2', name: 'Missing Cost', unit: 'each', quantity: 3 }, // Missing cost
+        { id: '3', name: 'Missing Quantity', unit: 'each', cost: 25 }, // Missing quantity
+        { id: '4', name: 'String Cost', unit: 'each', cost: "100", quantity: 1 }, // String cost
+        { id: '5', name: 'String Quantity', unit: 'each', cost: 30, quantity: "2" }, // String quantity
+        { id: '6', name: 'Null Values', unit: 'each', cost: null, quantity: null }, // Null values
+      ];
+
+      // @ts-ignore - Intentionally testing invalid item types
+      const result = calculateQuote(invalidItems, 10, 15);
+      
+      // Should only count the valid item: cost=50, quantity=2 = 100
+      expect(result.subtotal).toBe(100);
+      expect(result.markupAmount).toBe(15); // 100 * 0.15
+      expect(result.taxAmount).toBe(11.5); // (100 + 15) * 0.10
+      expect(result.total).toBe(126.5);
     });
   });
 });

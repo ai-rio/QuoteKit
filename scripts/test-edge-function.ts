@@ -266,7 +266,7 @@ class EdgeFunctionTester {
 export { EdgeFunctionTester };
 
 // Run if called directly
-if (import.meta.main) {
+if (require.main === module) {
   const tester = new EdgeFunctionTester();
   tester.runTests().catch(error => {
     console.error('Fatal error during testing:', error);
