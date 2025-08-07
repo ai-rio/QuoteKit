@@ -138,13 +138,15 @@ const MDXComponents = {
       {children}
     </a>
   ),
-  img: ({ src, alt }: { src?: string; alt?: string }) => (
+  img: ({ src, alt }: { src?: string; alt?: string }) => src ? (
     <Image 
       src={src} 
-      alt={alt} 
-      width={800} height={400} className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
+      alt={alt || ""} 
+      width={800} 
+      height={400} 
+      className="w-full rounded-2xl mb-6 shadow-lg border border-stone-gray/20"
     />
-  ),
+  ) : null,
   hr: () => (
     <hr className="border-stone-gray/30 my-12" />
   ),
