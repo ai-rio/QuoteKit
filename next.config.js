@@ -40,7 +40,7 @@ const nextConfig = {
     // Note: By not including 'prettier' here, it will be bundled
   ],
   
-  // Security headers for development and production
+  // Security headers for production
   async headers() {
     return [
       {
@@ -62,6 +62,13 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+          // Allow connections to local Supabase for development
+          {
+            key: 'Content-Security-Policy',
+            value: process.env.NODE_ENV === 'development' 
+              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.stripe.com https://m.stripe.network https://hcaptcha.com https://*.hcaptcha.com https://vitals.vercel-insights.com wss://ws-us3.pusher.com http://127.0.0.1:54321 http://localhost:54321 data:; img-src 'self' data: https:; font-src 'self' data:;"
+              : "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.stripe.com https://m.stripe.network https://hcaptcha.com https://*.hcaptcha.com https://vitals.vercel-insights.com wss://ws-us3.pusher.com data:; img-src 'self' data: https:; font-src 'self' data:;"
           },
         ],
       },

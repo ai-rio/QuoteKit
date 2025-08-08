@@ -54,6 +54,11 @@
     "edge-functions:deploy:test": "npm run edge-functions:deploy:production && npm run edge-functions:test:production",
     "edge-functions:test:full": "npm run edge-functions:test:local && npm run edge-functions:deploy:local && npm run edge-functions:test:performance && npm run edge-functions:test:connection-pool",
     "edge-functions:test:critical": "npm run edge-functions:test:health && npm run edge-functions:test:production --health-check",
+    "edge-functions:diagnose": "bash scripts/diagnose-edge-functions.sh",
+    "edge-functions:diagnose:enhanced": "bash scripts/diagnose-edge-functions-enhanced.sh",
+    "edge-functions:ci": "bash scripts/edge-functions-ci.sh",
+    "edge-functions:ci:quick": "bash scripts/edge-functions-ci.sh --quick",
+    "edge-functions:test:ui": "echo 'Open http://localhost:3000/test-edge-functions in your browser'",
     "security:audit": "bash scripts/security-audit-simple.sh",
     "security:setup": "bash scripts/setup-secure-testing.sh"
   },
