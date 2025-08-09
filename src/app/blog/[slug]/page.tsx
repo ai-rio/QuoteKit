@@ -4,14 +4,31 @@ import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 
 import { BlogBreadcrumb } from '@/components/blog-breadcrumb';
+import { ArticleHero } from '@/components/mdx/ArticleHero';
+import { BetaTestingJourney } from '@/components/mdx/BetaTestingJourney';
 // Import components individually to avoid chunk loading issues
-import { Callout } from '@/components/mdx/Callout';
-import { CodeBlock } from '@/components/mdx/CodeBlock';
+import { 
+  Callout,
+  CelebrationCallout, 
+  ChallengeCallout, 
+  ErrorCallout,
+  InfoCallout,
+  MotivationCallout, 
+  QuestCallout, 
+  RewardCallout, 
+  SuccessCallout,
+  TipCallout,
+  WarningCallout} from '@/components/mdx/Callout';
+import { BashCode, CodeBlock, JavaScriptCode, SQLCode,TypeScriptCode } from '@/components/mdx/CodeBlock';
 import { FAQAccordion } from '@/components/mdx/FAQAccordion';
 import { KeyTakeaways } from '@/components/mdx/KeyTakeaways';
 import { MaterialCostTable } from '@/components/mdx/MaterialCostTable';
-import { PricingCalculator } from '@/components/mdx/PricingCalculator';
+import { MilestoneCelebration } from '@/components/mdx/MilestoneCelebration';
+import { MowingCalculator, PricingCalculator, SeasonalCalculator } from '@/components/mdx/PricingCalculator';
+import TableOfContents from '@/components/mdx/TableOfContents';
+import { TestingScenarios } from '@/components/mdx/TestingScenarios';
 import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/blog/content';
+import { extractHeadingsFromContent, generateHeadingId } from '@/lib/blog/headings';
 
 import { BlogPostHeader } from '../components/blog-post-header';
 import { BlogPostNavigation } from '../components/blog-post-navigation';
@@ -73,26 +90,42 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 // Optimize component imports for better bundle splitting
 const MDXComponents = {
   // Style default HTML elements with LawnQuote design system per style guide
-  h1: ({ children }: { children: React.ReactNode }) => (
-    <h1 className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
-      {children}
-    </h1>
-  ),
-  h2: ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
-      {children}
-    </h2>
-  ),
-  h3: ({ children }: { children: React.ReactNode }) => (
-    <h3 className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
-      {children}
-    </h3>
-  ),
-  h4: ({ children }: { children: React.ReactNode }) => (
-    <h4 className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
-      {children}
-    </h4>
-  ),
+  h1: ({ children }: { children: React.ReactNode }) => {
+    const text = typeof children === 'string' ? children : String(children);
+    const id = generateHeadingId(text);
+    return (
+      <h1 id={id} className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
+        {children}
+      </h1>
+    );
+  },
+  h2: ({ children }: { children: React.ReactNode }) => {
+    const text = typeof children === 'string' ? children : String(children);
+    const id = generateHeadingId(text);
+    return (
+      <h2 id={id} className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
+        {children}
+      </h2>
+    );
+  },
+  h3: ({ children }: { children: React.ReactNode }) => {
+    const text = typeof children === 'string' ? children : String(children);
+    const id = generateHeadingId(text);
+    return (
+      <h3 id={id} className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
+        {children}
+      </h3>
+    );
+  },
+  h4: ({ children }: { children: React.ReactNode }) => {
+    const text = typeof children === 'string' ? children : String(children);
+    const id = generateHeadingId(text);
+    return (
+      <h4 id={id} className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
+        {children}
+      </h4>
+    );
+  },
   p: ({ children }: { children: React.ReactNode }) => (
     <p className="text-lg text-charcoal mb-6 leading-relaxed">
       {children}
@@ -163,11 +196,32 @@ const MDXComponents = {
 
   // Custom MDX Components - individually imported to avoid chunk issues
   Callout,
+  InfoCallout,
+  WarningCallout,
+  SuccessCallout,
+  ErrorCallout,
+  TipCallout,
+  CelebrationCallout,
+  ChallengeCallout,
+  MotivationCallout,
+  QuestCallout,
+  RewardCallout,
   CodeBlock,
+  BashCode,
+  JavaScriptCode,
+  TypeScriptCode,
+  SQLCode,
   PricingCalculator,
+  MowingCalculator,
+  SeasonalCalculator,
   KeyTakeaways,
   FAQAccordion,
   MaterialCostTable,
+  TableOfContents,
+  ArticleHero,
+  BetaTestingJourney,
+  TestingScenarios,
+  MilestoneCelebration,
 };
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
@@ -181,6 +235,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // Get all posts for navigation
   const allPosts = await getAllPosts();
   const relatedPosts = await getRelatedPosts(post.slug, post.category, 3);
+  
+  // Extract headings for table of contents
+  const headings = extractHeadingsFromContent(post.content || '');
   
   // Use pre-optimized components
   const components = MDXComponents;
@@ -232,19 +289,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <BlogPostHeader post={post} />
         
         {/* Main Content Area with proper styling */}
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <article className="
-            bg-paper-white 
-            rounded-2xl 
-            border 
-            border-stone-gray/20 
-            shadow-lg 
-            p-8 
-            mb-8
-          ">
-            {/* Pass our custom components to MDXRemote */}
-            <MDXRemote source={post.content || ''} components={components} />
-          </article>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="flex gap-8">
+            {/* Main Article Content */}
+            <article className="
+              flex-1
+              bg-paper-white 
+              rounded-2xl 
+              border 
+              border-stone-gray/20 
+              shadow-lg 
+              p-8 
+              mb-8
+              min-w-0
+            ">
+              {/* Pass our custom components to MDXRemote */}
+              <MDXRemote source={post.content || ''} components={components} />
+            </article>
+            
+            {/* Table of Contents Sidebar */}
+            {headings.length > 0 && (
+              <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+                <div className="sticky top-8">
+                  <TableOfContents headings={headings} />
+                </div>
+              </aside>
+            )}
+          </div>
         </div>
         
         <BlogPostNavigation currentSlug={post.slug} allPosts={allPosts} />

@@ -41,16 +41,25 @@ export function extractHeadingsFromContent(content: string): TOCHeading[] {
   return headings;
 }
 
+// Track generated IDs to prevent duplicates
+const generatedIds = new Map<string, number>();
+
 /**
  * Generate a URL-safe ID from heading text
  */
 export function generateHeadingId(text: string): string {
-  return text
+  const baseId = text
     .toLowerCase()
     .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+  
+  // Handle duplicates by adding a counter
+  const count = generatedIds.get(baseId) || 0;
+  generatedIds.set(baseId, count + 1);
+  
+  return count === 0 ? baseId : `${baseId}-${count}`;
 }
 
 /**

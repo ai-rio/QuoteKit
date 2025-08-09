@@ -227,7 +227,7 @@ export function AuthUI({
               </>
             ) : (
               <>
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/signup"
                   className="text-forest-green hover:text-forest-green/90 underline-offset-4 hover:underline font-medium"

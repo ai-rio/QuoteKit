@@ -16,7 +16,7 @@ export function AboutPageClient() {
             <br className="hidden md:block" /> not to do paperwork.
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-charcoal/70">
-            LawnQuote was born in the field, not in a boardroom. It's the tool I wish I had when I was running my own crew, turning messy notes into winning bids.
+            LawnQuote was born in the field, not in a boardroom. It&apos;s the tool I wish I had when I was running my own crew, turning messy notes into winning bids.
           </p>
         </div>
       </section>
@@ -44,7 +44,7 @@ export function AboutPageClient() {
                 The Story Behind the Tool
               </h2>
               <p className="mb-6">
-                For years, my office was the front seat of my truck. My filing system was a pile of crumpled, coffee-stained napkins in the center console. I loved the feeling of transforming a client's yard, but I dreaded the end of the day. That's when the "real" work began: trying to decipher my own handwriting, guessing at material costs, and typing up quotes in a clunky spreadsheet—all while my family waited for me to come home.
+                For years, my office was the front seat of my truck. My filing system was a pile of crumpled, coffee-stained napkins in the center console. I loved the feeling of transforming a client&apos;s yard, but I dreaded the end of the day. That&apos;s when the &quot;real&quot; work began: trying to decipher my own handwriting, guessing at material costs, and typing up quotes in a clunky spreadsheet—all while my family waited for me to come home.
               </p>
               <p className="mb-6">
                 I knew two things for sure: <strong className="text-forest-green">I was losing money</strong> from inaccurate bids, and <strong className="text-forest-green">I looked unprofessional</strong>. Every messy quote I sent felt like it undermined the quality of my actual work.
@@ -74,7 +74,7 @@ export function AboutPageClient() {
             <div className="bg-paper-white/10 p-8 rounded-2xl border border-paper-white/20">
               <h3 className="text-2xl font-bold text-equipment-yellow">Radical Simplicity</h3>
               <p className="mt-3 text-stone-gray">
-                No bloated features you'll never use. Just a laser-focused tool that helps you create quotes in minutes, not hours.
+                No bloated features you&apos;ll never use. Just a laser-focused tool that helps you create quotes in minutes, not hours.
               </p>
             </div>
             <div className="bg-paper-white/10 p-8 rounded-2xl border border-paper-white/20">
@@ -86,7 +86,7 @@ export function AboutPageClient() {
             <div className="bg-paper-white/10 p-8 rounded-2xl border border-paper-white/20">
               <h3 className="text-2xl font-bold text-equipment-yellow">Built for the Trade</h3>
               <p className="mt-3 text-stone-gray">
-                We're not a generic business app. We speak your language and build features that solve your real-world problems.
+                We&apos;re not a generic business app. We speak your language and build features that solve your real-world problems.
               </p>
             </div>
           </div>

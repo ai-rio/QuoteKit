@@ -49,7 +49,7 @@ export function MaterialCostTable({
 
   // Calculate total if showTotal is enabled
   const total = showTotal ? data.reduce((sum, item) => {
-    const cost = parseFloat(item.totalCost.replace(/[$,]/g, '')) || 0;
+    const cost = parseFloat((item.totalCost || '').replace(/[$,]/g, '')) || 0;
     return sum + cost;
   }, 0) : 0;
 

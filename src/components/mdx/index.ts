@@ -7,9 +7,13 @@
 export { 
   Callout,
   type CalloutVariant,
+  CelebrationCallout,
+  ChallengeCallout,
   ErrorCallout,
   InfoCallout,
-  SuccessCallout,
+  MotivationCallout,
+  QuestCallout,
+  RewardCallout,  SuccessCallout,
   TipCallout,
   WarningCallout} from './Callout';
 
@@ -35,3 +39,8 @@ export { default as FAQAccordion } from './FAQAccordion';
 export { default as KeyTakeaways } from './KeyTakeaways';
 export { default as MaterialCostTable } from './MaterialCostTable';
 export { default as TableOfContents } from './TableOfContents';
+
+// Beta Testing Delight Components
+export { default as BetaTestingJourney } from './BetaTestingJourney';
+export { default as MilestoneCelebration } from './MilestoneCelebration';
+export { default as TestingScenarios } from './TestingScenarios';

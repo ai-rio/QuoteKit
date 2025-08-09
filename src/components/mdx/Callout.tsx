@@ -6,15 +6,19 @@
 import { 
   AlertTriangleIcon, 
   CheckCircleIcon, 
+  Heart,
   InfoIcon, 
   LightbulbIcon,
-  XCircleIcon 
-} from 'lucide-react';
+  Rocket,
+  Sparkles,
+  Target,
+  Trophy,
+  XCircleIcon} from 'lucide-react';
 import React from 'react';
 
 import { cn } from '@/utils/cn';
 
-export type CalloutVariant = 'info' | 'warning' | 'success' | 'error' | 'tip';
+export type CalloutVariant = 'info' | 'warning' | 'success' | 'error' | 'tip' | 'celebration' | 'challenge' | 'motivation' | 'quest' | 'reward';
 
 interface CalloutProps {
   variant?: CalloutVariant;
@@ -53,6 +57,36 @@ const variantConfig = {
     containerClass: 'border-forest-green bg-green-50 text-forest-green',
     iconClass: 'text-forest-green',
     titleClass: 'text-forest-green',
+  },
+  celebration: {
+    icon: Trophy,
+    containerClass: 'border-equipment-yellow bg-gradient-to-r from-yellow-50 to-orange-50 text-yellow-900 shadow-lg',
+    iconClass: 'text-equipment-yellow animate-bounce',
+    titleClass: 'text-yellow-800 font-bold',
+  },
+  challenge: {
+    icon: Target,
+    containerClass: 'border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 shadow-lg',
+    iconClass: 'text-purple-600 animate-pulse',
+    titleClass: 'text-purple-800 font-bold',
+  },
+  motivation: {
+    icon: Heart,
+    containerClass: 'border-pink-300 bg-gradient-to-r from-pink-50 to-red-50 text-pink-900 shadow-lg',
+    iconClass: 'text-pink-600 animate-pulse',
+    titleClass: 'text-pink-800 font-bold',
+  },
+  quest: {
+    icon: Rocket,
+    containerClass: 'border-indigo-300 bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-900 shadow-lg',
+    iconClass: 'text-indigo-600 animate-bounce',
+    titleClass: 'text-indigo-800 font-bold',
+  },
+  reward: {
+    icon: Sparkles,
+    containerClass: 'border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 text-green-900 shadow-xl',
+    iconClass: 'text-green-600 animate-spin',
+    titleClass: 'text-green-800 font-bold',
   },
 };
 
@@ -117,4 +151,25 @@ export const ErrorCallout = (props: Omit<CalloutProps, 'variant'>) => (
 
 export const TipCallout = (props: Omit<CalloutProps, 'variant'>) => (
   <Callout variant="tip" {...props} />
+);
+
+// Beta Testing Specific Callouts
+export const CelebrationCallout = (props: Omit<CalloutProps, 'variant'>) => (
+  <Callout variant="celebration" {...props} />
+);
+
+export const ChallengeCallout = (props: Omit<CalloutProps, 'variant'>) => (
+  <Callout variant="challenge" {...props} />
+);
+
+export const MotivationCallout = (props: Omit<CalloutProps, 'variant'>) => (
+  <Callout variant="motivation" {...props} />
+);
+
+export const QuestCallout = (props: Omit<CalloutProps, 'variant'>) => (
+  <Callout variant="quest" {...props} />
+);
+
+export const RewardCallout = (props: Omit<CalloutProps, 'variant'>) => (
+  <Callout variant="reward" {...props} />
 );

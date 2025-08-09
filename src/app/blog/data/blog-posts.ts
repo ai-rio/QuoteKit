@@ -13,6 +13,18 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    id: '9',
+    title: 'Level Up Your QuoteKit Skills: The Ultimate Beta Testing Adventure',
+    slug: 'beta-testing-adventure',
+    category: 'tools',
+    image: 'https://placehold.co/600x400/6366F1/FFFFFF?text=Beta+Adventure&font=source-sans-pro',
+    summary: 'Join the most rewarding beta program in landscaping! Discover how to turn testing into a game, unlock pro features, and become a QuoteKit champion while helping shape the future of quoting.',
+    author: 'The QuoteKit Team',
+    publishedAt: '2025-01-16',
+    readTime: 12,
+    featured: true,
+  },
+  {
     id: '1',
     title: 'The 5-Minute Quote: How to Price a Paver Patio',
     slug: 'how-to-price-a-paver-patio',
