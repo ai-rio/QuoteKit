@@ -18,9 +18,9 @@ export function WelcomeEmail() {
             </Section>
             <Section className='p-8'>
               <Heading as='h2' className='m-0 text-[24px] font-bold text-charcoal'>
-                Thanks for signing up.
+                Welcome to LawnQuote!
               </Heading>
-              <Text className='my-6 text-[16px] text-charcoal'>Go to your dashboard to get started.</Text>
+              <Text className='my-6 text-[16px] text-charcoal'>Start creating professional landscaping quotes and grow your lawn care business. Access your dashboard to begin building your first quote.</Text>
               <Button href={baseUrl + '/dashboard'} className='rounded-md bg-forest-green px-4 py-2 font-medium text-paper-white hover:opacity-90'>
 
                 Dashboard

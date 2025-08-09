@@ -1,0 +1,7 @@
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Forest Green Background -->
+  <rect width="40" height="40" fill="#2A3D2F" rx="8"/>
+  
+  <!-- LQ Letters in Modern Sans Style -->
+  <text x="20" y="28" font-family="Inter, sans-serif" font-weight="900" font-size="18" text-anchor="middle" fill="#FFFFFF">LQ</text>
+</svg>

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import * as React from "react"
 
 import { signOut } from "@/app/(auth)/auth-actions"
-import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
+import { LawnQuoteLogoIcon } from "@/components/branding/lawn-quote-logo"
 import { Badge } from "@/components/ui/badge"
 import {
   Popover,
@@ -109,7 +109,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     <Sidebar className="bg-forest-green text-white" {...props}>
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-3 px-2">
-          <LawnQuoteLogo className="text-white flex-shrink-0" />
+          <LawnQuoteLogoIcon className="text-white flex-shrink-0" />
           <span className="text-2xl font-bold text-white font-mono">LawnQuote</span>
         </div>
       </SidebarHeader>

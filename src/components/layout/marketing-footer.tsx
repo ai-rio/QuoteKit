@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import React from 'react'
 
-import { LawnQuoteLogo } from '@/components/branding/lawn-quote-logo'
+import { LawnQuoteLogoHorizontal } from '@/components/branding/lawn-quote-logo'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/utils/cn'
 
@@ -98,16 +98,9 @@ export function MarketingFooter({ className }: MarketingFooterProps) {
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           {/* Company info section */}
           <div className="space-y-6">
-            <div className="flex items-center space-x-3">
-              <LawnQuoteLogo 
-                className="text-forest-green" 
-                width={32} 
-                height={32} 
-              />
-              <span className="text-xl font-bold text-charcoal">LawnQuote</span>
-            </div>
+            <LawnQuoteLogoHorizontal />
             <p className="text-sm text-charcoal/70 max-w-md">
-              Professional landscaping quote management software that helps contractors 
+              Professional quote management software that helps contractors and service providers
               create accurate estimates, manage clients, and grow their business efficiently.
             </p>
             <div className="flex space-x-4">

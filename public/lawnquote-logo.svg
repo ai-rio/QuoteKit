@@ -1,0 +1,8 @@
+<svg width="160" height="40" viewBox="0 0 160 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Icon -->
+  <rect width="40" height="40" fill="#2A3D2F" rx="8"/>
+  <text x="20" y="28" font-family="Inter, sans-serif" font-weight="900" font-size="18" text-anchor="middle" fill="#FFFFFF">LQ</text>
+  
+  <!-- LawnQuote Text -->
+  <text x="52" y="28" font-family="Inter, sans-serif" font-weight="700" font-size="24" fill="#1C1C1C">LawnQuote</text>
+</svg>

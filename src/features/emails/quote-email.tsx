@@ -82,7 +82,7 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
               </Heading>
               
               <Text className="mb-6 text-charcoal leading-relaxed">
-                Thank you for your interest in our services. Please find attached your quote 
+                Thank you for considering our landscaping services. Please find attached your detailed quote 
                 <strong> #{quote.quote_number}</strong> for your review.
               </Text>
 
@@ -115,12 +115,11 @@ export default function QuoteEmail({ quote, company }: QuoteEmailProps) {
               </Section>
 
               <Text className="mb-6 text-charcoal leading-relaxed">
-                The detailed quote is attached as a PDF. Please review it carefully and 
-                let us know if you have any questions or need any modifications.
+                The detailed quote is attached as a PDF with all labor, materials, and landscaping services itemized. Please review it carefully and let us know if you have any questions or need any modifications to better suit your project needs.
               </Text>
 
               <Text className="mb-6 text-charcoal leading-relaxed">
-                We look forward to working with you on this project!
+                We look forward to transforming your outdoor space and working with you on this landscaping project!
               </Text>
 
               {/* CTA Button */}

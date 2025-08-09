@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function QuotePDFTemplate({ quote, company, showWatermark = false, watermarkText = 'Created with QuoteKit' }: PDFGenerationOptions) {
+export function QuotePDFTemplate({ quote, company, showWatermark = false, watermarkText = 'Created with LawnQuote' }: PDFGenerationOptions) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',

@@ -30,19 +30,22 @@ const kalam = Kalam({
 
 export const metadata: Metadata = {
   title: 'LawnQuote - Professional Landscaping Quotes in Minutes',
-  description: 'Stop underbidding and start winning jobs. Create professional landscaping quotes in under 5 minutes with LawnQuote. Trusted by contractors nationwide.',
-  keywords: 'landscaping quotes, lawn care software, landscaping business, professional estimates, contractor software',
+  description: 'Create professional landscaping quotes in minutes. LawnQuote helps landscaping contractors streamline their quoting process and grow their business.',
+  keywords: 'landscaping quotes, lawn care estimates, landscaping contractor software, landscaping quote generator, professional landscaping quotes',
   authors: [{ name: 'LawnQuote' }],
+  icons: {
+    icon: '/favicon.svg',
+  },
   openGraph: {
     title: 'LawnQuote - Professional Landscaping Quotes in Minutes',
-    description: 'Stop underbidding and start winning jobs. Create professional landscaping quotes in under 5 minutes.',
+    description: 'Create professional landscaping quotes in minutes. Streamline your quoting process and grow your landscaping business.',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'LawnQuote - Professional Landscaping Quotes in Minutes',
-    description: 'Stop underbidding and start winning jobs. Create professional landscaping quotes in under 5 minutes.',
+    description: 'Create professional landscaping quotes in minutes. Streamline your quoting process and grow your landscaping business.',
   },
 };
 

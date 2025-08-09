@@ -4,7 +4,7 @@ import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect,useState } from 'react'
 
-import { LawnQuoteLogo } from '@/components/branding/lawn-quote-logo'
+import { LawnQuoteLogoHorizontal, LawnQuoteLogoIcon } from '@/components/branding/lawn-quote-logo'
 import { Button } from '@/components/ui/button'
 import {
   NavigationMenu,
@@ -70,14 +70,9 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and brand */}
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-              <LawnQuoteLogo 
-                className="text-forest-green" 
-                width={32} 
-                height={32} 
-              />
-              <span className="text-xl font-bold text-charcoal">LawnQuote</span>
+          <div className="flex items-center">
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <LawnQuoteLogoHorizontal />
             </Link>
           </div>
 
@@ -158,14 +153,7 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
               <SheetContent side="right" className="w-full bg-paper-white sm:max-w-sm">
                 <SheetHeader className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <LawnQuoteLogo 
-                        className="text-forest-green" 
-                        width={28} 
-                        height={28} 
-                      />
-                      <span className="text-lg font-bold text-charcoal">LawnQuote</span>
-                    </div>
+                    <LawnQuoteLogoHorizontal />
                     <SheetClose asChild>
                       <Button
                         variant="ghost"

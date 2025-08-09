@@ -4,6 +4,9 @@ export default {
   content: [],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         'forest-green': '#2A3D2F',
         'equipment-yellow': '#F2B705',

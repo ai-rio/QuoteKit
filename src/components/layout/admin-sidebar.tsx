@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation"
 import * as React from "react"
 
 import { signOut } from "@/app/(auth)/auth-actions"
-import { LawnQuoteLogo } from "@/components/branding/lawn-quote-logo"
+import { LawnQuoteLogoIcon } from "@/components/branding/lawn-quote-logo"
 import {
   Popover,
   PopoverContent,
@@ -163,7 +163,7 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
     <Sidebar className="bg-forest-green text-white" variant="sidebar" {...props}>
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-3 px-2">
-          <LawnQuoteLogo className="text-white flex-shrink-0" />
+          <LawnQuoteLogoIcon className="text-white flex-shrink-0" />
           <div className="flex flex-col">
             <span className="text-2xl font-bold text-white font-mono">LawnQuote</span>
             <span className="text-xs text-white/70 font-medium">Admin Panel</span>

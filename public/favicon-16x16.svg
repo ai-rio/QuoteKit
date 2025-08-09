@@ -1,0 +1,6 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <!-- Forest Green Background -->
+  <rect width="16" height="16" fill="#2A3D2F" rx="3"/>
+  <!-- LQ Text in White -->
+  <text x="8" y="11.5" font-family="Inter, sans-serif" font-weight="900" font-size="8" text-anchor="middle" fill="#FFFFFF">LQ</text>
+</svg>

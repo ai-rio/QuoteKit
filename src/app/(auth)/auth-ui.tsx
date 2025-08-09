@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 
-import { LawnQuoteLogo } from '@/components/branding/lawn-quote-logo';
+import { LawnQuoteLogoHorizontal } from '@/components/branding/lawn-quote-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -118,10 +118,7 @@ export function AuthUI({
     <div className={cn('flex flex-col gap-6 w-full max-w-sm', className)}>
       {/* Logo and Brand */}
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex items-center gap-3">
-          <LawnQuoteLogo className="text-forest-green" width={40} height={40} />
-          <span className="text-2xl font-bold text-charcoal">LawnQuote</span>
-        </div>
+        <LawnQuoteLogoHorizontal />
       </div>
 
       {/* Auth Card */}
