@@ -1,0 +1,209 @@
+# Fly.io Staging Configuration for QuoteKit
+# This configuration is optimized for pre-release testing environment
+# with cost efficiency and comprehensive testing capabilities
+
+app = "quotekit-staging"
+primary_region = "iad"  # Washington, D.C. - chosen for low latency to Supabase
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
+
+[build]
+  builder = "heroku/buildpacks:20"  # Use Heroku Node.js buildpack for Next.js
+  buildpacks = ["heroku/nodejs"]
+
+[env]
+  # Application environment
+  NODE_ENV = "staging"
+  PORT = "3000"
+  
+  # Next.js optimization
+  NODE_OPTIONS = "--max-old-space-size=512"  # Optimized for shared-cpu-1x
+  NEXT_TELEMETRY_DISABLED = "1"
+  
+  # Application configuration
+  NEXT_PUBLIC_APP_ENV = "staging"
+  
+  # Build-time configuration
+  SKIP_INSTALL_DEPS = "false"
+  NPM_CONFIG_PRODUCTION = "false"
+
+# Secrets (managed via `fly secrets set`)
+# These are configured separately for security:
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY  
+# - SUPABASE_SERVICE_ROLE_KEY
+# - DATABASE_URL
+# - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET
+# - RESEND_API_KEY
+# - NEXT_PUBLIC_POSTHOG_KEY
+# - NEXT_PUBLIC_POSTHOG_HOST
+# - NEXT_PUBLIC_SITE_URL
+
+[deploy]
+  # Database migrations and setup
+  release_command = "npx supabase migration up && npm run db:setup:staging"
+  
+  # Deployment strategy
+  strategy = "rolling"  # Zero-downtime deployment
+  wait_timeout = "10m"  # Allow time for build and startup
+
+[processes]
+  web = "npm start"
+
+# HTTP service configuration
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+  auto_stop_machines = "stop"  # Cost optimization: auto-stop after inactivity
+  auto_start_machines = true
+  min_machines_running = 0     # Allow scaling to zero
+  max_machines_running = 2     # Limit for staging environment
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true  # Redirect HTTP to HTTPS
+
+  [[services.ports]] 
+    handlers = ["tls", "http"]
+    port = 443
+
+  # Health checks
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/api/health"
+    protocol = "http"
+    timeout = "5s"
+    tls_skip_verify = false
+    
+    [services.http_checks.headers]
+      User-Agent = "Fly.io Health Check"
+
+  # TCP health check (fallback)
+  [[services.tcp_checks]]
+    grace_period = "10s"
+    interval = "30s"
+    port = 3000
+    restart_limit = 3
+    timeout = "5s"
+
+# Resource allocation optimized for staging environment
+[[vm]]
+  size = "shared-cpu-1x"  # 1 vCPU, 256MB RAM - cost-effective for staging
+  memory = "256mb"        # Explicit memory limit
+
+# Volume for persistent storage (optional, for file uploads/cache)
+# Uncomment if your application needs persistent storage
+# [[mounts]]
+#   source = "quotekit_staging_data"
+#   destination = "/data"
+#   auto_extend_size_threshold = 80
+#   auto_extend_size_increment = "1GB"
+#   auto_extend_size_limit = "10GB"
+
+# Metrics and monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Logging configuration  
+[logging]
+  level = "info"
+  format = "json"
+
+# Machine configuration for staging optimization
+[machine]
+  # Auto-stop configuration for cost savings
+  auto_stop = "10m"  # Stop after 10 minutes of inactivity
+  
+  # Resource monitoring
+  restart_policy = "on-failure"
+  
+  # Graceful shutdown
+  kill_timeout = "30s"
+
+# Environment-specific build configuration
+[build.env]
+  NODE_ENV = "staging"
+  NEXT_BUILD_ID = "staging"
+  ANALYZE = "false"  # Disable bundle analyzer in staging builds
+
+# Security and network configuration
+[network]
+  # Enable IPv6
+  ipv6 = true
+
+# Custom headers for staging environment
+[[headers]]
+  for = "/*"
+  
+  [headers.values]
+    X-Environment = "staging"
+    X-Robots-Tag = "noindex, nofollow"  # Prevent search engine indexing
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    
+    # Content Security Policy optimized for staging
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
+      style-src 'self' 'unsafe-inline';
+      connect-src 'self' 
+                  https://api.stripe.com 
+                  https://m.stripe.network 
+                  https://hcaptcha.com 
+                  https://*.hcaptcha.com 
+                  https://vitals.vercel-insights.com 
+                  wss://ws-us3.pusher.com
+                  https://*.supabase.co
+                  https://app.posthog.com
+                  data:;
+      img-src 'self' data: https: blob:;
+      font-src 'self' data:;
+      media-src 'self' blob:;
+      worker-src 'self' blob:;
+      frame-src https://js.stripe.com https://hooks.stripe.com;
+    """
+
+# Staging-specific console configuration
+[console]
+  # Enable console access for debugging
+  enabled = true
+  
+  # SSH configuration
+  [console.ssh]
+    username = "root"
+    authorized_keys_url = "https://github.com/YOUR_GITHUB_USERNAME.keys"
+
+# Performance optimization for Next.js
+[optimization]
+  # Gzip compression
+  gzip = true
+  
+  # Static file caching
+  static_cache_control = "public, max-age=31536000, immutable"
+
+# Staging-specific database configuration (if using Fly Postgres)
+# This section is optional if using external Supabase database
+# [postgres]
+#   shared_preload_libraries = "pg_stat_statements"
+#   max_connections = 20  # Lower for staging environment
+#   shared_buffers = "64MB"
+#   effective_cache_size = "128MB"
+
+# Development and debugging features for staging
+[debug]
+  # Enable detailed logging
+  verbose = true
+  
+  # Performance monitoring
+  enable_metrics = true

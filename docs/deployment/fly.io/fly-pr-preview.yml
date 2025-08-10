@@ -1,0 +1,431 @@
+# GitHub Actions Workflow for Fly.io Staging Environment
+# Automated PR preview deployments and staging environment management
+
+name: Fly.io Staging Deployment
+
+on:
+  # Trigger on pull requests to main branch
+  pull_request:
+    branches: [ main ]
+    types: [opened, reopened, synchronize, closed, labeled]
+    
+  # Manual trigger for staging deployments
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - pr-preview
+      
+      deploy_type:
+        description: 'Type of deployment'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+        - full
+        - quick
+        - database-only
+
+  # Scheduled deployments for maintenance
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly Monday 2 AM UTC for maintenance
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  FLY_REGION: iad
+  REGISTRY: fly.io
+  
+  # Staging environment configuration
+  STAGING_APP_NAME: quotekit-staging
+  STAGING_DATABASE: quotekit-staging-db
+  
+  # PR preview configuration
+  PR_APP_PREFIX: quotekit-pr
+  PR_DATABASE_PREFIX: quotekit-pr-db
+
+jobs:
+  # Environment setup and validation
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      app_name: ${{ steps.config.outputs.app_name }}
+      database_name: ${{ steps.config.outputs.database_name }}
+      deployment_type: ${{ steps.config.outputs.deployment_type }}
+      should_deploy: ${{ steps.config.outputs.should_deploy }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure deployment
+      id: config
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "${{ github.event.action }}" == "closed" ]]; then
+            echo "should_deploy=cleanup" >> $GITHUB_OUTPUT
+            echo "app_name=${{ env.PR_APP_PREFIX }}-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "database_name=${{ env.PR_DATABASE_PREFIX }}-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "deployment_type=cleanup" >> $GITHUB_OUTPUT
+          else
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "app_name=${{ env.PR_APP_PREFIX }}-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "database_name=${{ env.PR_DATABASE_PREFIX }}-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "deployment_type=pr-preview" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "app_name=${{ env.STAGING_APP_NAME }}" >> $GITHUB_OUTPUT
+          echo "database_name=${{ env.STAGING_DATABASE }}" >> $GITHUB_OUTPUT
+          echo "deployment_type=staging" >> $GITHUB_OUTPUT
+        fi
+
+  # Build and test application
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: '1.2.17'
+        
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.bun/install/cache
+          node_modules
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+          
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+      
+    - name: Type checking
+      run: bun run type-check
+      
+    - name: Linting
+      run: bun run lint
+      
+    - name: Unit tests
+      run: bun run test
+      env:
+        NODE_ENV: test
+        
+    - name: Build application
+      run: bun run build
+      env:
+        NODE_ENV: staging
+        SKIP_BUILD_STATIC_GENERATION: true
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          .next/
+          package.json
+          bun.lockb
+        retention-days: 1
+
+  # Database setup and migrations
+  database-setup:
+    runs-on: ubuntu-latest
+    needs: [setup, build-and-test]
+    if: needs.setup.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Fly CLI
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Setup Supabase CLI
+      uses: supabase/setup-cli@v1
+      with:
+        version: latest
+        
+    - name: Check if database exists
+      id: db_check
+      run: |
+        if fly postgres list | grep -q "${{ needs.setup.outputs.database_name }}"; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create database (if needed)
+      if: steps.db_check.outputs.exists == 'false' && needs.setup.outputs.deployment_type == 'pr-preview'
+      run: |
+        fly postgres create \
+          --name ${{ needs.setup.outputs.database_name }} \
+          --region ${{ env.FLY_REGION }} \
+          --initial-cluster-size 1 \
+          --vm-size shared-cpu-1x \
+          --volume-size 1
+          
+    - name: Wait for database readiness
+      if: steps.db_check.outputs.exists == 'false'
+      run: |
+        echo "Waiting for database to be ready..."
+        sleep 30
+        fly postgres connect --database-url ${{ needs.setup.outputs.database_name }} -c "SELECT 1;"
+        
+    - name: Run database migrations
+      run: |
+        # Get database URL from Fly.io
+        DATABASE_URL=$(fly postgres connect --database-url ${{ needs.setup.outputs.database_name }})
+        
+        # Run Supabase migrations if available
+        if [ -f "supabase/config.toml" ]; then
+          supabase db push --db-url "$DATABASE_URL"
+        fi
+
+  # Deploy to Fly.io
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [setup, build-and-test, database-setup]
+    if: needs.setup.outputs.should_deploy == 'true'
+    
+    environment:
+      name: ${{ needs.setup.outputs.deployment_type }}
+      url: ${{ steps.deploy.outputs.url }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        
+    - name: Setup Fly CLI
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Generate fly.toml for deployment
+      run: |
+        cp docs/deployment/fly.io/fly-staging.toml fly.toml
+        
+        # Update app name for PR previews
+        if [[ "${{ needs.setup.outputs.deployment_type }}" == "pr-preview" ]]; then
+          sed -i 's/app = "quotekit-staging"/app = "${{ needs.setup.outputs.app_name }}"/' fly.toml
+          
+          # Add PR-specific environment variables
+          cat >> fly.toml << EOF
+          
+        [env]
+          NEXT_PUBLIC_APP_ENV = "pr-preview"
+          PR_NUMBER = "${{ github.event.number }}"
+          GITHUB_SHA = "${{ github.sha }}"
+        EOF
+        fi
+        
+    - name: Set up environment secrets
+      run: |
+        # Core application secrets
+        fly secrets set NEXT_PUBLIC_SUPABASE_URL="${{ secrets.STAGING_SUPABASE_URL }}" --app ${{ needs.setup.outputs.app_name }}
+        fly secrets set NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.STAGING_SUPABASE_ANON_KEY }}" --app ${{ needs.setup.outputs.app_name }}
+        fly secrets set SUPABASE_SERVICE_ROLE_KEY="${{ secrets.STAGING_SUPABASE_SERVICE_KEY }}" --app ${{ needs.setup.outputs.app_name }}
+        
+        # Database connection
+        DATABASE_URL=$(fly postgres connect --database-url ${{ needs.setup.outputs.database_name }})
+        fly secrets set DATABASE_URL="$DATABASE_URL" --app ${{ needs.setup.outputs.app_name }}
+        
+        # Stripe configuration (test mode)
+        fly secrets set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_TEST_PUBLISHABLE_KEY }}" --app ${{ needs.setup.outputs.app_name }}
+        fly secrets set STRIPE_SECRET_KEY="${{ secrets.STRIPE_TEST_SECRET_KEY }}" --app ${{ needs.setup.outputs.app_name }}
+        fly secrets set STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_TEST_WEBHOOK_SECRET }}" --app ${{ needs.setup.outputs.app_name }}
+        
+        # Email service
+        fly secrets set RESEND_API_KEY="${{ secrets.RESEND_STAGING_API_KEY }}" --app ${{ needs.setup.outputs.app_name }}
+        
+        # Analytics
+        fly secrets set NEXT_PUBLIC_POSTHOG_KEY="${{ secrets.POSTHOG_STAGING_KEY }}" --app ${{ needs.setup.outputs.app_name }}
+        fly secrets set NEXT_PUBLIC_POSTHOG_HOST="https://app.posthog.com" --app ${{ needs.setup.outputs.app_name }}
+        
+        # Application URLs
+        if [[ "${{ needs.setup.outputs.deployment_type }}" == "pr-preview" ]]; then
+          fly secrets set NEXT_PUBLIC_SITE_URL="https://${{ needs.setup.outputs.app_name }}.fly.dev" --app ${{ needs.setup.outputs.app_name }}
+        else
+          fly secrets set NEXT_PUBLIC_SITE_URL="https://quotekit-staging.fly.dev" --app ${{ needs.setup.outputs.app_name }}
+        fi
+        
+    - name: Deploy to Fly.io
+      id: deploy
+      run: |
+        # Deploy the application
+        fly deploy --app ${{ needs.setup.outputs.app_name }} --wait-timeout 10m
+        
+        # Get the deployment URL
+        APP_URL="https://${{ needs.setup.outputs.app_name }}.fly.dev"
+        echo "url=$APP_URL" >> $GITHUB_OUTPUT
+        
+        # Wait for application to be healthy
+        echo "Waiting for application to be healthy..."
+        timeout 300 bash -c "until curl -f $APP_URL/api/health; do sleep 10; done"
+        
+    - name: Run post-deployment tests
+      run: |
+        APP_URL="https://${{ needs.setup.outputs.app_name }}.fly.dev"
+        
+        # Test health endpoint
+        curl -f "$APP_URL/api/health" || exit 1
+        
+        # Test main page
+        curl -f "$APP_URL" || exit 1
+        
+        # Test API endpoints
+        curl -f "$APP_URL/api/status" || exit 1
+        
+        echo "✅ All health checks passed"
+        
+    - name: Update PR with deployment info
+      if: needs.setup.outputs.deployment_type == 'pr-preview'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const deploymentUrl = '${{ steps.deploy.outputs.url }}';
+          const body = `## 🚀 PR Preview Deployment
+          
+          Your pull request has been deployed to Fly.io!
+          
+          **🌐 Preview URL:** ${deploymentUrl}
+          **📊 Health Check:** ${deploymentUrl}/api/health
+          **🔍 Logs:** \`fly logs --app ${{ needs.setup.outputs.app_name }}\`
+          
+          ### 🧪 Testing Endpoints
+          - **Main App:** ${deploymentUrl}
+          - **API Health:** ${deploymentUrl}/api/health
+          - **API Status:** ${deploymentUrl}/api/status
+          
+          ### 📈 Monitoring
+          - Check logs: \`fly logs --app ${{ needs.setup.outputs.app_name }}\`
+          - SSH access: \`fly ssh console --app ${{ needs.setup.outputs.app_name }}\`
+          
+          This preview environment will be automatically cleaned up when the PR is closed.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+  # Integration testing on deployed environment
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [setup, deploy]
+    if: needs.setup.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+      
+    - name: Run integration tests
+      run: |
+        APP_URL="https://${{ needs.setup.outputs.app_name }}.fly.dev"
+        
+        # Set test environment variables
+        export TEST_BASE_URL="$APP_URL"
+        export NODE_ENV="test"
+        
+        # Run integration test suite
+        bun run test:integration
+        
+        # Run API endpoint tests
+        bun run test:api
+        
+        # Run user journey tests (if available)
+        if [ -f "tests/e2e/user-journey.test.js" ]; then
+          bun run test:e2e
+        fi
+        
+    - name: Performance testing
+      run: |
+        APP_URL="https://${{ needs.setup.outputs.app_name }}.fly.dev"
+        
+        # Simple performance test using curl
+        echo "Testing page load performance..."
+        time curl -s -o /dev/null -w "Total time: %{time_total}s\n" "$APP_URL"
+        
+        # Test API response times
+        echo "Testing API performance..."
+        time curl -s -o /dev/null -w "Total time: %{time_total}s\n" "$APP_URL/api/health"
+
+  # Cleanup PR preview environments
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.should_deploy == 'cleanup'
+    
+    steps:
+    - name: Setup Fly CLI
+      uses: superfly/flyctl-actions/setup-flyctl@master
+      
+    - name: Cleanup PR preview app
+      run: |
+        # Destroy the preview application
+        if fly apps list | grep -q "${{ needs.setup.outputs.app_name }}"; then
+          echo "Destroying PR preview app: ${{ needs.setup.outputs.app_name }}"
+          fly apps destroy ${{ needs.setup.outputs.app_name }} --yes
+        fi
+        
+        # Destroy the preview database
+        if fly postgres list | grep -q "${{ needs.setup.outputs.database_name }}"; then
+          echo "Destroying PR preview database: ${{ needs.setup.outputs.database_name }}"
+          fly postgres destroy ${{ needs.setup.outputs.database_name }} --yes
+        fi
+        
+    - name: Comment on PR cleanup
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## 🧹 PR Preview Cleanup
+            
+            The preview environment for this PR has been automatically cleaned up:
+            - App \`${{ needs.setup.outputs.app_name }}\` destroyed
+            - Database \`${{ needs.setup.outputs.database_name }}\` destroyed
+            
+            Resources have been freed up and billing has stopped for this preview environment.`
+          });
+
+  # Notification and reporting
+  notify:
+    runs-on: ubuntu-latest
+    needs: [setup, deploy, integration-tests]
+    if: always() && needs.setup.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Report deployment status
+      run: |
+        if [[ "${{ needs.deploy.result }}" == "success" && "${{ needs.integration-tests.result }}" == "success" ]]; then
+          echo "✅ Deployment successful!"
+          echo "🌐 URL: https://${{ needs.setup.outputs.app_name }}.fly.dev"
+        else
+          echo "❌ Deployment failed!"
+          echo "Check the logs above for details."
+          exit 1
+        fi
