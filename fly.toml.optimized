@@ -63,7 +63,6 @@ kill_timeout = "5s"
 [http_service]
   internal_port = 3000
   force_https = true
-  processes = ["web"]  # ADDED: Specify which process this service handles
   # STABILITY FIXES:
   auto_stop_machines = "stop"  # Cost optimization
   auto_start_machines = true
@@ -76,7 +75,7 @@ kill_timeout = "5s"
     soft_limit = 25      # Fly Proxy uses this for load balancing decisions
 
   # OPTIMIZED HEALTH CHECKS - FIXED
-  [[http_service.checks]]
+  [http_service.checks]
     interval = "15s"     # REDUCED: Less frequent checks
     timeout = "5s"       # Reasonable timeout
     grace_period = "15s" # INCREASED: More time for startup
