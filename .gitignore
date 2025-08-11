@@ -60,6 +60,8 @@ supabase/.env.*
 supabase/config.local.toml
 **/supabase-service-role-key*
 **/supabase-anon-key*
+.env.supabase
+supabase-auth.sh
 
 # JWT tokens and auth files
 jwt-token*

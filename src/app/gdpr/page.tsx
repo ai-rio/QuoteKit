@@ -167,7 +167,7 @@ export default function GdprPage() {
                     
                     <h4>Contact Information:</h4>
                     <ul>
-                      <li>Email: gdpr@lawnquote.com</li>
+                      <li>Email: gdpr@lawnquote.online</li>
                       <li>Subject Line: &quot;GDPR Request - [Type of Request]&quot;</li>
                       <li>Include: Your full name, email address, and specific request details</li>
                     </ul>
@@ -193,7 +193,7 @@ export default function GdprPage() {
                     <p>If you have any questions about our GDPR compliance or data protection practices, you can contact our Data Protection Officer:</p>
                     
                     <ul>
-                      <li>Email: dpo@lawnquote.com</li>
+                      <li>Email: dpo@lawnquote.onlineine</li>
                       <li>Address: [DPO Address]</li>
                     </ul>
                     

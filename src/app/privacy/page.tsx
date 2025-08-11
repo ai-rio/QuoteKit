@@ -138,7 +138,7 @@ export default function PrivacyPage() {
                       <li>Objection to processing</li>
                     </ul>
                     
-                    <p>To exercise these rights, please contact us at privacy@lawnquote.com.</p>
+                    <p>To exercise these rights, please contact us at privacy@lawnquote.online.</p>
                   </div>
                 </PrivacySection>
                 
@@ -152,7 +152,7 @@ export default function PrivacyPage() {
                     <p>If you have any questions about this Privacy Policy, please contact us:</p>
                     
                     <ul>
-                      <li>Email: privacy@lawnquote.com</li>
+                      <li>Email: privacy@lawnquote.onlineine</li>
                       <li>Address: [Company Address]</li>
                     </ul>
                     

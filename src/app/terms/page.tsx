@@ -145,7 +145,7 @@ export default function TermsPage() {
                     <p>If you have any questions about these Terms of Service, please contact us:</p>
                     
                     <ul>
-                      <li>Email: legal@lawnquote.com</li>
+                      <li>Email: legal@lawnquote.online</li>
                       <li>Address: [Company Address]</li>
                     </ul>
                     

@@ -81,6 +81,9 @@ const nextConfig = {
     scrollRestoration: true,
   },
   
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
+  
   // Optimize builds
   compress: true,
   poweredByHeader: false,

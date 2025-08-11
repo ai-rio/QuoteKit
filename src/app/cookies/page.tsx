@@ -169,7 +169,7 @@ export default function CookiesPage() {
                     <p>If you have any questions about our use of cookies, please contact us:</p>
                     
                     <ul>
-                      <li>Email: privacy@lawnquote.com</li>
+                      <li>Email: privacy@lawnquote.online</li>
                       <li>Address: [Company Address]</li>
                     </ul>
                     

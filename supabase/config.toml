@@ -42,8 +42,10 @@ default_pool_size = 20
 # Maximum number of client connections allowed.
 max_client_conn = 100
 
-# [db.vault]
-# secret_key = "env(SECRET_VALUE)"
+[db.vault]
+# Database connection configuration for hosted environment
+# Use environment variable for security
+db_url = "env(SUPABASE_DB_URL)"
 
 
 [db.seed]

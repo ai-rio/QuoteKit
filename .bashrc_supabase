@@ -1,0 +1,27 @@
+# Supabase CLI Aliases for WSL Environment
+# Source this file in your .bashrc: source .bashrc_supabase
+
+# Load Supabase environment variables
+if [ -f .env.supabase ]; then
+    export $(cat .env.supabase | grep -v '^#' | xargs)
+fi
+
+# Supabase CLI aliases with password authentication
+alias supabase-status="echo '$SUPABASE_DB_PASSWORD' | supabase migration list"
+alias supabase-push="echo '$SUPABASE_DB_PASSWORD' | supabase db push"
+alias supabase-diff="echo '$SUPABASE_DB_PASSWORD' | supabase db diff"
+alias supabase-reset="echo '$SUPABASE_DB_PASSWORD' | supabase db reset"
+alias supabase-link="SUPABASE_ACCESS_TOKEN='$SUPABASE_ACCESS_TOKEN' supabase link --project-ref '$SUPABASE_PROJECT_REF' --password '$SUPABASE_DB_PASSWORD'"
+
+# Deployment management aliases
+alias supa-deploy="./scripts/supabase-deploy.sh deploy"
+alias supa-status="./scripts/supabase-deploy.sh status"
+alias supa-push="./scripts/supabase-deploy.sh push"
+alias supa-link="./scripts/supabase-deploy.sh link"
+
+echo "Supabase CLI aliases loaded!"
+echo "Available commands:"
+echo "  supa-status   - Check migration status"
+echo "  supa-push     - Push migrations to hosted DB"
+echo "  supa-deploy   - Full deployment process"
+echo "  supa-link     - Link/relink to project"

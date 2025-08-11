@@ -1,14 +1,26 @@
 import { PostHog } from 'posthog-node'
 
-// Initialize PostHog client for server-side operations
-export const posthogAdmin = new PostHog(
-  process.env.POSTHOG_PROJECT_API_KEY!,
-  { 
-    host: process.env.POSTHOG_HOST || 'https://us.posthog.com',
-    flushAt: 1,
-    flushInterval: 0
+// Lazy initialization of PostHog client for server-side operations
+let posthogAdmin: PostHog | null = null
+
+function getPostHogAdmin(): PostHog {
+  if (!posthogAdmin && process.env.POSTHOG_PROJECT_API_KEY) {
+    posthogAdmin = new PostHog(
+      process.env.POSTHOG_PROJECT_API_KEY,
+      { 
+        host: process.env.POSTHOG_HOST || 'https://us.posthog.com',
+        flushAt: 1,
+        flushInterval: 0
+      }
+    )
   }
-)
+  
+  if (!posthogAdmin) {
+    throw new Error('PostHog not configured. Please set POSTHOG_PROJECT_API_KEY environment variable.')
+  }
+  
+  return posthogAdmin
+}
 
 // PostHog Query API types
 interface HogQLQuery {
@@ -587,22 +599,31 @@ export async function getUserAnalytics(userId: string) {
 
 // Track admin actions
 export function trackAdminAction(adminId: string, action: string, metadata?: Record<string, any>) {
-  posthogAdmin.capture({
-    distinctId: adminId,
-    event: 'admin_action',
-    properties: {
-      action,
-      timestamp: new Date().toISOString(),
-      ...metadata
-    }
-  })
+  try {
+    const client = getPostHogAdmin()
+    client.capture({
+      distinctId: adminId,
+      event: 'admin_action',
+      properties: {
+        action,
+        timestamp: new Date().toISOString(),
+        ...metadata
+      }
+    })
+  } catch (error) {
+    console.warn('PostHog not configured, skipping admin action tracking:', error)
+  }
 }
 
 // Ensure proper cleanup
 process.on('SIGINT', async () => {
-  await posthogAdmin.shutdown()
+  if (posthogAdmin) {
+    await posthogAdmin.shutdown()
+  }
 })
 
 process.on('SIGTERM', async () => {
-  await posthogAdmin.shutdown()
+  if (posthogAdmin) {
+    await posthogAdmin.shutdown()
+  }
 })

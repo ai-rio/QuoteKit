@@ -1,0 +1,225 @@
+# Fly.io Prelaunch Testing Configuration for QuoteKit
+# This configuration is optimized for pre-release testing environment
+# with cost efficiency and comprehensive testing capabilities
+
+app = "quotekit-prelaunch-test"
+primary_region = "iad"  # Washington, D.C. - chosen for low latency to Supabase
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
+
+[build]
+  [build.args]
+    NEXT_PUBLIC_SUPABASE_URL = "https://bujajubcktlpblewxtel.supabase.co"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NDMzNTQsImV4cCI6MjA3MDQxOTM1NH0.oLzfozz8_bYJrarlZyHJG3IM54AKLoIWI5D97TFwjH0"
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51PCRaPGgBK1ooXYFCVdD8Yr2O6moR1s5QzFRWopBmlsPBWHR2bLMvZ400elEJ3rzux9DNpnYadXJXnp0cqX7jmhv00c20JEgSB"
+    NEXT_PUBLIC_POSTHOG_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+    NEXT_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
+    NEXT_PUBLIC_SITE_URL = "https://quotekit-prelaunch-test.fly.dev"
+    SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDg0MzM1NCwiZXhwIjoyMDcwNDE5MzU0fQ.pIsMT2ohSRtkLDWS57GGpQYQOL5SVtUd8gDyNtdKjS8"
+    STRIPE_SECRET_KEY = "sk_test_51PCRaPGgBK1ooXYFpk09Mu8FvgQXshbm4XbpP0DZZ2crzJOabfqA60dUSQfg8yXWcs8IarbP8QAhQe4fhcwXp2M200b5lTZLuH"
+    STRIPE_WEBHOOK_SECRET = "whsec_391ee7fb05561e9f61817d6a97d7fc7a673be11ea853af57fa144b11e551c2f7"
+    RESEND_API_KEY = "re_3VoudbyM_3L7J7KjqXuzFr9SiKRAXXBDA"
+    POSTHOG_PROJECT_API_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+    POSTHOG_PROJECT_ID = "your-project-id"
+    POSTHOG_PERSONAL_API_KEY = "your-personal-api-key"
+    SUPABASE_DB_PASSWORD = "Luliflora1.@"
+
+[env]
+  # Application environment
+  NODE_ENV = "production"
+  PORT = "3000"
+  
+  # Next.js optimization
+  NODE_OPTIONS = "--max-old-space-size=512"  # Optimized for shared-cpu-1x
+  NEXT_TELEMETRY_DISABLED = "1"
+  
+  # Application configuration
+  NEXT_PUBLIC_APP_ENV = "prelaunch-test"
+  
+  # Build-time configuration
+  SKIP_INSTALL_DEPS = "false"
+  NPM_CONFIG_PRODUCTION = "false"
+  
+  # Public environment variables (needed at build time)
+  NEXT_PUBLIC_SUPABASE_URL = "https://bujajubcktlpblewxtel.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NDMzNTQsImV4cCI6MjA3MDQxOTM1NH0.oLzfozz8_bYJrarlZyHJG3IM54AKLoIWI5D97TFwjH0"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51PCRaPGgBK1ooXYFCVdD8Yr2O6moR1s5QzFRWopBmlsPBWHR2bLMvZ400elEJ3rzux9DNpnYadXJXnp0cqX7jmhv00c20JEgSB"
+  NEXT_PUBLIC_POSTHOG_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+  NEXT_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
+  NEXT_PUBLIC_SITE_URL = "https://quotekit-prelaunch-test.fly.dev"
+
+# Secrets (managed via `fly secrets set`)
+# These are configured separately for security:
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY  
+# - SUPABASE_SERVICE_ROLE_KEY
+# - SUPABASE_DB_PASSWORD
+# - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET
+# - RESEND_API_KEY
+# - NEXT_PUBLIC_POSTHOG_KEY
+# - NEXT_PUBLIC_POSTHOG_HOST
+# - NEXT_PUBLIC_SITE_URL
+
+[deploy]
+  # Deployment strategy
+  strategy = "rolling"  # Zero-downtime deployment
+  wait_timeout = "10m"  # Allow time for build and startup
+
+[processes]
+  web = "node server.js"
+
+# HTTP service configuration
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+  processes = ["web"]  # Specify which process this service handles
+  auto_stop_machines = "stop"  # Cost optimization: auto-stop after inactivity
+  auto_start_machines = true
+  min_machines_running = 0     # Allow scaling to zero
+  max_machines_running = 2     # Limit for testing environment
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true  # Redirect HTTP to HTTPS
+
+  [[services.ports]] 
+    handlers = ["tls", "http"]
+    port = 443
+
+  # Health checks
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/api/health"
+    protocol = "http"
+    timeout = "5s"
+    tls_skip_verify = false
+    
+    [services.http_checks.headers]
+      User-Agent = "Fly.io Health Check"
+
+  # TCP health check (fallback)
+  [[services.tcp_checks]]
+    grace_period = "10s"
+    interval = "30s"
+    port = 3000
+    restart_limit = 3
+    timeout = "5s"
+
+# Resource allocation optimized for testing environment
+[[vm]]
+  size = "shared-cpu-1x"  # 1 vCPU, 256MB RAM - cost-effective for testing
+  memory = "256mb"        # Explicit memory limit
+
+# Metrics and monitoring
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# Logging configuration  
+[logging]
+  level = "info"
+  format = "json"
+
+# Machine configuration for testing optimization
+[machine]
+  # Auto-stop configuration for cost savings
+  auto_stop = "10m"  # Stop after 10 minutes of inactivity
+  
+  # Resource monitoring
+  restart_policy = "on-failure"
+  
+  # Graceful shutdown
+  kill_timeout = "30s"
+
+# Environment-specific build configuration
+[build.env]
+  NODE_ENV = "production"
+  NEXT_BUILD_ID = "prelaunch-test"
+  ANALYZE = "false"  # Disable bundle analyzer in test builds
+  
+  # Environment variables needed at build time
+  NEXT_PUBLIC_SUPABASE_URL = "https://bujajubcktlpblewxtel.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NDMzNTQsImV4cCI6MjA3MDQxOTM1NH0.oLzfozz8_bYJrarlZyHJG3IM54AKLoIWI5D97TFwjH0"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51PCRaPGgBK1ooXYFCVdD8Yr2O6moR1s5QzFRWopBmlsPBWHR2bLMvZ400elEJ3rzux9DNpnYadXJXnp0cqX7jmhv00c20JEgSB"
+  NEXT_PUBLIC_POSTHOG_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+  NEXT_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
+  NEXT_PUBLIC_SITE_URL = "https://quotekit-prelaunch-test.fly.dev"
+  
+  # Server-side secrets needed for build (but will be overridden at runtime by secrets)
+  SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDg0MzM1NCwiZXhwIjoyMDcwNDE5MzU0fQ.pIsMT2ohSRtkLDWS57GGpQYQOL5SVtUd8gDyNtdKjS8"
+  STRIPE_SECRET_KEY = "sk_test_51PCRaPGgBK1ooXYFpk09Mu8FvgQXshbm4XbpP0DZZ2crzJOabfqA60dUSQfg8yXWcs8IarbP8QAhQe4fhcwXp2M200b5lTZLuH"
+  STRIPE_WEBHOOK_SECRET = "whsec_391ee7fb05561e9f61817d6a97d7fc7a673be11ea853af57fa144b11e551c2f7"
+  RESEND_API_KEY = "re_3VoudbyM_3L7J7KjqXuzFr9SiKRAXXBDA"
+  POSTHOG_PROJECT_API_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+  POSTHOG_PROJECT_ID = "your-project-id"
+  POSTHOG_PERSONAL_API_KEY = "your-personal-api-key"
+  SUPABASE_DB_PASSWORD = "Luliflora1.@"
+
+# Security and network configuration
+[network]
+  # Enable IPv6
+  ipv6 = true
+
+# Custom headers for testing environment
+[[headers]]
+  for = "/*"
+  
+  [headers.values]
+    X-Environment = "prelaunch-test"
+    X-Robots-Tag = "noindex, nofollow"  # Prevent search engine indexing
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    
+    # Content Security Policy optimized for testing
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;
+      style-src 'self' 'unsafe-inline';
+      connect-src 'self' 
+                  https://api.stripe.com 
+                  https://m.stripe.network 
+                  https://hcaptcha.com 
+                  https://*.hcaptcha.com 
+                  https://vitals.vercel-insights.com 
+                  wss://ws-us3.pusher.com
+                  https://*.supabase.co
+                  https://app.posthog.com
+                  https://us.i.posthog.com
+                  data:;
+      img-src 'self' data: https: blob:;
+      font-src 'self' data:;
+      media-src 'self' blob:;
+      worker-src 'self' blob:;
+      frame-src https://js.stripe.com https://hooks.stripe.com;
+    """
+
+# Testing-specific console configuration
+[console]
+  # Enable console access for debugging
+  enabled = true
+
+# Performance optimization for Next.js
+[optimization]
+  # Gzip compression
+  gzip = true
+  
+  # Static file caching
+  static_cache_control = "public, max-age=31536000, immutable"
+
+# Development and debugging features for testing
+[debug]
+  # Enable detailed logging
+  verbose = true
+  
+  # Performance monitoring
+  enable_metrics = true

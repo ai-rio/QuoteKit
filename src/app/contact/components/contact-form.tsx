@@ -57,7 +57,7 @@ export function ContactForm() {
               </div>
               <h2 className="text-3xl font-black text-charcoal mb-4">Message Sent!</h2>
               <p className="text-lg text-charcoal/90 mb-6">
-                Thanks for reaching out. We'll get back to you within 24 hours.
+                Thanks for reaching out. We&apos;ll get back to you within 24 hours.
               </p>
               <button
                 onClick={handleSendAnother}
@@ -92,7 +92,7 @@ export function ContactForm() {
                 A Note from John
               </h3>
               <p className="text-center text-sm text-charcoal/90 leading-relaxed">
-                "Your feedback directly shapes the future of this tool. If you have an idea that would make your life easier, I genuinely want to hear it. Let's build the best quoting tool for the trade, together."
+                &ldquo;Your feedback directly shapes the future of this tool. If you have an idea that would make your life easier, I genuinely want to hear it. Let&apos;s build the best quoting tool for the trade, together.&rdquo;
               </p>
             </div>
 
@@ -108,7 +108,7 @@ export function ContactForm() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-charcoal">Email</p>
-                    <p className="text-sm text-charcoal/90">hello@lawnquote.com</p>
+                    <p className="text-sm text-charcoal/90">hello@lawnquote.online</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -225,9 +225,9 @@ export function ContactForm() {
                 </div>
                 
                 <p className="text-xs text-charcoal/70 text-center">
-                  We'll get back to you within 24 hours. For urgent matters, email us directly at{' '}
-                  <a href="mailto:hello@lawnquote.com" className="text-forest-green hover:underline font-medium">
-                    hello@lawnquote.com
+                  We&apos;ll get back to you within 24 hours. For urgent matters, email us directly at{' '}
+                  <a href="mailto:hello@lawnquote.onlineine" className="text-forest-green hover:underline font-medium">
+                    hello@lawnquote.onlineine
                   </a>
                 </p>
               </form>
