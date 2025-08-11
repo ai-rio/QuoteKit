@@ -6,9 +6,9 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { getURL } from '@/utils/get-url';
 
-const siteUrl = getURL();
-
 export async function GET(request: NextRequest) {
+  // Calculate site URL dynamically at request time
+  const siteUrl = getURL();
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   
