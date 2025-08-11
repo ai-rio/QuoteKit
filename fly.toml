@@ -26,6 +26,8 @@ kill_timeout = "5s"
     POSTHOG_PROJECT_ID = "your-project-id"
     POSTHOG_PERSONAL_API_KEY = "your-personal-api-key"
     SUPABASE_DB_PASSWORD = "Luliflora1.@"
+    GOOGLE_CLIENT_ID = "768508478306-0g344icg3jbfvuv6tg4b4s394cekk3l0.apps.googleusercontent.com"
+    GOOGLE_CLIENT_SECRET = "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"
 
 [env]
   # Application environment
@@ -117,6 +119,8 @@ kill_timeout = "5s"
   POSTHOG_PROJECT_ID = "your-project-id"
   POSTHOG_PERSONAL_API_KEY = "your-personal-api-key"
   SUPABASE_DB_PASSWORD = "Luliflora1.@"
+  GOOGLE_CLIENT_ID = "768508478306-0g344icg3jbfvuv6tg4b4s394cekk3l0.apps.googleusercontent.com"
+  GOOGLE_CLIENT_SECRET = "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"
 
 # Security and network configuration
 [network]
