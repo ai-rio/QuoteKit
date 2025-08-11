@@ -1,0 +1,13 @@
+# Gitleaks ignore file
+# This file tells gitleaks to ignore certain findings
+
+# Ignore all .env files (they should never be committed)
+.env*
+
+# Ignore specific files that may contain test secrets
+*.example
+*test*
+*demo*
+
+# Ignore specific patterns that are false positives
+# Add specific fingerprints from GitGuardian here if needed

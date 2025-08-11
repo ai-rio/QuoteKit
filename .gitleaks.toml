@@ -1,0 +1,91 @@
+# Gitleaks Configuration for QuoteKit
+# This configuration helps prevent secrets from being committed to the repository
+
+title = "QuoteKit Gitleaks Configuration"
+
+[extend]
+# Use the default Gitleaks configuration as a base
+useDefault = true
+
+# Disable rules that cause false positives in our codebase
+disabledRules = [
+    "generic-api-key",  # Too many false positives with example keys
+]
+
+# Global allowlist for known false positives
+[[allowlists]]
+description = "Ignore example and template files"
+paths = [
+    '''\.example$''',
+    '''\.template$''',
+    '''\.sample$''',
+    '''README\.md$''',
+    '''SECURITY_INCIDENT_RESPONSE\.md$''',
+    '''docs/.*\.md$''',
+    '''\.env\..*\.example$''',
+]
+
+[[allowlists]]
+description = "Ignore test and demo secrets"
+regexTarget = "match"
+regexes = [
+    '''YOUR_.*_KEY''',
+    '''YOUR_.*_SECRET''',
+    '''YOUR_PROJECT_REF''',
+    '''PLACEHOLDER_.*''',
+    '''EXAMPLE_.*''',
+    '''TEST_.*_KEY''',
+    '''DEMO_.*''',
+]
+
+[[allowlists]]
+description = "Ignore common false positives"
+stopwords = [
+    "example",
+    "template", 
+    "placeholder",
+    "your_key_here",
+    "replace_with",
+    "todo",
+    "fixme",
+]
+
+# Custom rules for QuoteKit-specific patterns
+[[rules]]
+id = "quotekit-supabase-service-key"
+description = "QuoteKit Supabase Service Role Key"
+regex = '''supabase.*service.*role.*key.*=.*eyJ[A-Za-z0-9_/+-]*\.eyJ[A-Za-z0-9_/+-]*\.[A-Za-z0-9_/+-]*'''
+secretGroup = 0
+entropy = 4.0
+keywords = ["supabase", "service", "role", "key"]
+
+    [[rules.allowlists]]
+    description = "Allow example Supabase keys"
+    regexTarget = "match"
+    regexes = ['''YOUR_SERVICE_ROLE_KEY''']
+
+[[rules]]
+id = "quotekit-stripe-secret-key"
+description = "QuoteKit Stripe Secret Key"
+regex = '''sk_(test|live)_[A-Za-z0-9]{99}'''
+secretGroup = 0
+entropy = 4.0
+keywords = ["stripe", "secret", "key"]
+
+    [[rules.allowlists]]
+    description = "Allow example Stripe keys"
+    regexTarget = "match"
+    regexes = ['''sk_(test|live)_YOUR_SECRET_KEY''']
+
+[[rules]]
+id = "quotekit-resend-api-key"
+description = "QuoteKit Resend API Key"
+regex = '''re_[A-Za-z0-9_]{26}'''
+secretGroup = 0
+entropy = 3.5
+keywords = ["resend", "api", "key"]
+
+    [[rules.allowlists]]
+    description = "Allow example Resend keys"
+    regexTarget = "match"
+    regexes = ['''re_YOUR_.*_API_KEY''']
