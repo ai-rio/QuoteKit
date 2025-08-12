@@ -327,3 +327,85 @@ export function CompactUsageAnalytics() {
     />
   )
 }
+
+/**
+ * Dashboard version that matches the original circular progress design
+ */
+export function DashboardUsageAnalytics() {
+  const [usageData, setUsageData] = useState<UsageData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const { features: planFeatures } = useFeatureAccess()
+
+  useEffect(() => {
+    fetchUsageData()
+  }, [])
+
+  const fetchUsageData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/features/usage')
+      if (!response.ok) {
+        throw new Error('Failed to fetch usage data')
+      }
+      const { usage } = await response.json()
+      setUsageData(usage)
+    } catch (err) {
+      console.error('Failed to load usage data:', err)
+      // Fallback to 0 if API fails
+      setUsageData({ quotes_count: 0 })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const quotesUsed = usageData?.quotes_count || 0
+  const quotesLimit = planFeatures.max_quotes || 5
+  const percentage = Math.min((quotesUsed / quotesLimit) * 100, 100)
+  const circumference = 2 * Math.PI * 45 // radius = 45
+  const strokeDashoffset = circumference - (percentage / 100) * circumference
+
+  if (loading) {
+    return (
+      <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+        <h2 className="text-xl font-bold text-charcoal mb-4">Usage Analytics</h2>
+        <div className="flex flex-col items-center text-center">
+          <Skeleton className="w-32 h-32 rounded-full mb-4" />
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+      <h2 className="text-xl font-bold text-charcoal mb-4">Usage Analytics</h2>
+      <div className="flex flex-col items-center text-center">
+        <div className="relative w-32 h-32 flex items-center justify-center">
+          <svg className="absolute w-full h-full" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" stroke="#F5F5F5" strokeWidth="10" fill="none"></circle>
+            <circle 
+              cx="50" 
+              cy="50" 
+              r="45" 
+              stroke="#2A3D2F" 
+              strokeWidth="10" 
+              fill="none" 
+              strokeLinecap="round" 
+              transform="rotate(-90 50 50)" 
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+            ></circle>
+          </svg>
+          <div className="text-center">
+            <p className="text-3xl font-black font-mono text-charcoal">{quotesUsed}</p>
+            <p className="text-sm text-charcoal/60">/ {quotesLimit}</p>
+          </div>
+        </div>
+        <p className="font-bold mt-4 text-charcoal">Quotes Created This Month</p>
+        <p className="text-sm text-charcoal/70">Your free plan includes {quotesLimit} quotes per month.</p>
+      </div>
+    </div>
+  )
+}

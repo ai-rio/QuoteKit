@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
+import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
 import { getDashboardData } from "@/features/dashboard/actions"
 import { QuoteStatusBadge } from "@/features/quotes/components/QuoteStatusBadge"
 import { createSupabaseServerClient } from "@/libs/supabase/supabase-server-client"
@@ -165,35 +166,8 @@ export default async function DashboardPage() {
           {/* Usage Analytics & Upgrade Prompt - Only for Free Users */}
           {!isPremium && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Usage Analytics Card */}
-              <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
-                <h2 className="text-xl font-bold text-charcoal mb-4">Usage Analytics</h2>
-                <div className="flex flex-col items-center text-center">
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    <svg className="absolute w-full h-full" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="45" stroke="#F5F5F5" strokeWidth="10" fill="none"></circle>
-                      <circle 
-                        cx="50" 
-                        cy="50" 
-                        r="45" 
-                        stroke="#2A3D2F" 
-                        strokeWidth="10" 
-                        fill="none" 
-                        strokeLinecap="round" 
-                        transform="rotate(-90 50 50)" 
-                        strokeDasharray="282.74" 
-                        strokeDashoffset="226.19"
-                      ></circle>
-                    </svg>
-                    <div className="text-center">
-                      <p className="text-3xl font-black font-mono text-charcoal">{dashboardData.stats.totalQuotes}</p>
-                      <p className="text-sm text-charcoal/60">/ 5</p>
-                    </div>
-                  </div>
-                  <p className="font-bold mt-4">Quotes Created This Month</p>
-                  <p className="text-sm text-charcoal/70">Your free plan includes 5 quotes per month.</p>
-                </div>
-              </div>
+              {/* Real Usage Analytics Component */}
+              <DashboardUsageAnalytics />
               
               {/* Upgrade Prompt Card */}
               <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
