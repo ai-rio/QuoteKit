@@ -83,41 +83,9 @@ export function PlanChangeDialog({
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [paymentMethodErrors, setPaymentMethodErrors] = useState<{ [key: string]: string }>({});
 
-  // Debug logging
+  // Track dialog open state for cleanup
   useEffect(() => {
-    if (isOpen) {
-      console.log('🔍 PlanChangeDialog opened with data:', {
-        currentPlan,
-        availablePlansCount: availablePlans?.length || 0,
-        paymentMethodsCount: paymentMethods?.length || 0,
-        stripeCustomerId,
-        stripeSubscriptionId,
-        availablePlans: availablePlans?.map(p => ({
-          name: p.name,
-          pricesCount: p.prices?.length || 0,
-          prices: p.prices?.map((price: any) => ({
-            id: price.stripe_price_id,
-            amount: price.unit_amount,
-            interval: price.interval
-          }))
-        }))
-      });
-
-      // Enhanced Stripe Integration Check
-      console.log('🔍 Stripe Integration Check:', {
-        hasStripeCustomerId: !!stripeCustomerId,
-        hasStripeSubscriptionId: !!stripeSubscriptionId,
-        stripeCustomerId: stripeCustomerId ? stripeCustomerId.substring(0, 12) + '...' : 'MISSING',
-        stripeSubscriptionId: stripeSubscriptionId ? stripeSubscriptionId.substring(0, 12) + '...' : 'MISSING',
-        paymentMethodsCount: paymentMethods?.length || 0,
-        hasValidPaymentMethods: paymentMethods && paymentMethods.length > 0,
-        integrationStatus: {
-          canShowDialog: true,
-          canProcessPayments: !!(stripeCustomerId && stripeSubscriptionId),
-          canHandleUpgrades: !!(stripeCustomerId && stripeSubscriptionId && paymentMethods?.length > 0)
-        }
-      });
-    }
+    // No debug logging needed in production
   }, [isOpen, currentPlan, availablePlans, paymentMethods, stripeCustomerId, stripeSubscriptionId]);
 
   // Fetch proration preview for selected plan
@@ -187,12 +155,7 @@ export function PlanChangeDialog({
     }
 
     setPaymentMethodErrors(errors);
-    console.log('🔍 Payment method validation completed:', {
-      totalMethods: paymentMethods.length,
-      errorsFound: Object.keys(errors).length,
-      errors,
-      validMethods: paymentMethods.filter(pm => !errors[pm.id]).length
-    });
+    // Payment method validation completed
   }, [stripeCustomerId, paymentMethods]);
 
   // Set default payment method when dialog opens AND payment methods are loaded
@@ -243,7 +206,7 @@ export function PlanChangeDialog({
       setSelectedPriceId('');
       setProrationPreview(null);
       setPreviewError(null);
-      console.log('🔄 Dialog closed, cleared selections');
+      // Dialog closed, cleared selections
     }
   }, [isOpen]);
 
@@ -266,7 +229,6 @@ export function PlanChangeDialog({
   }, [selectedPriceId, isOpen, fetchProrationPreview, availablePlans, currentPlan.price, stripeCustomerId, stripeSubscriptionId]);
 
   const handlePlanChange = async () => {
-    console.log('🔥 FIXED VERSION: handlePlanChange called - if you see this, the fix is loaded');
     
     if (!selectedPriceId) {
       setPreviewError('Please select a plan to continue');
@@ -317,31 +279,10 @@ export function PlanChangeDialog({
         return;
       }
 
-      console.log('💳 Upgrade validation passed:', {
-        selectedPaymentMethodId,
-        paymentMethod: {
-          brand: selectedPaymentMethod.brand,
-          last4: selectedPaymentMethod.last4,
-          isDefault: selectedPaymentMethod.is_default
-        }
-      });
+      // Upgrade validation passed
     }
 
-    console.log('💳 Plan change initiated:', {
-      selectedPriceId,
-      selectedPaymentMethodId,
-      selectedPrice: {
-        amount: selectedPrice.unit_amount,
-        interval: selectedPrice.interval
-      },
-      currentPrice: currentPlan.price * 100,
-      isUpgrade,
-      hasPaymentMethods: hasValidPaymentMethods,
-      prorationPreview: prorationPreview ? {
-        immediateTotal: prorationPreview.immediateTotal,
-        prorationAmount: prorationPreview.prorationAmount
-      } : null
-    });
+    // Plan change initiated
 
     setIsChanging(true);
     setPreviewError(null);
@@ -353,8 +294,7 @@ export function PlanChangeDialog({
       setProrationPreview(null);
       setSelectedPriceId('');
       setSelectedPaymentMethodId('');
-      
-      console.log('✅ Plan change completed successfully');
+
       
       onClose();
     } catch (error) {

@@ -12,24 +12,20 @@ export function AccountPageWrapper({ children }: AccountPageWrapperProps) {
   // Listen for plan change events and billing updates
   useEffect(() => {
     const handlePlanChange = (event: CustomEvent) => {
-      console.log('🔄 Plan change detected on account page:', event.detail);
       setRefreshKey(prev => prev + 1);
       
       // Force page refresh to get latest subscription data
       // This ensures all server-side data is fresh
       setTimeout(() => {
-        console.log('🔄 Refreshing page to show updated plan...');
         window.location.reload();
       }, 1000);
     };
 
     const handleBillingUpdate = () => {
-      console.log('💳 Billing update detected on account page');
       setRefreshKey(prev => prev + 1);
     };
 
     const handleBillingInvalidation = () => {
-      console.log('🗑️ Billing history invalidation detected');
       // This will trigger re-fetch of billing data
       setRefreshKey(prev => prev + 1);
     };
