@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { MarketingLayout } from '@/components/layout/marketing-layout';
 import LawnQuotePricing from '@/components/pricing/LawnQuotePricing';
+import { STRIPE_PRICE_IDS } from '@/constants/stripe-prices';
 import { createFreeSubscription } from '@/features/pricing/actions/create-free-subscription';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 
@@ -19,7 +20,7 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
   console.log('🎩 PRICING PAGE: Plan selection initiated:', {
     plan_name: planName,
     stripe_price_id: stripePriceId,
-    is_free: stripePriceId === 'price_free_monthly' || planName === 'Free Plan',
+    is_free: stripePriceId === STRIPE_PRICE_IDS.FREE_MONTHLY || planName === 'Free Plan',
     timestamp: new Date().toISOString()
   });
   
@@ -36,7 +37,7 @@ async function handlePlanSelection(stripePriceId: string, planName: string) {
   const { getSubscription } = await import('@/features/account/controllers/get-subscription');
   const existingSubscription = await getSubscription();
 
-  if (stripePriceId === 'price_free_monthly' || planName === 'Free Plan') {
+  if (stripePriceId === STRIPE_PRICE_IDS.FREE_MONTHLY || planName === 'Free Plan') {
     // Check if user already has an active subscription
     if (existingSubscription) {
       console.log('User already has active subscription, redirecting to dashboard:', {

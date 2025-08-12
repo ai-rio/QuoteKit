@@ -1,7 +1,6 @@
 'use client';
 
 import { Check } from 'lucide-react';
-import Link from 'next/link';
 import { useState } from 'react';
 
 import { 
@@ -11,6 +10,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { getStripePrice,PRICING_CONFIG } from '@/constants/stripe-prices';
 
 interface LawnQuotePricingProps {
   onSelectPlan: (stripePriceId: string, planName: string) => void;
@@ -19,10 +19,10 @@ interface LawnQuotePricingProps {
 export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps) {
   const [isYearly, setIsYearly] = useState(false);
 
-  const monthlyPrice = 12;
-  const yearlyDiscount = 0.20;
-  const yearlyPriceMonthly = monthlyPrice * (1 - yearlyDiscount);
-  const yearlyPriceTotal = yearlyPriceMonthly * 12;
+  // Use centralized pricing configuration
+  const monthlyPrice = PRICING_CONFIG.PREMIUM.monthlyPrice;
+  const yearlyPriceMonthly = PRICING_CONFIG.PREMIUM.monthlyPriceWhenYearly;
+  const yearlyPriceTotal = PRICING_CONFIG.PREMIUM.yearlyPrice;
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
 
@@ -36,7 +36,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
               The Right Plan for Your Business.
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-charcoal/70">
-              Start for free and see how it works. Upgrade when you're ready to unlock powerful features and grow your business. Simple, transparent pricing. No surprises.
+              Start for free and see how it works. Upgrade when you&apos;re ready to unlock powerful features and grow your business. Simple, transparent pricing. No surprises.
             </p>
           </div>
         </section>
@@ -52,7 +52,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
                 <p className="mt-2 text-charcoal/70">For new businesses getting started and learning the ropes.</p>
                 <p className="mt-6 font-mono text-5xl font-bold text-charcoal">$0</p>
                 <Button 
-                  onClick={() => onSelectPlan('price_free_monthly', 'Free Plan')}
+                  onClick={() => onSelectPlan(getStripePrice('free'), 'Free Plan')}
                   className="mt-8 w-full bg-paper-white text-forest-green border-2 border-forest-green font-bold px-6 py-4 rounded-lg hover:bg-forest-green hover:text-paper-white transition-all duration-200"
                 >
                   Start for Free
@@ -115,7 +115,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
                 )}
                 <Button 
                   onClick={() => onSelectPlan(
-                    isYearly ? 'price_1RoUo5GgBK1ooXYF4nMSQooR' : 'price_1RVyAQGgBK1ooXYF0LokEHtQ', 
+                    isYearly ? getStripePrice('premium_yearly') : getStripePrice('premium_monthly'), 
                     'Pro Plan'
                   )}
                   className="mt-8 w-full bg-equipment-yellow text-charcoal font-bold px-6 py-4 rounded-lg hover:brightness-110 transition-all duration-200"
@@ -164,7 +164,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
                   What happens when I use my 5 free quotes?
                 </AccordionTrigger>
                 <AccordionContent className="text-charcoal/70 pt-4">
-                  Your account remains active and you can still manage your item library and clients. To create more quotes for the month, you'll need to upgrade to the Pro plan. Your limit will reset to 5 quotes on the first of the next month.
+                  Your account remains active and you can still manage your item library and clients. To create more quotes for the month, you&apos;ll need to upgrade to the Pro plan. Your limit will reset to 5 quotes on the first of the next month.
                 </AccordionContent>
               </AccordionItem>
               
@@ -173,7 +173,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
                   Can I cancel my Pro plan at any time?
                 </AccordionTrigger>
                 <AccordionContent className="text-charcoal/70 pt-4">
-                  Absolutely. You can cancel your subscription from your account settings with a single click. You'll retain access to all Pro features until the end of your current billing period.
+                  Absolutely. You can cancel your subscription from your account settings with a single click. You&apos;ll retain access to all Pro features until the end of your current billing period.
                 </AccordionContent>
               </AccordionItem>
               
