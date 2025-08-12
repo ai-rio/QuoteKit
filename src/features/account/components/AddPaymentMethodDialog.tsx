@@ -7,8 +7,8 @@ import {
   useElements, 
   useStripe 
 } from '@stripe/react-stripe-js';
-import { AlertCircle, CreditCard, Loader2, Plus, Shield } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, CreditCard, HelpCircle, Loader2, Plus, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
 
 interface AddPaymentMethodDialogProps {
@@ -45,6 +46,7 @@ export function AddPaymentMethodDialog({
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(true);
   const [errors, setErrors] = useState<CardErrors>({});
   const [cardComplete, setCardComplete] = useState<CardComplete>({
     cardNumber: false,
@@ -55,32 +57,54 @@ export function AddPaymentMethodDialog({
   const [billingName, setBillingName] = useState('');
   const { toast } = useToast();
 
+  // Monitor Stripe loading state
+  useEffect(() => {
+    if (stripe && elements) {
+      console.debug('Stripe and Elements are ready');
+      setStripeLoading(false);
+    } else {
+      console.debug('Waiting for Stripe and Elements to load...', { 
+        hasStripe: !!stripe, 
+        hasElements: !!elements 
+      });
+    }
+  }, [stripe, elements]);
+
   const elementOptions = {
     style: {
       base: {
-        fontSize: '15px',
-        color: 'hsl(var(--charcoal))', // Design system consistency
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '16px',
+        color: '#1f2937',
+        fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
+        fontWeight: '400',
+        lineHeight: '1.5',
         '::placeholder': {
-          color: 'hsl(var(--charcoal) / 0.5)', // WCAG AA compliant: ~7.65:1 ratio
+          color: '#9CA3AF',
         },
-        iconColor: 'hsl(var(--charcoal) / 0.7)', // ~10.7:1 ratio
+        iconColor: '#6B7280',
+        // Remove padding from Stripe options since we handle it with CSS
       },
       invalid: {
-        color: 'hsl(var(--error-red))', // Design system error color
-        iconColor: 'hsl(var(--error-red))',
+        color: '#EF4444',
+        iconColor: '#EF4444',
       },
       complete: {
-        color: 'hsl(var(--success-green))', // Design system success color
-        iconColor: 'hsl(var(--success-green))',
+        color: '#10B981',
+        iconColor: '#10B981',
+      },
+      focus: {
+        color: '#1f2937',
       },
     },
+    hideIcon: false,
   };
 
   const handleCardNumberChange = (event: any) => {
+    console.debug('Card number change event:', event);
     setCardComplete(prev => ({ ...prev, cardNumber: event.complete }));
     
     if (event.error) {
+      console.debug('Card number error:', event.error);
       setErrors(prev => ({ ...prev, cardNumber: event.error.message }));
     } else {
       setErrors(prev => ({ ...prev, cardNumber: undefined }));
@@ -88,9 +112,11 @@ export function AddPaymentMethodDialog({
   };
 
   const handleCardExpiryChange = (event: any) => {
+    console.debug('Card expiry change event:', event);
     setCardComplete(prev => ({ ...prev, cardExpiry: event.complete }));
     
     if (event.error) {
+      console.debug('Card expiry error:', event.error);
       setErrors(prev => ({ ...prev, cardExpiry: event.error.message }));
     } else {
       setErrors(prev => ({ ...prev, cardExpiry: undefined }));
@@ -98,9 +124,11 @@ export function AddPaymentMethodDialog({
   };
 
   const handleCardCvcChange = (event: any) => {
+    console.debug('Card CVC change event:', event);
     setCardComplete(prev => ({ ...prev, cardCvc: event.complete }));
     
     if (event.error) {
+      console.debug('Card CVC error:', event.error);
       setErrors(prev => ({ ...prev, cardCvc: event.error.message }));
     } else {
       setErrors(prev => ({ ...prev, cardCvc: undefined }));
@@ -270,7 +298,7 @@ export function AddPaymentMethodDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent 
-        className="sm:max-w-lg max-h-[90vh] bg-paper-white border-stone-gray shadow-xl overflow-hidden flex flex-col"
+        className="sm:max-w-lg max-h-[90vh] bg-white border-gray-300 shadow-xl overflow-hidden flex flex-col"
         aria-describedby="add-payment-description"
       >
         <DialogHeader className="pb-3 border-b border-stone-gray/30 flex-shrink-0">
@@ -295,7 +323,18 @@ export function AddPaymentMethodDialog({
         </div>
 
         <div className="flex-1 overflow-y-auto py-2">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {stripeLoading || !stripe || !elements ? (
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 text-forest-green mx-auto mb-4 animate-spin" />
+              <p className="text-charcoal/70">Loading Stripe payment form...</p>
+              {process.env.NODE_ENV === 'development' && (
+                <p className="text-xs text-charcoal/50 mt-2">
+                  Debug: Stripe={!!stripe ? 'loaded' : 'loading'}, Elements={!!elements ? 'loaded' : 'loading'}
+                </p>
+              )}
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
             {/* General Error Alert */}
             {errors.general && (
               <Alert className="border-error-red/50 bg-error-red/5 shadow-sm">
@@ -332,32 +371,57 @@ export function AddPaymentMethodDialog({
 
             {/* Card Information */}
             <fieldset className="space-y-3">
-              <legend className="text-sm font-medium text-charcoal">
-                Card Information *
+              <legend className="text-sm font-medium text-charcoal flex items-center space-x-2">
+                <span>Card Information *</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-4 w-4 text-charcoal/60 hover:text-charcoal cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      <p>Your payment information is securely processed by Stripe and never stored on our servers. All fields are required for card verification.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </legend>
               
               {/* Card Number */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-charcoal/70">Card Number</Label>
-                <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                <Label className="text-xs font-medium text-charcoal/70 flex items-center space-x-1">
+                  <span>Card Number</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3 w-3 text-charcoal/50 hover:text-charcoal cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <p>Enter your 16-digit card number. We accept Visa, MasterCard, American Express, and Discover.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <div className={`relative border-2 rounded-lg bg-white transition-all duration-200 ${
                   errors.cardNumber 
-                    ? 'border-error-red bg-error-red/5 shadow-sm' 
+                    ? 'border-red-500 bg-red-50' 
                     : cardComplete.cardNumber 
-                      ? 'border-success-green bg-success-green/5 shadow-sm' 
-                      : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-300 hover:border-forest-green focus-within:border-forest-green'
                 }`}>
-                  <div className="p-3">
-                    <CardNumberElement 
-                      options={{
-                        ...elementOptions,
-                        placeholder: '1234 1234 1234 1234'
-                      }} 
-                      onChange={handleCardNumberChange}
-                    />
+                  <div className="relative min-h-[48px] flex items-center px-3 py-3">
+                    <div className="w-full">
+                      <CardNumberElement 
+                        options={{
+                          ...elementOptions,
+                          showIcon: true,
+                          placeholder: '1234 1234 1234 1234'
+                        }} 
+                        onChange={handleCardNumberChange}
+                      />
+                    </div>
                   </div>
                   
                   {/* Visual feedback indicator */}
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-2 right-2 pointer-events-none">
                     {cardComplete.cardNumber && (
                       <div className="w-4 h-4 bg-success-green rounded-full flex items-center justify-center">
                         <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,26 +450,40 @@ export function AddPaymentMethodDialog({
               <div className="grid grid-cols-2 gap-3">
                 {/* Expiry Date */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-charcoal/70">Expiry Date</Label>
-                  <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                  <Label className="text-xs font-medium text-charcoal/70 flex items-center space-x-1">
+                    <span>Expiry Date</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3 w-3 text-charcoal/50 hover:text-charcoal cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p>Enter MM/YY format (e.g., 12/25 for December 2025)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Label>
+                  <div className={`relative border-2 rounded-lg bg-white transition-all duration-200 ${
                     errors.cardExpiry 
-                      ? 'border-error-red bg-error-red/5 shadow-sm' 
+                      ? 'border-red-500 bg-red-50' 
                       : cardComplete.cardExpiry 
-                        ? 'border-success-green bg-success-green/5 shadow-sm' 
-                        : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-gray-300 hover:border-forest-green focus-within:border-forest-green'
                   }`}>
-                    <div className="p-3">
-                      <CardExpiryElement 
-                        options={{
-                          ...elementOptions,
-                          placeholder: 'MM/YY'
-                        }} 
-                        onChange={handleCardExpiryChange}
-                      />
+                    <div className="relative min-h-[48px] flex items-center px-3 py-3">
+                      <div className="w-full">
+                        <CardExpiryElement 
+                          options={{
+                            ...elementOptions,
+                            placeholder: 'MM/YY'
+                          }} 
+                          onChange={handleCardExpiryChange}
+                        />
+                      </div>
                     </div>
                     
                     {/* Visual feedback indicator */}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 pointer-events-none">
                       {cardComplete.cardExpiry && (
                         <div className="w-4 h-4 bg-success-green rounded-full flex items-center justify-center">
                           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,26 +510,40 @@ export function AddPaymentMethodDialog({
 
                 {/* CVC */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-charcoal/70">CVC</Label>
-                  <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
+                  <Label className="text-xs font-medium text-charcoal/70 flex items-center space-x-1">
+                    <span>CVC</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3 w-3 text-charcoal/50 hover:text-charcoal cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p>3-digit security code on the back of your card (4 digits for American Express on the front)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Label>
+                  <div className={`relative border-2 rounded-lg bg-white transition-all duration-200 ${
                     errors.cardCvc 
-                      ? 'border-error-red bg-error-red/5 shadow-sm' 
+                      ? 'border-red-500 bg-red-50' 
                       : cardComplete.cardCvc 
-                        ? 'border-success-green bg-success-green/5 shadow-sm' 
-                        : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-gray-300 hover:border-forest-green focus-within:border-forest-green'
                   }`}>
-                    <div className="p-3">
-                      <CardCvcElement 
-                        options={{
-                          ...elementOptions,
-                          placeholder: 'CVC'
-                        }} 
-                        onChange={handleCardCvcChange}
-                      />
+                    <div className="relative min-h-[48px] flex items-center px-3 py-3">
+                      <div className="w-full">
+                        <CardCvcElement 
+                          options={{
+                            ...elementOptions,
+                            placeholder: '123'
+                          }} 
+                          onChange={handleCardCvcChange}
+                        />
+                      </div>
                     </div>
                     
                     {/* Visual feedback indicator */}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 pointer-events-none">
                       {cardComplete.cardCvc && (
                         <div className="w-4 h-4 bg-success-green rounded-full flex items-center justify-center">
                           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -487,8 +579,18 @@ export function AddPaymentMethodDialog({
                 className="mt-0.5 border-2 border-stone-gray data-[state=checked]:bg-forest-green data-[state=checked]:border-forest-green"
               />
               <div className="flex-1">
-                <Label className="text-sm font-medium text-charcoal cursor-pointer">
-                  Set as default payment method
+                <Label className="text-sm font-medium text-charcoal cursor-pointer flex items-center space-x-1">
+                  <span>Set as default payment method</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3 w-3 text-charcoal/50 hover:text-charcoal cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs">
+                        <p>This card will be used automatically for future billing cycles and plan upgrades.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </Label>
               </div>
             </div>
@@ -501,7 +603,8 @@ export function AddPaymentMethodDialog({
                 <p>Encrypted by Stripe (PCI DSS Level 1). Your card details are never stored on our servers.</p>
               </div>
             </div>
-          </form>
+            </form>
+          )}
         </div>
 
         {/* Action Buttons - Fixed at bottom */}
@@ -518,7 +621,7 @@ export function AddPaymentMethodDialog({
             </Button>
             <Button
               type="submit"
-              disabled={!stripe || loading || !isCardComplete || !billingName.trim()}
+              disabled={stripeLoading || !stripe || !elements || loading || !isCardComplete || !billingName.trim()}
               className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/95 focus:bg-forest-green/95 focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium h-10 shadow-sm"
               onClick={handleSubmit}
             >

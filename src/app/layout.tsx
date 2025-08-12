@@ -53,22 +53,8 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang='en'>
       <head>
-        <meta
-          httpEquiv="Content-Security-Policy"
-          content={`
-            default-src 'self';
-            script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://m.stripe.network https://hcaptcha.com https://*.hcaptcha.com https://vercel.live https://va.vercel-scripts.com;
-            style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-            font-src 'self' https://fonts.gstatic.com;
-            img-src 'self' data: https: blob:;
-            connect-src 'self' https://api.stripe.com https://m.stripe.network https://hcaptcha.com https://*.hcaptcha.com https://vitals.vercel-insights.com wss://ws-us3.pusher.com data:;
-            frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com blob:;
-            object-src 'none';
-            base-uri 'self';
-            form-action 'self';
-            frame-ancestors 'none';
-          `.replace(/\s+/g, ' ').trim()}
-        />
+        {/* Meta tags for SEO and viewport */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={cn('font-sans antialiased', inter.variable, robotoMono.variable, kalam.variable)}>
         <CookieConsentProvider>

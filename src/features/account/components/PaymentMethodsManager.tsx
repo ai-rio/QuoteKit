@@ -33,11 +33,231 @@ interface PaymentMethodsManagerProps {
   stripePublishableKey: string;
 }
 
-const stripePromise = (publishableKey: string) => loadStripe(publishableKey);
+interface StripeLoadState {
+  status: 'loading' | 'loaded' | 'error' | 'fallback';
+  error?: string;
+  retryCount: number;
+}
+
+// Create stripe promise with error handling
+const stripePromiseCache = new Map<string, Promise<any>>();
+
+const createStripePromise = async (publishableKey: string): Promise<any> => {
+  try {
+    console.debug('PaymentMethodsManager: Loading Stripe with key:', publishableKey.substring(0, 8) + '...');
+    
+    const stripe = await loadStripe(publishableKey);
+    
+    if (!stripe) {
+      throw new Error('Stripe failed to initialize - invalid publishable key or network issues');
+    }
+    
+    console.debug('PaymentMethodsManager: Stripe loaded successfully');
+    return stripe;
+  } catch (error) {
+    console.error('PaymentMethodsManager: Failed to load Stripe:', error);
+    throw error;
+  }
+};
+
+const getStripePromise = (publishableKey: string) => {
+  if (!stripePromiseCache.has(publishableKey)) {
+    stripePromiseCache.set(publishableKey, createStripePromise(publishableKey));
+  }
+  return stripePromiseCache.get(publishableKey)!;
+};
 
 export function PaymentMethodsManager({ stripePublishableKey }: PaymentMethodsManagerProps) {
+  const [stripeLoadState, setStripeLoadState] = useState<StripeLoadState>({
+    status: 'loading',
+    retryCount: 0
+  });
+
+  // Load Stripe when component mounts or when retrying
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStripeInstance = async () => {
+      try {
+        setStripeLoadState(prev => ({ ...prev, status: 'loading' }));
+        
+        const stripePromise = getStripePromise(stripePublishableKey);
+        await stripePromise; // Wait for the promise to resolve
+        
+        if (isMounted) {
+          setStripeLoadState(prev => ({ ...prev, status: 'loaded' }));
+        }
+      } catch (error) {
+        console.error('PaymentMethodsManager: Stripe loading failed:', error);
+        
+        if (isMounted) {
+          setStripeLoadState(prev => ({
+            ...prev,
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Failed to load Stripe.js'
+          }));
+        }
+      }
+    };
+
+    loadStripeInstance();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [stripePublishableKey, stripeLoadState.retryCount]);
+
+  const handleRetry = () => {
+    // Clear the cached promise to force a fresh load
+    stripePromiseCache.delete(stripePublishableKey);
+    setStripeLoadState(prev => ({
+      ...prev,
+      retryCount: prev.retryCount + 1,
+      error: undefined
+    }));
+  };
+
+  const handleFallback = () => {
+    setStripeLoadState(prev => ({ ...prev, status: 'fallback' }));
+  };
+
+  // Show loading state
+  if (stripeLoadState.status === 'loading') {
+    return (
+      <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+        <CardHeader className="p-8">
+          <CardTitle className="text-xl md:text-2xl font-bold text-forest-green flex items-center space-x-2">
+            <CreditCard className="h-5 w-5 text-forest-green" />
+            <span>Payment Methods</span>
+          </CardTitle>
+          <CardDescription className="text-lg text-charcoal mt-2">
+            Loading payment system...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-8 pt-0">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-forest-green mx-auto mb-4" />
+              <p className="text-lg text-charcoal">Connecting to Stripe...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state with retry option
+  if (stripeLoadState.status === 'error') {
+    return (
+      <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+        <CardHeader className="p-8">
+          <CardTitle className="text-xl md:text-2xl font-bold text-forest-green flex items-center space-x-2">
+            <CreditCard className="h-5 w-5 text-forest-green" />
+            <span>Payment Methods</span>
+          </CardTitle>
+          <CardDescription className="text-lg text-charcoal">
+            Payment system unavailable
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-8 pt-0">
+          <Card className="bg-red-50 border-red-200 mb-6 rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-bold text-red-800 text-base">Payment System Error</p>
+                  <p className="text-base text-red-600 mt-1">
+                    {stripeLoadState.error || 'Failed to load Stripe.js'}
+                  </p>
+                  <p className="text-sm text-red-600 mt-2">
+                    This might be due to network issues, ad blockers, or browser security settings.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="flex flex-col gap-3 text-center">
+            <Button 
+              className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
+              onClick={handleRetry}
+              disabled={stripeLoadState.retryCount >= 3}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              {stripeLoadState.retryCount >= 3 ? 'Max Retries Reached' : 'Retry Loading Stripe'}
+            </Button>
+            
+            <Button 
+              variant="outline"
+              className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200"
+              onClick={handleFallback}
+            >
+              Continue in Limited Mode
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show fallback (limited functionality without Stripe)
+  if (stripeLoadState.status === 'fallback') {
+    return (
+      <>
+        <Card className="bg-blue-50 border-blue-200 mb-4 rounded-2xl">
+          <CardContent className="p-6">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold text-blue-800 text-base">Limited Mode</p>
+                <p className="text-base text-blue-600 mt-1">
+                  Payment method management is disabled due to Stripe connectivity issues.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+          <CardHeader className="p-8">
+            <CardTitle className="text-xl md:text-2xl font-bold text-forest-green flex items-center space-x-2">
+              <CreditCard className="h-5 w-5 text-forest-green" />
+              <span>Payment Methods</span>
+            </CardTitle>
+            <CardDescription className="text-lg text-charcoal">
+              Manage your payment information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 pt-0">
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-stone-gray/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="h-8 w-8 text-charcoal" />
+              </div>
+              <h3 className="text-lg font-bold text-charcoal mb-2">Payment Management Unavailable</h3>
+              <p className="text-charcoal text-base mb-6 max-w-sm mx-auto">
+                You can manage your payment methods directly through Stripe&apos;s customer portal.
+              </p>
+              <Button 
+                variant="outline" 
+                className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-6 py-3 rounded-lg transition-all duration-200"
+                asChild
+              >
+                <a href="/manage-subscription">Manage in Stripe</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
+
+  // Stripe loaded successfully - render with Elements wrapper
+  console.debug('PaymentMethodsManager: Rendering with Stripe Elements');
+  
+  const stripePromise = getStripePromise(stripePublishableKey);
+
   return (
-    <Elements stripe={stripePromise(stripePublishableKey)}>
+    <Elements stripe={stripePromise}>
       <PaymentMethodsContent />
     </Elements>
   );
