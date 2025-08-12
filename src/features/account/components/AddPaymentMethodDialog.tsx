@@ -59,20 +59,20 @@ export function AddPaymentMethodDialog({
     style: {
       base: {
         fontSize: '15px',
-        color: '#1C1C1C',
+        color: 'hsl(var(--charcoal))', // Design system consistency
         fontFamily: 'Inter, system-ui, sans-serif',
         '::placeholder': {
-          color: '#6B7280',
+          color: 'hsl(var(--charcoal) / 0.5)', // WCAG AA compliant: ~7.65:1 ratio
         },
-        iconColor: '#374151',
+        iconColor: 'hsl(var(--charcoal) / 0.7)', // ~10.7:1 ratio
       },
       invalid: {
-        color: '#DC2626',
-        iconColor: '#DC2626',
+        color: 'hsl(var(--error-red))', // Design system error color
+        iconColor: 'hsl(var(--error-red))',
       },
       complete: {
-        color: '#059669',
-        iconColor: '#059669',
+        color: 'hsl(var(--success-green))', // Design system success color
+        iconColor: 'hsl(var(--success-green))',
       },
     },
   };
@@ -269,24 +269,38 @@ export function AddPaymentMethodDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] bg-paper-white border-stone-gray shadow-xl overflow-hidden flex flex-col">
+      <DialogContent 
+        className="sm:max-w-lg max-h-[90vh] bg-paper-white border-stone-gray shadow-xl overflow-hidden flex flex-col"
+        aria-describedby="add-payment-description"
+      >
         <DialogHeader className="pb-3 border-b border-stone-gray/30 flex-shrink-0">
-          <DialogTitle className="flex items-center space-x-2 text-charcoal">
+          <DialogTitle className="flex items-center space-x-2 text-charcoal text-xl font-semibold">
             <CreditCard className="h-5 w-5 text-forest-green" />
-            <span className="text-lg font-semibold">Add Payment Method</span>
+            <span>Add Payment Method</span>
           </DialogTitle>
-          <DialogDescription className="text-charcoal/70 text-sm">
-            Add a new payment method securely via Stripe.
+          <DialogDescription id="add-payment-description" className="text-charcoal/70 text-sm">
+            Add a new payment method securely via Stripe. This card will be used for future billing.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Live region for screen reader announcements */}
+        <div 
+          role="status" 
+          aria-live="polite" 
+          className="sr-only"
+          aria-atomic="true"
+        >
+          {errors.general ? `Error: ${errors.general}` : ''}
+          {loading ? 'Processing payment method...' : ''}
+        </div>
 
         <div className="flex-1 overflow-y-auto py-2">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* General Error Alert */}
             {errors.general && (
-              <Alert className="border-red-300 bg-red-50 shadow-sm">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800 font-medium">
+              <Alert className="border-error-red/50 bg-error-red/5 shadow-sm">
+                <AlertCircle className="h-4 w-4 text-error-red" />
+                <AlertDescription className="text-error-red font-medium">
                   {errors.general}
                 </AlertDescription>
               </Alert>
@@ -295,34 +309,41 @@ export function AddPaymentMethodDialog({
             {/* Billing Name */}
             <div className="space-y-2">
               <Label htmlFor="billing-name" className="text-sm font-medium text-charcoal">
-                Cardholder Name *
+                Billing Name *
               </Label>
               <Input
                 id="billing-name"
                 type="text"
-                placeholder="Enter the name on your card"
+                placeholder="Enter the name as it appears on your card"
                 value={billingName}
                 onChange={(e) => setBillingName(e.target.value)}
-                className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green/20 bg-light-concrete text-charcoal placeholder:text-charcoal/50"
+                className="border-2 border-stone-gray focus:border-forest-green focus:ring-2 focus:ring-forest-green focus:ring-offset-2 bg-light-concrete text-charcoal placeholder:text-charcoal/50"
                 disabled={loading}
                 required
+                aria-describedby={errors.general ? "billing-name-error" : undefined}
               />
+              {errors.general && errors.general.includes('Billing name') && (
+                <p id="billing-name-error" className="text-xs text-error-red flex items-center space-x-1" role="alert">
+                  <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                  <span>Billing name is required</span>
+                </p>
+              )}
             </div>
 
             {/* Card Information */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-charcoal">
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium text-charcoal">
                 Card Information *
-              </Label>
+              </legend>
               
               {/* Card Number */}
               <div className="space-y-1">
                 <Label className="text-xs font-medium text-charcoal/70">Card Number</Label>
                 <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
                   errors.cardNumber 
-                    ? 'border-red-500 bg-red-50 shadow-sm' 
+                    ? 'border-error-red bg-error-red/5 shadow-sm' 
                     : cardComplete.cardNumber 
-                      ? 'border-green-500 bg-green-50 shadow-sm' 
+                      ? 'border-success-green bg-success-green/5 shadow-sm' 
                       : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
                 }`}>
                   <div className="p-3">
@@ -338,14 +359,14 @@ export function AddPaymentMethodDialog({
                   {/* Visual feedback indicator */}
                   <div className="absolute top-2 right-2">
                     {cardComplete.cardNumber && (
-                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <div className="w-4 h-4 bg-success-green rounded-full flex items-center justify-center">
                         <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     )}
                     {errors.cardNumber && (
-                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                      <div className="w-4 h-4 bg-error-red rounded-full flex items-center justify-center">
                         <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -354,8 +375,8 @@ export function AddPaymentMethodDialog({
                   </div>
                 </div>
                 {errors.cardNumber && (
-                  <p className="text-xs text-red-600 flex items-center space-x-1">
-                    <AlertCircle className="h-3 w-3" />
+                  <p className="text-xs text-error-red flex items-center space-x-1" role="alert">
+                    <AlertCircle className="h-3 w-3" aria-hidden="true" />
                     <span>{errors.cardNumber}</span>
                   </p>
                 )}
@@ -368,9 +389,9 @@ export function AddPaymentMethodDialog({
                   <Label className="text-xs font-medium text-charcoal/70">Expiry Date</Label>
                   <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
                     errors.cardExpiry 
-                      ? 'border-red-500 bg-red-50 shadow-sm' 
+                      ? 'border-error-red bg-error-red/5 shadow-sm' 
                       : cardComplete.cardExpiry 
-                        ? 'border-green-500 bg-green-50 shadow-sm' 
+                        ? 'border-success-green bg-success-green/5 shadow-sm' 
                         : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
                   }`}>
                     <div className="p-3">
@@ -386,14 +407,14 @@ export function AddPaymentMethodDialog({
                     {/* Visual feedback indicator */}
                     <div className="absolute top-2 right-2">
                       {cardComplete.cardExpiry && (
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 bg-success-green rounded-full flex items-center justify-center">
                           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       )}
                       {errors.cardExpiry && (
-                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 bg-error-red rounded-full flex items-center justify-center">
                           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
@@ -402,8 +423,8 @@ export function AddPaymentMethodDialog({
                     </div>
                   </div>
                   {errors.cardExpiry && (
-                    <p className="text-xs text-red-600 flex items-center space-x-1">
-                      <AlertCircle className="h-3 w-3" />
+                    <p className="text-xs text-error-red flex items-center space-x-1" role="alert">
+                      <AlertCircle className="h-3 w-3" aria-hidden="true" />
                       <span>{errors.cardExpiry}</span>
                     </p>
                   )}
@@ -414,9 +435,9 @@ export function AddPaymentMethodDialog({
                   <Label className="text-xs font-medium text-charcoal/70">CVC</Label>
                   <div className={`relative border-2 rounded-lg bg-paper-white transition-all duration-200 ${
                     errors.cardCvc 
-                      ? 'border-red-500 bg-red-50 shadow-sm' 
+                      ? 'border-error-red bg-error-red/5 shadow-sm' 
                       : cardComplete.cardCvc 
-                        ? 'border-green-500 bg-green-50 shadow-sm' 
+                        ? 'border-success-green bg-success-green/5 shadow-sm' 
                         : 'border-stone-gray hover:border-forest-green focus-within:border-forest-green focus-within:ring-2 focus-within:ring-forest-green/20'
                   }`}>
                     <div className="p-3">
@@ -432,14 +453,14 @@ export function AddPaymentMethodDialog({
                     {/* Visual feedback indicator */}
                     <div className="absolute top-2 right-2">
                       {cardComplete.cardCvc && (
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 bg-success-green rounded-full flex items-center justify-center">
                           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       )}
                       {errors.cardCvc && (
-                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 bg-error-red rounded-full flex items-center justify-center">
                           <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
@@ -448,14 +469,14 @@ export function AddPaymentMethodDialog({
                     </div>
                   </div>
                   {errors.cardCvc && (
-                    <p className="text-xs text-red-600 flex items-center space-x-1">
-                      <AlertCircle className="h-3 w-3" />
+                    <p className="text-xs text-error-red flex items-center space-x-1" role="alert">
+                      <AlertCircle className="h-3 w-3" aria-hidden="true" />
                       <span>{errors.cardCvc}</span>
                     </p>
                   )}
                 </div>
               </div>
-            </div>
+            </fieldset>
 
             {/* Set as Default Checkbox */}
             <div className="flex items-start space-x-2 p-2 bg-stone-gray/5 rounded-lg border border-stone-gray/30">
@@ -491,14 +512,14 @@ export function AddPaymentMethodDialog({
               variant="outline"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 border-2 border-stone-gray text-charcoal hover:bg-stone-gray/10 hover:border-stone-gray/70 font-medium h-10"
+              className="flex-1 border-2 border-stone-gray bg-paper-white text-charcoal hover:bg-light-concrete hover:border-charcoal focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 font-medium h-10"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!stripe || loading || !isCardComplete || !billingName.trim()}
-              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/90 disabled:bg-stone-gray disabled:text-charcoal/50 font-medium h-10 shadow-sm"
+              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/95 focus:bg-forest-green/95 focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium h-10 shadow-sm"
               onClick={handleSubmit}
             >
               {loading ? (
