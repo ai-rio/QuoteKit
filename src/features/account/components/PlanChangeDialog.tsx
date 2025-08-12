@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, Calculator, CheckCircle, CreditCard, DollarSign, Info, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
+import { AlertCircle, Calculator, CheckCircle, CreditCard, DollarSign, Info, Loader2, Lock, Shield,TrendingDown, TrendingUp } from 'lucide-react';
 import { useCallback,useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -196,17 +196,9 @@ export function PlanChangeDialog({
   }, [stripeCustomerId, paymentMethods]);
 
   // Set default payment method when dialog opens AND payment methods are loaded
+  // Auto-select default payment method to reduce friction
   useEffect(() => {
-    console.log('🔍 Payment method selection useEffect triggered:', {
-      isOpen,
-      paymentMethodsLength: paymentMethods.length,
-      selectedPaymentMethodId,
-      paymentMethodsData: paymentMethods
-    });
-
     if (isOpen && paymentMethods.length > 0 && !selectedPaymentMethodId) {
-      console.log('🔍 Setting up payment method selection - conditions met');
-      
       // Validate payment methods inline to avoid circular dependency
       const errors: { [key: string]: string } = {};
       const now = new Date();
@@ -231,45 +223,16 @@ export function PlanChangeDialog({
         }
       }
 
-      console.log('🔍 Payment method validation results:', {
-        totalMethods: paymentMethods.length,
-        errors,
-        validMethodsCount: paymentMethods.filter(pm => !errors[pm.id]).length
-      });
-
       // Update errors state
       setPaymentMethodErrors(errors);
       
-      // Find the best payment method to select
+      // Auto-select the best available payment method
       const validPaymentMethods = paymentMethods.filter(pm => !errors[pm.id]);
       const defaultMethod = validPaymentMethods.find(pm => pm.is_default) || validPaymentMethods[0];
       
       if (defaultMethod) {
         setSelectedPaymentMethodId(defaultMethod.id);
-        console.log('🔧 Default payment method set:', {
-          id: defaultMethod.id,
-          isDefault: defaultMethod.is_default,
-          brand: defaultMethod.brand || defaultMethod.card?.brand,
-          last4: defaultMethod.last4 || defaultMethod.card?.last4,
-          validMethodsCount: validPaymentMethods.length,
-          totalMethodsCount: paymentMethods.length
-        });
-      } else {
-        console.warn('⚠️ No valid payment methods available:', {
-          totalMethods: paymentMethods.length,
-          errorsFound: Object.keys(errors).length,
-          errors
-        });
       }
-    } else {
-      console.log('🔍 Payment method selection conditions not met:', {
-        isOpen,
-        paymentMethodsLength: paymentMethods.length,
-        selectedPaymentMethodId,
-        reason: !isOpen ? 'Dialog not open' : 
-                paymentMethods.length === 0 ? 'No payment methods' :
-                selectedPaymentMethodId ? 'Payment method already selected' : 'Unknown'
-      });
     }
   }, [isOpen, paymentMethods, selectedPaymentMethodId]);
 
@@ -433,13 +396,28 @@ export function PlanChangeDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto"
+        aria-describedby="plan-change-description"
+      >
         <DialogHeader>
-          <DialogTitle className="text-charcoal text-section-title">Change Your Plan</DialogTitle>
-          <DialogDescription className="text-charcoal/70">
+          <DialogTitle className="text-charcoal text-xl font-semibold">Change Your Plan</DialogTitle>
+          <DialogDescription id="plan-change-description" className="text-charcoal/70">
             Select a new plan that better fits your needs. Changes take effect immediately.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Live region for screen reader announcements */}
+        <div 
+          role="status" 
+          aria-live="polite" 
+          className="sr-only"
+          aria-atomic="true"
+        >
+          {prorationPreview ? `Plan change will cost ${formatPrice(prorationPreview.immediateTotal)} immediately` : ''}
+          {previewError ? `Error: ${previewError}` : ''}
+          {isLoadingPreview ? 'Loading cost preview...' : ''}
+        </div>
 
         <div className="space-y-6">
           {/* Current Plan Display */}
@@ -464,12 +442,13 @@ export function PlanChangeDialog({
           {requiresPaymentMethod && (
             <Card className="bg-light-concrete border-stone-gray">
               <CardHeader>
-                <CardTitle className="text-lg text-charcoal flex items-center space-x-2">
+                <CardTitle id="payment-methods-title" className="text-lg text-charcoal flex items-center space-x-2">
                   <CreditCard className="h-5 w-5" />
                   <span>Payment Method</span>
+                  <Shield className="h-4 w-4 text-forest-green ml-2" aria-label="Secure payment" />
                 </CardTitle>
-                <CardDescription className="text-charcoal/70">
-                  Select a payment method for your plan upgrade
+                <CardDescription id="payment-methods-desc" className="text-charcoal/70">
+                  Select a payment method for your plan upgrade. Your payment information is secure and encrypted.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -496,16 +475,31 @@ export function PlanChangeDialog({
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div 
+                    className="space-y-3" 
+                    role="radiogroup"
+                    aria-labelledby="payment-methods-title"
+                    aria-describedby="payment-methods-desc"
+                  >
                     {paymentMethods.map((paymentMethod) => (
                       <div
                         key={paymentMethod.id}
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        className={`border rounded-lg p-4 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-2 ${
                           selectedPaymentMethodId === paymentMethod.id
-                            ? 'border-forest-green bg-forest-green/5'
-                            : 'border-stone-gray hover:bg-light-concrete/50'
-                        }`}
+                            ? 'border-forest-green bg-forest-green/15 ring-1 ring-forest-green/25'
+                            : 'border-stone-gray hover:bg-light-concrete/75'
+                        } ${paymentMethodErrors[paymentMethod.id] ? 'border-error-red/50 bg-error-red/5' : ''}`}
                         onClick={() => setSelectedPaymentMethodId(paymentMethod.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedPaymentMethodId(paymentMethod.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="radio"
+                        aria-checked={selectedPaymentMethodId === paymentMethod.id}
+                        aria-describedby={paymentMethodErrors[paymentMethod.id] ? `error-${paymentMethod.id}` : undefined}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -518,7 +512,11 @@ export function PlanChangeDialog({
                                 {(paymentMethod.brand || paymentMethod.card?.brand)?.toUpperCase()} • Expires {paymentMethod.exp_month || paymentMethod.card?.exp_month}/{paymentMethod.exp_year || paymentMethod.card?.exp_year}
                               </p>
                               {paymentMethodErrors[paymentMethod.id] && (
-                                <p className="text-sm text-error-red font-medium">
+                                <p 
+                                  id={`error-${paymentMethod.id}`}
+                                  className="text-sm text-error-red font-medium"
+                                  role="alert"
+                                >
                                   {paymentMethodErrors[paymentMethod.id]}
                                 </p>
                               )}
@@ -579,10 +577,15 @@ export function PlanChangeDialog({
 
           {/* Available Plans */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-charcoal">Available Plans</h3>
+            <h3 id="available-plans-title" className="text-lg font-semibold text-charcoal">Available Plans</h3>
             
             {validPlans.length > 0 ? (
-              <div className="grid gap-4">
+              <div 
+                className="grid gap-4"
+                role="radiogroup"
+                aria-labelledby="available-plans-title"
+                aria-describedby="plan-change-description"
+              >
                 {validPlans.map((product) => 
                   product.prices?.map((price: any) => {
                     if (!price?.stripe_price_id || price.stripe_price_id === currentPlan.id) {
@@ -595,12 +598,22 @@ export function PlanChangeDialog({
                     return (
                       <Card
                         key={price.stripe_price_id}
-                        className={`cursor-pointer transition-all border-2 ${
+                        className={`cursor-pointer transition-all border-2 focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-2 ${
                           selectedPriceId === price.stripe_price_id
-                            ? 'border-forest-green bg-forest-green/5'
-                            : 'border-stone-gray hover:border-forest-green/50 hover:bg-light-concrete/50'
+                            ? 'border-forest-green bg-forest-green/15 ring-1 ring-forest-green/25'
+                            : 'border-stone-gray hover:border-forest-green/50 hover:bg-light-concrete/75'
                         }`}
                         onClick={() => setSelectedPriceId(price.stripe_price_id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedPriceId(price.stripe_price_id);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="radio"
+                        aria-checked={selectedPriceId === price.stripe_price_id}
+                        aria-label={`Select ${product.name} plan for ${formatPrice(price.unit_amount || 0)} per ${price.interval}`}
                       >
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
@@ -666,7 +679,7 @@ export function PlanChangeDialog({
             variant="outline"
             onClick={onClose}
             disabled={isChanging}
-            className="border-stone-gray text-charcoal hover:bg-light-concrete"
+            className="border-stone-gray bg-paper-white text-charcoal hover:bg-light-concrete hover:border-charcoal focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50"
           >
             Cancel
           </Button>
@@ -679,7 +692,7 @@ export function PlanChangeDialog({
               isLoadingPaymentMethods ||
               (requiresPaymentMethod && (!hasValidPaymentMethods || selectedPaymentMethodId === ''))
             }
-            className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+            className="bg-forest-green text-paper-white hover:bg-forest-green/95 focus:bg-forest-green/95 focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isChanging ? (
               <>
