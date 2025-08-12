@@ -1,0 +1,47 @@
+/* Payment Method Card Button Fixes */
+/* Ensures Set Default button has proper visibility and contrast */
+
+.payment-method-set-default-btn {
+  background-color: hsl(147, 21%, 20%) !important; /* forest-green */
+  color: hsl(0, 0%, 100%) !important; /* paper-white */
+  border: 2px solid hsl(147, 21%, 20%) !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+
+.payment-method-set-default-btn:hover {
+  background-color: hsl(147, 21%, 18%) !important; /* darker forest-green */
+  color: hsl(0, 0%, 100%) !important;
+  border-color: hsl(147, 21%, 18%) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.payment-method-set-default-btn:focus {
+  outline: none !important;
+  ring: 2px solid hsl(147, 21%, 20%) !important;
+  ring-opacity: 0.5 !important;
+  ring-offset: 2px !important;
+}
+
+.payment-method-set-default-btn:disabled {
+  background-color: hsl(0, 0%, 85%) !important; /* stone-gray */
+  color: hsl(0, 0%, 11%, 0.5) !important; /* charcoal with opacity */
+  border-color: hsl(0, 0%, 85%) !important;
+  cursor: not-allowed !important;
+}
+
+/* Alternative bright yellow variant for maximum visibility */
+.payment-method-set-default-btn-alt {
+  background-color: hsl(47, 95%, 49%) !important; /* equipment-yellow */
+  color: hsl(0, 0%, 11%) !important; /* charcoal */
+  border: 2px solid hsl(47, 95%, 49%) !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+
+.payment-method-set-default-btn-alt:hover {
+  background-color: hsl(47, 95%, 45%) !important;
+  color: hsl(0, 0%, 11%) !important;
+  border-color: hsl(47, 95%, 45%) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}

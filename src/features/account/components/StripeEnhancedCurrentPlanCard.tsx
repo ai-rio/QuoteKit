@@ -1,10 +1,9 @@
 'use client';
 
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -106,7 +105,7 @@ export function StripeEnhancedCurrentPlanCard({
   }, [stripePublishableKey, stripeLoadState.retryCount]);
 
   // Only render with Stripe Elements if we have a publishable key
-  if (!stripePublishableKey || stripeLoadState.status === 'fallback') {
+  if (!stripePublishableKey) {
     console.debug('StripeEnhancedCurrentPlanCard: No publishable key provided, falling back to basic component');
     return (
       <EnhancedCurrentPlanCard 

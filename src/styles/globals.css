@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './payment-method-fixes.css';
 @layer base {
   :root {
     --background: 240 6% 10%;
@@ -43,7 +45,7 @@
     --paper-white: 0 0% 100%;         /* #FFFFFF */
     
     /* System Status Colors */
-    --success-green: 142 76% 36%;     /* #16a34a */
+    --success-green: 142 69% 30%;     /* #0f7a2a - Darker green for better contrast */
     --error-red: 0 84% 60%;           /* #dc2626 */
     --info-blue: 221 83% 53%;         /* #2563eb */
 

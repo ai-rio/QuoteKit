@@ -4,7 +4,6 @@ import { Check, CreditCard, Loader2, MoreVertical, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useToast } from '@/components/ui/use-toast';
 
 interface PaymentMethod {
@@ -213,12 +213,12 @@ export function PaymentMethodCard({
             {/* Mobile-friendly actions */}
             <div className="hidden sm:flex space-x-2">
               {!paymentMethod.is_default && !isExpired() && (
-                <Button
+                <EnhancedButton
                   size="sm"
-                  variant="outline"
-                  className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+                  variant="primary"
                   onClick={handleSetDefault}
                   disabled={isSettingDefault}
+                  className="payment-method-set-default-btn"
                 >
                   {isSettingDefault ? (
                     <Loader2 className="h-3 w-3 animate-spin mr-1" />
@@ -226,13 +226,12 @@ export function PaymentMethodCard({
                     <Check className="h-3 w-3 mr-1" />
                   )}
                   Set Default
-                </Button>
+                </EnhancedButton>
               )}
               
-              <Button
+              <EnhancedButton
                 size="sm"
-                variant="outline"
-                className="border-red-200 text-red-600 hover:bg-red-50"
+                variant="outline-destructive"
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -241,20 +240,19 @@ export function PaymentMethodCard({
                 ) : (
                   <Trash2 className="h-3 w-3" />
                 )}
-              </Button>
+              </EnhancedButton>
             </div>
 
             {/* Mobile dropdown menu */}
             <div className="sm:hidden">
               <DropdownMenu open={showActions} onOpenChange={setShowActions}>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    size="sm"
+                  <EnhancedButton
+                    size="icon-sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0"
                   >
                     <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  </EnhancedButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   {!paymentMethod.is_default && !isExpired() && (

@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { getAvailablePlans } from '@/features/account/actions/subscription-actions';
 import { BillingHistoryTable } from '@/features/account/components/BillingHistoryTable';
 import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedCurrentPlanCard';

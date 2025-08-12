@@ -4,8 +4,8 @@ import { AlertCircle,Calendar, Download, FileText, Filter, RefreshCw, Search } f
 import { useEffect, useMemo,useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -258,14 +258,14 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
             <p className="text-lg text-charcoal mb-4">
               {error instanceof Error ? error.message : 'An error occurred while loading billing history'}
             </p>
-            <Button 
+            <EnhancedButton 
               onClick={() => refetch()} 
               variant="outline"
-              className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-8 py-4 rounded-lg transition-all duration-200"
+              size="lg"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
-            </Button>
+            </EnhancedButton>
           </div>
         </CardContent>
       </Card>
@@ -285,15 +285,14 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button
+            <EnhancedButton
               onClick={() => refetch()}
               variant="ghost"
-              size="sm"
+              size="icon-sm"
               disabled={isRefetching}
-              className="text-charcoal hover:bg-light-concrete font-bold px-4 py-2 rounded-lg transition-all duration-200"
             >
               <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
-            </Button>
+            </EnhancedButton>
             <Calendar className="h-6 w-6 text-charcoal" />
           </div>
         </div>
@@ -445,15 +444,14 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                       </TableCell>
                       <TableCell>
                         {hasDownloadableInvoice(item) ? (
-                          <Button 
-                            size="sm" 
+                          <EnhancedButton 
+                            size="icon" 
                             variant="outline"
-                            className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-2 lg:px-3 py-2 lg:py-3 rounded-lg transition-all duration-200 w-10 lg:w-12 h-10 lg:h-12"
                             onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
                             title="Download Invoice"
                           >
-                            <Download className="h-6 lg:h-8 w-6 lg:w-8" />
-                          </Button>
+                            <Download className="h-4 w-4" />
+                          </EnhancedButton>
                         ) : (
                           <span className="text-charcoal text-sm lg:text-base">No invoice</span>
                         )}
@@ -492,15 +490,15 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                         ${(item.amount / 100).toFixed(2)}
                       </span>
                       {hasDownloadableInvoice(item) ? (
-                        <Button 
-                          size="sm" 
+                        <EnhancedButton 
+                          size="default" 
                           variant="outline"
-                          className="bg-paper-white border-stone-gray text-charcoal hover:bg-paper-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
                           onClick={() => handleDownloadInvoice(item.invoice_url, item.id)}
+                          className="w-full sm:w-auto"
                         >
-                          <Download className="h-6 sm:h-8 w-6 sm:w-8 mr-2 sm:mr-3" />
+                          <Download className="h-4 w-4 mr-2" />
                           Download
-                        </Button>
+                        </EnhancedButton>
                       ) : (
                         <span className="text-charcoal text-sm sm:text-base">No invoice available</span>
                       )}
@@ -513,15 +511,15 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-6">
-                <Button
+                <EnhancedButton
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                  className="w-full sm:w-auto"
                 >
                   Previous
-                </Button>
+                </EnhancedButton>
                 
                 <div className="flex items-center gap-1 order-first sm:order-none">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -537,32 +535,27 @@ export function BillingHistoryTable({ initialData = [], className, metadata }: B
                     }
 
                     return (
-                      <Button
+                      <EnhancedButton
                         key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
+                        variant={currentPage === pageNum ? "primary" : "outline"}
                         size="sm"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={
-                          currentPage === pageNum
-                            ? "bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 shadow-lg"
-                            : "bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200"
-                        }
                       >
                         {pageNum}
-                      </Button>
+                      </EnhancedButton>
                     );
                   })}
                 </div>
 
-                <Button
+                <EnhancedButton
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                  className="w-full sm:w-auto"
                 >
                   Next
-                </Button>
+                </EnhancedButton>
               </div>
             )}
           </>

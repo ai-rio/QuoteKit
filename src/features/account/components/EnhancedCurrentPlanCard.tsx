@@ -4,7 +4,6 @@ import { AlertCircle, DollarSign, Loader2, RefreshCw, Settings, X } from 'lucide
 import { useEffect,useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -13,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { PriceWithProduct, ProductWithPrices, SubscriptionWithProduct } from '@/features/pricing/types';
 import { formatDate } from '@/utils/to-date-time';
 
@@ -321,14 +321,14 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                     <p className="font-bold text-green-800 text-base">Sync Successful</p>
                     <p className="text-base text-green-600 mt-1">{syncSuccess}</p>
                     <p className="text-sm text-green-600 mt-1">Page will refresh in 2 seconds...</p>
-                    <Button
+                    <EnhancedButton
                       size="sm"
                       variant="outline"
-                      className="mt-2 bg-paper-white border-green-300 text-green-600 hover:bg-green-50 font-bold px-4 py-2 rounded-lg transition-all duration-200"
+                      className="mt-2"
                       onClick={() => setSyncSuccess(null)}
                     >
                       Dismiss
-                    </Button>
+                    </EnhancedButton>
                   </div>
                 </div>
               </CardContent>
@@ -344,14 +344,14 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                   <div className="flex-1">
                     <p className="font-bold text-red-800 text-base">Error</p>
                     <p className="text-base text-red-600 mt-1">{error}</p>
-                    <Button
+                    <EnhancedButton
                       size="sm"
-                      variant="outline"
-                      className="mt-2 bg-paper-white border-red-300 text-red-600 hover:bg-red-50 font-bold px-4 py-2 rounded-lg transition-all duration-200"
+                      variant="outline-destructive"
+                      className="mt-2"
                       onClick={() => setError(null)}
                     >
                       Dismiss
-                    </Button>
+                    </EnhancedButton>
                   </div>
                 </div>
               </CardContent>
@@ -403,14 +403,15 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                           Your subscription will end on {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}.
                           You&apos;ll retain access to all features until then.
                         </p>
-                        <Button
-                          size="sm"
-                          className="mt-3 bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
+                        <EnhancedButton
+                          size="default"
+                          variant="success"
                           onClick={handleReactivation}
                           disabled={isLoading}
+                          className="mt-3"
                         >
                           {isLoading ? 'Reactivating...' : 'Reactivate Subscription'}
-                        </Button>
+                        </EnhancedButton>
                       </div>
                     </div>
                   </CardContent>
@@ -437,39 +438,43 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
               )}
 
               <div className="flex flex-col gap-3 pt-4">
-                <Button 
-                  className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 shadow-lg w-full sm:w-auto"
+                <EnhancedButton 
+                  size="lg"
+                  variant="primary"
                   onClick={() => setShowPlanDialog(true)}
                   disabled={isLoading}
+                  className="w-full sm:w-auto"
                 >
                   <Settings className="mr-2 h-4 w-4" />
                   {isLoading ? 'Loading...' : 
                     (planData.price === 0 ? 'Upgrade Plan' : 'Change Plan')}
-                </Button>
+                </EnhancedButton>
                 
                 <div className="flex flex-col sm:flex-row gap-3">
                   {/* Only show Stripe management for real subscriptions */}
                   {hasSubscription && (
-                    <Button 
-                      variant="outline" 
-                      className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                    <EnhancedButton 
+                      size="default"
+                      variant="outline"
+                      className="w-full sm:w-auto"
                       asChild
                     >
                       <a href="/manage-subscription">Manage in Stripe</a>
-                    </Button>
+                    </EnhancedButton>
                   )}
                   
                   {/* Only show cancel for real subscriptions */}
                   {hasSubscription && !subscription.cancel_at_period_end && (
-                    <Button 
-                      variant="outline" 
-                      className="bg-paper-white border-red-500 text-red-500 hover:bg-red-500 hover:text-paper-white font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                    <EnhancedButton 
+                      size="default"
+                      variant="outline-destructive"
                       onClick={() => setShowCancelDialog(true)}
                       disabled={isLoading}
+                      className="w-full sm:w-auto"
                     >
                       <X className="mr-2 h-4 w-4" />
                       {isLoading ? 'Loading...' : 'Cancel'}
-                    </Button>
+                    </EnhancedButton>
                   )}
                 </div>
               </div>
@@ -488,21 +493,24 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                 </div>
               </div>
               <div className="flex flex-col gap-3 justify-center">
-                <Button 
-                  className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 shadow-lg w-full sm:w-auto"
+                <EnhancedButton 
+                  size="lg"
+                  variant="primary"
+                  className="w-full sm:w-auto"
                   asChild
                 >
                   <a href="/pricing">View Plans</a>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 w-full sm:w-auto"
+                </EnhancedButton>
+                <EnhancedButton 
+                  size="default"
+                  variant="secondary"
                   onClick={handleSyncSubscription}
                   disabled={isSyncing || isLoading}
+                  className="w-full sm:w-auto"
                 >
                   <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   {isSyncing ? 'Syncing...' : 'Sync Subscription'}
-                </Button>
+                </EnhancedButton>
               </div>
             </div>
           )}

@@ -6,8 +6,8 @@ import { AlertCircle, CreditCard, Loader2, Plus, RefreshCw, RotateCcw } from 'lu
 import { useCallback, useEffect, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useToast } from '@/components/ui/use-toast';
 
 import { AddPaymentMethodDialog } from './AddPaymentMethodDialog';
@@ -178,22 +178,23 @@ export function PaymentMethodsManager({ stripePublishableKey }: PaymentMethodsMa
           </Card>
           
           <div className="flex flex-col gap-3 text-center">
-            <Button 
-              className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
+            <EnhancedButton 
+              size="lg"
+              variant="primary"
               onClick={handleRetry}
               disabled={stripeLoadState.retryCount >= 3}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               {stripeLoadState.retryCount >= 3 ? 'Max Retries Reached' : 'Retry Loading Stripe'}
-            </Button>
+            </EnhancedButton>
             
-            <Button 
-              variant="outline"
-              className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200"
+            <EnhancedButton 
+              size="default"
+              variant="secondary"
               onClick={handleFallback}
             >
               Continue in Limited Mode
-            </Button>
+            </EnhancedButton>
           </div>
         </CardContent>
       </Card>
@@ -237,13 +238,13 @@ export function PaymentMethodsManager({ stripePublishableKey }: PaymentMethodsMa
               <p className="text-charcoal text-base mb-6 max-w-sm mx-auto">
                 You can manage your payment methods directly through Stripe&apos;s customer portal.
               </p>
-              <Button 
-                variant="outline" 
-                className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-6 py-3 rounded-lg transition-all duration-200"
+              <EnhancedButton 
+                size="default"
+                variant="outline"
                 asChild
               >
                 <a href="/manage-subscription">Manage in Stripe</a>
-              </Button>
+              </EnhancedButton>
             </div>
           </CardContent>
         </Card>
@@ -512,26 +513,24 @@ function PaymentMethodsContent() {
             </CardDescription>
           </div>
           <div className="flex items-center space-x-2 self-start sm:self-auto">
-            <Button
+            <EnhancedButton
               size="sm"
               variant="outline"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200"
               title="Refresh payment methods"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            </Button>
-            <Button
+            </EnhancedButton>
+            <EnhancedButton
               size="sm"
               variant="outline"
               onClick={handleForceSync}
               disabled={refreshing}
-              className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200"
               title="Force sync from Stripe"
             >
               <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            </Button>
+            </EnhancedButton>
           </div>
         </div>
       </CardHeader>
@@ -541,14 +540,14 @@ function PaymentMethodsContent() {
             <AlertCircle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800 text-base">
               {error}
-              <Button
+              <EnhancedButton
                 size="sm"
-                variant="outline"
+                variant="outline-destructive"
                 onClick={() => fetchPaymentMethods()}
-                className="ml-2 h-8 text-sm bg-paper-white border-red-300 text-red-600 hover:bg-red-50 font-bold px-3 py-1 rounded transition-all duration-200"
+                className="ml-2 h-8 text-sm"
               >
                 Try Again
-              </Button>
+              </EnhancedButton>
             </AlertDescription>
           </Alert>
         )}
@@ -567,14 +566,15 @@ function PaymentMethodsContent() {
             ))}
             
             <div className="pt-4 border-t border-stone-gray/30">
-              <Button
+              <EnhancedButton
+                size="lg"
                 variant="outline"
                 onClick={() => setShowAddDialog(true)}
-                className="w-full bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-200 h-12"
+                className="w-full h-12"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Another Payment Method
-              </Button>
+              </EnhancedButton>
             </div>
           </div>
         ) : (
@@ -586,13 +586,15 @@ function PaymentMethodsContent() {
             <p className="text-charcoal text-sm sm:text-base mb-6 max-w-sm mx-auto px-4">
               Add a payment method to manage your subscriptions and make payments.
             </p>
-            <Button 
+            <EnhancedButton 
+              size="lg"
+              variant="primary"
               onClick={() => setShowAddDialog(true)}
-              className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 sm:px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-10 w-full sm:w-auto"
+              className="h-10 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Payment Method
-            </Button>
+            </EnhancedButton>
           </div>
         )}
 

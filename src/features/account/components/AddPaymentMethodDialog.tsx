@@ -8,12 +8,12 @@ import {
   useStripe 
 } from '@stripe/react-stripe-js';
 import { AlertCircle, CreditCard, HelpCircle, Loader2, Plus, Shield } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect,useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -610,20 +610,21 @@ export function AddPaymentMethodDialog({
         {/* Action Buttons - Fixed at bottom */}
         <div className="flex-shrink-0 border-t border-stone-gray/30 pt-3 mt-2">
           <div className="flex space-x-3">
-            <Button
+            <EnhancedButton
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 border-2 border-stone-gray bg-paper-white text-charcoal hover:bg-light-concrete hover:border-charcoal focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 font-medium h-10"
+              className="flex-1"
             >
               Cancel
-            </Button>
-            <Button
+            </EnhancedButton>
+            <EnhancedButton
               type="submit"
+              variant="primary"
               disabled={stripeLoading || !stripe || !elements || loading || !isCardComplete || !billingName.trim()}
-              className="flex-1 bg-forest-green text-paper-white hover:bg-forest-green/95 focus:bg-forest-green/95 focus:ring-2 focus:ring-forest-green focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium h-10 shadow-sm"
               onClick={handleSubmit}
+              className="flex-1"
             >
               {loading ? (
                 <>
@@ -636,7 +637,7 @@ export function AddPaymentMethodDialog({
                   Add Card
                 </>
               )}
-            </Button>
+            </EnhancedButton>
           </div>
         </div>
       </DialogContent>
