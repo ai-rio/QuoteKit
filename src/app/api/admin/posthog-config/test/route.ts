@@ -12,6 +12,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check admin role
+    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { 
+      user_id: user.id 
+    })
+    
+    if (adminError || !isAdminUser) {
+      console.error('Admin check failed:', adminError)
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const body = await request.json()
     let { project_api_key, host, project_id, personal_api_key } = body
 

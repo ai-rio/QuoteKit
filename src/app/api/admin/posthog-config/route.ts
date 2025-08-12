@@ -12,6 +12,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check admin role
+    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { 
+      user_id: user.id 
+    })
+    
+    if (adminError || !isAdminUser) {
+      console.error('Admin check failed:', adminError)
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Try to get config from database first, then fallback to environment variables
     let config = {
       project_api_key: '',
@@ -84,11 +94,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check admin role (when implemented)
-    // const isAdmin = await checkAdminRole(user.id)
-    // if (!isAdmin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    // }
+    // Check admin role
+    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { 
+      user_id: user.id 
+    })
+    
+    if (adminError || !isAdminUser) {
+      console.error('Admin check failed:', adminError)
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const body = await request.json()
     const { project_api_key, host, project_id, personal_api_key } = body
