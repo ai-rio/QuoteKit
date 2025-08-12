@@ -64,7 +64,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
     
     setIsLoadingPaymentMethods(true);
     try {
-      console.log('🔄 Loading payment methods...');
+      // Loading payment methods
       const response = await fetch('/api/payment-methods', {
         cache: 'no-store', // Always fetch fresh data
         headers: {
@@ -74,21 +74,9 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Payment methods API response:', data);
-        
         // Handle both possible response formats
         const methods = data.success ? data.data : (data.paymentMethods || []);
         setPaymentMethods(methods);
-        
-        console.log('✅ Payment methods loaded:', {
-          count: methods.length,
-          methods: methods.map((pm: PaymentMethod) => ({
-            id: pm.id,
-            isDefault: pm.is_default,
-            brand: pm.brand || pm.card?.brand,
-            last4: pm.last4 || pm.card?.last4
-          }))
-        });
       } else {
         console.error('Failed to load payment methods:', response.statusText);
         setPaymentMethods([]);
@@ -149,22 +137,14 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       setIsLoading(true);
       setError(null);
       
-      console.log('💳 Plan change initiated from EnhancedCurrentPlanCard:', {
-        priceId,
-        isUpgrade,
-        paymentMethodId,
-        hasPaymentMethod: !!paymentMethodId
-      });
+      // Plan change initiated
       
       const result = await changePlan(priceId, isUpgrade, paymentMethodId);
       
       // Close dialog first
       setShowPlanDialog(false);
       
-      console.log('✅ Plan change completed, dispatching events:', {
-        result: result ? 'success' : 'unknown',
-        needsBillingRefresh: result && typeof result === 'object' && 'needsBillingRefresh' in result ? result.needsBillingRefresh : false
-      });
+      // Plan change completed, dispatching events
       
       // Dispatch events for UI updates
       window.dispatchEvent(new CustomEvent('plan-change-completed', {
@@ -178,19 +158,19 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       // Additional delayed refresh to catch server-side billing updates
       // Stripe/payment processing might take a moment to create billing records
       setTimeout(() => {
-        console.log('🔄 Delayed billing history refresh after plan change');
+        // Delayed billing history refresh
         window.dispatchEvent(new CustomEvent('billing-history-updated'));
         window.dispatchEvent(new CustomEvent('invalidate-billing-history'));
       }, 2000); // 2 second delay
       
       // Another refresh after 5 seconds to ensure we catch any delayed billing records
       setTimeout(() => {
-        console.log('🔄 Final billing history refresh after plan change');
+        // Final billing history refresh
         window.dispatchEvent(new CustomEvent('billing-history-updated'));
         window.dispatchEvent(new CustomEvent('invalidate-billing-history'));
       }, 5000); // 5 second delay
       
-      console.log('✅ Billing history refresh events dispatched (immediate + delayed)');
+      // Billing history refresh events dispatched
       
       // Show success message with billing update info
       setSyncSuccess(`Plan ${isUpgrade ? 'upgraded' : 'changed'} successfully! Billing history will update shortly.`);
@@ -204,7 +184,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
         // Let Next.js handle the redirect, don't show error or reset loading state
         // The redirect will navigate away from this page anyway
-        console.log('🔄 Redirecting for checkout flow...');
+        // Redirecting for checkout flow
         return;
       }
       
@@ -409,28 +389,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
                 </Card>
               )}
 
-              {/* Plan Details Debug Info (only in development) */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="p-4 bg-light-concrete text-sm text-charcoal rounded-lg border border-stone-gray">
-                  <p><strong>Debug Info:</strong></p>
-                  <p>Has Subscription: {hasSubscription ? 'Yes' : 'No'}</p>
-                  <p>Has Fallback Plan: {hasFallbackPlan ? 'Yes' : 'No'}</p>
-                  {hasSubscription ? (
-                    <>
-                      <p>Subscription ID: {subscription.id}</p>
-                      <p>Price ID: {(subscription as any).stripe_price_id || 'None'}</p>
-                      <p>Has Price Data: {subscription.prices ? 'Yes' : 'No'}</p>
-                      <p>Has Product Data: {subscription.prices?.products ? 'Yes' : 'No'}</p>
-                      <p>Product Name: {subscription.prices?.products?.name || 'None'}</p>
-                    </>
-                  ) : (
-                    <>
-                      <p>Free Plan Data: {freePlanInfo ? 'Available' : 'Not available'}</p>
-                      <p>Free Plan Name: {freePlanInfo?.products?.name || 'None'}</p>
-                    </>
-                  )}
-                </div>
-              )}
+
 
               {/* Cancellation Notice - only for real subscriptions */}
               {hasSubscription && subscription.cancel_at_period_end && (
@@ -553,18 +512,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
       {/* Plan Change Dialog - works with both subscription and free plan fallback */}
       {planData && (
         <>
-          {/* Debug logging for dialog state */}
-          {showPlanDialog && console.log('🔍 Rendering PlanChangeDialog with:', {
-            showPlanDialog,
-            isLoadingPaymentMethods,
-            paymentMethodsCount: paymentMethods.length,
-            paymentMethods: paymentMethods.map(pm => ({
-              id: pm.id,
-              brand: pm.brand || pm.card?.brand,
-              last4: pm.last4 || pm.card?.last4,
-              is_default: pm.is_default
-            }))
-          })}
+
           
           {/* Loading dialog while payment methods are being loaded */}
           {showPlanDialog && isLoadingPaymentMethods && (
