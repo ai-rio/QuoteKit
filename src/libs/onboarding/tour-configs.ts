@@ -1,3 +1,4 @@
+import { navigateForTour, validatePageForTour } from './navigation-helper'
 import { TourConfig } from './tour-manager'
 
 // Welcome Tour - Dashboard Overview (M1.3 Specification)
@@ -99,11 +100,9 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'close'],
-      onBeforeHighlight: () => {
+      onBeforeHighlight: async () => {
         // Ensure we're on the dashboard page
-        if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
-          window.location.href = '/dashboard'
-        }
+        await navigateForTour('/dashboard');
       }
     },
     {
@@ -113,11 +112,9 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'previous', 'close'],
-      onBeforeHighlight: () => {
+      onBeforeHighlight: async () => {
         // Navigate to quote creation page if not already there
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/quotes/new')) {
-          window.location.href = '/quotes/new'
-        }
+        await navigateForTour('/quotes/new');
       }
     },
     {
@@ -210,11 +207,9 @@ export const SETTINGS_TOUR: TourConfig = {
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'close'],
-      onBeforeHighlight: () => {
+      onBeforeHighlight: async () => {
         // Navigate to settings page if not already there
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/settings')) {
-          window.location.href = '/settings'
-        }
+        await navigateForTour('/settings');
       }
     },
     {
@@ -288,11 +283,9 @@ export const ITEM_LIBRARY_TOUR: TourConfig = {
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'close'],
-      onBeforeHighlight: () => {
+      onBeforeHighlight: async () => {
         // Navigate to items page if not already there
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/items')) {
-          window.location.href = '/items'
-        }
+        await navigateForTour('/items');
       }
     },
     {

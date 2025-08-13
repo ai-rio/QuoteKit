@@ -111,12 +111,16 @@ class TourManager {
         showProgress: config.showProgress ?? true,
         allowClose: config.allowClose ?? true,
         steps: driverSteps,
-        onHighlighted: (element, step, options) => {
+        onHighlighted: async (element, step, options) => {
           // Execute onBeforeHighlight if defined
           const currentStepIndex = options.state?.activeIndex ?? 0
           const currentStepConfig = config.steps[currentStepIndex]
           if (currentStepConfig?.onBeforeHighlight) {
-            currentStepConfig.onBeforeHighlight(element || undefined)
+            try {
+              await currentStepConfig.onBeforeHighlight(element || undefined)
+            } catch (error) {
+              console.error('Error in onBeforeHighlight:', error)
+            }
           }
 
           // Notify step change callbacks

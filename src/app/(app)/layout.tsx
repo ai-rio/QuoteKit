@@ -2,6 +2,7 @@ import "@/styles/driver-tour.css"
 
 import { AppHeader } from "@/components/layout/app-header"
 import { AppSidebar } from "@/components/layout/app-sidebar"
+import { OnboardingDebugPanel } from "@/components/onboarding/OnboardingDebugPanel"
 import { OnboardingManager } from "@/components/onboarding/OnboardingManager"
 import {
   SidebarInset,
@@ -29,6 +30,7 @@ export default function AppLayout({
           </div>
         </SidebarInset>
         <OnboardingManager autoStartWelcome={true} enableTierBasedTours={true} debugMode={true} />
+        <OnboardingDebugPanel />
       </SidebarProvider>
     </OnboardingWrapper>
   )

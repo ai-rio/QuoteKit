@@ -1,8 +1,7 @@
-import { CheckCircle, Crown, DollarSign, FileText, List, Package, Plus, Send, Settings, TrendingUp, User, Zap } from "lucide-react"
+import { CheckCircle, Crown, DollarSign, FileText, List, Plus, Send, Settings, TrendingUp, User, Zap } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { OnboardingDebugPanel } from "@/components/onboarding/OnboardingDebugPanel"
 import { TourTrigger } from "@/components/onboarding/TourTrigger"
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
@@ -304,9 +303,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-      
-      {/* Debug Panel - Only shows in development */}
-      <OnboardingDebugPanel />
     </div>
   )
 }
