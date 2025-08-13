@@ -1,7 +1,8 @@
-import { CheckCircle, Crown, DollarSign, FileText, List, Package, Plus, Send, Settings, TrendingUp, User, Zap } from "lucide-react"
+import { CheckCircle, Crown, DollarSign, FileText, List, Plus, Send, Settings, TrendingUp, User, Zap } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
+import { HelpMenuWrapper } from "@/components/help/HelpMenuWrapper"
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
 import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
@@ -112,15 +113,16 @@ export default async function DashboardPage() {
   
   // Quick actions matching HTML mock
   const quickActions = [
-    { href: '/quotes/new', icon: Plus, label: 'Create New Quote' },
+    { href: '/quotes/new', icon: Plus, label: 'Create New Quote', tourId: 'create-quote' },
     { href: '/quotes', icon: FileText, label: 'Manage Quotes' },
     { href: '/items', icon: List, label: 'Item Library' },
     { href: '/account', icon: User, label: 'Account & Billing' },
-    { href: '/settings', icon: Settings, label: 'Company Settings' }
+    { href: '/settings', icon: Settings, label: 'Company Settings', tourId: 'settings-link' }
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-light-concrete min-h-full">
+      
       <PageBreadcrumbs />
       
       {/* Welcome Banner */}
@@ -135,7 +137,7 @@ export default async function DashboardPage() {
         {/* Main Content Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Stat Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" data-tour="stats-cards">
                         {statCards.map((stat) => {
               const Icon = stat.icon
               const isRevenue = stat.isRevenue
@@ -167,10 +169,12 @@ export default async function DashboardPage() {
           {!isPremium && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Real Usage Analytics Component */}
-              <DashboardUsageAnalytics />
+              <div data-tour="quote-limit-indicator">
+                <DashboardUsageAnalytics />
+              </div>
               
               {/* Upgrade Prompt Card */}
-              <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
+              <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg" data-tour="upgrade-button">
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-forest-green/80 mb-4">
                   <Zap className="w-6 h-6 text-equipment-yellow" />
                 </div>
@@ -186,13 +190,13 @@ export default async function DashboardPage() {
 
           {/* Premium Analytics Card - Only for Premium Users */}
           {isPremium && (
-            <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+            <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm" data-tour="analytics-unlocked">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
                   <Crown className="w-6 h-6 text-equipment-yellow" />
                   Premium Analytics
                 </h2>
-                <Button asChild variant="outline" className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200">
+                <Button asChild variant="outline" className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200" data-tour="analytics-locked">
                   <Link href="/analytics">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     View Full Analytics
@@ -273,8 +277,11 @@ export default async function DashboardPage() {
         
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1">
-          <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8">
-            <h2 className="text-xl font-bold text-charcoal mb-4">Quick Actions</h2>
+          <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8" data-tour="quick-actions">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-charcoal">Quick Actions</h2>
+              <HelpMenuWrapper variant="icon" size="sm" showLabel={false} />
+            </div>
             <div className="space-y-3">
               {quickActions.map((action) => {
                 const Icon = action.icon
@@ -283,6 +290,7 @@ export default async function DashboardPage() {
                     key={action.href}
                     href={action.href} 
                     className="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+                    data-tour={action.tourId || undefined}
                   >
                     <Icon className="w-6 h-6 text-forest-green" />
                     <span className="ml-4 font-bold text-charcoal">{action.label}</span>

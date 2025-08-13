@@ -1,0 +1,287 @@
+/**
+ * Mobile-Optimized Tour Styles - S2.2 Implementation
+ * Responsive styles for mobile and tablet tour experiences
+ */
+
+/* Base mobile tour styles */
+.lawnquote-tour-mobile .driver-popover {
+  max-width: calc(100vw - 32px);
+  margin: 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+
+.lawnquote-tour-mobile .driver-popover-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.lawnquote-tour-mobile .driver-popover-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* Touch-optimized buttons */
+.lawnquote-tour-touch .driver-popover-footer {
+  padding: 16px;
+  gap: 12px;
+}
+
+.lawnquote-tour-touch .driver-popover-footer button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lawnquote-tour-touch .driver-popover-footer button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Mobile-specific positioning */
+.lawnquote-tour-mobile .driver-popover.driver-popover-bottom {
+  margin-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.lawnquote-tour-mobile .driver-popover.driver-popover-top {
+  margin-top: max(16px, env(safe-area-inset-top));
+}
+
+/* Tablet optimizations */
+.lawnquote-tour-tablet .driver-popover {
+  max-width: 480px;
+  margin: 24px;
+  border-radius: 16px;
+}
+
+.lawnquote-tour-tablet .driver-popover-title {
+  font-size: 1.25rem;
+}
+
+.lawnquote-tour-tablet .driver-popover-description {
+  font-size: 1rem;
+}
+
+/* Gesture navigation indicators */
+.lawnquote-tour-gesture .driver-popover::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.lawnquote-tour-gesture .driver-popover-footer {
+  padding-bottom: 24px;
+}
+
+/* Progress indicator for mobile */
+.lawnquote-tour-mobile .driver-popover-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+.lawnquote-tour-mobile .driver-popover-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transition: width 0.3s ease;
+  border-radius: 12px 12px 0 0;
+}
+
+/* Mobile keyboard adjustments */
+@media (max-height: 500px) {
+  .lawnquote-tour-mobile .driver-popover {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-description {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lawnquote-tour-mobile .driver-popover {
+    max-width: 400px;
+    max-height: 80vh;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-footer {
+    padding: 12px 16px;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-footer button {
+    min-height: 40px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .lawnquote-tour-mobile .driver-popover {
+    border: 2px solid #000;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-footer button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .lawnquote-tour-touch .driver-popover-footer button:active {
+    transform: none;
+    transition: none;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-progress-bar {
+    transition: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .lawnquote-tour-mobile .driver-popover {
+    background: #1f2937;
+    color: #f9fafb;
+    border: 1px solid #374151;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-progress {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .lawnquote-tour-gesture .driver-popover::after {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Focus management for accessibility */
+.lawnquote-tour-mobile .driver-popover-footer button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Touch target optimization */
+.lawnquote-tour-touch [data-tour] {
+  position: relative;
+}
+
+.lawnquote-tour-touch [data-tour]::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  min-width: 44px;
+  min-height: 44px;
+  pointer-events: none;
+}
+
+/* Swipe gesture hints */
+.lawnquote-tour-gesture .driver-popover-swipe-hint {
+  position: absolute;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.lawnquote-tour-gesture .driver-popover-swipe-hint::before {
+  content: '← Swipe to navigate →';
+}
+
+/* Loading states for mobile */
+.lawnquote-tour-mobile .driver-popover-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.lawnquote-tour-mobile .driver-popover-loading::after {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile-specific tour step indicators */
+.lawnquote-tour-mobile .driver-popover-step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.lawnquote-tour-mobile .driver-popover-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease;
+}
+
+.lawnquote-tour-mobile .driver-popover-step-dot.active {
+  background: #10b981;
+}
+
+/* Responsive font scaling */
+@media (max-width: 375px) {
+  .lawnquote-tour-mobile .driver-popover-title {
+    font-size: 1rem;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-description {
+    font-size: 0.875rem;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-footer button {
+    font-size: 0.9rem;
+    padding: 10px 16px;
+  }
+}
+
+/* Large mobile devices */
+@media (min-width: 414px) and (max-width: 767px) {
+  .lawnquote-tour-mobile .driver-popover {
+    max-width: 380px;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-title {
+    font-size: 1.2rem;
+  }
+}

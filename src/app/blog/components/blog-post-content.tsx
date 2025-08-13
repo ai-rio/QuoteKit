@@ -12,32 +12,32 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
       return (
         <div className="prose prose-lg max-w-none">
           <p className="text-xl text-charcoal font-medium leading-relaxed mb-8">
-            Pricing a paver patio correctly is the difference between a profitable job and working for free. Here's the exact formula I use to price every paver project.
+            Pricing a paver patio correctly is the difference between a profitable job and working for free. Here&apos;s the exact formula I use to price every paver project.
           </p>
 
           <h2 className="text-3xl font-black text-charcoal mt-12 mb-6">The 3-Part Pricing Formula</h2>
           
           <p className="mb-6 text-charcoal leading-relaxed">
-            Every profitable paver patio quote has three components: materials, labor, and profit. Miss any one of these, and you're either losing money or losing jobs.
+            Every profitable paver patio quote has three components: materials, labor, and profit. Miss any one of these, and you&apos;re either losing money or losing jobs.
           </p>
 
           <h3 className="text-2xl font-bold text-charcoal mt-8 mb-4">1. Calculate Your Materials</h3>
           
           <p className="mb-4 text-charcoal leading-relaxed">
-            Start with the basics: pavers, sand, gravel, and edge restraints. Here's my material checklist:
+            Start with the basics: pavers, sand, gravel, and edge restraints. Here&apos;s my material checklist:
           </p>
 
           <ul className="list-disc list-inside mb-6 space-y-2 text-charcoal">
             <li><strong className="text-charcoal">Pavers:</strong> Square footage × 1.05 (5% waste factor)</li>
             <li><strong className="text-charcoal">Sand:</strong> 1 ton per 100 square feet</li>
-            <li><strong className="text-charcoal">Gravel base:</strong> 1.5 tons per 100 square feet (4" depth)</li>
+            <li><strong className="text-charcoal">Gravel base:</strong> 1.5 tons per 100 square feet (4&quot; depth)</li>
             <li><strong className="text-charcoal">Edge restraints:</strong> Perimeter + 10% for cuts</li>
           </ul>
 
           <div className="bg-equipment-yellow/10 border border-equipment-yellow/20 rounded-lg p-6 mb-8">
             <h4 className="font-bold text-charcoal mb-3">Pro Tip:</h4>
             <p className="text-charcoal leading-relaxed">
-              Always add a 10-15% markup on materials. This covers delivery, handling, and the inevitable "oops, we need more sand" moments.
+              Always add a 10-15% markup on materials. This covers delivery, handling, and the inevitable &quot;oops, we need more sand&quot; moments.
             </p>
           </div>
 
@@ -59,10 +59,10 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             For a standard paver patio, budget 8-12 hours per 100 square feet, depending on complexity.
           </p>
 
-          <h3 className="text-2xl font-bold text-charcoal mt-8 mb-4">3. Don't Forget Your Profit</h3>
+          <h3 className="text-2xl font-bold text-charcoal mt-8 mb-4">3. Don&apos;t Forget Your Profit</h3>
           
           <p className="mb-6 text-charcoal leading-relaxed">
-            This isn't optional. A 20-30% profit margin is standard for hardscaping work. This covers your overhead, equipment wear, and actually pays you for running a business.
+            This isn&apos;t optional. A 20-30% profit margin is standard for hardscaping work. This covers your overhead, equipment wear, and actually pays you for running a business.
           </p>
 
           <div className="bg-forest-green/10 border border-forest-green/20 rounded-lg p-6 mb-8">
@@ -75,7 +75,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
           <h2 className="text-3xl font-black text-charcoal mt-12 mb-6">Common Pricing Mistakes</h2>
           
           <p className="mb-4 text-charcoal leading-relaxed">
-            I've seen contractors make these mistakes over and over:
+            I&apos;ve seen contractors make these mistakes over and over:
           </p>
 
           <ul className="list-disc list-inside mb-6 space-y-2 text-charcoal">
@@ -87,11 +87,11 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
           <h2 className="text-3xl font-black text-charcoal mt-12 mb-6">The Bottom Line</h2>
           
           <p className="mb-6 text-charcoal leading-relaxed">
-            Pricing isn't about being the cheapest—it's about being profitable while delivering value. Use this formula, track your actual costs, and adjust as you learn.
+            Pricing isn&apos;t about being the cheapest—it&apos;s about being profitable while delivering value. Use this formula, track your actual costs, and adjust as you learn.
           </p>
 
           <p className="text-lg font-bold text-charcoal">
-            Remember: A quote that doesn't make you money isn't worth winning.
+            Remember: A quote that doesn&apos;t make you money isn&apos;t worth winning.
           </p>
         </div>
       );

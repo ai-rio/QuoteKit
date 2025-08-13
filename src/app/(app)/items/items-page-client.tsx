@@ -39,7 +39,7 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
   return (
     <div className="w-full">
       <Tabs defaultValue="items" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 bg-paper-white border border-stone-gray">
+        <TabsList className="grid w-full grid-cols-3 bg-paper-white border border-stone-gray">
           <TabsTrigger 
             value="items" 
             className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white text-sm sm:text-base"
@@ -50,7 +50,13 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
             value="categories" 
             className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white text-sm sm:text-base"
           >
-            Manage Categories
+            Categories
+          </TabsTrigger>
+          <TabsTrigger 
+            value="global" 
+            className="text-charcoal data-[state=active]:bg-forest-green data-[state=active]:text-white text-sm sm:text-base"
+          >
+            Global Library
           </TabsTrigger>
         </TabsList>
         
@@ -67,6 +73,22 @@ export function ItemsPageClient({ initialItems }: ItemsPageClientProps) {
             categories={categories}
             onCategoriesChange={refreshCategories}
           />
+        </TabsContent>
+        
+        <TabsContent value="global" className="space-y-4 sm:space-y-6" data-tour="global-library">
+          <div className="bg-paper-white border border-stone-gray rounded-lg p-6">
+            <h2 className="text-xl font-bold text-charcoal mb-4">Professional Items Library</h2>
+            <p className="text-charcoal/70 mb-4">
+              Browse our curated collection of professional landscaping services and materials. 
+              Copy items to your personal library to save time on quote creation.
+            </p>
+            <div className="bg-light-concrete p-4 rounded-lg">
+              <p className="text-sm text-charcoal/60">
+                🚀 Global library integration coming soon! This will include hundreds of pre-configured 
+                landscaping services, materials, and equipment with professional pricing.
+              </p>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

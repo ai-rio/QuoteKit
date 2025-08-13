@@ -79,6 +79,7 @@
         "npm:clsx@^2.1.1",
         "npm:date-fns@^4.1.0",
         "npm:dotenv@^17.2.1",
+        "npm:driver.js@^1.3.6",
         "npm:env-cmd@^10.1.0",
         "npm:eslint-config-next@^15.1.4",
         "npm:eslint-config-prettier@^8.10.0",

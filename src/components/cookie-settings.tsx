@@ -125,7 +125,7 @@ export function CookieSettings() {
             />
           </div>
           <p className="text-sm text-charcoal/60 bg-light-concrete p-4 rounded-lg">
-            We don't use marketing cookies or track users for advertising.
+            We don&apos;t use marketing cookies or track users for advertising.
           </p>
         </div>
 

@@ -242,6 +242,7 @@ export function QuotesTable({
                       <DropdownMenuItem 
                         onClick={() => onDownload(quote)}
                         className="text-charcoal hover:bg-stone-gray/20"
+                        data-tour="pdf-export-locked"
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Download PDF
@@ -333,6 +334,7 @@ export function QuotesTable({
                   <DropdownMenuItem 
                     onClick={() => onDownload(quote)}
                     className="text-charcoal hover:bg-stone-gray/20"
+                    data-tour="pdf-export-locked"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download PDF

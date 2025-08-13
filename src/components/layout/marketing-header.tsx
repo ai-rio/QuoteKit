@@ -4,15 +4,12 @@ import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect,useState } from 'react'
 
-import { LawnQuoteLogoHorizontal, LawnQuoteLogoIcon } from '@/components/branding/lawn-quote-logo'
-import { Button } from '@/components/ui/button'
+import { LawnQuoteLogoHorizontal } from '@/components/branding/lawn-quote-logo'
+import { EnhancedButton } from '@/components/ui/enhanced-button'
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu'
 import { Sheet, SheetClose,SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/utils/cn'
@@ -21,11 +18,6 @@ interface NavigationItem {
   label: string
   href: string
   description?: string
-}
-
-interface NavigationSection {
-  title: string
-  items: NavigationItem[]
 }
 
 const navigationItems: NavigationItem[] = [
@@ -119,50 +111,50 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden lg:flex lg:items-center lg:space-x-4">
-            <Button
+            <EnhancedButton
               variant="ghost"
               size="sm"
               className="text-charcoal hover:text-forest-green hover:bg-light-concrete"
               asChild
             >
               <Link href="/login">Log in</Link>
-            </Button>
-            <Button
-              variant="sexy"
+            </EnhancedButton>
+            <EnhancedButton
+              variant="secondary"
               size="sm"
               className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-semibold"
               asChild
             >
               <Link href="/signup">Start Free Trial</Link>
-            </Button>
+            </EnhancedButton>
           </div>
 
           {/* Mobile menu button */}
           <div className="lg:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button
+                <EnhancedButton
                   variant="ghost"
                   size="icon"
                   className="text-charcoal hover:text-forest-green hover:bg-light-concrete"
                   aria-label="Open navigation menu"
                 >
                   <Menu className="h-6 w-6" />
-                </Button>
+                </EnhancedButton>
               </SheetTrigger>
               <SheetContent side="right" className="w-full bg-paper-white sm:max-w-sm">
                 <SheetHeader className="space-y-4">
                   <div className="flex items-center justify-between">
                     <LawnQuoteLogoHorizontal />
                     <SheetClose asChild>
-                      <Button
+                      <EnhancedButton
                         variant="ghost"
                         size="icon"
                         className="text-charcoal hover:text-forest-green hover:bg-light-concrete"
                         aria-label="Close navigation menu"
                       >
                         <X className="h-5 w-5" />
-                      </Button>
+                      </EnhancedButton>
                     </SheetClose>
                   </div>
                 </SheetHeader>
@@ -186,7 +178,7 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
 
                   {/* Mobile CTA Buttons */}
                   <div className="space-y-3 px-4 pt-6 border-t border-stone-gray/20">
-                    <Button
+                    <EnhancedButton
                       variant="outline"
                       className="w-full text-charcoal border-stone-gray/30 hover:bg-light-concrete hover:text-forest-green"
                       asChild
@@ -194,16 +186,16 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
                       <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                         Log in
                       </Link>
-                    </Button>
-                    <Button
-                      variant="sexy"
+                    </EnhancedButton>
+                    <EnhancedButton
+                      variant="secondary"
                       className="w-full bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-semibold"
                       asChild
                     >
                       <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
                         Start Free Trial
                       </Link>
-                    </Button>
+                    </EnhancedButton>
                   </div>
                 </div>
               </SheetContent>

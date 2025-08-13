@@ -50,7 +50,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         </Alert>
       )}
 
-      <Card className="bg-paper-white border border-stone-gray shadow-sm">
+      <Card className="bg-paper-white border border-stone-gray shadow-sm" data-tour="company-profile">
         <CardHeader className="pb-4">
           <CardTitle className="text-section-title text-charcoal">Company Information</CardTitle>
         </CardHeader>
@@ -89,7 +89,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             />
           </div>
 
-          <div className="grid gap-3">
+          <div className="grid gap-3" data-tour="logo-upload">
             <Label className="text-label text-charcoal font-medium">Company Logo</Label>
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
@@ -106,7 +106,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
       <Separator />
 
-      <Card className="bg-paper-white border border-stone-gray shadow-sm">
+      <Card className="bg-paper-white border border-stone-gray shadow-sm" data-tour="financial-defaults">
         <CardHeader className="pb-4">
           <CardTitle className="text-section-title text-charcoal">Quote Settings</CardTitle>
         </CardHeader>
@@ -141,7 +141,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             />
           </div>
 
-          <Button type="submit" disabled={pending} className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold">
+          <Button type="submit" disabled={pending} className="bg-forest-green text-white hover:opacity-90 active:opacity-80 font-bold" data-tour="save-settings">
             {pending ? 'Saving...' : 'Save Settings'}
           </Button>
         </CardContent>

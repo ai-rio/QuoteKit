@@ -368,8 +368,8 @@ GRANT EXECUTE ON FUNCTION log_pdf_generation(uuid, uuid, text, text, text, integ
 GRANT EXECUTE ON FUNCTION get_pdf_generation_stats(uuid, integer) TO authenticated;
 
 -- Create storage bucket for PDF files if it doesn't exist
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('documents', 'documents', true)
+INSERT INTO storage.buckets (id, name)
+VALUES ('documents', 'documents')
 ON CONFLICT (id) DO NOTHING;
 
 -- Set up storage policies
