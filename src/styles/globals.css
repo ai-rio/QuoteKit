@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 @import './payment-method-fixes.css';
+@import './onboarding.css';
+@import './driver-tour.css';
 @layer base {
   :root {
     --background: 240 6% 10%;
@@ -193,5 +195,61 @@
     @apply lg:bg-gradient-to-br;
     @apply from-white;
     @apply to-neutral-400;
+  }
+}
+
+/* Critical fixes for button interactions - Override any conflicting styles */
+@layer components {
+  /* Ensure onboarding debug panel is always interactive */
+  .onboarding-debug-panel,
+  .onboarding-debug-panel * {
+    pointer-events: auto !important;
+    z-index: 10004 !important;
+  }
+
+  /* Ensure all modal dialogs work above Driver.js */
+  [data-radix-dialog-overlay] {
+    z-index: 10005 !important;
+  }
+
+  [data-radix-dialog-content] {
+    z-index: 10006 !important;
+    pointer-events: auto !important;
+  }
+
+  [data-radix-dialog-content] button,
+  [data-radix-dialog-content] [role="button"] {
+    pointer-events: auto !important;
+    z-index: 10007 !important;
+    position: relative !important;
+  }
+
+  /* Fix for any modal close buttons */
+  button[aria-label*="close"],
+  button[aria-label*="Close"],
+  .close-button,
+  [data-close-modal],
+  [data-dismiss] {
+    pointer-events: auto !important;
+    z-index: 10007 !important;
+    position: relative !important;
+    cursor: pointer !important;
+  }
+
+  /* Ensure Driver.js doesn't block essential UI */
+  .driver-active [data-radix-dialog-content],
+  .driver-active [role="dialog"],
+  .driver-active [aria-modal="true"],
+  .driver-active .onboarding-debug-panel {
+    pointer-events: auto !important;
+    z-index: 10006 !important;
+  }
+
+  /* Force debug panel buttons to work */
+  .onboarding-debug-panel button {
+    pointer-events: auto !important;
+    z-index: 10005 !important;
+    position: relative !important;
+    cursor: pointer !important;
   }
 }

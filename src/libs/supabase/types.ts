@@ -16,6 +16,8 @@ export type Database = {
           avatar_url: string | null
           billing_address: Json | null
           payment_method: Json | null
+          onboarding_progress: Json | null
+          onboarding_completed_at: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -25,6 +27,8 @@ export type Database = {
           avatar_url?: string | null
           billing_address?: Json | null
           payment_method?: Json | null
+          onboarding_progress?: Json | null
+          onboarding_completed_at?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -34,6 +38,8 @@ export type Database = {
           avatar_url?: string | null
           billing_address?: Json | null
           payment_method?: Json | null
+          onboarding_progress?: Json | null
+          onboarding_completed_at?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -432,7 +438,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_onboarding_progress: {
+        Args: {
+          progress_data: Json
+          mark_completed?: boolean
+        }
+        Returns: undefined
+      }
+      is_onboarding_complete: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       quote_status: 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted'

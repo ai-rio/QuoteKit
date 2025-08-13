@@ -48,6 +48,7 @@ export function UserMenu({ user }: UserMenuProps) {
         <Button 
           variant="ghost" 
           className="flex items-center gap-2 h-10 px-3 hover:bg-stone-gray/10"
+          data-tour="account-menu"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.user_metadata?.avatar_url} alt={displayName} />
@@ -74,7 +75,7 @@ export function UserMenu({ user }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
+          <Link href="/settings" className="flex items-center gap-2 cursor-pointer" data-tour="settings-link">
             <Settings className="h-4 w-4" />
             <span>Company Settings</span>
           </Link>

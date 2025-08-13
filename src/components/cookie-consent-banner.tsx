@@ -50,7 +50,7 @@ export function CookieConsentBanner() {
                 
                 {/* Following Body typography from style guide */}
                 <p className="text-lg text-charcoal/70 mb-6 leading-relaxed">
-                  We use essential cookies to make our site work. We'd also like to set optional cookies to help us improve our website and analyze how it's used. We won't set optional cookies unless you enable them.
+                  We use essential cookies to make our site work. We&apos;d also like to set optional cookies to help us improve our website and analyze how it&apos;s used. We won&apos;t set optional cookies unless you enable them.
                 </p>
                 
                 {/* Button group following style guide patterns */}
@@ -106,7 +106,7 @@ export function CookieConsentBanner() {
               Cookie Preferences
             </DialogTitle>
             <DialogDescription className="text-lg text-charcoal/70 mt-3">
-              Choose which cookies you'd like to accept. You can change these settings at any time.
+              Choose which cookies you&apos;d like to accept. You can change these settings at any time.
             </DialogDescription>
           </DialogHeader>
 
@@ -176,7 +176,7 @@ export function CookieConsentBanner() {
                 <div className="flex-1">
                   <h4 className="text-xl font-bold text-charcoal mb-2">Marketing Cookies</h4>
                   <p className="text-lg text-charcoal/70">
-                    Currently not used. We don't track you for advertising.
+                    Currently not used. We don&apos;t track you for advertising.
                   </p>
                 </div>
                 <StyleGuideToggle
@@ -186,7 +186,7 @@ export function CookieConsentBanner() {
                 />
               </div>
               <p className="text-sm text-charcoal/60 bg-light-concrete p-4 rounded-lg">
-                LawnQuote doesn't use marketing cookies or track users for advertising purposes.
+                LawnQuote doesn&apos;t use marketing cookies or track users for advertising purposes.
               </p>
             </div>
           </div>

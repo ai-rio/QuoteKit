@@ -2,6 +2,7 @@ import { CheckCircle, Crown, DollarSign, FileText, List, Package, Plus, Send, Se
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
+import { OnboardingDebugPanel } from "@/components/onboarding/OnboardingDebugPanel"
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
 import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
@@ -121,6 +122,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      
       <PageBreadcrumbs />
       
       {/* Welcome Banner */}
@@ -135,7 +137,7 @@ export default async function DashboardPage() {
         {/* Main Content Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Stat Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" data-tour="stats-cards">
                         {statCards.map((stat) => {
               const Icon = stat.icon
               const isRevenue = stat.isRevenue
@@ -273,7 +275,7 @@ export default async function DashboardPage() {
         
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1">
-          <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8">
+          <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8" data-tour="quick-actions">
             <h2 className="text-xl font-bold text-charcoal mb-4">Quick Actions</h2>
             <div className="space-y-3">
               {quickActions.map((action) => {
@@ -293,6 +295,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+      
+      {/* Debug Panel - Only shows in development */}
+      <OnboardingDebugPanel />
     </div>
   )
 }

@@ -11,7 +11,7 @@ export async function AppHeader() {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-stone-gray px-4 bg-paper-white">
       <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-1" />
+        <SidebarTrigger className="-ml-1" data-tour="sidebar-trigger" />
         <Separator orientation="vertical" className="mr-2 h-4" />
       </div>
       
