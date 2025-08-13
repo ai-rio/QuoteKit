@@ -149,6 +149,9 @@ export class EnhancedTourManager extends TourManager {
     // Personalize tour content
     const personalizedTour = this.personalizeTour(adaptedTour)
 
+    // IMPORTANT: Initialize the tour first before starting
+    await super.initializeTour(personalizedTour.id, personalizedTour)
+
     // Start the tour with enhanced features
     await super.startTour(personalizedTour.id)
 
@@ -309,18 +312,32 @@ export class EnhancedTourManager extends TourManager {
    * Start personalized onboarding flow
    */
   async startPersonalizedOnboarding(): Promise<void> {
-    if (!this.userTierInfo) {
-      this.userTierInfo = await detectUserTier()
-    }
+    try {
+      if (!this.userTierInfo) {
+        this.userTierInfo = await detectUserTier()
+      }
 
-    const recommendedTours = await this.getRecommendedTours()
-    
-    // Start with personalized tour if available
-    if (recommendedTours.includes('personalized-onboarding')) {
-      await this.startTour('personalized-onboarding')
-    } else {
-      // Fall back to welcome tour
-      await this.startTour('welcome')
+      const recommendedTours = await this.getRecommendedTours()
+      
+      // Start with personalized tour if available
+      if (recommendedTours.includes('personalized-onboarding')) {
+        console.log('🎯 Starting personalized onboarding tour')
+        await this.startTour('personalized-onboarding')
+      } else {
+        // Fall back to welcome tour
+        console.log('🎯 Starting fallback welcome tour')
+        await this.startTour('welcome')
+      }
+    } catch (error) {
+      console.error('❌ Error in startPersonalizedOnboarding:', error)
+      // Fallback to basic welcome tour if everything else fails
+      try {
+        console.log('🔄 Attempting fallback to welcome tour')
+        await this.startTour('welcome')
+      } catch (fallbackError) {
+        console.error('❌ Fallback tour also failed:', fallbackError)
+        throw fallbackError
+      }
     }
   }
 

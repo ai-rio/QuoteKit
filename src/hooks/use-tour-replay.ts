@@ -47,11 +47,10 @@ export function useTourReplay() {
       
       // CRITICAL FIX: Handle step navigation after tour is running
       if (startAtStep > 0) {
-        // Use Driver.js moveTo method for precise step navigation
+        // Use TourManager's moveTo method for precise step navigation
         setTimeout(() => {
-          const driverInstance = tourManager.getDriverInstance()
-          if (driverInstance && driverInstance.isActive()) {
-            driverInstance.moveTo(startAtStep)
+          if (tourManager.isActive()) {
+            tourManager.moveTo(startAtStep)
           }
         }, 300) // Increased delay to ensure tour is fully initialized
       }

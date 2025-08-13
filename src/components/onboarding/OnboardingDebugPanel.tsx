@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useOnboarding } from '@/contexts/onboarding-context'
@@ -18,6 +18,9 @@ export function OnboardingDebugPanel() {
     startTour
   } = useOnboarding()
 
+  // State for minimize/collapse functionality
+  const [isMinimized, setIsMinimized] = useState(false)
+
   // Fix button interactions on mount and when content changes
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -30,6 +33,12 @@ export function OnboardingDebugPanel() {
   // Only show in development
   if (process.env.NODE_ENV !== 'development') {
     return null
+  }
+
+  const handleToggleMinimize = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsMinimized(!isMinimized)
   }
 
   const handleClearPhantom = async (e: React.MouseEvent) => {
@@ -153,9 +162,39 @@ export function OnboardingDebugPanel() {
 
   const isPhantom = activeTour && !tourManager.isActive()
 
+  // Minimized view
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-[9999] bg-red-500 text-white p-2 rounded shadow-lg text-xs">
+        <div className="flex items-center justify-between">
+          <span className="font-bold">🔧 Debug</span>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-4 w-4 p-0 text-white hover:bg-red-600"
+            onClick={handleToggleMinimize}
+          >
+            ⬆️
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Full view
   return (
     <div className="fixed bottom-4 right-4 z-[9999] bg-red-500 text-white p-3 rounded shadow-lg text-xs max-w-xs">
-      <div className="font-bold mb-2">🔧 Debug Panel ({typeof window !== 'undefined' ? window.location.pathname : 'unknown'})</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="font-bold">🔧 Debug Panel ({typeof window !== 'undefined' ? window.location.pathname : 'unknown'})</div>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-4 w-4 p-0 text-white hover:bg-red-600"
+          onClick={handleToggleMinimize}
+        >
+          ⬇️
+        </Button>
+      </div>
       
       <div className="space-y-1 mb-3 text-xs">
         <div>Active Tour: {activeTour ? String(activeTour) : 'None'}</div>
