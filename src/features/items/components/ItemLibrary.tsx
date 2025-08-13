@@ -3,6 +3,7 @@
 import { Plus, Search, Star, StarOff, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { ItemLibraryTourButton } from '@/components/help/TourReplayWrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -208,7 +209,10 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-charcoal">Item Library</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-charcoal">Item Library</h1>
+            <ItemLibraryTourButton />
+          </div>
           <p className="text-charcoal/70">
             Manage your services and materials database for quick quote creation.
           </p>

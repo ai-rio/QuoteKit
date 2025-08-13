@@ -1,3 +1,4 @@
+import { HelpMenuWrapper } from "@/components/help/HelpMenuWrapper"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { createSupabaseServerClient } from "@/libs/supabase/supabase-server-client"
@@ -17,6 +18,7 @@ export async function AppHeader() {
       
       {user && (
         <div className="flex items-center gap-4">
+          <HelpMenuWrapper variant="button" size="sm" />
           <UserMenu user={user} />
         </div>
       )}

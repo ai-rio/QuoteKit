@@ -2,7 +2,7 @@ import { CheckCircle, Crown, DollarSign, FileText, List, Plus, Send, Settings, T
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { TourTrigger } from "@/components/onboarding/TourTrigger"
+import { HelpMenuWrapper } from "@/components/help/HelpMenuWrapper"
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
 import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
@@ -280,11 +280,7 @@ export default async function DashboardPage() {
           <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8" data-tour="quick-actions">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-charcoal">Quick Actions</h2>
-              <TourTrigger tourId="contextual-help" trigger="click" data-tour="help-button">
-                <button className="w-8 h-8 rounded-full bg-forest-green/10 text-forest-green hover:bg-forest-green/20 transition-colors flex items-center justify-center">
-                  <span className="text-sm font-bold">?</span>
-                </button>
-              </TourTrigger>
+              <HelpMenuWrapper variant="icon" size="sm" showLabel={false} />
             </div>
             <div className="space-y-3">
               {quickActions.map((action) => {
