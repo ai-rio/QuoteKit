@@ -121,7 +121,7 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-light-concrete min-h-full">
       
       <PageBreadcrumbs />
       
@@ -169,10 +169,12 @@ export default async function DashboardPage() {
           {!isPremium && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Real Usage Analytics Component */}
-              <DashboardUsageAnalytics />
+              <div data-tour="quote-limit-indicator">
+                <DashboardUsageAnalytics />
+              </div>
               
               {/* Upgrade Prompt Card */}
-              <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg">
+              <div className="bg-equipment-yellow border border-yellow-300 p-6 rounded-2xl flex flex-col items-center text-center shadow-lg" data-tour="upgrade-button">
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-forest-green/80 mb-4">
                   <Zap className="w-6 h-6 text-equipment-yellow" />
                 </div>
@@ -188,13 +190,13 @@ export default async function DashboardPage() {
 
           {/* Premium Analytics Card - Only for Premium Users */}
           {isPremium && (
-            <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm">
+            <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm" data-tour="analytics-unlocked">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
                   <Crown className="w-6 h-6 text-equipment-yellow" />
                   Premium Analytics
                 </h2>
-                <Button asChild variant="outline" className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200">
+                <Button asChild variant="outline" className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200" data-tour="analytics-locked">
                   <Link href="/analytics">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     View Full Analytics

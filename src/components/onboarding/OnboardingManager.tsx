@@ -5,6 +5,7 @@ import React, { useCallback,useEffect } from 'react'
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { useUser } from '@/hooks/use-user'
 import { useUserTier } from '@/hooks/use-user-tier'
+import { enhancedTourManager } from '@/libs/onboarding/enhanced-tour-manager'
 import { getTourConfig, getToursForTier } from '@/libs/onboarding/tour-configs'
 import { tourManager } from '@/libs/onboarding/tour-manager'
 import { onboardingDebug } from '@/utils/onboarding-debug'
@@ -44,7 +45,7 @@ export function OnboardingManager({
   const { data: user } = useUser()
   const { tier: userTier, isLoading: tierLoading, canAccess } = useUserTier()
 
-  // Handle tour completion
+  // Handle tour completion with Sprint 3 enhancements
   const handleTourComplete = useCallback(async (tourId: string) => {
     if (debugMode) {
       console.log(`Tour completed: ${tourId}`)
@@ -54,23 +55,32 @@ export function OnboardingManager({
     
     // Auto-start next recommended tour based on completion and user tier
     if (enableTierBasedTours && !tierLoading) {
-      const availableTours = getToursForTier(userTier)
+      // Use enhanced tour manager for Sprint 3 features
+      const recommendedTours = await enhancedTourManager.getRecommendedTours()
       
-      // Define tour sequence based on user tier (Progressive Onboarding - S1.2)
+      // Define enhanced tour sequence with Sprint 3 features
       const tourSequence: Record<string, string> = {
-        'welcome': 'settings',
+        'welcome': 'personalized-onboarding', // Start with personalized experience
+        'personalized-onboarding': 'settings',
         'settings': 'quote-creation', 
         'quote-creation': 'item-library',
         'item-library': 'contextual-help'
       }
       
-      // Add pro-specific tour for pro users after contextual-help
-      if ((userTier === 'pro' || userTier === 'enterprise') && tourId === 'contextual-help') {
+      // Add tier-specific tours
+      if (userTier === 'free' && tourId === 'contextual-help') {
+        tourSequence['contextual-help'] = 'freemium-highlights'
+      } else if ((userTier === 'pro' || userTier === 'enterprise') && tourId === 'contextual-help') {
         tourSequence['contextual-help'] = 'pro-features'
       }
       
+      // Add interactive tutorial for advanced users
+      if (userTier !== 'free' && tourId === 'pro-features') {
+        tourSequence['pro-features'] = 'interactive-tutorial'
+      }
+      
       const nextTourId = tourSequence[tourId]
-      if (nextTourId && shouldShowTour(nextTourId)) {
+      if (nextTourId && shouldShowTour(nextTourId) && recommendedTours.includes(nextTourId)) {
         // Check if next tour is available for user's tier
         const nextTourConfig = getTourConfig(nextTourId)
         if (nextTourConfig?.userTiers?.includes(userTier)) {
@@ -118,7 +128,7 @@ export function OnboardingManager({
 
   }, [skipTour, debugMode])
 
-  // Start next tour in sequence
+  // Start next tour in sequence with enhanced features
   const startNextTour = useCallback(async (tourId: string) => {
     try {
       const tourConfig = getTourConfig(tourId)
@@ -127,13 +137,21 @@ export function OnboardingManager({
         return
       }
 
-      await tourManager.initializeTour(tourId, tourConfig)
-      await startTour(tourId)
+      // Use enhanced tour manager for Sprint 3 tours
+      const sprint3Tours = ['freemium-highlights', 'interactive-tutorial', 'personalized-onboarding', 'mobile-welcome']
       
-      // Add slight delay to ensure proper initialization
-      setTimeout(async () => {
-        await tourManager.startTour()
-      }, 100)
+      if (sprint3Tours.includes(tourId)) {
+        await enhancedTourManager.startTour(tourId)
+      } else {
+        // Use regular tour manager for existing tours
+        await tourManager.initializeTour(tourId, tourConfig)
+        await startTour(tourId)
+        
+        // Add slight delay to ensure proper initialization
+        setTimeout(async () => {
+          await tourManager.startTour()
+        }, 100)
+      }
       
     } catch (error) {
       console.error(`Error starting next tour ${tourId}:`, error)
@@ -163,7 +181,7 @@ export function OnboardingManager({
     }
   }, [user?.id, handleTourComplete, handleTourSkip])
 
-  // Auto-start welcome tour for new users
+  // Auto-start welcome tour for new users with Sprint 3 enhancements
   useEffect(() => {
     if (debugMode) {
       console.log('🎯 OnboardingManager: Auto-start check conditions:')
@@ -208,14 +226,25 @@ export function OnboardingManager({
       
       if (!hasCompletedAnyTour) {
         if (debugMode) {
-          console.log('🚀 OnboardingManager: Starting welcome tour in 2 seconds...')
+          console.log('🚀 OnboardingManager: Starting personalized onboarding in 2 seconds...')
         }
         // Delay to ensure page is fully loaded
-        const timer = setTimeout(() => {
+        const timer = setTimeout(async () => {
           if (debugMode) {
-            console.log('🚀 OnboardingManager: Executing startNextTour("welcome")')
+            console.log('🚀 OnboardingManager: Executing enhanced personalized onboarding')
           }
-          startNextTour('welcome')
+          
+          // Use enhanced tour manager for personalized onboarding
+          await enhancedTourManager.startPersonalizedOnboarding()
+          
+          // Show freemium highlights for free users after delay
+          if (userTier === 'free') {
+            setTimeout(async () => {
+              if (shouldShowTour('freemium-highlights')) {
+                await enhancedTourManager.showFreemiumHighlights()
+              }
+            }, 10000) // Show after 10 seconds
+          }
         }, 2000)
 
         return () => clearTimeout(timer)
@@ -241,6 +270,8 @@ export function OnboardingManager({
     if (debugMode && activeTour?.tourId) {
       console.log(`Active tour: ${activeTour?.tourId}`)
       console.log(`Tour manager active: ${tourManager.isActive()}`)
+      console.log(`Enhanced tour manager device: ${enhancedTourManager.getDeviceType()}`)
+      console.log(`Enhanced tour manager tier: ${enhancedTourManager.getUserTierInfo()?.tier}`)
       console.log(`Current step: ${tourManager.getCurrentStep()}`)
     }
   }, [debugMode, activeTour?.tourId])

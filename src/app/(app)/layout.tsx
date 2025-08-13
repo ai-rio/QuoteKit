@@ -21,11 +21,18 @@ export default function AppLayout({
   
   return (
     <OnboardingWrapper>
-      <SidebarProvider>
+      <SidebarProvider 
+        className="sidebar-provider"
+        style={{
+          '--sidebar-width': '16rem',
+          '--sidebar-width-mobile': '18rem',
+          '--sidebar-width-icon': '3rem',
+        } as React.CSSProperties}
+      >
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="bg-light-concrete">
           <AppHeader />
-          <div className="flex flex-1 flex-col p-4 bg-light-concrete min-h-[calc(100vh-4rem)]">
+          <div className="flex flex-1 flex-col p-4 min-h-[calc(100vh-4rem)]">
             {children}
           </div>
         </SidebarInset>

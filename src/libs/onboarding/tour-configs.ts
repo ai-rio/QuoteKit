@@ -1,4 +1,5 @@
 import { navigateForTour, validatePageForTour } from './navigation-helper'
+import { SPRINT3_TOUR_CONFIGS } from './sprint3-tour-configs'
 import { TourConfig } from './tour-manager'
 
 // Welcome Tour - Dashboard Overview (M1.3 Specification)
@@ -424,6 +425,189 @@ export const CONTEXTUAL_HELP_TOUR: TourConfig = {
   ]
 }
 
+// S2.1: Freemium Feature Highlights Tour (Sprint 3)
+export const FREEMIUM_HIGHLIGHTS_TOUR: TourConfig = {
+  id: 'freemium-highlights',
+  name: 'Discover Premium Features',
+  description: 'Learn about advanced features available with premium plans',
+  userTiers: ['free'], // Only show to free users
+  deviceTypes: ['desktop', 'mobile', 'tablet'],
+  showProgress: true,
+  allowClose: true,
+  overlayClickBehavior: 'ignore',
+  steps: [
+    {
+      id: 'freemium-intro',
+      title: 'Unlock More with Premium 🚀',
+      description: 'You\'re currently on the Free plan with 5 quotes limit. Discover powerful features available with our Premium plan to grow your business faster.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'close']
+    },
+    {
+      id: 'unlimited-quotes-highlight',
+      element: '[data-tour="quote-limit-indicator"]',
+      title: 'Unlimited Quotes 📈',
+      description: 'Premium users can create unlimited quotes without restrictions. Perfect for growing businesses that need to send multiple quotes daily.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'pdf-export-highlight',
+      element: '[data-tour="pdf-export-locked"]',
+      title: 'Professional PDF Export 📄',
+      description: 'Generate professional PDF quotes with your branding. Impress clients with polished, branded documents that stand out from the competition.',
+      position: 'top',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'analytics-highlight',
+      element: '[data-tour="analytics-locked"]',
+      title: 'Business Analytics 📊',
+      description: 'Track your quote conversion rates, revenue trends, and client insights. Make data-driven decisions to grow your landscaping business.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'custom-branding-highlight',
+      element: '[data-tour="branding-locked"]',
+      title: 'Custom Branding 🎨',
+      description: 'Add your logo, colors, and custom styling to quotes and emails. Build brand recognition and look more professional to clients.',
+      position: 'right',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'upgrade-call-to-action',
+      element: '[data-tour="upgrade-button"]',
+      title: 'Ready to Upgrade? 💎',
+      description: 'Start your free trial today and unlock all premium features. No commitment required - cancel anytime. Your business growth is worth the investment.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['previous', 'close']
+    }
+  ]
+}
+
+// C1.1: Interactive Tutorial Tour (Sprint 3)
+export const INTERACTIVE_TUTORIAL_TOUR: TourConfig = {
+  id: 'interactive-tutorial',
+  name: 'Hands-On Practice',
+  description: 'Practice with real features in a safe environment',
+  userTiers: ['free', 'pro', 'enterprise'],
+  deviceTypes: ['desktop', 'mobile', 'tablet'],
+  showProgress: true,
+  allowClose: true,
+  overlayClickBehavior: 'ignore',
+  steps: [
+    {
+      id: 'tutorial-intro',
+      title: 'Interactive Learning Mode 🎯',
+      description: 'This tutorial lets you practice with real features safely. All actions can be undone, so feel free to experiment and learn by doing.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'close']
+    },
+    {
+      id: 'practice-client-creation',
+      element: '[data-tour="client-selector"]',
+      title: 'Practice: Add a Client 👤',
+      description: 'Try adding a practice client. Click "Add New Client" and fill in some sample information. This won\'t affect your real client database.',
+      position: 'bottom',
+      align: 'start',
+      showButtons: ['next', 'previous', 'close'],
+      onBeforeHighlight: async () => {
+        await navigateForTour('/quotes/new');
+      }
+    },
+    {
+      id: 'practice-item-selection',
+      element: '[data-tour="add-items"]',
+      title: 'Practice: Add Line Items 🛠️',
+      description: 'Now try adding some services or materials. Browse your item library and add a few items to see how pricing calculations work.',
+      position: 'top',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'practice-calculations',
+      element: '[data-tour="quote-totals"]',
+      title: 'Practice: Watch Calculations 💰',
+      description: 'Notice how totals update automatically as you add items and adjust quantities. Try changing some quantities to see real-time calculations.',
+      position: 'left',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'practice-save-draft',
+      element: '[data-tour="save-send-actions"]',
+      title: 'Practice: Save as Draft 💾',
+      description: 'Save this practice quote as a draft. You can always delete it later or use it as a template for real quotes.',
+      position: 'top',
+      align: 'center',
+      showButtons: ['previous', 'close']
+    }
+  ]
+}
+
+// C1.2: Personalized Onboarding Tour (Sprint 3)
+export const PERSONALIZED_ONBOARDING_TOUR: TourConfig = {
+  id: 'personalized-onboarding',
+  name: 'Tailored Experience',
+  description: 'Customized onboarding based on your business type and goals',
+  userTiers: ['free', 'pro', 'enterprise'],
+  deviceTypes: ['desktop', 'mobile', 'tablet'],
+  showProgress: true,
+  allowClose: true,
+  overlayClickBehavior: 'ignore',
+  steps: [
+    {
+      id: 'personalization-intro',
+      title: 'Welcome to Your Personalized Tour 🎯',
+      description: 'Based on your business profile, we\'ve customized this experience to focus on features most relevant to your landscaping business.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'close']
+    },
+    {
+      id: 'business-type-focus',
+      title: 'Your Business Focus 🌱',
+      description: 'We\'ve identified you as a landscaping professional. This tour will emphasize quote management, client communication, and business growth features.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'recommended-workflow',
+      element: '[data-tour="quick-actions"]',
+      title: 'Your Recommended Workflow 📋',
+      description: 'For landscaping businesses, we recommend this workflow: 1) Set up your item library, 2) Configure company settings, 3) Create your first quote.',
+      position: 'left',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'industry-specific-tips',
+      title: 'Landscaping Pro Tips 💡',
+      description: 'Tip: Create categories like "Lawn Care", "Hardscaping", "Seasonal Services", and "Materials" to organize your services effectively.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'growth-recommendations',
+      title: 'Business Growth Features 📈',
+      description: 'As your business grows, consider using analytics to track conversion rates and client preferences. This helps optimize your pricing and services.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['previous', 'close']
+    }
+  ]
+}
+
 // Export all tour configurations
 export const TOUR_CONFIGS: Record<string, TourConfig> = {
   welcome: WELCOME_TOUR,
@@ -431,7 +615,11 @@ export const TOUR_CONFIGS: Record<string, TourConfig> = {
   settings: SETTINGS_TOUR,
   'item-library': ITEM_LIBRARY_TOUR,
   'pro-features': PRO_FEATURES_TOUR,
-  'contextual-help': CONTEXTUAL_HELP_TOUR
+  'contextual-help': CONTEXTUAL_HELP_TOUR,
+  'freemium-highlights': FREEMIUM_HIGHLIGHTS_TOUR,
+  'interactive-tutorial': INTERACTIVE_TUTORIAL_TOUR,
+  'personalized-onboarding': PERSONALIZED_ONBOARDING_TOUR,
+  ...SPRINT3_TOUR_CONFIGS
 }
 
 // Helper function to get tour config by ID

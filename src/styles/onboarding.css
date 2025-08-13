@@ -1,4 +1,5 @@
 /* Driver.js Tour Styling for LawnQuote */
+@import './mobile-onboarding.css';
 
 :root {
   /* Tour Colors - Using LawnQuote design system */
