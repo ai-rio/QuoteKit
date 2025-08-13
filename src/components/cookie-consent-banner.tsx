@@ -1,11 +1,11 @@
 'use client';
 
-import { Cookie, Settings, X } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter,DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { CookiePreferences,useCookieConsent } from '@/contexts/cookie-consent-context';
 import { cn } from '@/utils/cn';
 
@@ -33,180 +33,145 @@ export function CookieConsentBanner() {
 
   return (
     <>
-      {/* Main Cookie Banner - Following style guide card pattern */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-6 bg-paper-white/95 backdrop-blur-lg border-t border-stone-gray/50 shadow-lg">
-        <div className="container mx-auto max-w-6xl">
-          <div className="bg-paper-white p-8 rounded-2xl border border-stone-gray/20 shadow-lg">
-            <div className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                <Cookie className="w-8 h-8 text-forest-green" />
-              </div>
+      {/* Minimalist Cookie Banner */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-paper-white/95 backdrop-blur-sm border-t border-stone-gray/20 shadow-sm">
+        <div className="container mx-auto max-w-7xl px-4 py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Minimal text */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-charcoal/80">
+                We use cookies to improve your experience.{' '}
+                <Link href="/cookies" className="text-forest-green hover:underline font-medium">
+                  Learn more
+                </Link>
+              </p>
+            </div>
+            
+            {/* Compact button group */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:flex-shrink-0">
+              <EnhancedButton
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreferences(true)}
+                className="text-charcoal hover:text-forest-green hover:bg-light-concrete text-xs sm:text-sm"
+              >
+                <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                Settings
+              </EnhancedButton>
               
-              <div className="flex-1 min-w-0">
-                {/* Following H3 typography from style guide */}
-                <h3 className="text-xl md:text-2xl font-bold text-charcoal mb-3">
-                  We use cookies to improve your experience
-                </h3>
-                
-                {/* Following Body typography from style guide */}
-                <p className="text-lg text-charcoal/70 mb-6 leading-relaxed">
-                  We use essential cookies to make our site work. We&apos;d also like to set optional cookies to help us improve our website and analyze how it&apos;s used. We won&apos;t set optional cookies unless you enable them.
-                </p>
-                
-                {/* Button group following style guide patterns */}
-                <div className="flex flex-wrap gap-4 mb-4">
-                  {/* Primary CTA - Equipment Yellow */}
-                  <button
-                    onClick={acceptAll}
-                    className="bg-equipment-yellow text-charcoal font-bold px-8 py-4 rounded-lg hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
-                  >
-                    Accept All Cookies
-                  </button>
-                  
-                  {/* Standard Button - Forest Green */}
-                  <button
-                    onClick={rejectNonEssential}
-                    className="bg-forest-green text-paper-white font-bold px-8 py-4 rounded-lg hover:opacity-90 transition-opacity text-lg"
-                  >
-                    Reject Non-Essential
-                  </button>
-                  
-                  {/* Secondary CTA - Ghost Style */}
-                  <button
-                    onClick={() => setShowPreferences(true)}
-                    className="bg-paper-white/20 text-charcoal font-bold px-8 py-4 rounded-lg hover:bg-paper-white/30 transition-all duration-200 border border-stone-gray/30 text-lg flex items-center gap-2"
-                  >
-                    <Settings className="w-5 h-5" />
-                    Customize
-                  </button>
-                </div>
-                
-                {/* Subtle text following style guide */}
-                <p className="text-sm text-charcoal/60">
-                  Learn more in our{' '}
-                  <Link href="/cookies" className="text-forest-green hover:underline font-medium">
-                    Cookie Policy
-                  </Link>
-                  {' '}and{' '}
-                  <Link href="/privacy" className="text-forest-green hover:underline font-medium">
-                    Privacy Policy
-                  </Link>
-                </p>
-              </div>
+              <EnhancedButton
+                variant="outline"
+                size="sm"
+                onClick={rejectNonEssential}
+                className="text-charcoal border-stone-gray/30 hover:bg-light-concrete hover:text-forest-green text-xs sm:text-sm"
+              >
+                Reject
+              </EnhancedButton>
+              
+              <EnhancedButton
+                variant="secondary"
+                size="sm"
+                onClick={acceptAll}
+                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-semibold text-xs sm:text-sm"
+              >
+                Accept All
+              </EnhancedButton>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Cookie Preferences Dialog - Following style guide patterns */}
+      {/* Streamlined Cookie Preferences Dialog */}
       <Dialog open={showPreferences} onOpenChange={setShowPreferences}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-paper-white">
-          <DialogHeader className="pb-6">
-            <DialogTitle className="text-3xl md:text-4xl font-black text-charcoal">
-              Cookie Preferences
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-paper-white">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-2xl font-bold text-charcoal">
+              Cookie Settings
             </DialogTitle>
-            <DialogDescription className="text-lg text-charcoal/70 mt-3">
-              Choose which cookies you&apos;d like to accept. You can change these settings at any time.
+            <DialogDescription className="text-sm text-charcoal/70">
+              Choose which cookies you&apos;d like to accept.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-8 py-4">
+          <div className="space-y-4 py-2">
             {/* Essential Cookies */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h4 className="text-xl font-bold text-charcoal mb-2">Essential Cookies</h4>
-                  <p className="text-lg text-charcoal/70">
-                    Required for the website to function properly. Cannot be disabled.
-                  </p>
-                </div>
-                <div className="flex items-center ml-6">
-                  <div className="w-14 h-8 bg-forest-green rounded-full flex items-center justify-end px-1">
-                    <div className="w-6 h-6 bg-paper-white rounded-full"></div>
-                  </div>
-                  <span className="ml-3 text-sm font-bold text-forest-green">Always On</span>
-                </div>
+            <div className="flex items-center justify-between p-3 bg-light-concrete/50 rounded-lg">
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-charcoal">Essential Cookies</h4>
+                <p className="text-xs text-charcoal/60 mt-1">
+                  Required for the website to function properly.
+                </p>
               </div>
-              <p className="text-sm text-charcoal/60 bg-light-concrete p-4 rounded-lg">
-                These cookies are necessary for authentication, security, and basic website functionality.
-              </p>
+              <div className="flex items-center ml-4">
+                <div className="w-10 h-6 bg-forest-green rounded-full flex items-center justify-end px-1">
+                  <div className="w-4 h-4 bg-paper-white rounded-full"></div>
+                </div>
+                <span className="ml-2 text-xs font-medium text-forest-green">Always On</span>
+              </div>
             </div>
 
             {/* Functional Cookies */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h4 className="text-xl font-bold text-charcoal mb-2">Functional Cookies</h4>
-                  <p className="text-lg text-charcoal/70">
-                    Remember your preferences and settings for a better experience.
-                  </p>
-                </div>
-                <StyleGuideToggle
-                  enabled={preferences.functional}
-                  onChange={(value) => handlePreferenceChange('functional', value)}
-                />
+            <div className="flex items-center justify-between p-3 rounded-lg border border-stone-gray/20">
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-charcoal">Functional Cookies</h4>
+                <p className="text-xs text-charcoal/60 mt-1">
+                  Remember your preferences and settings.
+                </p>
               </div>
-              <p className="text-sm text-charcoal/60 bg-light-concrete p-4 rounded-lg">
-                These cookies remember your language preferences, theme settings, and form data.
-              </p>
+              <MinimalToggle
+                enabled={preferences.functional}
+                onChange={(value) => handlePreferenceChange('functional', value)}
+              />
             </div>
 
             {/* Analytics Cookies */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h4 className="text-xl font-bold text-charcoal mb-2">Analytics Cookies</h4>
-                  <p className="text-lg text-charcoal/70">
-                    Help us understand how you use our website to improve it.
-                  </p>
-                </div>
-                <StyleGuideToggle
-                  enabled={preferences.analytics}
-                  onChange={(value) => handlePreferenceChange('analytics', value)}
-                />
+            <div className="flex items-center justify-between p-3 rounded-lg border border-stone-gray/20">
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-charcoal">Analytics Cookies</h4>
+                <p className="text-xs text-charcoal/60 mt-1">
+                  Help us understand how you use our website.
+                </p>
               </div>
-              <p className="text-sm text-charcoal/60 bg-light-concrete p-4 rounded-lg">
-                These cookies collect anonymous information about page views and user interactions.
-              </p>
+              <MinimalToggle
+                enabled={preferences.analytics}
+                onChange={(value) => handlePreferenceChange('analytics', value)}
+              />
             </div>
 
             {/* Marketing Cookies */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h4 className="text-xl font-bold text-charcoal mb-2">Marketing Cookies</h4>
-                  <p className="text-lg text-charcoal/70">
-                    Currently not used. We don&apos;t track you for advertising.
-                  </p>
-                </div>
-                <StyleGuideToggle
-                  enabled={preferences.marketing}
-                  onChange={(value) => handlePreferenceChange('marketing', value)}
-                  disabled={true}
-                />
+            <div className="flex items-center justify-between p-3 rounded-lg border border-stone-gray/20 opacity-60">
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-charcoal">Marketing Cookies</h4>
+                <p className="text-xs text-charcoal/60 mt-1">
+                  Currently not used. We don&apos;t track you for advertising.
+                </p>
               </div>
-              <p className="text-sm text-charcoal/60 bg-light-concrete p-4 rounded-lg">
-                LawnQuote doesn&apos;t use marketing cookies or track users for advertising purposes.
-              </p>
+              <MinimalToggle
+                enabled={preferences.marketing}
+                onChange={(value) => handlePreferenceChange('marketing', value)}
+                disabled={true}
+              />
             </div>
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-stone-gray/20">
-            {/* Standard Button - Forest Green */}
-            <button
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-stone-gray/20">
+            <EnhancedButton
+              variant="outline"
+              size="sm"
               onClick={rejectNonEssential}
-              className="bg-forest-green text-paper-white font-bold px-8 py-4 rounded-lg hover:opacity-90 transition-opacity text-lg"
+              className="text-charcoal border-stone-gray/30 hover:bg-light-concrete hover:text-forest-green"
             >
               Reject All Non-Essential
-            </button>
+            </EnhancedButton>
             
-            {/* Primary CTA - Equipment Yellow */}
-            <button
+            <EnhancedButton
+              variant="secondary"
+              size="sm"
               onClick={handleSavePreferences}
-              className="bg-equipment-yellow text-charcoal font-bold px-8 py-4 rounded-lg hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-semibold"
             >
               Save Preferences
-            </button>
+            </EnhancedButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -214,16 +179,16 @@ export function CookieConsentBanner() {
   );
 }
 
-// Style Guide Compliant Toggle Component
-interface StyleGuideToggleProps {
+// Minimal Toggle Component
+interface MinimalToggleProps {
   enabled: boolean;
   onChange: (enabled: boolean) => void;
   disabled?: boolean;
 }
 
-function StyleGuideToggle({ enabled, onChange, disabled = false }: StyleGuideToggleProps) {
+function MinimalToggle({ enabled, onChange, disabled = false }: MinimalToggleProps) {
   return (
-    <label className="relative inline-flex items-center cursor-pointer ml-6">
+    <label className="relative inline-flex items-center cursor-pointer ml-4">
       <input 
         type="checkbox" 
         className="sr-only peer" 
@@ -232,10 +197,10 @@ function StyleGuideToggle({ enabled, onChange, disabled = false }: StyleGuideTog
         disabled={disabled}
       />
       <div className={cn(
-        "w-14 h-8 rounded-full peer transition-all duration-200",
+        "w-10 h-6 rounded-full peer transition-all duration-200",
         enabled ? "bg-forest-green" : "bg-stone-gray/50",
         disabled && "opacity-50 cursor-not-allowed",
-        "peer-checked:bg-forest-green peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all"
+        "peer-checked:bg-forest-green peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
       )}>
       </div>
     </label>
