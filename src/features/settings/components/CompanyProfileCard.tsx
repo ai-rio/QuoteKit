@@ -261,7 +261,7 @@ export function CompanyProfileCard({
             </div>
 
             {/* Upload Controls - Full Width on Mobile */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" data-tour="logo-upload">
               <div
                 className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors min-h-[120px] sm:min-h-[140px] ${
                   dragActive

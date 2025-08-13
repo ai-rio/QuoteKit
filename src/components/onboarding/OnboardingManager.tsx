@@ -56,16 +56,17 @@ export function OnboardingManager({
     if (enableTierBasedTours && !tierLoading) {
       const availableTours = getToursForTier(userTier)
       
-      // Define tour sequence based on user tier
+      // Define tour sequence based on user tier (Progressive Onboarding - S1.2)
       const tourSequence: Record<string, string> = {
         'welcome': 'settings',
-        'settings': 'quote-creation',
-        'quote-creation': 'item-library'
+        'settings': 'quote-creation', 
+        'quote-creation': 'item-library',
+        'item-library': 'contextual-help'
       }
       
-      // Add pro-specific tour for pro users after item-library
-      if ((userTier === 'pro' || userTier === 'enterprise') && tourId === 'item-library') {
-        tourSequence['item-library'] = 'pro-features'
+      // Add pro-specific tour for pro users after contextual-help
+      if ((userTier === 'pro' || userTier === 'enterprise') && tourId === 'contextual-help') {
+        tourSequence['contextual-help'] = 'pro-features'
       }
       
       const nextTourId = tourSequence[tourId]

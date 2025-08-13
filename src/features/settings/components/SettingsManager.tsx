@@ -148,6 +148,7 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
               ? 'bg-paper-white text-charcoal/60' 
               : 'bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal active:bg-equipment-yellow/80'
           } border border-stone-gray`}
+          data-tour="save-settings"
         >
           {isSaving ? (
             <>
@@ -170,7 +171,8 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
       {/* Form Sections */}
       <form ref={formRef} className="space-y-6">
         {/* Company Profile Section */}
-        <CompanyProfileCard
+        <div data-tour="company-profile">
+          <CompanyProfileCard
           companyName={formData.company_name}
           companyAddress={formData.company_address}
           companyPhone={formData.company_phone}
@@ -179,24 +181,29 @@ export function SettingsManager({ initialSettings, userId }: SettingsManagerProp
           onFieldChange={handleFieldChange}
           onLogoChange={handleLogoChange}
         />
+        </div>
 
         <Separator className="bg-stone-gray" />
 
         {/* Financial Defaults Section */}
-        <FinancialDefaultsCard
-          taxRate={formData.default_tax_rate}
-          markupRate={formData.default_markup_rate}
-          onFieldChange={handleFieldChange}
-        />
+        <div data-tour="financial-defaults">
+          <FinancialDefaultsCard
+            taxRate={formData.default_tax_rate}
+            markupRate={formData.default_markup_rate}
+            onFieldChange={handleFieldChange}
+          />
+        </div>
 
         <Separator className="bg-stone-gray" />
 
         {/* Quote Terms Section */}
-        <QuoteTermsCard
-          preferredCurrency={formData.preferred_currency}
-          quoteTerms={formData.quote_terms}
-          onFieldChange={handleFieldChange}
-        />
+        <div data-tour="quote-terms">
+          <QuoteTermsCard
+            preferredCurrency={formData.preferred_currency}
+            quoteTerms={formData.quote_terms}
+            onFieldChange={handleFieldChange}
+          />
+        </div>
       </form>
 
       {/* Change Indicator - Mobile Optimized */}

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { OnboardingDebugPanel } from "@/components/onboarding/OnboardingDebugPanel"
+import { TourTrigger } from "@/components/onboarding/TourTrigger"
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
 import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
@@ -113,11 +114,11 @@ export default async function DashboardPage() {
   
   // Quick actions matching HTML mock
   const quickActions = [
-    { href: '/quotes/new', icon: Plus, label: 'Create New Quote' },
+    { href: '/quotes/new', icon: Plus, label: 'Create New Quote', tourId: 'create-quote' },
     { href: '/quotes', icon: FileText, label: 'Manage Quotes' },
     { href: '/items', icon: List, label: 'Item Library' },
     { href: '/account', icon: User, label: 'Account & Billing' },
-    { href: '/settings', icon: Settings, label: 'Company Settings' }
+    { href: '/settings', icon: Settings, label: 'Company Settings', tourId: 'settings-link' }
   ]
 
   return (
@@ -276,7 +277,14 @@ export default async function DashboardPage() {
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1">
           <div className="bg-paper-white p-6 rounded-2xl border border-stone-gray/20 shadow-sm sticky top-8" data-tour="quick-actions">
-            <h2 className="text-xl font-bold text-charcoal mb-4">Quick Actions</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-charcoal">Quick Actions</h2>
+              <TourTrigger tourId="contextual-help" trigger="click" data-tour="help-button">
+                <button className="w-8 h-8 rounded-full bg-forest-green/10 text-forest-green hover:bg-forest-green/20 transition-colors flex items-center justify-center">
+                  <span className="text-sm font-bold">?</span>
+                </button>
+              </TourTrigger>
+            </div>
             <div className="space-y-3">
               {quickActions.map((action) => {
                 const Icon = action.icon
@@ -285,6 +293,7 @@ export default async function DashboardPage() {
                     key={action.href}
                     href={action.href} 
                     className="flex items-center p-4 bg-light-concrete hover:bg-stone-gray/50 rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+                    data-tour={action.tourId || undefined}
                   >
                     <Icon className="w-6 h-6 text-forest-green" />
                     <span className="ml-4 font-bold text-charcoal">{action.label}</span>

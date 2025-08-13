@@ -213,11 +213,13 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
             Manage your services and materials database for quick quote creation.
           </p>
         </div>
-        <AddItemDialog onItemAdded={onItemsChange} categories={categories} />
+        <div data-tour="add-item">
+          <AddItemDialog onItemAdded={onItemsChange} categories={categories} />
+        </div>
       </div>
 
       {/* Search and Filters */}
-      <Card className="bg-paper-white border border-stone-gray shadow-sm mb-6">
+      <Card className="bg-paper-white border border-stone-gray shadow-sm mb-6" data-tour="search-filter">
         <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
             {/* Search Input - Full width on mobile */}
@@ -246,7 +248,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
             {/* Filters Grid - Responsive layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Category Filter */}
-              <div className="w-full">
+              <div className="w-full" data-tour="categories">
                 <Select value={filters.category} onValueChange={handleCategoryChange}>
                   <SelectTrigger className="w-full border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
                     <SelectValue placeholder="All Categories" />
@@ -363,7 +365,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
 
       {/* Items Table */}
       {/* Desktop Table View */}
-        <div className="hidden md:block">
+        <div className="hidden md:block" data-tour="items-list">
           <ItemsTable
             items={filteredAndSortedItems}
             categories={categories}
@@ -375,7 +377,7 @@ export function ItemLibrary({ items, categories, onItemsChange }: ItemLibraryPro
         </div>
         
         {/* Mobile Card View */}
-        <div className="block md:hidden">
+        <div className="block md:hidden" data-tour="items-list">
           <ItemsCard
             items={filteredAndSortedItems}
             categories={categories}
