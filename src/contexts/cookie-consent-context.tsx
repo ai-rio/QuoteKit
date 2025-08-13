@@ -21,8 +21,8 @@ type CookieConsentContextType = {
 
 const CookieConsentContext = createContext<CookieConsentContextType | undefined>(undefined);
 
-const COOKIE_CONSENT_KEY = 'lawnquote-cookie-consent';
-const COOKIE_PREFERENCES_KEY = 'lawnquote-cookie-preferences';
+const COOKIE_CONSENT_KEY = 'lawnquote-cookie-consent-v2';
+const COOKIE_PREFERENCES_KEY = 'lawnquote-cookie-preferences-v2';
 
 const defaultPreferences: CookiePreferences = {
   essential: true, // Always true, cannot be disabled
