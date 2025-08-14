@@ -25,7 +25,7 @@ import {
 import { useSystemStatus } from "@/hooks/use-user"
 
 export default function AdminDashboard() {
-  const { status: systemStatus, loading: statusLoading, error: statusError } = useSystemStatus()
+  const { status: systemStatus, loading: statusLoading, error: _statusError } = useSystemStatus()
 
   return (
     <div className="space-y-6">

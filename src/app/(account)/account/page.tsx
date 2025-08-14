@@ -11,7 +11,7 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { EnhancedButton } from '@/components/ui/enhanced-button';
+// import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { getAvailablePlans } from '@/features/account/actions/subscription-actions';
 import { BillingHistoryTable } from '@/features/account/components/BillingHistoryTable';
 import { EnhancedCurrentPlanCard } from '@/features/account/components/EnhancedCurrentPlanCard';
@@ -32,7 +32,7 @@ export default async function AccountPage() {
     redirect('/login');
   }
 
-  const [subscription, billingHistoryResponse, paymentMethods, availablePlans, stripePublishableKey] = await Promise.all([
+  const [subscription, billingHistoryResponse, _paymentMethods, availablePlans, stripePublishableKey] = await Promise.all([
     getSubscription(),
     getEnhancedBillingHistory(session.user.id, {
       limit: 20,

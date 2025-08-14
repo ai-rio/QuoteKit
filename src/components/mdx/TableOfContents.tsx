@@ -155,6 +155,11 @@ export default function TableOfContents({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [headings, enableScrollTracking, usingSections]);
 
+  // Type guard to check if item is a grouped heading
+  const isGroupedHeading = (item: any): item is { id: string; text: string; level: number; children: TOCHeading[] } => {
+    return 'text' in item && 'level' in item && 'children' in item;
+  };
+
   // Group headings into hierarchical structure
   const groupedHeadings = useMemo(() => {
     if (usingSections) return propSections || [];
@@ -268,9 +273,9 @@ export default function TableOfContents({
         <nav className="space-y-2" aria-labelledby="toc-title">
           {groupedHeadings.map((group, groupIndex) => {
             const isExpanded = expandedSections.has(group.id);
-            const hasChildren = group.children && group.children.length > 0;
+            const hasChildren = 'children' in group && group.children && group.children.length > 0;
             const isActive = enableScrollTracking && activeId === group.id;
-            const hasActiveChild = enableScrollTracking && group.children?.some(child => child.id === activeId);
+            const hasActiveChild = enableScrollTracking && 'children' in group && group.children?.some(child => child.id === activeId);
             const shouldHighlight = isActive || hasActiveChild;
             
             return (
@@ -288,7 +293,7 @@ export default function TableOfContents({
                         : 'hover:bg-forest-green/5 hover:text-forest-green text-charcoal/80'
                       }
                     `}
-                    aria-label={`Navigate to ${group.text}`}
+                    aria-label={`Navigate to ${isGroupedHeading(group) ? group.text : (group as TOCSection).title}`}
                   >
                     <div className="flex items-center gap-3">
                       {showNumbers && (
@@ -314,11 +319,11 @@ export default function TableOfContents({
                       <div className="flex-1">
                         <h3 className={`
                           font-semibold leading-tight
-                          ${group.level === 1 ? 'text-lg' : 'text-base'}
+                          ${isGroupedHeading(group) && group.level === 1 ? 'text-lg' : 'text-base'}
                         `}>
-                          {group.text}
+                          {isGroupedHeading(group) ? group.text : (group as TOCSection).title}
                         </h3>
-                        {hasChildren && (
+                        {hasChildren && 'children' in group && (
                           <p className="text-sm text-charcoal/60 mt-1">
                             {group.children.length} subsection{group.children.length !== 1 ? 's' : ''}
                           </p>
@@ -341,7 +346,7 @@ export default function TableOfContents({
                           : 'hover:bg-forest-green/5 hover:text-forest-green text-charcoal/60'
                         }
                       `}
-                      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.text} subsections`}
+                      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${isGroupedHeading(group) ? group.text : (group as TOCSection).title} subsections`}
                       aria-expanded={isExpanded}
                     >
                       <svg
@@ -372,7 +377,7 @@ export default function TableOfContents({
                     `}
                   >
                     <div className="bg-stone-gray/5 border-t border-stone-gray/20">
-                      {group.children.map((child, childIndex) => {
+                      {'children' in group && group.children.map((child, childIndex) => {
                         const isChildActive = enableScrollTracking && activeId === child.id;
                         
                         return (
@@ -443,7 +448,7 @@ export default function TableOfContents({
               <span>
                 {activeId ? 
                   `Reading section ${groupedHeadings.findIndex(g => 
-                    g.id === activeId || g.children?.some(c => c.id === activeId)
+                    g.id === activeId || (isGroupedHeading(g) && g.children?.some((c: TOCHeading) => c.id === activeId))
                   ) + 1} of ${groupedHeadings.length}` :
                   'Start reading'
                 }
@@ -457,7 +462,7 @@ export default function TableOfContents({
                 style={{
                   width: activeId ? 
                     `${((groupedHeadings.findIndex(g => 
-                      g.id === activeId || g.children?.some(c => c.id === activeId)
+                      g.id === activeId || (isGroupedHeading(g) && g.children?.some((c: TOCHeading) => c.id === activeId))
                     ) + 1) / groupedHeadings.length) * 100}%` :
                     '0%'
                 }}

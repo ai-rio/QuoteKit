@@ -36,13 +36,14 @@ export function CodeBlock({
     
     if (React.isValidElement(children)) {
       // If it's a React element, try to extract text from props.children
-      if (typeof children.props?.children === 'string') {
-        return children.props.children;
+      const element = children as React.ReactElement<{ children?: React.ReactNode }>;
+      if (typeof element.props?.children === 'string') {
+        return element.props.children;
       }
       
       // Handle nested elements by recursively extracting text
-      if (children.props?.children) {
-        return getTextContent(children.props.children);
+      if (element.props?.children) {
+        return getTextContent(element.props.children);
       }
     }
     

@@ -4,7 +4,6 @@
  */
 
 import React from 'react';
-import React from 'react';
 
 import { cn } from '@/utils/cn';
 
@@ -70,7 +69,7 @@ export function AccessibleHeading({
   className,
   id 
 }: AccessibleHeadingProps) {
-  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+  const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
   
   const baseClasses = "font-black text-forest-green";
   
@@ -83,17 +82,17 @@ export function AccessibleHeading({
     6: "text-sm md:text-base font-bold mb-2 mt-4"
   };
 
-  return (
-    <Tag 
-      id={id}
-      className={cn(
+  return React.createElement(
+    Tag,
+    {
+      id,
+      className: cn(
         baseClasses,
         sizeClasses[level],
         className
-      )}
-    >
-      {children}
-    </Tag>
+      )
+    },
+    children
   );
 }
 
