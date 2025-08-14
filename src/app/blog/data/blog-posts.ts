@@ -14,14 +14,14 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     id: '9',
-    title: 'Level Up Your QuoteKit Skills: The Ultimate Beta Testing Adventure',
-    slug: 'beta-testing-adventure',
+    title: 'LawnQuote Walkthrough: How to Create Professional Landscaping Quotes in Minutes',
+    slug: 'lawnquote-walkthrough-how-to-create-professional',
     category: 'tools',
-    image: 'https://placehold.co/600x400/6366F1/FFFFFF?text=Beta+Adventure&font=source-sans-pro',
-    summary: 'Join the most rewarding beta program in landscaping! Discover how to turn testing into a game, unlock pro features, and become a QuoteKit champion while helping shape the future of quoting.',
-    author: 'The QuoteKit Team',
+    image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&h=630&fit=crop',
+    summary: 'Master LawnQuote with our complete step-by-step guide. Learn to create professional landscaping quotes, test premium features safely, and grow your business with industry-leading quote software.',
+    author: 'LawnQuote Team',
     publishedAt: '2025-01-16',
-    readTime: 12,
+    readTime: 25,
     featured: true,
   },
   {

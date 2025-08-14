@@ -4,6 +4,7 @@
  */
 
 import type { MDXComponents } from 'mdx/types';
+import React from 'react';
 
 import { 
   ArticleHero,
@@ -31,17 +32,20 @@ import {
   TableOfContents,
   TestingScenarios,
   TipCallout,
+  TOCDebug,
   TypeScriptCode,
   WarningCallout} from '@/components/mdx';
-import { generateHeadingId } from '@/lib/blog/headings';
+import { generateHeadingId } from '@/utils/heading-id';
+
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     // Style default HTML elements with LawnQuote design system per style guide
     // FIXED: Proper typography hierarchy with font-black for H1/H2, font-bold for H3
+    // ENHANCED: Added ID generation for TOC navigation
     h1: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
+      const id = generateHeadingId(children);
+      
       return (
         <h1 id={id} className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
           {children}
@@ -49,8 +53,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h2: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
+      const id = generateHeadingId(children);
+      
       return (
         <h2 id={id} className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
           {children}
@@ -58,8 +62,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h3: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
+      const id = generateHeadingId(children);
+      
       return (
         <h3 id={id} className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
           {children}
@@ -67,8 +71,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     h4: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
+      const id = generateHeadingId(children);
+      
       return (
         <h4 id={id} className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
           {children}
@@ -147,7 +151,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         href={href} 
         className="
           text-forest-green 
-          hover:text-equipment-yellow 
+          hover:text-charcoal
+          focus:text-charcoal
+          focus:outline-2
+          focus:outline-forest-green
+          focus:outline-offset-2
           underline 
           transition-colors 
           duration-200
@@ -258,6 +266,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     BetaTestingJourney,
     TestingScenarios,
     MilestoneCelebration,
+    
+    // Debug Components (for development)
+    TOCDebug,
     
     // Override any custom components passed in
     ...components,

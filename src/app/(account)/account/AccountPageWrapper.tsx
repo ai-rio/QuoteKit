@@ -11,7 +11,7 @@ export function AccountPageWrapper({ children }: AccountPageWrapperProps) {
 
   // Listen for plan change events and billing updates
   useEffect(() => {
-    const handlePlanChange = (event: CustomEvent) => {
+    const handlePlanChange = (_event: CustomEvent) => {
       setRefreshKey(prev => prev + 1);
       
       // Force page refresh to get latest subscription data

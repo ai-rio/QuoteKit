@@ -4,9 +4,9 @@ import { Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter,DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
-import { CookiePreferences,useCookieConsent } from '@/contexts/cookie-consent-context';
+import { CookiePreferences, useCookieConsent } from '@/contexts/cookie-consent-context';
 import { cn } from '@/utils/cn';
 
 export function CookieConsentBanner() {

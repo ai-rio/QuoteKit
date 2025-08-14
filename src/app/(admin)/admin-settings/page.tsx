@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertCircle, BarChart3, CheckCircle, CreditCard, Database, Mail, RefreshCw, Save, Settings } from "lucide-react"
+import { AlertCircle, BarChart3, CheckCircle, CreditCard, Mail, RefreshCw, Save } from "lucide-react"
 import { useEffect,useState } from "react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+// import { Separator } from "@/components/ui/separator"
 
 interface PostHogConfig {
   project_api_key: string

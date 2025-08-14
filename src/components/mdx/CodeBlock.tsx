@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
 
 interface CodeBlockProps {
-  children: string;
+  children: React.ReactNode;
   language?: string;
   title?: string;
   showLineNumbers?: boolean;
@@ -28,9 +28,38 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
+  // Extract text content from children (handles both string and React nodes)
+  const getTextContent = (children: React.ReactNode): string => {
+    if (typeof children === 'string') {
+      return children;
+    }
+    
+    if (React.isValidElement(children)) {
+      // If it's a React element, try to extract text from props.children
+      const element = children as React.ReactElement<{ children?: React.ReactNode }>;
+      if (typeof element.props?.children === 'string') {
+        return element.props.children;
+      }
+      
+      // Handle nested elements by recursively extracting text
+      if (element.props?.children) {
+        return getTextContent(element.props.children);
+      }
+    }
+    
+    if (Array.isArray(children)) {
+      return children.map(child => getTextContent(child)).join('');
+    }
+    
+    // Fallback: convert to string
+    return String(children || '');
+  };
+
+  const textContent = getTextContent(children);
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(children);
+      await navigator.clipboard.writeText(textContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -39,7 +68,7 @@ export function CodeBlock({
   };
 
   // Split code into lines for line numbers
-  const lines = children.split('\n');
+  const lines = textContent.split('\n');
 
   return (
     <div className={cn('relative group mb-6', className)}>
@@ -88,7 +117,7 @@ export function CodeBlock({
             'font-mono text-sm',
             getLanguageClass(language)
           )}>
-            {children}
+            {textContent}
           </code>
         </pre>
       </div>
