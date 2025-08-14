@@ -1,0 +1,148 @@
+/**
+ * TOC Enhancement Styles
+ * Additional utilities for the enhanced Table of Contents component
+ */
+
+/* Line clamp utilities for text truncation */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Smooth accordion animations */
+.toc-accordion-enter {
+  max-height: 0;
+  opacity: 0;
+}
+
+.toc-accordion-enter-active {
+  max-height: 800px;
+  opacity: 1;
+  transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
+}
+
+.toc-accordion-exit {
+  max-height: 800px;
+  opacity: 1;
+}
+
+.toc-accordion-exit-active {
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
+}
+
+/* Enhanced focus styles for better accessibility */
+.toc-button:focus-visible {
+  outline: 2px solid hsl(var(--forest-green));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Smooth hover animations */
+.toc-item {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toc-item:hover {
+  transform: translateX(4px);
+}
+
+/* Progress indicator pulse animation */
+@keyframes toc-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.toc-reading-indicator {
+  animation: toc-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 1023px) {
+  .toc-mobile-compact {
+    position: sticky;
+    top: 80px;
+    z-index: 40;
+  }
+  
+  .toc-mobile-backdrop {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* Scroll behavior improvements */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced active state with subtle glow */
+.toc-active-item {
+  box-shadow: 0 0 0 1px hsl(var(--forest-green) / 0.2),
+              0 4px 6px -1px hsl(var(--forest-green) / 0.1);
+}
+
+/* Subheading indentation visual enhancement */
+.toc-subheading {
+  position: relative;
+}
+
+.toc-subheading::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 1px;
+  background: hsl(var(--forest-green) / 0.3);
+}
+
+/* Reading progress enhancements */
+.toc-progress-bar {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--forest-green)) 0%,
+    hsl(var(--equipment-yellow)) 100%
+  );
+  transition: width 300ms ease-out;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .toc-accordion-enter-active,
+  .toc-accordion-exit-active,
+  .toc-item,
+  .toc-progress-bar {
+    transition: none;
+  }
+  
+  .toc-reading-indicator {
+    animation: none;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
