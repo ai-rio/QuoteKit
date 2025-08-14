@@ -7,8 +7,10 @@ import { Inter, Kalam, Roboto_Mono } from 'next/font/google';
 import { PropsWithChildren } from 'react';
 
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
+import { NavigationTracker } from '@/components/tracking/navigation-tracker';
 import { Toaster } from '@/components/ui/toaster';
 import { CookieConsentProvider } from '@/contexts/cookie-consent-context';
+import { FormbricksProvider } from '@/libs/formbricks';
 import { cn } from '@/utils/cn';
 
 export const dynamic = 'force-dynamic';
@@ -59,6 +61,8 @@ export default function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body className={cn('font-sans antialiased', inter.variable, robotoMono.variable, kalam.variable)}>
         <CookieConsentProvider>
+          <FormbricksProvider />
+          <NavigationTracker />
           <div className='flex min-h-screen flex-col'>
             {children}
           </div>

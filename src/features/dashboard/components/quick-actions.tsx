@@ -3,6 +3,7 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useFormbricksTracking } from "@/hooks/use-formbricks-tracking"
 
 import { QuickAction } from "../types"
 
@@ -41,6 +42,16 @@ function getColorClasses(color: string) {
 }
 
 export function QuickActions({ actions }: QuickActionsProps) {
+  const { trackFeatureUsage } = useFormbricksTracking();
+  
+  const handleQuickActionClick = (action: any) => {
+    trackFeatureUsage('quick_actions', 'used', {
+      actionTitle: action.title,
+      actionHref: action.href,
+      actionIcon: action.icon,
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
       {actions.map((action) => {
@@ -65,6 +76,7 @@ export function QuickActions({ actions }: QuickActionsProps) {
                 asChild 
                 className={`w-full ${colorClasses}`}
                 size="lg"
+                onClick={() => handleQuickActionClick(action)}
               >
                 <Link href={action.href}>
                   Get Started

@@ -30,6 +30,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@formbricks/js@^4.1.0",
         "npm:@next/bundle-analyzer@^15.4.5",
         "npm:@number-flow/react@~0.5.10",
         "npm:@radix-ui/react-accordion@^1.2.11",

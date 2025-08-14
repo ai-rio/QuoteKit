@@ -1,8 +1,9 @@
 'use client';
 
 import { AlertTriangle, CheckCircle, Play, RefreshCw,XCircle } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useState } from 'react';
 
+import { TrackingTest } from '@/components/tracking/tracking-test';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -293,6 +294,7 @@ export default function TestEdgeFunctionsPage() {
           <TabsTrigger value="functions">Function Tests</TabsTrigger>
           <TabsTrigger value="certification">Certification Report</TabsTrigger>
           <TabsTrigger value="individual">Individual Testing</TabsTrigger>
+          <TabsTrigger value="tracking">Formbricks Tracking</TabsTrigger>
         </TabsList>
 
         <TabsContent value="functions" className="space-y-4">
@@ -436,6 +438,10 @@ export default function TestEdgeFunctionsPage() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="tracking" className="space-y-4">
+          <TrackingTest />
         </TabsContent>
       </Tabs>
     </div>

@@ -151,6 +151,62 @@
 - Integrates with existing QuoteKit metrics
 - Automated weekly insight reports
 
+### S5: Enhanced Integration Capabilities
+**Priority**: High
+**Effort**: 4 days
+**Dependencies**: M1
+
+**Requirements**:
+- [ ] **Multi-domain Configuration** - Support for separate survey domains
+- [ ] **Enhanced Route Tracking** - Automatic route change detection with Next.js App Router
+- [ ] **Advanced User Attributes** - Rich user context and behavior tracking
+- [ ] **Survey Action Triggers** - Event-based survey triggering system
+- [ ] **Latest SDK Patterns** - Updated to use setup() method and setAttributes()
+
+**Acceptance Criteria**:
+- Multi-domain setup works with PUBLIC_URL configuration
+- Route changes automatically trigger survey eligibility checks
+- User attributes update in real-time based on user actions
+- Action-based surveys trigger correctly without manual event tracking
+- SDK initialization uses latest Formbricks patterns
+
+### S6: Mobile SDK Integration Support
+**Priority**: High
+**Effort**: 6 days
+**Dependencies**: M1
+
+**Requirements**:
+- [ ] **React Native SDK Documentation** - Complete mobile app integration guide
+- [ ] **iOS SDK Support** - Native iOS app integration capability with Swift Package Manager
+- [ ] **Android SDK Support** - Native Android app integration with Kotlin
+- [ ] **Cross-platform Consistency** - Unified survey experience across web and mobile
+- [ ] **Mobile-specific Targeting** - Platform-aware survey distribution
+
+**Acceptance Criteria**:
+- React Native SDK integrates without performance impact
+- iOS and Android SDKs documented with working examples
+- Consistent user experience across web, iOS, Android, and React Native
+- Mobile-specific survey targeting works correctly
+- Documentation includes troubleshooting guides for each platform
+
+### S7: New Integration Ecosystem
+**Priority**: Medium
+**Effort**: 5 days
+**Dependencies**: M1, S5
+
+**Requirements**:
+- [ ] **ActivePieces Integration** - Open-source workflow automation support
+- [ ] **Enhanced n8n Support** - Improved workflow triggers and data flow
+- [ ] **WordPress Plugin Integration** - Direct WordPress site integration capability
+- [ ] **Enhanced Notion Integration** - Improved database connectivity and data sync
+
+**Acceptance Criteria**:
+- ActivePieces workflows trigger correctly from Formbricks events
+- n8n integration supports all major Formbricks events
+- WordPress plugin installs and configures without issues
+- Notion integration syncs survey data to specified databases
+- All integrations include proper error handling and fallbacks
+
 ---
 
 ## COULD HAVE (Nice to Have - Phase 3)
@@ -206,22 +262,39 @@
 - Automated workflows reduce manual effort
 - Measurable improvement in user retention
 
-### C4: Mobile App Surveys
+### C4: Advanced Survey Analytics
 **Priority**: Medium
 **Effort**: 7 days
-**Dependencies**: M1
+**Dependencies**: S5, S7
 
 **Requirements**:
-- [ ] Native mobile survey components
-- [ ] Mobile-optimized survey flows
-- [ ] Push notification triggers
-- [ ] Offline survey capability
+- [ ] **Custom Analytics Dashboard** - Advanced insight visualization
+- [ ] **Survey Performance Metrics** - Completion rates, drop-off analysis
+- [ ] **User Journey Mapping** - Survey interaction within user flows
+- [ ] **Predictive Analytics** - User behavior prediction based on survey data
 
 **Acceptance Criteria**:
-- Surveys work seamlessly on mobile devices
-- High completion rates on mobile (>15%)
-- Offline responses sync when connected
-- Native mobile experience
+- Custom dashboard provides actionable insights
+- Survey performance metrics help optimize survey design
+- User journey mapping identifies optimal survey placement
+- Predictive analytics improve user targeting
+
+### C5: Advanced Automation Workflows
+**Priority**: Medium
+**Effort**: 6 days
+**Dependencies**: S7
+
+**Requirements**:
+- [ ] **Zapier Integration** - Connect with 2000+ apps
+- [ ] **Make.com Integration** - Advanced automation workflows
+- [ ] **Custom Webhook Support** - Real-time data streaming
+- [ ] **API-driven Survey Management** - Programmatic survey control
+
+**Acceptance Criteria**:
+- Zapier integration works with major QuoteKit events
+- Make.com workflows handle complex automation scenarios
+- Webhooks deliver real-time data reliably
+- API allows full survey lifecycle management
 
 ---
 

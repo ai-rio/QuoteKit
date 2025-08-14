@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
 import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
 import { getDashboardData } from "@/features/dashboard/actions"
+import { DashboardTrackingWrapper } from "@/features/dashboard/components/dashboard-tracking-wrapper"
 import { QuoteStatusBadge } from "@/features/quotes/components/QuoteStatusBadge"
 import { createSupabaseServerClient } from "@/libs/supabase/supabase-server-client"
 
@@ -122,6 +123,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8 bg-light-concrete min-h-full">
+      {/* Tracking wrapper for dashboard analytics */}
+      <DashboardTrackingWrapper 
+        stats={dashboardData.stats}
+        userTier={user.user_metadata?.subscriptionTier || 'free'}
+        isPremium={isPremium}
+      />
       
       <PageBreadcrumbs />
       

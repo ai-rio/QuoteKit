@@ -39,7 +39,7 @@ pnpm db:status  # Should show connected
 ```bash
 # Add to .env.local
 NEXT_PUBLIC_FORMBRICKS_ENV_ID=your_environment_id_here
-NEXT_PUBLIC_FORMBRICKS_API_HOST=https://app.formbricks.com
+NEXT_PUBLIC_FORMBRICKS_APP_URL=https://app.formbricks.com
 FORMBRICKS_API_KEY=your_api_key_here  # For server-side operations
 ```
 
@@ -49,8 +49,8 @@ FORMBRICKS_API_KEY=your_api_key_here  # For server-side operations
 
 ### 2.1 Install Formbricks SDK
 ```bash
-# Install the main SDK
-pnpm add @formbricks/js
+# Install the main SDK with required peer dependency
+pnpm add @formbricks/js zod
 
 # Install additional dependencies for TypeScript support
 pnpm add -D @types/node
@@ -69,11 +69,11 @@ grep "@formbricks/js" package.json
 ### 3.1 Create Formbricks Manager Service
 ```typescript
 // lib/formbricks/manager.ts
-import formbricks from "@formbricks/js/app";
+import formbricks from "@formbricks/js";
 
 export interface FormbricksConfig {
   environmentId: string;
-  apiHost: string;
+  appUrl: string;
   userId?: string;
 }
 
@@ -98,11 +98,16 @@ export class FormbricksManager {
     try {
       this.config = config;
       
-      await formbricks.init({
+      // Updated initialization method
+      formbricks.setup({
         environmentId: config.environmentId,
-        apiHost: config.apiHost,
-        userId: config.userId,
+        appUrl: config.appUrl,
       });
+
+      // Set user attributes separately if needed
+      if (config.userId) {
+        formbricks.setAttributes({ userId: config.userId });
+      }
 
       this.initialized = true;
       console.log('Formbricks initialized successfully');
@@ -125,6 +130,20 @@ export class FormbricksManager {
     }
   }
 
+  registerRouteChange(): void {
+    if (!this.initialized) {
+      console.warn('Formbricks not initialized');
+      return;
+    }
+
+    try {
+      formbricks.registerRouteChange();
+    } catch (error) {
+      console.error('Failed to register route change:', error);
+    }
+  }
+
+  // Legacy method for backward compatibility
   trackEvent(eventName: string, properties?: Record<string, any>): void {
     if (!this.initialized) {
       console.warn('Formbricks not initialized');
@@ -132,7 +151,18 @@ export class FormbricksManager {
     }
 
     try {
-      formbricks.track(eventName, properties);
+      // Note: Direct event tracking may not be available in latest SDK
+      // Consider using user attributes or actions instead
+      console.warn('Direct event tracking deprecated. Use setAttributes or actions instead.');
+      
+      // Alternative: Set attributes that can trigger surveys
+      if (properties) {
+        this.setUserAttributes({
+          lastAction: eventName,
+          lastActionTime: new Date().toISOString(),
+          ...properties,
+        });
+      }
     } catch (error) {
       console.error('Failed to track event:', error);
     }
@@ -149,41 +179,39 @@ export class FormbricksManager {
 // components/providers/FormbricksProvider.tsx
 'use client';
 
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { FormbricksManager } from '@/lib/formbricks/manager';
+import formbricks from '@formbricks/js';
 
 export function FormbricksProvider() {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!user) return;
 
     const initializeFormbricks = async () => {
       try {
-        const manager = FormbricksManager.getInstance();
-        
-        await manager.initialize({
+        // Updated initialization using setup method
+        formbricks.setup({
           environmentId: process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID!,
-          apiHost: process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST!,
-          userId: user.id,
+          appUrl: process.env.NEXT_PUBLIC_FORMBRICKS_APP_URL!,
         });
 
         // Set initial user attributes
-        manager.setUserAttributes({
+        formbricks.setAttributes({
           email: user.email,
           subscriptionTier: user.subscriptionTier,
           quotesCreated: user.stats?.totalQuotes || 0,
           signupDate: user.createdAt.toISOString(),
           industry: user.profile?.industry,
           companySize: user.profile?.companySize,
+          userId: user.id,
         });
 
-        // Track initialization
-        manager.trackEvent('formbricks_initialized', {
-          userId: user.id,
-          tier: user.subscriptionTier,
-        });
+        console.log('Formbricks initialized successfully');
 
       } catch (error) {
         console.error('Formbricks initialization error:', error);
@@ -193,6 +221,11 @@ export function FormbricksProvider() {
 
     initializeFormbricks();
   }, [user]);
+
+  // Register route changes for survey triggering
+  useEffect(() => {
+    formbricks?.registerRouteChange();
+  }, [pathname, searchParams]);
 
   return null;
 }
@@ -267,7 +300,7 @@ export type FormbricksEventName = typeof FORMBRICKS_EVENTS[keyof typeof FORMBRIC
 import { useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { usePathname } from 'next/navigation';
-import { FormbricksManager } from '@/lib/formbricks/manager';
+import formbricks from '@formbricks/js';
 import { FormbricksEventName } from '@/lib/formbricks/events';
 
 export function useFormbricksTracking() {
@@ -278,38 +311,46 @@ export function useFormbricksTracking() {
     eventName: FormbricksEventName,
     properties?: Record<string, any>
   ) => {
-    const manager = FormbricksManager.getInstance();
-    
-    if (!manager.isInitialized()) {
-      console.warn('Formbricks not initialized, skipping event:', eventName);
-      return;
+    try {
+      // Use attributes to trigger surveys instead of direct event tracking
+      const eventData = {
+        lastAction: eventName,
+        lastActionTime: new Date().toISOString(),
+        lastActionPage: pathname,
+        userTier: user?.subscriptionTier || 'unknown',
+        userId: user?.id,
+        ...properties,
+      };
+
+      formbricks.setAttributes(eventData);
+      
+      // Log for debugging
+      console.log(`Formbricks: Set attributes for ${eventName}`, eventData);
+    } catch (error) {
+      console.error('Failed to track event:', error);
     }
-
-    const eventData = {
-      ...properties,
-      timestamp: new Date().toISOString(),
-      page: pathname,
-      userTier: user?.subscriptionTier || 'unknown',
-      userId: user?.id,
-    };
-
-    manager.trackEvent(eventName, eventData);
   }, [user, pathname]);
 
   const updateUserAttributes = useCallback((attributes: Record<string, any>) => {
-    const manager = FormbricksManager.getInstance();
-    
-    if (!manager.isInitialized()) {
-      console.warn('Formbricks not initialized, skipping attribute update');
-      return;
+    try {
+      formbricks.setAttributes(attributes);
+    } catch (error) {
+      console.error('Failed to update user attributes:', error);
     }
+  }, []);
 
-    manager.setUserAttributes(attributes);
+  const registerRouteChange = useCallback(() => {
+    try {
+      formbricks.registerRouteChange();
+    } catch (error) {
+      console.error('Failed to register route change:', error);
+    }
   }, []);
 
   return {
     trackEvent,
     updateUserAttributes,
+    registerRouteChange,
   };
 }
 ```
@@ -824,8 +865,11 @@ export class FormbricksFallbackHandler {
 ```bash
 # Add to production environment
 NEXT_PUBLIC_FORMBRICKS_ENV_ID=prod_environment_id
-NEXT_PUBLIC_FORMBRICKS_API_HOST=https://app.formbricks.com
+NEXT_PUBLIC_FORMBRICKS_APP_URL=https://app.formbricks.com
 FORMBRICKS_API_KEY=prod_api_key
+
+# For multi-domain setup (optional)
+NEXT_PUBLIC_FORMBRICKS_PUBLIC_URL=https://surveys.yourdomain.com
 ```
 
 ### 11.3 Monitoring Setup

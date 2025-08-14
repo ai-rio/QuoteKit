@@ -1,6 +1,7 @@
 import { CheckCircle, DollarSign, FileText, Package, Send } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
+import { useFormbricksTracking } from "@/hooks/use-formbricks-tracking"
 
 import { DashboardStats } from "../types"
 
@@ -9,6 +10,8 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
+  const { trackFeatureUsage } = useFormbricksTracking();
+  
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -16,6 +19,13 @@ export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
       minimumFractionDigits: 0
     }).format(amount)
   }
+
+  const handleStatCardClick = (statTitle: string, statValue: number | string) => {
+    trackFeatureUsage('dashboard_stats', 'used', {
+      statType: statTitle.toLowerCase().replace(/\s+/g, '_'),
+      statValue,
+    });
+  };
 
   const statCards = [
     {
@@ -61,7 +71,11 @@ export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
       {statCards.map((stat) => {
         const Icon = stat.icon
         return (
-          <Card key={stat.title} className="bg-paper-white border-stone-gray shadow-sm">
+          <Card 
+            key={stat.title} 
+            className="bg-paper-white border-stone-gray shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatCardClick(stat.title, stat.value)}
+          >
             <CardContent className="p-4 lg:p-6">
               <div className="flex items-start space-x-2 lg:space-x-3">
                 <Icon className={`w-4 h-4 lg:w-5 lg:h-5 ${stat.color} flex-shrink-0 mt-1`} />
@@ -73,7 +87,7 @@ export function DashboardStatsComponent({ stats }: DashboardStatsProps) {
             </CardContent>
           </Card>
         )
-})}
+      })}
     </div>
   )
 }

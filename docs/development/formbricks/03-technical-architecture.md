@@ -41,12 +41,56 @@ graph TB
 
 #### SDK Installation and Setup
 ```typescript
-// packages/formbricks/index.ts
-import formbricks from "@formbricks/js/app";
+// lib/formbricks/index.ts
+import formbricks from "@formbricks/js";
 
 export class FormbricksManager {
   private static instance: FormbricksManager;
   private initialized = false;
+
+  static getInstance(): FormbricksManager {
+    if (!FormbricksManager.instance) {
+      FormbricksManager.instance = new FormbricksManager();
+    }
+    return FormbricksManager.instance;
+  }
+
+  initialize(config: { environmentId: string; appUrl: string }): void {
+    if (this.initialized) return;
+
+    try {
+      formbricks.setup({
+        environmentId: config.environmentId,
+        appUrl: config.appUrl,
+      });
+      
+      this.initialized = true;
+    } catch (error) {
+      console.error('Formbricks initialization failed:', error);
+    }
+  }
+
+  setAttributes(attributes: Record<string, any>): void {
+    if (!this.initialized) return;
+    
+    try {
+      formbricks.setAttributes(attributes);
+    } catch (error) {
+      console.error('Failed to set attributes:', error);
+    }
+  }
+
+  registerRouteChange(): void {
+    if (!this.initialized) return;
+    
+    try {
+      formbricks.registerRouteChange();
+    } catch (error) {
+      console.error('Failed to register route change:', error);
+    }
+  }
+}
+```
 
   static getInstance(): FormbricksManager {
     if (!FormbricksManager.instance) {
