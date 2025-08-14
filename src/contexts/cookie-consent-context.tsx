@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, ReactNode,useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export type CookiePreferences = {
   essential: boolean;

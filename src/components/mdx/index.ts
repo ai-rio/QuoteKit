@@ -13,7 +13,8 @@ export {
   InfoCallout,
   MotivationCallout,
   QuestCallout,
-  RewardCallout,  SuccessCallout,
+  RewardCallout,
+  SuccessCallout,
   TipCallout,
   WarningCallout} from './Callout';
 

@@ -33,48 +33,32 @@ import {
   TipCallout,
   TypeScriptCode,
   WarningCallout} from '@/components/mdx';
-import { generateHeadingId } from '@/lib/blog/headings';
+
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     // Style default HTML elements with LawnQuote design system per style guide
     // FIXED: Proper typography hierarchy with font-black for H1/H2, font-bold for H3
-    h1: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
-      return (
-        <h1 id={id} className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
-          {children}
-        </h1>
-      );
-    },
-    h2: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
-      return (
-        <h2 id={id} className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
-          {children}
-        </h2>
-      );
-    },
-    h3: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
-      return (
-        <h3 id={id} className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
-          {children}
-        </h3>
-      );
-    },
-    h4: ({ children }) => {
-      const text = typeof children === 'string' ? children : String(children);
-      const id = generateHeadingId(text);
-      return (
-        <h4 id={id} className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
-          {children}
-        </h4>
-      );
-    },
+    h1: ({ children }) => (
+      <h1 className="text-4xl md:text-6xl font-black text-forest-green mb-8 mt-12 first:mt-0">
+        {children}
+      </h1>
+    ),
+    h2: ({ children }) => (
+      <h2 className="text-3xl md:text-4xl font-black text-forest-green mb-6 mt-10">
+        {children}
+      </h2>
+    ),
+    h3: ({ children }) => (
+      <h3 className="text-xl md:text-2xl font-bold text-forest-green mb-4 mt-8">
+        {children}
+      </h3>
+    ),
+    h4: ({ children }) => (
+      <h4 className="text-lg md:text-xl font-bold text-forest-green mb-3 mt-6">
+        {children}
+      </h4>
+    ),
     // FIXED: Body text uses text-lg text-charcoal per style guide (not text-sm text-stone-gray)
     p: ({ children }) => (
       <p className="text-lg text-charcoal mb-6 leading-relaxed">

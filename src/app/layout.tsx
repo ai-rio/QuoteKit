@@ -3,7 +3,7 @@ import '@/styles/onboarding.css';
 
 import { Analytics } from '@vercel/analytics/react';
 import type { Metadata } from 'next';
-import { Inter, Kalam,Roboto_Mono } from 'next/font/google';
+import { Inter, Kalam, Roboto_Mono } from 'next/font/google';
 import { PropsWithChildren } from 'react';
 
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
