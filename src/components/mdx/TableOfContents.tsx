@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo,useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -32,15 +32,14 @@ interface TableOfContentsProps {
 }
 
 /**
- * Enhanced TableOfContents Component with Accordion/Collapsible UI
+ * Enhanced TableOfContents Component with Hierarchical Accordion Structure
  * 
  * Features:
- * - Accordion/collapsible interface for better mobile UX
- * - Auto-responsive: collapsed on mobile, expanded on desktop
- * - Smooth animations and transitions
- * - Active section highlighting and progress tracking
+ * - Hierarchical accordion: H2 headings with collapsible H3+ subheadings
+ * - Individual section toggles for better content organization
+ * - Smart auto-expand: active section automatically opens
  * - Full accessibility support with keyboard navigation
- * - Auto-collapse after navigation on mobile
+ * - Smooth animations and visual feedback
  */
 export default function TableOfContents({ 
   headings: propHeadings,
@@ -53,28 +52,31 @@ export default function TableOfContents({
 }: TableOfContentsProps) {
   const [headings, setHeadings] = useState<TOCHeading[]>(propHeadings || []);
   const [activeId, setActiveId] = useState<string>('');
-  const [isExpanded, setIsExpanded] = useState<boolean>(false); // Collapsed by default on mobile
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Determine if we're using sections (legal pages) or headings (blog posts)
   const usingSections = propSections && propSections.length > 0;
-  const items = usingSections ? propSections : headings;
 
   // Check if mobile on mount and resize
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024; // lg breakpoint
       setIsMobile(mobile);
-      // Auto-expand on desktop, collapsed on mobile
-      if (!mobile) {
-        setIsExpanded(true);
+      
+      // Auto-expand first section on desktop, keep collapsed on mobile
+      if (!mobile && headings.length > 0) {
+        const firstH2 = headings.find(h => h.level === 2);
+        if (firstH2) {
+          setExpandedSections(new Set([firstH2.id]));
+        }
       }
     };
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [headings]);
 
   // Auto-extract headings from DOM if not provided via props and not using sections
   useEffect(() => {
@@ -132,6 +134,23 @@ export default function TableOfContents({
       }
 
       setActiveId(currentActiveId);
+
+      // Auto-expand section containing active heading
+      if (currentActiveId) {
+        const activeHeading = headings.find(h => h.id === currentActiveId);
+        if (activeHeading) {
+          if (activeHeading.level === 2) {
+            // If it's an H2, expand it
+            setExpandedSections(prev => new Set([...prev, activeHeading.id]));
+          } else if (activeHeading.level > 2) {
+            // If it's a subheading, find and expand its parent H2
+            const parentH2 = findParentH2(headings, activeHeading);
+            if (parentH2) {
+              setExpandedSections(prev => new Set([...prev, parentH2.id]));
+            }
+          }
+        }
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -140,23 +159,70 @@ export default function TableOfContents({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [headings, enableScrollTracking, usingSections]);
 
+  // Group headings into hierarchical structure
+  const groupedHeadings = useMemo(() => {
+    if (usingSections) return propSections || [];
+    
+    const groups: Array<{
+      id: string;
+      text: string;
+      level: number;
+      children: TOCHeading[];
+    }> = [];
+    
+    let currentGroup: typeof groups[0] | null = null;
+    
+    headings.forEach(heading => {
+      if (heading.level === 2) {
+        // Start new group for H2
+        currentGroup = {
+          id: heading.id,
+          text: heading.text,
+          level: heading.level,
+          children: []
+        };
+        groups.push(currentGroup);
+      } else if (heading.level > 2 && currentGroup) {
+        // Add subheading to current group
+        currentGroup.children.push(heading);
+      } else if (heading.level === 1) {
+        // H1 gets its own group without children
+        groups.push({
+          id: heading.id,
+          text: heading.text,
+          level: heading.level,
+          children: []
+        });
+      }
+    });
+    
+    return groups;
+  }, [headings, usingSections, propSections]);
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
       // Calculate offset for sticky header and padding
-      const headerOffset = 120; // Adjust based on your header height
+      const headerOffset = 120;
       const elementPosition = element.offsetTop - headerOffset;
       
       window.scrollTo({
         top: elementPosition,
         behavior: 'smooth'
       });
-
-      // Auto-collapse on mobile after navigation
-      if (isMobile) {
-        setIsExpanded(false);
-      }
     }
+  };
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
   };
 
   const handleKeyDown = (event: React.KeyboardEvent, id: string) => {
@@ -166,183 +232,125 @@ export default function TableOfContents({
     }
   };
 
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const handleToggleKeyDown = (event: React.KeyboardEvent) => {
+  const handleToggleKeyDown = (event: React.KeyboardEvent, sectionId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      toggleExpanded();
+      toggleSection(sectionId);
     }
   };
 
-  if (!items || items.length === 0) {
+  if (!groupedHeadings || groupedHeadings.length === 0) {
     return null;
   }
 
   return (
     <Card className={`bg-paper-white border-stone-gray/20 shadow-lg ${className}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-2xl font-bold text-forest-green">
-              {title}
-            </CardTitle>
-            {subtitle && (
-              <p className="text-charcoal/70 mt-1">
-                {subtitle}
-              </p>
-            )}
-          </div>
-          
-          {/* Toggle Button - Always visible but more prominent on mobile */}
-          <button
-            onClick={toggleExpanded}
-            onKeyDown={handleToggleKeyDown}
-            className={`
-              flex items-center justify-center
-              w-10 h-10 rounded-lg
-              border-2 border-stone-gray/20
-              hover:border-forest-green/50
-              hover:bg-forest-green/5
-              focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-offset-2
-              transition-all duration-200
-              ${isMobile ? 'bg-forest-green/10' : 'bg-transparent'}
-            `}
-            aria-label={isExpanded ? 'Collapse table of contents' : 'Expand table of contents'}
-            aria-expanded={isExpanded}
-          >
-            <svg
-              className={`w-5 h-5 text-forest-green transition-transform duration-200 ${
-                isExpanded ? 'rotate-180' : 'rotate-0'
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-        </div>
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-forest-green">
+          {title}
+        </CardTitle>
+        {subtitle && (
+          <p className="text-charcoal/70">
+            {subtitle}
+          </p>
+        )}
         
-        {/* Progress indicator when collapsed */}
-        {!isExpanded && activeId && (
+        {/* Reading progress indicator */}
+        {enableScrollTracking && !usingSections && activeId && (
           <div className="mt-3 pt-3 border-t border-stone-gray/20">
             <div className="flex items-center gap-2 text-sm text-charcoal/70">
               <div className="w-2 h-2 rounded-full bg-forest-green animate-pulse"></div>
               <span>
-                Reading: {items.find(item => item.id === activeId)?.[
-                  usingSections ? 'title' : 'text'
-                ] || 'Unknown section'}
+                Reading: {headings.find(h => h.id === activeId)?.text || 'Unknown section'}
               </span>
             </div>
           </div>
         )}
       </CardHeader>
       
-      {/* Collapsible Content */}
-      <div
-        className={`
-          overflow-hidden transition-all duration-300 ease-in-out
-          ${isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}
-        `}
-      >
-        <CardContent className="pt-0">
-          <nav className="space-y-2" aria-labelledby="toc-title">
-            {items.map((item, index) => {
-              const isActive = enableScrollTracking && activeId === item.id;
-              const isSubheading = !usingSections && 'level' in item && item.level > 2;
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => scrollToSection(item.id)}
-                  onKeyDown={(e) => handleKeyDown(e, item.id)}
-                  className={`
-                    w-full 
-                    text-left 
-                    p-3 
-                    rounded-lg 
-                    border 
-                    transition-all 
-                    duration-200 
-                    group
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-forest-green
-                    focus:ring-offset-2
-                    ${isActive 
-                      ? 'border-forest-green bg-forest-green/5 shadow-sm scale-[1.02]' 
-                      : 'border-stone-gray/20 hover:border-forest-green/30 hover:bg-forest-green/5 hover:scale-[1.01]'
-                    }
-                    ${isSubheading ? 'ml-4 border-l-4 border-l-forest-green/20' : ''}
-                  `}
-                  aria-label={`Navigate to ${usingSections ? (item as TOCSection).title : (item as TOCHeading).text}`}
-                >
-                  <div className="flex items-start space-x-3">
-                    {showNumbers && (
-                      <span className={`
-                        flex-shrink-0 
-                        w-7 
-                        h-7 
-                        rounded-full 
-                        flex 
-                        items-center 
-                        justify-center 
-                        text-sm 
-                        font-bold 
-                        transition-colors
-                        ${isActive
-                          ? 'bg-forest-green text-paper-white'
-                          : 'bg-forest-green/10 text-forest-green group-hover:bg-forest-green group-hover:text-paper-white'
-                        }
-                      `}>
-                        {index + 1}
-                      </span>
-                    )}
-                    
-                    {/* Active indicator dot */}
-                    {!showNumbers && (
-                      <div className={`
-                        flex-shrink-0 w-2 h-2 rounded-full mt-2 transition-colors
-                        ${isActive ? 'bg-forest-green' : 'bg-stone-gray/30 group-hover:bg-forest-green/50'}
-                      `} />
-                    )}
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`
-                        font-semibold 
-                        transition-colors
-                        leading-tight
-                        ${isActive 
-                          ? 'text-forest-green' 
-                          : 'text-charcoal/80 group-hover:text-forest-green'
-                        }
-                        ${isSubheading ? 'text-sm' : 'text-base'}
-                      `}>
-                        {usingSections ? (item as TOCSection).title : (item as TOCHeading).text}
-                      </h3>
-                      {usingSections && (item as TOCSection).description && (
-                        <p className="text-sm text-charcoal/60 mt-1 line-clamp-2">
-                          {(item as TOCSection).description}
-                        </p>
+      <CardContent>
+        <nav className="space-y-2" aria-labelledby="toc-title">
+          {groupedHeadings.map((group, groupIndex) => {
+            const isExpanded = expandedSections.has(group.id);
+            const hasChildren = group.children && group.children.length > 0;
+            const isActive = enableScrollTracking && activeId === group.id;
+            const hasActiveChild = enableScrollTracking && group.children?.some(child => child.id === activeId);
+            const shouldHighlight = isActive || hasActiveChild;
+            
+            return (
+              <div key={group.id} className="border border-stone-gray/20 rounded-lg overflow-hidden">
+                {/* Main heading button */}
+                <div className="flex">
+                  <button
+                    onClick={() => scrollToSection(group.id)}
+                    onKeyDown={(e) => handleKeyDown(e, group.id)}
+                    className={`
+                      flex-1 text-left p-4 transition-all duration-200
+                      focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-inset
+                      ${shouldHighlight 
+                        ? 'bg-forest-green/5 text-forest-green' 
+                        : 'hover:bg-forest-green/5 hover:text-forest-green text-charcoal/80'
+                      }
+                    `}
+                    aria-label={`Navigate to ${group.text}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {showNumbers && (
+                        <span className={`
+                          flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center
+                          text-sm font-bold transition-colors
+                          ${shouldHighlight
+                            ? 'bg-forest-green text-paper-white'
+                            : 'bg-forest-green/10 text-forest-green'
+                          }
+                        `}>
+                          {groupIndex + 1}
+                        </span>
                       )}
+                      
+                      {!showNumbers && (
+                        <div className={`
+                          flex-shrink-0 w-2 h-2 rounded-full transition-colors
+                          ${shouldHighlight ? 'bg-forest-green' : 'bg-stone-gray/30'}
+                        `} />
+                      )}
+                      
+                      <div className="flex-1">
+                        <h3 className={`
+                          font-semibold leading-tight
+                          ${group.level === 1 ? 'text-lg' : 'text-base'}
+                        `}>
+                          {group.text}
+                        </h3>
+                        {hasChildren && (
+                          <p className="text-sm text-charcoal/60 mt-1">
+                            {group.children.length} subsection{group.children.length !== 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    
-                    {/* Navigation arrow */}
-                    <div className={`
-                      flex-shrink-0 transition-transform duration-200
-                      ${isActive ? 'translate-x-1' : 'translate-x-0 group-hover:translate-x-1'}
-                    `}>
+                  </button>
+                  
+                  {/* Accordion toggle button for sections with children */}
+                  {hasChildren && (
+                    <button
+                      onClick={() => toggleSection(group.id)}
+                      onKeyDown={(e) => handleToggleKeyDown(e, group.id)}
+                      className={`
+                        flex items-center justify-center w-12 border-l border-stone-gray/20
+                        transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-inset
+                        ${shouldHighlight 
+                          ? 'bg-forest-green/5 text-forest-green' 
+                          : 'hover:bg-forest-green/5 hover:text-forest-green text-charcoal/60'
+                        }
+                      `}
+                      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.text} subsections`}
+                      aria-expanded={isExpanded}
+                    >
                       <svg
-                        className={`w-4 h-4 transition-colors ${
-                          isActive ? 'text-forest-green' : 'text-stone-gray/40 group-hover:text-forest-green'
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isExpanded ? 'rotate-180' : 'rotate-0'
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -352,44 +360,130 @@ export default function TableOfContents({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 5l7 7-7 7"
+                          d="M19 9l-7 7-7-7"
                         />
                       </svg>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Collapsible children */}
+                {hasChildren && (
+                  <div
+                    className={`
+                      overflow-hidden transition-all duration-300 ease-in-out
+                      ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+                    `}
+                  >
+                    <div className="bg-stone-gray/5 border-t border-stone-gray/20">
+                      {group.children.map((child, childIndex) => {
+                        const isChildActive = enableScrollTracking && activeId === child.id;
+                        
+                        return (
+                          <button
+                            key={child.id}
+                            onClick={() => scrollToSection(child.id)}
+                            onKeyDown={(e) => handleKeyDown(e, child.id)}
+                            className={`
+                              w-full text-left p-3 pl-8 transition-all duration-200
+                              border-l-4 border-l-transparent
+                              focus:outline-none focus:ring-2 focus:ring-forest-green focus:ring-inset
+                              ${isChildActive 
+                                ? 'border-l-forest-green bg-forest-green/5 text-forest-green' 
+                                : 'hover:border-l-forest-green/50 hover:bg-forest-green/5 hover:text-forest-green text-charcoal/70'
+                              }
+                              ${childIndex === group.children.length - 1 ? '' : 'border-b border-stone-gray/10'}
+                            `}
+                            aria-label={`Navigate to ${child.text}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`
+                                flex-shrink-0 w-1.5 h-1.5 rounded-full transition-colors
+                                ${isChildActive ? 'bg-forest-green' : 'bg-stone-gray/40'}
+                              `} />
+                              
+                              <h4 className={`
+                                font-medium text-sm leading-tight
+                                ${child.level === 3 ? '' : 'text-xs'}
+                              `}>
+                                {child.text}
+                              </h4>
+                              
+                              {/* Navigation arrow for active child */}
+                              {isChildActive && (
+                                <div className="ml-auto">
+                                  <svg
+                                    className="w-3 h-3 text-forest-green"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9 5l7 7-7 7"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                </button>
-              );
-            })}
-          </nav>
-          
-          {/* Footer with reading progress */}
-          {enableScrollTracking && !usingSections && (
-            <div className="mt-6 pt-4 border-t border-stone-gray/20">
-              <div className="flex items-center justify-between text-sm text-charcoal/60">
-                <span>{items.length} sections</span>
-                <span>
-                  {activeId ? 
-                    `Section ${items.findIndex(item => item.id === activeId) + 1} of ${items.length}` :
-                    'Start reading'
-                  }
-                </span>
+                )}
               </div>
-              
-              {/* Progress bar */}
-              <div className="mt-2 w-full bg-stone-gray/20 rounded-full h-1">
-                <div 
-                  className="bg-forest-green h-1 rounded-full transition-all duration-300"
-                  style={{
-                    width: activeId ? 
-                      `${((items.findIndex(item => item.id === activeId) + 1) / items.length) * 100}%` :
-                      '0%'
-                  }}
-                />
-              </div>
+            );
+          })}
+        </nav>
+        
+        {/* Footer with reading progress */}
+        {enableScrollTracking && !usingSections && (
+          <div className="mt-6 pt-4 border-t border-stone-gray/20">
+            <div className="flex items-center justify-between text-sm text-charcoal/60">
+              <span>{groupedHeadings.length} sections</span>
+              <span>
+                {activeId ? 
+                  `Reading section ${groupedHeadings.findIndex(g => 
+                    g.id === activeId || g.children?.some(c => c.id === activeId)
+                  ) + 1} of ${groupedHeadings.length}` :
+                  'Start reading'
+                }
+              </span>
             </div>
-          )}
-        </CardContent>
-      </div>
+            
+            {/* Progress bar */}
+            <div className="mt-2 w-full bg-stone-gray/20 rounded-full h-1">
+              <div 
+                className="bg-forest-green h-1 rounded-full transition-all duration-300"
+                style={{
+                  width: activeId ? 
+                    `${((groupedHeadings.findIndex(g => 
+                      g.id === activeId || g.children?.some(c => c.id === activeId)
+                    ) + 1) / groupedHeadings.length) * 100}%` :
+                    '0%'
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
+}
+
+// Helper function to find parent H2 for a subheading
+function findParentH2(headings: TOCHeading[], subheading: TOCHeading): TOCHeading | null {
+  const subheadingIndex = headings.findIndex(h => h.id === subheading.id);
+  
+  // Look backwards for the nearest H2
+  for (let i = subheadingIndex - 1; i >= 0; i--) {
+    if (headings[i].level === 2) {
+      return headings[i];
+    }
+  }
+  
+  return null;
 }

@@ -6,11 +6,12 @@ The Table of Contents component has been significantly enhanced with accordion/c
 
 ## ✨ New Features
 
-### 1. **Accordion/Collapsible Interface**
-- **Auto-responsive**: Collapsed by default on mobile (< 1024px), expanded on desktop
+### 1. **Hierarchical Accordion Interface**
+- **Grouped sections**: H2 headings with collapsible H3+ subheadings
+- **Individual toggles**: Each main section can be expanded/collapsed independently
+- **Smart auto-expand**: Active section automatically expands to show current position
 - **Smooth animations**: 300ms ease-in-out transitions for expand/collapse
-- **Toggle button**: Prominent chevron icon with hover and focus states
-- **Keyboard accessible**: Enter/Space keys to toggle
+- **Keyboard accessible**: Enter/Space keys for navigation and toggling
 
 ### 2. **Enhanced Mobile Experience**
 - **Auto-collapse**: Automatically collapses after navigation on mobile
@@ -43,17 +44,26 @@ The Table of Contents component has been significantly enhanced with accordion/c
 ### Visual Hierarchy
 ```
 ┌─ TOC Header ─────────────────────────┐
-│ Title                    [Toggle Btn] │
-│ Subtitle (optional)                   │
-│ Progress indicator (when collapsed)   │
-├─ Collapsible Content ─────────────────┤
-│ ● Section 1                        → │
-│   ○ Subsection 1.1                → │
-│ ● Section 2 (active)               → │
-│ ● Section 3                        → │
+│ Title                                │
+│ Subtitle (optional)                  │
+│ Reading: Current Section             │
+├─ Accordion Sections ─────────────────┤
+│ ┌─ Section 1 ──────────────── [▼] ┐ │
+│ │ ● Introduction               → │ │
+│ │   ○ Getting Started         → │ │
+│ │   ○ Prerequisites           → │ │
+│ └─────────────────────────────────┘ │
+│ ┌─ Section 2 (active) ──────── [▲] ┐│
+│ │ ● Main Content (active)     → │ │
+│ │   ○ Subsection 2.1          → │ │
+│ │   ○ Subsection 2.2 (active) → │ │
+│ └─────────────────────────────────┘ │
+│ ┌─ Section 3 ──────────────── [▼] ┐ │
+│ │ ● Conclusion                → │ │
+│ └─────────────────────────────────┘ │
 ├─ Footer ──────────────────────────────┤
-│ X sections    Section Y of X         │
-│ [████████░░] Progress Bar            │
+│ 3 sections    Reading section 2 of 3 │
+│ [██████░░░░] Progress Bar            │
 └──────────────────────────────────────┘
 ```
 
