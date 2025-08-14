@@ -683,21 +683,11 @@ async function createBlogPost(
     const frontmatter = createFrontmatter(metadata);
     const fullContent = `${frontmatter}\n\n${content}`;
     
+    // Ensure content directory exists
+    await fs.mkdir(CONTENT_DIR, { recursive: true });
+    
     // Write file
-    // Create year-based directory structure
-    const currentYear = new Date().getFullYear().toString();
-    const yearDir = join(CONTENT_DIR, currentYear);
-    await fs.mkdir(yearDir, { recursive: true });
-    
-    // Generate filename with date prefix
-    const currentDate = new Date();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-    const day = String(currentDate.getDate()).padStart(2, "0");
-    const datePrefix = `${month}-${day}`;
-    
-    // Write file in year directory with date prefix
-    const fileName = `${datePrefix}-${slug}.mdx`;
-    const filePath = join(yearDir, fileName);
+    const filePath = join(CONTENT_DIR, `${slug}.mdx`);
     await fs.writeFile(filePath, fullContent, 'utf-8');
     
     console.log(`✅ Blog post created successfully!`);
@@ -799,4 +789,4 @@ if (require.main === module) {
   main().catch(console.error);
 }
 
-export { calculateReadingTime,createBlogPost, generateSlug };
+export { createBlogPost, generateSlug, calculateReadingTime };
