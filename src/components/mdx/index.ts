@@ -54,3 +54,6 @@ export {
   AccessibleText,
   SkipLink
 } from './AccessibleTypography';
+
+// Debug Components
+export { TOCDebug } from './TOCDebug';

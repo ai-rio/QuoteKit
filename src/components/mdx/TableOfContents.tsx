@@ -128,9 +128,13 @@ export default function TableOfContents({
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
+      // Calculate offset for sticky header and padding
+      const headerOffset = 120; // Adjust based on your header height
+      const elementPosition = element.offsetTop - headerOffset;
+      
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
       });
     }
   };

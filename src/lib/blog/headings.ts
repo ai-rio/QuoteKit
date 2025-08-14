@@ -5,6 +5,8 @@
  * to generate Table of Contents and navigation structures.
  */
 
+import { generateHeadingId } from '@/utils/heading-id';
+
 export interface TOCHeading {
   id: string;
   text: string;
@@ -50,35 +52,6 @@ let generatedIds = new Map<string, number>();
  */
 export function resetGeneratedIds(): void {
   generatedIds = new Map<string, number>();
-}
-
-/**
- * Generate a URL-safe ID from heading text
- */
-export function generateHeadingId(text: string): string {
-  // Ensure we have a valid string to work with
-  if (typeof text !== 'string' || !text) {
-    console.warn('generateHeadingId received invalid text:', text);
-    return 'heading-' + Math.random().toString(36).substr(2, 9);
-  }
-
-  const baseId = text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-  
-  // If after cleaning we have no valid ID, generate a fallback
-  if (!baseId) {
-    return 'heading-' + Math.random().toString(36).substr(2, 9);
-  }
-  
-  // Handle duplicates by adding a counter
-  const count = generatedIds.get(baseId) || 0;
-  generatedIds.set(baseId, count + 1);
-  
-  return count === 0 ? baseId : `${baseId}-${count}`;
 }
 
 /**
