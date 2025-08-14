@@ -64,16 +64,9 @@ export default function TableOfContents({
       const mobile = window.innerWidth < 1024; // lg breakpoint
       setIsMobile(mobile);
       
-      // Auto-expand first section on desktop, keep all collapsed on mobile
-      if (!mobile && headings.length > 0) {
-        const firstH2 = headings.find(h => h.level === 2);
-        if (firstH2) {
-          setExpandedSections(new Set([firstH2.id]));
-        }
-      } else if (mobile) {
-        // Ensure all sections are collapsed on mobile
-        setExpandedSections(new Set());
-      }
+      // Keep all sections collapsed initially on both desktop and mobile
+      // Users can choose which section to explore
+      setExpandedSections(new Set());
     };
 
     checkMobile();

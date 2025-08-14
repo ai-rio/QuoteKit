@@ -9,6 +9,7 @@ The Table of Contents component has been significantly enhanced with accordion/c
 ### 1. **Single-Section Accordion Interface**
 - **Grouped sections**: H2 headings with collapsible H3+ subheadings
 - **Exclusive expansion**: Only one section can be expanded at a time (classic accordion)
+- **Clean initial state**: All sections collapsed by default for minimal visual clutter
 - **Smart auto-expand**: Active section automatically expands, others collapse
 - **Smooth animations**: 300ms ease-in-out transitions for expand/collapse
 - **Keyboard accessible**: Enter/Space keys for navigation and toggling
