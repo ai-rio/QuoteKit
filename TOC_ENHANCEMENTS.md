@@ -6,17 +6,17 @@ The Table of Contents component has been significantly enhanced with accordion/c
 
 ## ✨ New Features
 
-### 1. **Hierarchical Accordion Interface**
+### 1. **Single-Section Accordion Interface**
 - **Grouped sections**: H2 headings with collapsible H3+ subheadings
-- **Individual toggles**: Each main section can be expanded/collapsed independently
-- **Smart auto-expand**: Active section automatically expands to show current position
+- **Exclusive expansion**: Only one section can be expanded at a time (classic accordion)
+- **Smart auto-expand**: Active section automatically expands, others collapse
 - **Smooth animations**: 300ms ease-in-out transitions for expand/collapse
 - **Keyboard accessible**: Enter/Space keys for navigation and toggling
 
 ### 2. **Enhanced Mobile Experience**
-- **Auto-collapse**: Automatically collapses after navigation on mobile
-- **Progress indicator**: Shows current reading section when collapsed
-- **Compact design**: Optimized for small screens
+- **Single-section focus**: Only one section expanded reduces cognitive load
+- **Clean interface**: Collapsed sections keep the TOC compact and organized
+- **Progress indicator**: Shows current reading section clearly
 - **Touch-friendly**: Larger touch targets and improved spacing
 
 ### 3. **Visual Improvements**

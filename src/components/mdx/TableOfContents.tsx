@@ -64,12 +64,15 @@ export default function TableOfContents({
       const mobile = window.innerWidth < 1024; // lg breakpoint
       setIsMobile(mobile);
       
-      // Auto-expand first section on desktop, keep collapsed on mobile
+      // Auto-expand first section on desktop, keep all collapsed on mobile
       if (!mobile && headings.length > 0) {
         const firstH2 = headings.find(h => h.level === 2);
         if (firstH2) {
           setExpandedSections(new Set([firstH2.id]));
         }
+      } else if (mobile) {
+        // Ensure all sections are collapsed on mobile
+        setExpandedSections(new Set());
       }
     };
 
@@ -135,18 +138,18 @@ export default function TableOfContents({
 
       setActiveId(currentActiveId);
 
-      // Auto-expand section containing active heading
+      // Auto-expand section containing active heading (collapse all others)
       if (currentActiveId) {
         const activeHeading = headings.find(h => h.id === currentActiveId);
         if (activeHeading) {
           if (activeHeading.level === 2) {
-            // If it's an H2, expand it
-            setExpandedSections(prev => new Set([...prev, activeHeading.id]));
+            // If it's an H2, expand only this section
+            setExpandedSections(new Set([activeHeading.id]));
           } else if (activeHeading.level > 2) {
-            // If it's a subheading, find and expand its parent H2
+            // If it's a subheading, find and expand only its parent H2
             const parentH2 = findParentH2(headings, activeHeading);
             if (parentH2) {
-              setExpandedSections(prev => new Set([...prev, parentH2.id]));
+              setExpandedSections(new Set([parentH2.id]));
             }
           }
         }
@@ -215,13 +218,13 @@ export default function TableOfContents({
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(sectionId)) {
-        newSet.delete(sectionId);
+      if (prev.has(sectionId)) {
+        // If clicking on already expanded section, collapse it
+        return new Set();
       } else {
-        newSet.add(sectionId);
+        // If clicking on collapsed section, expand only this one (collapse all others)
+        return new Set([sectionId]);
       }
-      return newSet;
     });
   };
 
