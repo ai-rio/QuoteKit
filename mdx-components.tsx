@@ -131,7 +131,11 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         href={href} 
         className="
           text-forest-green 
-          hover:text-equipment-yellow 
+          hover:text-charcoal
+          focus:text-charcoal
+          focus:outline-2
+          focus:outline-forest-green
+          focus:outline-offset-2
           underline 
           transition-colors 
           duration-200
