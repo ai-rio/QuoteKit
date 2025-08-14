@@ -97,31 +97,61 @@ export function PricingCalculator({
   };
 
   return (
-    <Card className={cn('mb-6 border-forest-green/20', className)}>
-      <CardHeader className="bg-forest-green/5">
-        <CardTitle className="flex items-center gap-2 text-forest-green">
-          <CalculatorIcon className="w-5 h-5" />
+    <Card className={cn('mb-6 border-forest-green/20 shadow-lg', className)}>
+      <CardHeader className="bg-light-concrete border-b border-stone-gray/20">
+        <CardTitle className="flex items-center gap-2 text-forest-green text-2xl font-bold">
+          <CalculatorIcon className="w-6 h-6" />
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CardContent className="p-8 bg-paper-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Input Section */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <Label htmlFor="service-type" className="text-charcoal font-medium">
+              <Label 
+                htmlFor="service-type" 
+                className="text-lg font-semibold text-charcoal mb-2 block"
+              >
                 Service Type
               </Label>
               <Select value={selectedService.id} onValueChange={handleServiceChange}>
-                <SelectTrigger id="service-type" className="mt-1">
+                <SelectTrigger 
+                  id="service-type" 
+                  className="
+                    mt-2 
+                    h-12 
+                    text-lg 
+                    bg-paper-white 
+                    border-2 
+                    border-stone-gray 
+                    text-charcoal
+                    focus:border-forest-green 
+                    focus:ring-2 
+                    focus:ring-forest-green/20
+                    hover:border-forest-green/50
+                  "
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-paper-white border-2 border-stone-gray">
                   {serviceTypes.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
+                    <SelectItem 
+                      key={service.id} 
+                      value={service.id}
+                      className="
+                        text-charcoal 
+                        hover:bg-light-concrete 
+                        focus:bg-light-concrete
+                        cursor-pointer
+                        p-4
+                      "
+                    >
                       <div>
-                        <div className="font-medium">{service.name}</div>
-                        <div className="text-sm text-stone-gray">
+                        <div className="font-semibold text-lg text-charcoal">
+                          {service.name}
+                        </div>
+                        <div className="text-base text-charcoal/80 mt-1">
                           ${service.baseRate.toFixed(3)} {service.unit}
                         </div>
                       </div>
@@ -129,13 +159,16 @@ export function PricingCalculator({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-sm text-stone-gray mt-1">
+              <p className="text-base text-charcoal/80 mt-2 leading-relaxed">
                 {selectedService.description}
               </p>
             </div>
 
             <div>
-              <Label htmlFor="area" className="text-charcoal font-medium">
+              <Label 
+                htmlFor="area" 
+                className="text-lg font-semibold text-charcoal mb-2 block"
+              >
                 Area ({selectedService.unit.includes('sq ft') ? 'Square Feet' : 'Linear Feet'})
               </Label>
               <Input
@@ -144,14 +177,30 @@ export function PricingCalculator({
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
                 placeholder="Enter area"
-                className="mt-1"
+                className="
+                  mt-2 
+                  h-12 
+                  text-lg 
+                  bg-paper-white 
+                  border-2 
+                  border-stone-gray 
+                  text-charcoal
+                  placeholder:text-charcoal/60
+                  focus:border-forest-green 
+                  focus:ring-2 
+                  focus:ring-forest-green/20
+                  hover:border-forest-green/50
+                "
                 min="0"
                 step="1"
               />
             </div>
 
             <div>
-              <Label htmlFor="tax-rate" className="text-charcoal font-medium">
+              <Label 
+                htmlFor="tax-rate" 
+                className="text-lg font-semibold text-charcoal mb-2 block"
+              >
                 Tax Rate (%)
               </Label>
               <Input
@@ -160,7 +209,20 @@ export function PricingCalculator({
                 value={taxRate}
                 onChange={(e) => setTaxRate(e.target.value)}
                 placeholder="8.25"
-                className="mt-1"
+                className="
+                  mt-2 
+                  h-12 
+                  text-lg 
+                  bg-paper-white 
+                  border-2 
+                  border-stone-gray 
+                  text-charcoal
+                  placeholder:text-charcoal/60
+                  focus:border-forest-green 
+                  focus:ring-2 
+                  focus:ring-forest-green/20
+                  hover:border-forest-green/50
+                "
                 min="0"
                 max="20"
                 step="0.01"
@@ -169,41 +231,52 @@ export function PricingCalculator({
           </div>
 
           {/* Results Section */}
-          <div className="space-y-4">
-            <div className="bg-light-concrete rounded-lg p-4">
-              <h4 className="font-semibold text-charcoal mb-3 flex items-center gap-2">
-                <DollarSignIcon className="w-4 h-4" />
+          <div className="space-y-6">
+            <div className="bg-light-concrete rounded-2xl p-6 border-2 border-stone-gray/20 shadow-sm">
+              <h4 className="text-xl font-bold text-charcoal mb-4 flex items-center gap-2">
+                <DollarSignIcon className="w-5 h-5" />
                 Price Estimate
               </h4>
               
               {showBreakdown && (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-stone-gray">Subtotal:</span>
-                    <span className="font-medium">${results.subtotal.toFixed(2)}</span>
+                <div className="space-y-3 text-lg mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-charcoal/80 font-medium">Subtotal:</span>
+                    <span className="font-semibold text-charcoal">
+                      ${results.subtotal.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-gray">Tax ({taxRate}%):</span>
-                    <span className="font-medium">${results.tax.toFixed(2)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-charcoal/80 font-medium">Tax ({taxRate}%):</span>
+                    <span className="font-semibold text-charcoal">
+                      ${results.tax.toFixed(2)}
+                    </span>
                   </div>
-                  <hr className="border-stone-gray/30" />
+                  <hr className="border-stone-gray/50 my-3" />
                 </div>
               )}
               
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-charcoal">Total:</span>
-                <span className="text-2xl font-bold text-forest-green">
+              <div className="flex justify-between items-center bg-paper-white rounded-xl p-4 border-2 border-forest-green/20">
+                <span className="text-xl font-bold text-charcoal">Total:</span>
+                <span className="text-3xl font-black text-forest-green">
                   ${results.total.toFixed(2)}
                 </span>
               </div>
             </div>
 
-            <div className="bg-equipment-yellow/10 rounded-lg p-4 border border-equipment-yellow/20">
-              <p className="text-sm text-charcoal">
-                <strong>Note:</strong> This is an estimate based on standard rates. 
-                Actual pricing may vary based on property conditions, accessibility, 
-                and additional services required.
-              </p>
+            <div className="bg-light-concrete rounded-2xl p-6 border-2 border-equipment-yellow/30 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-equipment-yellow flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-charcoal font-bold text-sm">!</span>
+                </div>
+                <div>
+                  <p className="text-lg text-charcoal leading-relaxed">
+                    <strong className="font-semibold">Note:</strong> This is an estimate based on standard rates. 
+                    Actual pricing may vary based on property conditions, accessibility, 
+                    and additional services required.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

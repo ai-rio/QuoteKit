@@ -102,6 +102,13 @@ const tests = [
   { name: 'Table Headers', fg: COLORS['forest-green'], bg: COLORS['light-concrete'], large: false },
   { name: 'Success Callouts (FIXED)', fg: COLORS['charcoal'], bg: COLORS['light-concrete'], large: false },
   { name: 'Error Callouts (FIXED)', fg: COLORS['charcoal'], bg: COLORS['light-concrete'], large: false },
+  
+  // PricingCalculator Component Tests
+  { name: 'Calculator Labels', fg: COLORS['charcoal'], bg: COLORS['paper-white'], large: false },
+  { name: 'Calculator Input Text', fg: COLORS['charcoal'], bg: COLORS['paper-white'], large: false },
+  { name: 'Calculator Input Placeholder', fg: COLORS['charcoal'] + '99', bg: COLORS['paper-white'], large: false }, // 60% opacity
+  { name: 'Calculator Results Background', fg: COLORS['charcoal'], bg: COLORS['light-concrete'], large: false },
+  { name: 'Calculator Note Text', fg: COLORS['charcoal'], bg: COLORS['light-concrete'], large: false },
 ];
 
 let totalTests = 0;
