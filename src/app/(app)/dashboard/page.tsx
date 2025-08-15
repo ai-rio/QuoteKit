@@ -2,11 +2,13 @@ import { CheckCircle, Crown, DollarSign, FileText, List, Plus, Send, Settings, T
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
+import { FeedbackIntegrationWrapper } from "@/components/feedback/feedback-integration-wrapper"
 import { HelpMenuWrapper } from "@/components/help/HelpMenuWrapper"
 import { Button } from "@/components/ui/button"
 import { PageBreadcrumbs } from "@/components/ui/page-breadcrumbs"
 import { DashboardUsageAnalytics } from "@/components/UsageAnalyticsDashboard"
 import { getDashboardData } from "@/features/dashboard/actions"
+import { DashboardSatisfactionSurvey } from "@/features/dashboard/components/dashboard-satisfaction-survey"
 import { DashboardTrackingWrapper } from "@/features/dashboard/components/dashboard-tracking-wrapper"
 import { QuoteStatusBadge } from "@/features/quotes/components/QuoteStatusBadge"
 import { createSupabaseServerClient } from "@/libs/supabase/supabase-server-client"
@@ -128,6 +130,13 @@ export default async function DashboardPage() {
         stats={dashboardData.stats}
         userTier={user.user_metadata?.subscriptionTier || 'free'}
         isPremium={isPremium}
+      />
+      
+      {/* Dashboard satisfaction survey trigger */}
+      <DashboardSatisfactionSurvey
+        userTier={user.user_metadata?.subscriptionTier || 'free'}
+        isPremium={isPremium}
+        stats={dashboardData.stats}
       />
       
       <PageBreadcrumbs />
@@ -308,6 +317,31 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* FB-006 & FB-008: Floating Feedback Widget + User Context Tracking */}
+      <FeedbackIntegrationWrapper
+        features={{
+          floatingWidget: true,
+          contextTracking: true
+        }}
+        widgetConfig={{
+          position: 'bottom-right',
+          showDelay: 5000,
+          autoHideAfter: 60000,
+          hideOnPages: ['/login', '/signup', '/auth/*']
+        }}
+        trackingConfig={{
+          trackUsageStats: true,
+          trackSessionEvents: true,
+          customAttributes: {
+            page: 'dashboard',
+            dashboardStatsLoaded: true,
+            hasRecentActivity: dashboardData.recentQuotes.length > 0,
+            isPremium,
+            subscriptionTier: user.user_metadata?.subscriptionTier || 'free'
+          }
+        }}
+      />
     </div>
   )
 }

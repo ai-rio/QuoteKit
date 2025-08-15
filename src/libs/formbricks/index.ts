@@ -5,6 +5,7 @@
  * implementing the technical architecture defined in the documentation.
  */
 
+export { FormbricksContextSync, getContextSync } from './context-sync';
 export { FormbricksManager, getFormbricksManager } from './formbricks-manager';
 export { FormbricksProvider } from './formbricks-provider';
 export * from './tracking-utils';

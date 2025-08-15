@@ -24,6 +24,8 @@ export interface FormbricksEvent {
 export const FORMBRICKS_EVENTS = {
   // Dashboard Events
   DASHBOARD_VISIT: 'dashboard_visit',
+  DASHBOARD_SATISFACTION_SURVEY_TRIGGERED: 'dashboard_satisfaction_survey_triggered',
+  DASHBOARD_INTERACTION: 'dashboard_interaction',
   USAGE_LIMIT_REACHED: 'usage_limit_reached',
   UPGRADE_PROMPT_SHOWN: 'upgrade_prompt_shown',
   QUICK_ACTION_CLICKED: 'quick_action_clicked',
@@ -91,6 +93,14 @@ export const FORMBRICKS_EVENTS = {
   ANALYTICS_VIEWED: 'analytics_viewed',
   EXPORT_GENERATED: 'export_generated',
   REPORT_DOWNLOADED: 'report_downloaded',
+  
+  // Feedback Widget Events
+  FEEDBACK_WIDGET_SHOWN: 'feedback_widget_shown',
+  FEEDBACK_WIDGET_CLICKED: 'feedback_widget_clicked',
+  FEEDBACK_GENERAL: 'feedback_general',
+  FEEDBACK_FEATURE_REQUEST: 'feedback_feature_request',
+  FEEDBACK_BUG_REPORT: 'feedback_bug_report',
+  FEEDBACK_APPRECIATION: 'feedback_appreciation',
 } as const;
 
 export type FormbricksEventName = typeof FORMBRICKS_EVENTS[keyof typeof FORMBRICKS_EVENTS];

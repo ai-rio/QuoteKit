@@ -158,64 +158,108 @@ export class FormbricksManager {
       console.log('🌍 Browser environment detected, proceeding with SDK setup...');
       console.log('📦 Formbricks SDK is properly imported and ready');
 
-      // Initialize Formbricks SDK using v4 API
+      // Initialize Formbricks SDK using v4 API with enhanced error handling
       const setupConfig = {
         environmentId: config.environmentId,
         appUrl: config.appUrl || 'https://app.formbricks.com',
+        debug: true, // Enable debug mode for better error reporting
       };
 
       console.log('⚙️ About to call formbricks.setup() with config:', setupConfig);
       console.log('🔍 Pre-setup SDK state:', {
-        formbricksType: typeof formbricks,
+        formbricks: typeof formbricks,
         setupMethod: typeof formbricks.setup,
         formbricksKeys: Object.keys(formbricks || {}),
         setupConfigValid: !!(setupConfig.environmentId && setupConfig.appUrl),
+        windowLocation: typeof window !== 'undefined' ? window.location.origin : 'N/A',
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent.substring(0, 100) : 'N/A',
       });
       
-      // Add a try-catch specifically around the setup call
-      try {
-        console.log('📞 Calling formbricks.setup() now...');
-        const setupResult = formbricks.setup(setupConfig);
-        console.log('📦 Formbricks SDK setup() call completed successfully');
-        console.log('📦 Setup result:', setupResult);
-        
-        // Check immediate post-setup state
-        console.log('🔍 Post-setup immediate state:', {
-          windowFormbricks: typeof window !== 'undefined' ? typeof (window as any).formbricks : 'N/A',
-          windowFormbricksKeys: typeof window !== 'undefined' && (window as any).formbricks ? Object.keys((window as any).formbricks) : 'N/A',
-          setupComplete: true,
-        });
-        
-      } catch (setupError) {
-        console.error('💥 Error during formbricks.setup() call:', setupError);
-        console.error('💥 Setup error details:', {
-          message: setupError instanceof Error ? setupError.message : 'Unknown error',
-          name: setupError instanceof Error ? setupError.name : 'Unknown',
-          stack: setupError instanceof Error ? setupError.stack : undefined,
-          type: typeof setupError,
-          setupConfig,
-          timestamp: new Date().toISOString(),
-        });
-        
-        // Check if this is the specific validation error we're debugging
-        if (setupError instanceof Error && setupError.message.includes('network_error')) {
-          console.error('🎯 DETECTED THE NETWORK/VALIDATION ERROR!');
-          console.error('🔍 This is likely a configuration or API connectivity issue');
-          console.error('🔍 Environment ID format check:', {
-            envId: config.environmentId,
-            length: config.environmentId.length,
-            startsWithDev: config.environmentId.startsWith('dev_'),
-            isValidFormat: /^dev_[a-z0-9]+$/.test(config.environmentId),
-          });
-          console.error('🔍 API URL check:', {
-            apiUrl: config.appUrl,
-            isHttps: config.appUrl?.startsWith('https://'),
-            isFormbricksApp: config.appUrl?.includes('app.formbricks.com'),
-          });
-        }
-        
-        throw setupError;
+      // Wait a moment to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Pre-flight check: Validate environment ID exists before attempting SDK setup
+      console.log('🔍 Pre-flight check: Validating environment ID...');
+      const isValidEnvironment = await this.validateEnvironmentId(config.environmentId, config.appUrl);
+      if (!isValidEnvironment) {
+        throw new Error(`Environment ID validation failed: ${config.environmentId} not found in Formbricks account`);
       }
+      
+      // Add a try-catch specifically around the setup call with retry logic
+      let setupAttempts = 0;
+      const maxSetupAttempts = 3;
+      
+      while (setupAttempts < maxSetupAttempts) {
+        try {
+          setupAttempts++;
+          console.log(`📞 Calling formbricks.setup() now (attempt ${setupAttempts}/${maxSetupAttempts})...`);
+          
+          // Call setup with await if it returns a promise
+          const setupResult = await Promise.resolve(formbricks.setup(setupConfig));
+          
+          console.log('📦 Formbricks SDK setup() call completed successfully');
+          console.log('📦 Setup result:', setupResult);
+          
+          // Break out of retry loop on success
+          break;
+          
+        } catch (setupError) {
+          console.error(`💥 Error during formbricks.setup() call (attempt ${setupAttempts}/${maxSetupAttempts}):`, setupError);
+          console.error('💥 Setup error details:', {
+            message: setupError instanceof Error ? setupError.message : 'Unknown error',
+            name: setupError instanceof Error ? setupError.name : 'Unknown',
+            stack: setupError instanceof Error ? setupError.stack : undefined,
+            type: typeof setupError,
+            setupConfig,
+            attempt: setupAttempts,
+            timestamp: new Date().toISOString(),
+          });
+          
+          // Check if this is the specific validation error we're debugging
+          if (setupError instanceof Error && 
+              (setupError.message.includes('network_error') || 
+               setupError.message.includes('404') ||
+               setupError.message.includes('Environment not found'))) {
+            console.error('🎯 DETECTED ENVIRONMENT ID VALIDATION ERROR!');
+            console.error('🔍 The environment ID does not exist in your Formbricks account');
+            console.error('🔍 Environment ID format check:', {
+              envId: config.environmentId,
+              length: config.environmentId.length,
+              startsWithCme: config.environmentId.startsWith('cme'),
+              isValidFormat: /^cme[a-z0-9]+$/.test(config.environmentId),
+            });
+            console.error('🔍 API URL check:', {
+              apiUrl: config.appUrl,
+              isHttps: config.appUrl?.startsWith('https://'),
+              isFormbricksApp: config.appUrl?.includes('app.formbricks.com'),
+            });
+            
+            // For environment not found errors, don't retry
+            if (setupError.message.includes('404') || setupError.message.includes('Environment not found')) {
+              console.error('💥 Environment ID not found - skipping retries and failing gracefully');
+              throw new Error(`Formbricks Environment ID not found: ${config.environmentId}. Please verify the environment ID in your Formbricks account.`);
+            }
+          }
+          
+          // If this is the last attempt, throw the error
+          if (setupAttempts >= maxSetupAttempts) {
+            console.error('💥 All setup attempts failed, throwing error...');
+            throw setupError;
+          }
+          
+          // Wait before retrying
+          console.log(`⏳ Waiting 1 second before retry attempt ${setupAttempts + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      // Check immediate post-setup state
+      console.log('🔍 Post-setup immediate state:', {
+        windowFormbricks: typeof window !== 'undefined' ? typeof (window as any).formbricks : 'N/A',
+        windowFormbricksKeys: typeof window !== 'undefined' && (window as any).formbricks ? Object.keys((window as any).formbricks) : 'N/A',
+        setupComplete: true,
+        attempts: setupAttempts,
+      });
 
       // Wait for the SDK to fully initialize and verify it's actually ready
       await this.waitForSDKReady();
@@ -551,6 +595,46 @@ export class FormbricksManager {
     console.log(`fetch('${config.appUrl}/api/v1/management/environment/${config.environmentId}', { method: 'HEAD' })`);
     
     console.groupEnd();
+  }
+
+  /**
+   * Validate environment ID exists in Formbricks account
+   */
+  private async validateEnvironmentId(environmentId: string, appUrl?: string): Promise<boolean> {
+    try {
+      const apiHost = appUrl || 'https://app.formbricks.com';
+      const testUrl = `${apiHost}/api/v1/environments/${environmentId}`;
+      
+      console.log('🔍 Validating environment ID with URL:', testUrl);
+      
+      const response = await fetch(testUrl, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'QuoteKit-Formbricks-Validation/1.0.0',
+        },
+      });
+      
+      console.log('🔍 Validation response status:', response.status);
+      
+      if (response.status === 200) {
+        console.log('✅ Environment ID validation successful');
+        return true;
+      } else if (response.status === 404) {
+        console.error('❌ Environment ID not found (404)');
+        console.error('💡 This environment ID does not exist in your Formbricks account');
+        console.error('💡 Please check your Formbricks dashboard and update .env file');
+        return false;
+      } else {
+        console.warn(`⚠️ Unexpected validation response: ${response.status}`);
+        // Allow SDK initialization to proceed for other status codes (might be auth-related)
+        return true;
+      }
+    } catch (error) {
+      console.warn('⚠️ Environment ID validation failed with error:', error);
+      console.warn('⚠️ Proceeding with SDK initialization despite validation error');
+      // Allow SDK initialization to proceed if validation fails (network issues, etc.)
+      return true;
+    }
   }
 
   /**

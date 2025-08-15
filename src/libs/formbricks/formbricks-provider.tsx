@@ -108,9 +108,30 @@ export function FormbricksProvider() {
     }).catch((error) => {
       console.error('💥 FormbricksProvider initialization promise rejected:', error);
       console.error('🔍 Error message:', error?.message);
-      console.error('🔍 Error stack:', error?.stack);
-      console.error('🔍 Error type:', typeof error);
-      console.error('🔍 Error properties:', Object.keys(error || {}));
+      
+      // Provide specific guidance for environment ID errors
+      if (error?.message?.includes('Environment ID validation failed') || 
+          error?.message?.includes('not found in Formbricks account')) {
+        console.error('\n🎯 FORMBRICKS ENVIRONMENT ID ERROR');
+        console.error('═══════════════════════════════════════════════════════════════════════════');
+        console.error('❌ The environment ID in your .env file does not exist in your Formbricks account');
+        console.error('\n💡 TO FIX THIS:');
+        console.error('1. Go to https://app.formbricks.com');
+        console.error('2. Log into your account (or create a new one)');
+        console.error('3. Create a new project or select an existing one');
+        console.error('4. Go to Project Settings > General');
+        console.error('5. Copy the Environment ID');
+        console.error('6. Update NEXT_PUBLIC_FORMBRICKS_ENV_ID in your .env file');
+        console.error('\n🔍 CURRENT CONFIGURATION:');
+        console.error(`   Environment ID: ${environmentId}`);
+        console.error(`   API Host: ${appUrl}`);
+        console.error('\n⚠️ Until this is fixed, feedback collection will be disabled but the app will continue to work normally.');
+        console.error('═══════════════════════════════════════════════════════════════════════════\n');
+      } else {
+        console.error('🔍 Error stack:', error?.stack);
+        console.error('🔍 Error type:', typeof error);
+        console.error('🔍 Error properties:', Object.keys(error || {}));
+      }
     });
     
     console.log('🚀 FormbricksProvider useEffect triggered - END');
