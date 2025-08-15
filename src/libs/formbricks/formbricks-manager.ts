@@ -12,9 +12,12 @@ export class FormbricksManager {
   private initialized = false;
   private initializationPromise: Promise<void> | null = null;
   private isAvailable = false;
+  private eventQueue: Array<{ eventName: string; properties?: Record<string, any> }> = [];
+  private attributeQueue: Record<string, any> = {};
 
   private constructor() {
     // Private constructor for singleton pattern
+    console.log('🏗️ FormbricksManager constructor called');
   }
 
   /**
@@ -47,33 +50,226 @@ export class FormbricksManager {
   }
 
   /**
+   * Wait for the Formbricks SDK to be fully ready
+   */
+  private async waitForSDKReady(): Promise<void> {
+    const maxAttempts = 50; // 5 seconds with 100ms intervals
+    const intervalMs = 100;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        console.log(`🔍 Attempt ${attempt}/${maxAttempts}: Checking if Formbricks SDK is ready...`);
+        
+        // Check if the SDK is properly loaded and initialized
+        if (typeof window !== 'undefined' && (window as any).formbricks) {
+          const fb = (window as any).formbricks;
+          console.log('🔍 Found window.formbricks object:', {
+            type: typeof fb,
+            hasTrack: typeof fb.track === 'function',
+            hasSetAttributes: typeof fb.setAttributes === 'function',
+            hasRegisterRouteChange: typeof fb.registerRouteChange === 'function',
+            keys: Object.keys(fb || {})
+          });
+          
+          // Check if essential methods are available
+          if (typeof fb.track === 'function' && 
+              typeof fb.setAttributes === 'function' && 
+              typeof fb.registerRouteChange === 'function') {
+            console.log('✅ Formbricks SDK is fully ready! All methods are available.');
+            return;
+          }
+        }
+        
+        // Also check if the imported formbricks object has the methods
+        if (typeof formbricks.track === 'function' && 
+            typeof formbricks.setAttributes === 'function' && 
+            typeof formbricks.registerRouteChange === 'function') {
+          console.log('✅ Formbricks SDK ready via import! All methods are available.');
+          return;
+        }
+        
+        console.log(`⏳ SDK not ready yet (attempt ${attempt}/${maxAttempts}), waiting...`);
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      } catch (error) {
+        console.warn(`⚠️ Error checking SDK readiness on attempt ${attempt}:`, error);
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      }
+    }
+    
+    console.warn('⚠️ Formbricks SDK did not become ready within timeout, but continuing...');
+    console.warn('🔍 Final SDK state check:', {
+      windowFormbricks: typeof window !== 'undefined' ? typeof (window as any).formbricks : 'N/A',
+      importedFormbricks: typeof formbricks,
+      importedTrack: typeof formbricks.track,
+      importedSetAttributes: typeof formbricks.setAttributes,
+      importedRegisterRouteChange: typeof formbricks.registerRouteChange,
+    });
+  }
+
+  /**
    * Perform the actual SDK initialization
    */
   private async performInitialization(config: { environmentId: string; appUrl?: string }): Promise<void> {
     try {
+      console.log('🔄 Starting Formbricks initialization - DETAILED...');
+      console.log('🔄 Config received:', {
+        environmentId: config.environmentId,
+        environmentIdLength: config.environmentId?.length,
+        appUrl: config.appUrl,
+        window: typeof window !== 'undefined' ? 'available' : 'undefined',
+        formbricksImported: typeof formbricks !== 'undefined' ? 'YES' : 'NO',
+        formbricksSetupFunction: typeof formbricks?.setup === 'function' ? 'YES' : 'NO'
+      });
+
+      // Enhanced debugging: Check current window state
+      if (typeof window !== 'undefined') {
+        console.log('🌐 Window environment details:', {
+          userAgent: window.navigator.userAgent,
+          location: window.location.href,
+          protocol: window.location.protocol,
+          hostname: window.location.hostname,
+          hasDocument: typeof document !== 'undefined',
+          readyState: document?.readyState,
+          existingFormbricks: !!(window as any).formbricks,
+          existingFormbricksType: typeof (window as any).formbricks,
+        });
+      }
+
       // Validate required configuration
       if (!config.environmentId) {
         throw new Error('Formbricks environmentId is required');
       }
 
+      if (config.environmentId.length < 10) {
+        throw new Error(`Formbricks environmentId seems invalid: "${config.environmentId}" (too short)`);
+      }
+
       // Check if we're in a browser environment
       if (typeof window === 'undefined') {
-        console.warn('Formbricks can only be initialized in browser environment');
+        console.warn('⚠️ Formbricks can only be initialized in browser environment');
         return;
       }
 
+      // Check if Formbricks SDK is properly imported
+      if (typeof formbricks === 'undefined' || typeof formbricks.setup !== 'function') {
+        throw new Error('Formbricks SDK not properly imported or setup function not available');
+      }
+
+      console.log('🌍 Browser environment detected, proceeding with SDK setup...');
+      console.log('📦 Formbricks SDK is properly imported and ready');
+
       // Initialize Formbricks SDK using v4 API
-      formbricks.setup({
+      const setupConfig = {
         environmentId: config.environmentId,
         appUrl: config.appUrl || 'https://app.formbricks.com',
+      };
+
+      console.log('⚙️ About to call formbricks.setup() with config:', setupConfig);
+      console.log('🔍 Pre-setup SDK state:', {
+        formbricksType: typeof formbricks,
+        setupMethod: typeof formbricks.setup,
+        formbricksKeys: Object.keys(formbricks || {}),
+        setupConfigValid: !!(setupConfig.environmentId && setupConfig.appUrl),
       });
+      
+      // Add a try-catch specifically around the setup call
+      try {
+        console.log('📞 Calling formbricks.setup() now...');
+        const setupResult = formbricks.setup(setupConfig);
+        console.log('📦 Formbricks SDK setup() call completed successfully');
+        console.log('📦 Setup result:', setupResult);
+        
+        // Check immediate post-setup state
+        console.log('🔍 Post-setup immediate state:', {
+          windowFormbricks: typeof window !== 'undefined' ? typeof (window as any).formbricks : 'N/A',
+          windowFormbricksKeys: typeof window !== 'undefined' && (window as any).formbricks ? Object.keys((window as any).formbricks) : 'N/A',
+          setupComplete: true,
+        });
+        
+      } catch (setupError) {
+        console.error('💥 Error during formbricks.setup() call:', setupError);
+        console.error('💥 Setup error details:', {
+          message: setupError instanceof Error ? setupError.message : 'Unknown error',
+          name: setupError instanceof Error ? setupError.name : 'Unknown',
+          stack: setupError instanceof Error ? setupError.stack : undefined,
+          type: typeof setupError,
+          setupConfig,
+          timestamp: new Date().toISOString(),
+        });
+        
+        // Check if this is the specific validation error we're debugging
+        if (setupError instanceof Error && setupError.message.includes('network_error')) {
+          console.error('🎯 DETECTED THE NETWORK/VALIDATION ERROR!');
+          console.error('🔍 This is likely a configuration or API connectivity issue');
+          console.error('🔍 Environment ID format check:', {
+            envId: config.environmentId,
+            length: config.environmentId.length,
+            startsWithDev: config.environmentId.startsWith('dev_'),
+            isValidFormat: /^dev_[a-z0-9]+$/.test(config.environmentId),
+          });
+          console.error('🔍 API URL check:', {
+            apiUrl: config.appUrl,
+            isHttps: config.appUrl?.startsWith('https://'),
+            isFormbricksApp: config.appUrl?.includes('app.formbricks.com'),
+          });
+        }
+        
+        throw setupError;
+      }
+
+      // Wait for the SDK to fully initialize and verify it's actually ready
+      await this.waitForSDKReady();
 
       this.initialized = true;
       this.isAvailable = true;
       
-      console.log('✅ Formbricks SDK initialized successfully');
+      console.log('✅ Formbricks SDK initialized successfully', {
+        initialized: this.initialized,
+        available: this.isAvailable,
+        queuedEvents: this.eventQueue.length,
+        queuedAttributes: Object.keys(this.attributeQueue).length,
+        timestamp: new Date().toISOString()
+      });
+
+      // Process queued events and attributes
+      this.processQueue();
+      
+      console.log('🎉 FORMBRICKS INITIALIZATION COMPLETE - MANAGER IS READY! 🎉');
     } catch (error) {
       console.error('❌ Formbricks initialization failed:', error);
+      console.error('🔍 Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined,
+        config,
+        timestamp: new Date().toISOString(),
+        
+        // Additional debugging for network/validation errors
+        isNetworkError: error instanceof Error && error.message.includes('network_error'),
+        isValidationError: error instanceof Error && error.message.includes('Validation failed'),
+        
+        // Environment and network context
+        networkContext: {
+          online: typeof navigator !== 'undefined' ? navigator.onLine : 'unknown',
+          connection: typeof navigator !== 'undefined' && 'connection' in navigator ? (navigator as any).connection?.effectiveType : 'unknown',
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+        }
+      });
+      
+      // If this is the specific validation error, provide debugging suggestions
+      if (error instanceof Error && (error.message.includes('network_error') || error.message.includes('Validation failed'))) {
+        console.error('🎯 DEBUGGING SUGGESTIONS for Validation Error:');
+        console.error('1. ✅ Check Environment ID format - should be like: dev_cm5u8x9y6000114qg8x9y6000');
+        console.error('2. ✅ Verify Environment ID exists in your Formbricks account');
+        console.error('3. ✅ Check API connectivity to https://app.formbricks.com');
+        console.error('4. ✅ Verify the environment is correctly configured in Formbricks dashboard');
+        console.error('5. ✅ Check for any CORS or network issues');
+        console.error('6. ✅ Test the environment ID manually in Formbricks dashboard');
+        
+        // Attempt to provide more context about the error
+        this.debugValidationError(config);
+      }
+      
       this.handleInitializationError(error);
     }
   }
@@ -88,6 +284,30 @@ export class FormbricksManager {
     // Log error details in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Formbricks initialization error details:', error);
+      
+      // Provide specific guidance for common error scenarios
+      if (error instanceof Error) {
+        if (error.message.includes('network_error') || error.message.includes('Validation failed')) {
+          console.error('\n🎯 FORMBRICKS VALIDATION ERROR DETECTED');
+          console.error('╔════════════════════════════════════════════════════════════════╗');
+          console.error('║ The environment ID in your .env file is not valid or missing  ║');
+          console.error('║ from your Formbricks account.                                 ║');
+          console.error('╚════════════════════════════════════════════════════════════════╝');
+          console.error('\n💡 TO FIX THIS ISSUE:');
+          console.error('1. Go to https://app.formbricks.com');
+          console.error('2. Log into your account');
+          console.error('3. Create a new project or select an existing one');
+          console.error('4. Go to Settings > General');
+          console.error('5. Copy the Environment ID');
+          console.error('6. Update NEXT_PUBLIC_FORMBRICKS_ENV_ID in your .env file');
+          console.error('\n🔍 CURRENT CONFIGURATION:');
+          console.error(`   Environment ID: ${process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID || 'NOT SET'}`);
+          console.error(`   API Host: ${process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST || 'NOT SET'}`);
+          console.error('\n🧪 VERIFY YOUR SETUP:');
+          console.error('   Run: node scripts/debug-formbricks-validation.js');
+          console.error('\n⚠️  Until fixed, user feedback collection will be disabled.');
+        }
+      }
     }
 
     // In production, fail silently to not break the user experience
@@ -99,12 +319,25 @@ export class FormbricksManager {
    */
   setAttributes(attributes: Record<string, any>): void {
     if (!this.isInitialized()) {
-      console.warn('Formbricks not initialized, skipping setAttributes');
+      console.log('📋 Formbricks not initialized, queuing attributes:', attributes);
+      // Queue attributes for later processing
+      this.attributeQueue = { ...this.attributeQueue, ...attributes };
       return;
     }
 
     try {
-      formbricks.setAttributes(attributes);
+      console.log('📋 Setting Formbricks attributes:', attributes);
+      
+      // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
+      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.setAttributes === 'function') {
+        (window as any).formbricks.setAttributes(attributes);
+        console.log('📋 Used window.formbricks.setAttributes');
+      } else if (typeof formbricks.setAttributes === 'function') {
+        formbricks.setAttributes(attributes);
+        console.log('📋 Used imported formbricks.setAttributes');
+      } else {
+        throw new Error('setAttributes method not available on Formbricks SDK');
+      }
     } catch (error) {
       console.error('Failed to set Formbricks attributes:', error);
     }
@@ -115,18 +348,30 @@ export class FormbricksManager {
    */
   track(eventName: string, properties?: Record<string, any>): void {
     if (!this.isInitialized()) {
-      console.warn('Formbricks not initialized, skipping track event:', eventName);
+      console.log('📊 Formbricks not initialized, queuing event:', eventName, properties);
+      // Queue event for later processing
+      this.eventQueue.push({ eventName, properties });
       return;
     }
 
     try {
+      console.log('📊 Tracking Formbricks event:', eventName, properties);
       // Formbricks v4 expects specific structure - adapt our properties
       const trackProperties = properties ? {
         ...properties,
         hiddenFields: properties.hiddenFields || {}
       } : undefined;
       
-      formbricks.track(eventName, trackProperties);
+      // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
+      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.track === 'function') {
+        (window as any).formbricks.track(eventName, trackProperties);
+        console.log('📊 Used window.formbricks.track');
+      } else if (typeof formbricks.track === 'function') {
+        formbricks.track(eventName, trackProperties);
+        console.log('📊 Used imported formbricks.track');
+      } else {
+        throw new Error('track method not available on Formbricks SDK');
+      }
     } catch (error) {
       console.error('Failed to track Formbricks event:', error);
     }
@@ -142,7 +387,16 @@ export class FormbricksManager {
     }
 
     try {
-      formbricks.registerRouteChange();
+      // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
+      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.registerRouteChange === 'function') {
+        (window as any).formbricks.registerRouteChange();
+        console.log('📍 Used window.formbricks.registerRouteChange');
+      } else if (typeof formbricks.registerRouteChange === 'function') {
+        formbricks.registerRouteChange();
+        console.log('📍 Used imported formbricks.registerRouteChange');
+      } else {
+        throw new Error('registerRouteChange method not available on Formbricks SDK');
+      }
     } catch (error) {
       console.error('Failed to register Formbricks route change:', error);
     }
@@ -152,7 +406,47 @@ export class FormbricksManager {
    * Check if Formbricks is properly initialized and available
    */
   isInitialized(): boolean {
-    return this.initialized && this.isAvailable;
+    // Basic initialization check
+    const basicCheck = this.initialized && this.isAvailable;
+    
+    // Enhanced verification - check if SDK methods are actually available
+    let sdkMethodsAvailable = false;
+    try {
+      if (typeof window !== 'undefined') {
+        // Check window.formbricks first (this is what gets set after SDK loads)
+        const windowFb = (window as any).formbricks;
+        if (windowFb && 
+            typeof windowFb.track === 'function' && 
+            typeof windowFb.setAttributes === 'function') {
+          sdkMethodsAvailable = true;
+        }
+        
+        // Fallback to imported formbricks
+        if (!sdkMethodsAvailable &&
+            typeof formbricks.track === 'function' && 
+            typeof formbricks.setAttributes === 'function') {
+          sdkMethodsAvailable = true;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Error checking SDK methods availability:', error);
+    }
+    
+    const result = basicCheck && sdkMethodsAvailable;
+    
+    console.log('🔍 FormbricksManager.isInitialized() ENHANCED check:', {
+      initialized: this.initialized,
+      available: this.isAvailable,
+      basicCheck,
+      sdkMethodsAvailable,
+      result,
+      queuedEvents: this.eventQueue.length,
+      queuedAttributes: Object.keys(this.attributeQueue).length,
+      windowFormbricksType: typeof window !== 'undefined' ? typeof (window as any).formbricks : 'N/A',
+      importedFormbricksType: typeof formbricks,
+    });
+    
+    return result;
   }
 
   /**
@@ -165,12 +459,109 @@ export class FormbricksManager {
   }
 
   /**
+   * Process queued events and attributes after initialization
+   */
+  private processQueue(): void {
+    console.log('⚡ Processing Formbricks queue...', {
+      events: this.eventQueue.length,
+      attributes: Object.keys(this.attributeQueue).length
+    });
+
+    // Determine which formbricks instance to use
+    const getFormbricksInstance = () => {
+      if (typeof window !== 'undefined' && (window as any).formbricks) {
+        console.log('⚡ Using window.formbricks for queue processing');
+        return (window as any).formbricks;
+      } else {
+        console.log('⚡ Using imported formbricks for queue processing');
+        return formbricks;
+      }
+    };
+
+    const fb = getFormbricksInstance();
+
+    // Process queued attributes
+    if (Object.keys(this.attributeQueue).length > 0) {
+      try {
+        if (typeof fb.setAttributes === 'function') {
+          fb.setAttributes(this.attributeQueue);
+          console.log('✅ Processed queued attributes:', this.attributeQueue);
+          this.attributeQueue = {};
+        } else {
+          console.error('❌ setAttributes method not available during queue processing');
+        }
+      } catch (error) {
+        console.error('❌ Failed to process queued attributes:', error);
+      }
+    }
+
+    // Process queued events
+    this.eventQueue.forEach(({ eventName, properties }) => {
+      try {
+        if (typeof fb.track === 'function') {
+          const trackProperties = properties ? {
+            ...properties,
+            hiddenFields: properties.hiddenFields || {}
+          } : undefined;
+          
+          fb.track(eventName, trackProperties);
+          console.log('✅ Processed queued event:', eventName, properties);
+        } else {
+          console.error('❌ track method not available during queue processing for event:', eventName);
+        }
+      } catch (error) {
+        console.error('❌ Failed to process queued event:', eventName, error);
+      }
+    });
+
+    // Clear the queue
+    this.eventQueue = [];
+    console.log('🧹 Queue processing complete');
+  }
+
+  /**
+   * Debug validation errors with detailed analysis
+   */
+  private debugValidationError(config: { environmentId: string; appUrl?: string }): void {
+    console.group('🔍 DETAILED VALIDATION ERROR ANALYSIS');
+    
+    // Environment ID analysis
+    console.log('📋 Environment ID Analysis:', {
+      value: config.environmentId,
+      length: config.environmentId.length,
+      format: {
+        startsWithDev: config.environmentId.startsWith('dev_'),
+        hasCorrectLength: config.environmentId.length >= 20,
+        matchesPattern: /^dev_[a-z0-9]+$/.test(config.environmentId),
+        expectedFormat: 'dev_cm5u8x9y6000114qg8x9y6000',
+      },
+    });
+    
+    // API URL analysis
+    console.log('🌐 API URL Analysis:', {
+      value: config.appUrl,
+      isHttps: config.appUrl?.startsWith('https://'),
+      isFormbricksApp: config.appUrl?.includes('app.formbricks.com'),
+      expectedValue: 'https://app.formbricks.com',
+    });
+    
+    // Network connectivity test suggestion
+    console.log('🌍 Network Connectivity Check:');
+    console.log('Try this in your browser console to test API connectivity:');
+    console.log(`fetch('${config.appUrl}/api/v1/management/environment/${config.environmentId}', { method: 'HEAD' })`);
+    
+    console.groupEnd();
+  }
+
+  /**
    * Get initialization status for debugging
    */
-  getStatus(): { initialized: boolean; available: boolean } {
+  getStatus(): { initialized: boolean; available: boolean; queuedEvents: number; queuedAttributes: number } {
     return {
       initialized: this.initialized,
       available: this.isAvailable,
+      queuedEvents: this.eventQueue.length,
+      queuedAttributes: Object.keys(this.attributeQueue).length,
     };
   }
 }

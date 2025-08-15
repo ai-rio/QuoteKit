@@ -3,10 +3,17 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFormbricksTracking } from '@/hooks/use-formbricks-tracking';
+import { FormbricksManager } from '@/libs/formbricks';
 import { FORMBRICKS_EVENTS } from '@/libs/formbricks/types';
 
 export function TrackingTest() {
   const { trackEvent, isAvailable } = useFormbricksTracking();
+  
+  // Get detailed status for debugging
+  const getDetailedStatus = () => {
+    const manager = FormbricksManager.getInstance();
+    return manager.getStatus();
+  };
 
   const testEvents = [
     {
@@ -44,7 +51,16 @@ export function TrackingTest() {
 
   const handleTestEvent = (eventName: string, eventData: Record<string, any>) => {
     console.log(`Testing event: ${eventName}`, eventData);
+    const statusBefore = getDetailedStatus();
+    console.log('📊 Status before tracking:', statusBefore);
+    
     trackEvent(eventName, eventData);
+    
+    // Check status after tracking to see if event was queued
+    setTimeout(() => {
+      const statusAfter = getDetailedStatus();
+      console.log('📊 Status after tracking:', statusAfter);
+    }, 100);
   };
 
   if (!isAvailable) {
@@ -74,8 +90,14 @@ export function TrackingTest() {
         <div className="space-y-4">
           <div className="mb-4 p-3 bg-green-50 rounded-lg">
             <p className="text-green-800 text-sm">
-              ✅ Formbricks is available and initialized
+              ✅ Formbricks is available and ready for tracking
             </p>
+            <details className="mt-2">
+              <summary className="text-green-700 text-xs cursor-pointer">Show Detailed Status</summary>
+              <pre className="text-green-600 text-xs mt-2 whitespace-pre-wrap">
+                {JSON.stringify(getDetailedStatus(), null, 2)}
+              </pre>
+            </details>
           </div>
           
           <div className="grid gap-3">

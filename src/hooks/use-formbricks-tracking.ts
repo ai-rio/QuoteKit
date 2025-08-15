@@ -191,6 +191,20 @@ export function useFormbricksTracking() {
     trackSession,
     
     // Status
-    isAvailable: FormbricksManager.getInstance().isInitialized()
+    isAvailable: (() => {
+      const manager = FormbricksManager.getInstance();
+      const status = manager.getStatus();
+      console.log('🔍 useFormbricksTracking - checking availability:', status);
+      // Consider it available if initialized OR if there's a mechanism to queue events
+      const isInitialized = manager.isInitialized();
+      const canQueue = true; // We always have queuing capability
+      const result = isInitialized || canQueue;
+      console.log('🎯 useFormbricksTracking availability result:', {
+        isInitialized,
+        canQueue,
+        result
+      });
+      return result;
+    })()
   };
 }

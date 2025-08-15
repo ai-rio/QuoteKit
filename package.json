@@ -13,6 +13,7 @@
     "type-check:watch": "tsc --noEmit --watch",
     "type-fix": "npm run lint:fix && npm run type-check",
     "type-fix:auto": "./scripts/auto-type-fix.sh",
+    "test:formbricks": "node scripts/test-formbricks.js",
     "email:build": "email build",
     "email:dev": "email dev --dir ./src/features/emails --port 3001",
     "email:export": "email export",

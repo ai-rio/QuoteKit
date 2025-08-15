@@ -16,22 +16,104 @@ export function FormbricksProvider() {
   const { data: user } = useUser();
 
   useEffect(() => {
+    console.log('🚀 FormbricksProvider useEffect triggered - START');
+    console.log('🔍 Current timestamp:', new Date().toISOString());
+    
     // Only initialize if we have environment variables configured
     const environmentId = process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID;
     const appUrl = process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST;
+    const debugMode = process.env.FORMBRICKS_DEBUG;
+
+    console.log('🔧 DETAILED Environment variables check:', {
+      environmentId: environmentId || 'NOT SET',
+      environmentIdLength: environmentId?.length || 0,
+      appUrl: appUrl || 'NOT SET',
+      debugMode: debugMode || 'NOT SET',
+      nodeEnv: process.env.NODE_ENV,
+      windowDefined: typeof window !== 'undefined',
+      documentDefined: typeof document !== 'undefined',
+      locationHref: typeof window !== 'undefined' ? window.location.href : 'N/A',
+      allFormbricksEnvVars: {
+        NEXT_PUBLIC_FORMBRICKS_ENV_ID: process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID,
+        NEXT_PUBLIC_FORMBRICKS_API_HOST: process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST,
+        FORMBRICKS_DEBUG: process.env.FORMBRICKS_DEBUG,
+      },
+      // Show all NEXT_PUBLIC environment variables for debugging
+      allNextPublicVars: Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')).reduce((acc, key) => {
+        acc[key] = process.env[key];
+        return acc;
+      }, {} as Record<string, string | undefined>)
+    });
 
     if (!environmentId) {
-      console.warn('Formbricks environment ID not configured, skipping initialization');
+      console.error('❌ CRITICAL: Formbricks environment ID not configured!');
+      console.error('💡 Expected environment variable: NEXT_PUBLIC_FORMBRICKS_ENV_ID');
+      console.error('💡 Current value:', environmentId);
+      console.error('💡 Make sure your .env file has the correct variable name and is loaded');
       return;
     }
 
+    if (environmentId.length < 10) {
+      console.error('❌ CRITICAL: Formbricks environment ID seems invalid (too short)');
+      console.error('💡 Current value:', environmentId);
+      console.error('💡 Environment IDs should be longer strings like: dev_cm5u8x9y6000114qg8x9y6000');
+      return;
+    }
+
+    // Only initialize in browser environment
+    if (typeof window === 'undefined') {
+      console.log('🚫 Server-side rendering detected, skipping Formbricks initialization');
+      return;
+    }
+
+    console.log('🎯 Environment ID found and browser detected, proceeding with initialization...');
+    console.log('🎯 Using Environment ID:', environmentId);
+    console.log('🎯 Using App URL:', appUrl);
+
     const manager = FormbricksManager.getInstance();
     
-    // Initialize Formbricks SDK
-    manager.initialize({
+    // Check if already initialized
+    if (manager.isInitialized()) {
+      console.log('✅ FormbricksManager already initialized, skipping');
+      console.log('📊 Current manager status:', manager.getStatus());
+      return;
+    }
+    
+    console.log('📞 Calling manager.initialize() with config:', {
       environmentId,
       appUrl,
     });
+    
+    // Initialize Formbricks SDK with better error handling
+    manager.initialize({
+      environmentId,
+      appUrl,
+    }).then(() => {
+      console.log('🏁 FormbricksProvider initialization promise resolved - SUCCESS!');
+      console.log('📊 Manager status after initialization:', manager.getStatus());
+      
+      // Test that the manager is working
+      setTimeout(() => {
+        const finalStatus = manager.getStatus();
+        console.log('🔍 Manager status after 1 second:', finalStatus);
+        if (finalStatus.initialized && finalStatus.available) {
+          console.log('✨ FORMBRICKS IS FULLY OPERATIONAL! 🎉');
+          console.log('🚀 You should now be able to track events successfully');
+        } else {
+          console.error('❌ Formbricks initialization completed but not operational');
+          console.error('🔍 This means the SDK loaded but something went wrong during setup');
+        }
+      }, 1000);
+      
+    }).catch((error) => {
+      console.error('💥 FormbricksProvider initialization promise rejected:', error);
+      console.error('🔍 Error message:', error?.message);
+      console.error('🔍 Error stack:', error?.stack);
+      console.error('🔍 Error type:', typeof error);
+      console.error('🔍 Error properties:', Object.keys(error || {}));
+    });
+    
+    console.log('🚀 FormbricksProvider useEffect triggered - END');
   }, []);
 
   useEffect(() => {
