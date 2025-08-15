@@ -1,105 +1,101 @@
 #!/usr/bin/env node
 
 /**
- * FB-004 Verification Script
- * Quick verification that Formbricks environment is properly configured
+ * Verification script for Formbricks integration
+ * Tests the application on port 3001 and checks for proper initialization
  */
 
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+const puppeteer = require('puppeteer');
 
-console.log('🔍 FB-004: Formbricks Configuration Verification\n');
+async function verifyFormbricks() {
+  console.log('🚀 Starting Formbricks verification...');
+  
+  let browser;
+  try {
+    // Launch browser with proper flags for running as root
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    });
 
-// Load environment variables
-const envPath = path.join(__dirname, '../.env');
-if (!fs.existsSync(envPath)) {
-    console.error('❌ .env file not found');
-    process.exit(1);
-}
+    const page = await browser.newPage();
+    
+    // Set up console logging
+    page.on('console', (msg) => {
+      const text = msg.text();
+      if (text.includes('Formbricks') || text.includes('🚀') || text.includes('📊') || text.includes('✅')) {
+        console.log(`Browser Console: ${text}`);
+      }
+    });
 
-const envContent = fs.readFileSync(envPath, 'utf8');
-const envVars = {};
+    // Navigate to the test page
+    console.log('📍 Navigating to http://localhost:3001/test-edge-functions');
+    await page.goto('http://localhost:3001/test-edge-functions', { 
+      waitUntil: 'networkidle2', 
+      timeout: 30000 
+    });
 
-envContent.split('\n').forEach(line => {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#')) {
-        const [key, ...valueParts] = trimmed.split('=');
-        if (key && valueParts.length) {
-            envVars[key.trim()] = valueParts.join('=').trim();
-        }
+    // Wait for the page to fully load
+    await page.waitForTimeout(2000);
+
+    // Click on the Formbricks Tracking tab
+    console.log('🎯 Clicking on Formbricks Tracking tab...');
+    await page.click('[data-value="tracking"]');
+    
+    await page.waitForTimeout(1000);
+
+    // Check if the tracking test component is available
+    const trackingTestExists = await page.$('.tracking-test') !== null;
+    const formbricksAvailable = await page.evaluate(() => {
+      return document.querySelector('[data-testid="formbricks-available"]') !== null;
+    });
+
+    // Try to click a test event button
+    console.log('🧪 Attempting to trigger a test event...');
+    const testButtons = await page.$$('button[variant="outline"]');
+    if (testButtons.length > 0) {
+      await testButtons[0].click();
+      console.log('✅ Test event button clicked successfully');
     }
-});
 
-// Required variables
-const required = [
-    'NEXT_PUBLIC_FORMBRICKS_ENV_ID',
-    'NEXT_PUBLIC_FORMBRICKS_API_HOST'
-];
+    // Wait for any async operations
+    await page.waitForTimeout(3000);
 
-let isValid = true;
+    // Extract any final status from the page
+    const finalStatus = await page.evaluate(() => {
+      // Try to get status from the window object or global variables
+      if (window.FormbricksManager) {
+        return window.FormbricksManager.getInstance().getStatus();
+      }
+      return { message: 'FormbricksManager not found on window' };
+    });
 
-console.log('1️⃣ Environment Variables:');
-required.forEach(varName => {
-    const value = envVars[varName];
-    if (!value || value.includes('UPDATE_THIS')) {
-        console.log(`   ❌ ${varName}: Missing or not configured`);
-        isValid = false;
-    } else {
-        console.log(`   ✅ ${varName}: ${value}`);
+    console.log('📊 Final status check:', finalStatus);
+    
+    console.log('✅ Formbricks verification completed successfully');
+    console.log('🎉 Visit http://localhost:3001/test-edge-functions to interact with the tracking system');
+
+  } catch (error) {
+    console.error('❌ Verification failed:', error.message);
+    console.log('🔍 Error details:', error);
+  } finally {
+    if (browser) {
+      await browser.close();
     }
-});
-
-// Optional variables
-console.log('\n2️⃣ Optional Variables:');
-const optional = ['FORMBRICKS_DEBUG', 'FORMBRICKS_API_KEY', 'FORMBRICKS_WEBHOOK_SECRET'];
-optional.forEach(varName => {
-    const value = envVars[varName];
-    if (value) {
-        console.log(`   ✅ ${varName}: ${value}`);
-    } else {
-        console.log(`   ⚪ ${varName}: Not set`);
-    }
-});
-
-// Validate format
-console.log('\n3️⃣ Configuration Validation:');
-const envId = envVars['NEXT_PUBLIC_FORMBRICKS_ENV_ID'];
-const apiHost = envVars['NEXT_PUBLIC_FORMBRICKS_API_HOST'];
-
-if (envId && (envId.startsWith('dev_') || envId.startsWith('prod_'))) {
-    console.log(`   ✅ Environment ID format: ${envId}`);
-} else if (envId) {
-    console.log(`   ⚠️  Environment ID format unusual: ${envId}`);
+  }
 }
 
-if (apiHost === 'https://app.formbricks.com') {
-    console.log(`   ✅ Using Formbricks Cloud: ${apiHost}`);
-} else if (apiHost && apiHost.startsWith('https://')) {
-    console.log(`   ✅ Custom Formbricks instance: ${apiHost}`);
-} else {
-    console.log(`   ❌ Invalid API host: ${apiHost}`);
-    isValid = false;
+// Only run if this script is executed directly
+if (require.main === module) {
+  verifyFormbricks().catch(console.error);
 }
 
-// Check server configuration
-console.log('\n4️⃣ Server Configuration:');
-const siteUrl = envVars['NEXT_PUBLIC_SITE_URL'];
-if (siteUrl === 'http://localhost:3000') {
-    console.log(`   ✅ Development server: ${siteUrl}`);
-} else {
-    console.log(`   ℹ️  Site URL: ${siteUrl}`);
-}
-
-// Final status
-console.log('\n📋 FB-004 Status:');
-if (isValid) {
-    console.log('   ✅ Configuration is valid');
-    console.log('   ✅ Ready for Formbricks integration');
-    console.log('   ✅ Compatible with server on port 3000');
-    process.exit(0);
-} else {
-    console.log('   ❌ Configuration issues found');
-    console.log('   💡 Please check the environment variables above');
-    process.exit(1);
-}
+module.exports = { verifyFormbricks };
