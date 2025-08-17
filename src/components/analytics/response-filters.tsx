@@ -9,10 +9,9 @@ import { Calendar, Filter, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -88,27 +87,26 @@ export function ResponseFilters({
       {activeFiltersCount > 0 && (
         <div className="flex items-center justify-between p-3 bg-light-concrete rounded-lg">
           <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-charcoal/70" />
-            <span className="text-sm font-medium text-charcoal">
+            <Filter className="h-4 w-4 text-charcoal" />
+            <span className="text-base font-bold text-charcoal">
               {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
             </span>
           </div>
-          <Button
+          <EnhancedButton
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-charcoal/70 hover:text-charcoal"
           >
-            <X className="h-4 w-4 mr-1" />
+            <X className="h-4 w-4" />
             Clear all
-          </Button>
+          </EnhancedButton>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Date Range */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium text-charcoal">
+          <Label className="text-base font-bold text-forest-green">
             Date Range
           </Label>
           <div className="space-y-2">
@@ -117,13 +115,13 @@ export function ResponseFilters({
               onOpenChange={(open) => setDatePickerOpen(open ? 'start' : null)}
             >
               <PopoverTrigger asChild>
-                <Button
+                <EnhancedButton
                   variant="outline"
                   className="w-full justify-start text-left font-normal"
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="h-4 w-4" />
                   {filters.dateRange.start.toLocaleDateString()}
-                </Button>
+                </EnhancedButton>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <CalendarComponent
@@ -140,13 +138,13 @@ export function ResponseFilters({
               onOpenChange={(open) => setDatePickerOpen(open ? 'end' : null)}
             >
               <PopoverTrigger asChild>
-                <Button
+                <EnhancedButton
                   variant="outline"
                   className="w-full justify-start text-left font-normal"
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="h-4 w-4" />
                   {filters.dateRange.end.toLocaleDateString()}
-                </Button>
+                </EnhancedButton>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <CalendarComponent
@@ -162,7 +160,7 @@ export function ResponseFilters({
 
         {/* Completion Status */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium text-charcoal">
+          <Label className="text-base font-bold text-forest-green">
             Completion Status
           </Label>
           <Select
@@ -188,7 +186,7 @@ export function ResponseFilters({
 
         {/* Results Limit */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium text-charcoal">
+          <Label className="text-base font-bold text-forest-green">
             Results per page
           </Label>
           <Select
@@ -209,11 +207,11 @@ export function ResponseFilters({
 
         {/* Quick Date Ranges */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium text-charcoal">
+          <Label className="text-base font-bold text-forest-green">
             Quick Ranges
           </Label>
           <div className="space-y-2">
-            <Button
+            <EnhancedButton
               variant="outline"
               size="sm"
               className="w-full justify-start"
@@ -225,8 +223,8 @@ export function ResponseFilters({
               })}
             >
               Last 7 days
-            </Button>
-            <Button
+            </EnhancedButton>
+            <EnhancedButton
               variant="outline"
               size="sm"
               className="w-full justify-start"
@@ -238,8 +236,8 @@ export function ResponseFilters({
               })}
             >
               Last 30 days
-            </Button>
-            <Button
+            </EnhancedButton>
+            <EnhancedButton
               variant="outline"
               size="sm"
               className="w-full justify-start"
@@ -251,7 +249,7 @@ export function ResponseFilters({
               })}
             >
               Last 90 days
-            </Button>
+            </EnhancedButton>
           </div>
         </div>
       </div>
@@ -259,7 +257,7 @@ export function ResponseFilters({
       {/* Survey Selection */}
       {surveys.length > 0 && (
         <div className="space-y-3">
-          <Label className="text-sm font-medium text-charcoal">
+          <Label className="text-base font-bold text-forest-green">
             Surveys ({filters.surveyIds.length > 0 ? `${filters.surveyIds.length} selected` : 'All'})
           </Label>
           
@@ -280,7 +278,7 @@ export function ResponseFilters({
                   <div className="flex-1 min-w-0">
                     <label 
                       htmlFor={`survey-${survey.id}`}
-                      className="text-sm font-medium text-charcoal cursor-pointer line-clamp-1"
+                      className="text-base font-bold text-charcoal cursor-pointer line-clamp-1"
                     >
                       {survey.name}
                     </label>
@@ -291,7 +289,7 @@ export function ResponseFilters({
                       >
                         {survey.status}
                       </Badge>
-                      <span className="text-xs text-charcoal/60">
+                      <span className="text-sm text-charcoal">
                         {survey.responseCount} responses
                       </span>
                     </div>
@@ -318,14 +316,13 @@ export function ResponseFilters({
                   </Badge>
                 )}
               </div>
-              <Button
+              <EnhancedButton
                 variant="ghost"
                 size="sm"
                 onClick={() => onChange({ surveyIds: [] })}
-                className="text-xs text-charcoal/70 hover:text-charcoal"
               >
                 Clear selection
-              </Button>
+              </EnhancedButton>
             </div>
           )}
         </div>

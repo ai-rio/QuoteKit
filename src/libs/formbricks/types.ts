@@ -227,3 +227,136 @@ export interface QuoteWorkflowEventData {
     stackTrace?: string;
   };
 }
+
+/**
+ * Analytics Types for Formbricks Integration
+ */
+
+export interface FormbricksQuestion {
+  id: string;
+  type: 'openText' | 'multipleChoiceMulti' | 'multipleChoiceSingle' | 'nps' | 'cta' | 'rating' | 'consent' | 'pictureSelection' | 'cal' | 'fileUpload' | 'matrix' | 'address';
+  headline: string;
+  subheader?: string;
+  required?: boolean;
+  choices?: Array<{
+    id: string;
+    label: string;
+  }> | string[]; // Support both object and string array formats
+  scale?: {
+    min: number;
+    max: number;
+    minLabel?: string;
+    maxLabel?: string;
+  };
+}
+
+export interface FormbricksSurvey {
+  id: string;
+  name: string;
+  type: 'web' | 'link' | 'mobile';
+  status: 'draft' | 'inProgress' | 'paused' | 'completed';
+  questions: FormbricksQuestion[];
+  responseCount: number;
+  completionRate: number;
+  createdAt: string;
+  updatedAt: string;
+  triggers?: Array<{
+    actionClass: {
+      name: string;
+      description?: string;
+    };
+  }>;
+}
+
+export interface FormbricksSurveyResponse {
+  id: string;
+  surveyId: string;
+  personId?: string;
+  userId?: string; // Additional field used in components
+  finished: boolean;
+  data: Record<string, any>;
+  meta: {
+    userAgent?: string;
+    url?: string;
+    source?: string; // Additional field used in components
+  };
+  tags: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }> | string[]; // Support both object and string array formats
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FormbricksAnalyticsFilters {
+  dateRange?: {
+    from: Date;
+    to: Date;
+    start?: Date; // Alternative naming used in some places
+    end?: Date; // Alternative naming used in some places
+  };
+  surveyIds?: string[];
+  surveyId?: string; // Single survey filter used in some places
+  status?: Array<'completed' | 'partial' | 'dropped'>;
+  finished?: boolean; // Boolean filter used in some places
+  completed?: boolean; // Alternative naming used in some places
+  tags?: string[];
+  limit?: number; // Pagination limit
+  offset?: number; // Pagination offset
+}
+
+export interface FormbricksAnalyticsSortOptions {
+  field: 'createdAt' | 'updatedAt' | 'completionRate' | 'responseCount' | 'finished';
+  direction: 'asc' | 'desc';
+}
+
+export interface FormbricksAnalyticsQueryParams {
+  filters?: FormbricksAnalyticsFilters;
+  sort?: FormbricksAnalyticsSortOptions;
+  page?: number;
+  limit?: number;
+  // Additional query params used in various places
+  surveyId?: string;
+  finished?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface FormbricksAnalyticsData {
+  surveys: FormbricksSurvey[];
+  responses: FormbricksSurveyResponse[];
+  totalResponses: number;
+  completionRate: number;
+  averageCompletionTime: number;
+  responsesByPeriod: Array<{
+    date: string;
+    count: number;
+  }>;
+  completionRates: Array<{
+    surveyId: string;
+    surveyName: string;
+    completionRate: number;
+    responseCount: number;
+    totalResponses?: number; // Alternative naming used in some places
+    completedResponses?: number; // Alternative naming used in some places
+  }>;
+  topTags: Array<{
+    name: string;
+    count: number;
+    color: string;
+  }>;
+  lastUpdated: string;
+  // Metrics object used by analytics components
+  metrics?: {
+    totalResponses: number;
+    completionRate: number;
+    averageCompletionTime: number;
+    averageCompletionRate: number; // Alternative naming used in some places
+    totalSurveys: number;
+    activeSurveys: number;
+    responseRate: number;
+    topPerformingSurvey: string;
+    conversionRate: number;
+  };
+}

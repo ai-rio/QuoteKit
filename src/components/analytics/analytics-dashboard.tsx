@@ -9,8 +9,8 @@ import { Download, Filter, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { AnalyticsErrorState } from './analytics-error-state';
@@ -202,7 +202,7 @@ export function AnalyticsDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header - STYLE GUIDE COMPLIANT */}
       <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div className="flex-1">
           <h1 className="text-4xl md:text-6xl font-black text-forest-green">
@@ -233,54 +233,51 @@ export function AnalyticsDashboard({
             </p>
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - ENHANCED BUTTON COMPLIANT */}
           <div className="flex space-x-2">
-            <Button
+            <EnhancedButton
               variant="outline"
-              size="sm"
+              size="default"
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px]"
             >
-              <Filter className="h-4 w-4 mr-2" />
+              <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">Filters</span>
-            </Button>
+            </EnhancedButton>
             
-            <Button
+            <EnhancedButton
               variant="outline"
-              size="sm"
+              size="default"
               onClick={() => setShowExport(!showExport)}
-              className="min-h-[44px]"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4" />
               <span className="hidden sm:inline">Export</span>
-            </Button>
+            </EnhancedButton>
             
-            <Button
+            <EnhancedButton
               variant="outline"
-              size="sm"
+              size="default"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="min-h-[44px]"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">
                 {refreshing ? 'Refreshing...' : 'Refresh'}
               </span>
-            </Button>
+            </EnhancedButton>
           </div>
         </div>
       </div>
 
-      {/* Filters Panel */}
+      {/* Filters Panel - STYLE GUIDE COMPLIANT */}
       {showFilters && (
-        <Card>
-          <CardHeader>
+        <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+          <CardHeader className="p-8">
             <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">Filters</CardTitle>
             <CardDescription className="text-lg text-charcoal">
               Customize the data view with date ranges and survey filters
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-8 pt-0">
             <ResponseFilters
               filters={filters}
               onChange={handleFiltersChange}
@@ -290,16 +287,16 @@ export function AnalyticsDashboard({
         </Card>
       )}
 
-      {/* Export Panel */}
+      {/* Export Panel - STYLE GUIDE COMPLIANT */}
       {showExport && (
-        <Card>
-          <CardHeader>
+        <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+          <CardHeader className="p-8">
             <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">Export Data</CardTitle>
             <CardDescription className="text-lg text-charcoal">
               Download analytics data in various formats
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-8 pt-0">
             <DataExportInterface
               data={data}
               filters={filters}
@@ -352,8 +349,8 @@ export function AnalyticsDashboard({
         <TabsContent value="surveys" className="space-y-6">
           <div className="grid gap-6">
             {data.surveys.map((survey) => (
-              <Card key={survey.id}>
-                <CardHeader>
+              <Card key={survey.id} className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+                <CardHeader className="p-8">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">{survey.name}</CardTitle>
                     <Badge 
@@ -366,11 +363,11 @@ export function AnalyticsDashboard({
                     {survey.questions.length} questions • {survey.responseCount} responses
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-8 pt-0">
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-lg">
                     <div>
                       <p className="text-charcoal">Type</p>
-                      <p className="font-medium capitalize">{survey.type}</p>
+                      <p className="font-medium capitalize text-charcoal">{survey.type}</p>
                     </div>
                     <div>
                       <p className="text-charcoal">Responses</p>
@@ -382,7 +379,7 @@ export function AnalyticsDashboard({
                     </div>
                     <div>
                       <p className="text-charcoal">Created</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-charcoal">
                         {new Date(survey.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -396,4 +393,3 @@ export function AnalyticsDashboard({
     </div>
   );
 }
-

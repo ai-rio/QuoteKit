@@ -19,10 +19,10 @@ import { useMemo,useState } from 'react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -225,15 +225,15 @@ export function SurveyResponsesList({
                   </TableHead>
                   
                   <TableHead>
-                    <Button
+                    <EnhancedButton
                       variant="ghost"
                       size="sm"
                       onClick={() => handleSort('survey')}
                       className="font-medium p-0 h-auto hover:bg-transparent"
                     >
                       Survey
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      <ArrowUpDown className="h-4 w-4" />
+                    </EnhancedButton>
                   </TableHead>
                   
                   <TableHead className="hidden md:table-cell">
@@ -241,27 +241,27 @@ export function SurveyResponsesList({
                   </TableHead>
                   
                   <TableHead>
-                    <Button
+                    <EnhancedButton
                       variant="ghost"
                       size="sm"
                       onClick={() => handleSort('date')}
                       className="font-medium p-0 h-auto hover:bg-transparent"
                     >
                       Date
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      <ArrowUpDown className="h-4 w-4" />
+                    </EnhancedButton>
                   </TableHead>
                   
                   <TableHead>
-                    <Button
+                    <EnhancedButton
                       variant="ghost"
                       size="sm"
                       onClick={() => handleSort('completion')}
                       className="font-medium p-0 h-auto hover:bg-transparent"
                     >
                       Status
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
+                      <ArrowUpDown className="h-4 w-4" />
+                    </EnhancedButton>
                   </TableHead>
                   
                   <TableHead className="w-12">
@@ -357,9 +357,9 @@ export function SurveyResponsesList({
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <EnhancedButton variant="ghost" size="icon-sm">
                                 <MoreHorizontal className="h-4 w-4" />
-                              </Button>
+                              </EnhancedButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setSelectedResponse(response)}>
@@ -385,29 +385,29 @@ export function SurveyResponsesList({
               </p>
               
               <div className="flex items-center space-x-2">
-                <Button
+                <EnhancedButton
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronLeft className="h-4 w-4" />
                   Previous
-                </Button>
+                </EnhancedButton>
                 
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: Math.min(5, paginationInfo.totalPages) }, (_, i) => {
                     const pageNum = i + 1;
                     return (
-                      <Button
+                      <EnhancedButton
                         key={pageNum}
-                        variant={currentPage === pageNum ? 'default' : 'outline'}
+                        variant={currentPage === pageNum ? 'primary' : 'outline'}
                         size="sm"
                         onClick={() => handlePageChange(pageNum)}
                         className="w-10"
                       >
                         {pageNum}
-                      </Button>
+                      </EnhancedButton>
                     );
                   })}
                   {paginationInfo.totalPages > 5 && (
@@ -415,15 +415,15 @@ export function SurveyResponsesList({
                   )}
                 </div>
                 
-                <Button
+                <EnhancedButton
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === paginationInfo.totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+                  <ChevronRight className="h-4 w-4" />
+                </EnhancedButton>
               </div>
             </div>
           )}

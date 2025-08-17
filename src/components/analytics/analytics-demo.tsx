@@ -12,8 +12,8 @@ import { BarChart3, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Separator } from '@/components/ui/separator';
 
 import { AnalyticsDashboard } from './analytics-dashboard';
@@ -93,7 +93,6 @@ const generateMockData = (): FormbricksAnalyticsData => {
   
   // Generate mock responses
   const mockResponses = [];
-  const responseIds = ['resp-1', 'resp-2', 'resp-3', 'resp-4', 'resp-5'];
   
   for (let i = 0; i < 50; i++) {
     const surveyId = mockSurveys[Math.floor(Math.random() * mockSurveys.length)].id;
@@ -193,16 +192,15 @@ export function AnalyticsDemo() {
               <Badge variant="outline" className="text-forest-green border-forest-green">
                 Demo Mode
               </Badge>
-              <Button
+              <EnhancedButton
                 variant="outline"
-                size="sm"
+                size="default"
                 onClick={refreshMockData}
                 disabled={isRefreshing}
-                className="min-h-[44px]"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
-              </Button>
+              </EnhancedButton>
             </div>
           </div>
         </CardHeader>

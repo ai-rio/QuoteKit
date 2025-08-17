@@ -10,9 +10,9 @@ import { useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -186,15 +186,15 @@ export function DataExportInterface({
                 </p>
                 {downloadUrl && (
                   <div className="flex space-x-2">
-                    <Button size="sm" asChild className="bg-success-green hover:bg-success-green/90">
+                    <EnhancedButton variant="success" size="sm" asChild>
                       <a href={downloadUrl} download>
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-4 w-4" />
                         Download File
                       </a>
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={resetExport}>
+                    </EnhancedButton>
+                    <EnhancedButton variant="outline" size="sm" onClick={resetExport}>
                       Export Again
-                    </Button>
+                    </EnhancedButton>
                   </div>
                 )}
               </div>
@@ -203,9 +203,9 @@ export function DataExportInterface({
               <div className="space-y-3">
                 <p className="font-medium text-red-800">Export failed</p>
                 <p className="text-sm text-red-600">{exportError}</p>
-                <Button variant="outline" size="sm" onClick={resetExport}>
+                <EnhancedButton variant="outline-destructive" size="sm" onClick={resetExport}>
                   Try Again
-                </Button>
+                </EnhancedButton>
               </div>
             )}
           </AlertDescription>
@@ -213,15 +213,15 @@ export function DataExportInterface({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Export Format Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Export Format</CardTitle>
-            <CardDescription>
+        {/* Export Format Selection - STYLE GUIDE COMPLIANT */}
+        <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+          <CardHeader className="p-8">
+            <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">Export Format</CardTitle>
+            <CardDescription className="text-lg text-charcoal">
               Choose the format that best suits your needs
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-8 pt-0">
             <RadioGroup
               value={exportOptions.format}
               onValueChange={(value) => handleExportOptionChange('format', value as ExportOptions['format'])}
@@ -238,10 +238,10 @@ export function DataExportInterface({
                     <RadioGroupItem value={format.value} id={format.value} className="mt-1" />
                     <div className="flex-1">
                       <label htmlFor={format.value} className="flex items-center space-x-3 cursor-pointer">
-                        <IconComponent className="h-5 w-5 text-charcoal/70" />
+                        <IconComponent className="h-5 w-5 text-charcoal" />
                         <div>
-                          <p className="font-medium text-charcoal">{format.label}</p>
-                          <p className="text-sm text-charcoal/70">{getFormatDescription(format.value)}</p>
+                          <p className="font-bold text-charcoal">{format.label}</p>
+                          <p className="text-base text-charcoal">{getFormatDescription(format.value)}</p>
                         </div>
                       </label>
                     </div>
@@ -252,15 +252,15 @@ export function DataExportInterface({
           </CardContent>
         </Card>
 
-        {/* Data Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Data Selection</CardTitle>
-            <CardDescription>
+        {/* Data Selection - STYLE GUIDE COMPLIANT */}
+        <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+          <CardHeader className="p-8">
+            <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">Data Selection</CardTitle>
+            <CardDescription className="text-lg text-charcoal">
               Choose what data to include in your export
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-8 pt-0 space-y-4">
             {/* Include Options */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -272,8 +272,8 @@ export function DataExportInterface({
                 />
                 <Label htmlFor="include-responses" className="flex-1 cursor-pointer">
                   <div>
-                    <p className="font-medium">Survey Responses</p>
-                    <p className="text-sm text-charcoal/70">
+                    <p className="font-bold text-charcoal">Survey Responses</p>
+                    <p className="text-base text-charcoal">
                       Individual response data ({data.responses.length} responses)
                     </p>
                   </div>
@@ -289,8 +289,8 @@ export function DataExportInterface({
                 />
                 <Label htmlFor="include-metrics" className="flex-1 cursor-pointer">
                   <div>
-                    <p className="font-medium">Analytics Metrics</p>
-                    <p className="text-sm text-charcoal/70">
+                    <p className="font-bold text-charcoal">Analytics Metrics</p>
+                    <p className="text-base text-charcoal">
                       Summary statistics and completion rates
                     </p>
                   </div>
@@ -303,7 +303,7 @@ export function DataExportInterface({
             {/* Survey Filter */}
             {exportOptions.includeResponses && (
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Survey Filter</Label>
+                <Label className="text-base font-bold text-charcoal">Survey Filter</Label>
                 <Select
                   value={exportOptions.surveyIds?.length === 0 ? 'all' : 'selected'}
                   onValueChange={(value) => {
@@ -329,7 +329,7 @@ export function DataExportInterface({
                 
                 {exportOptions.surveyIds && exportOptions.surveyIds.length > 0 && (
                   <div className="p-3 bg-light-concrete rounded-lg">
-                    <p className="text-sm font-medium text-charcoal mb-2">
+                    <p className="text-base font-bold text-charcoal mb-2">
                       Selected Surveys:
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -355,39 +355,39 @@ export function DataExportInterface({
         </Card>
       </div>
 
-      {/* Export Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Export Summary</CardTitle>
-          <CardDescription>
+      {/* Export Summary - STYLE GUIDE COMPLIANT */}
+      <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg">
+        <CardHeader className="p-8">
+          <CardTitle className="text-xl md:text-2xl font-bold text-forest-green">Export Summary</CardTitle>
+          <CardDescription className="text-lg text-charcoal">
             Review your export configuration before proceeding
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           <div className="space-y-4">
             {/* Summary Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-3 bg-light-concrete rounded-lg text-center">
-                <p className="text-sm text-charcoal/70">Format</p>
-                <p className="font-mono font-bold text-charcoal uppercase">
+                <p className="text-sm text-charcoal">Format</p>
+                <p className="font-mono font-medium text-forest-green uppercase">
                   {exportOptions.format}
                 </p>
               </div>
               <div className="p-3 bg-light-concrete rounded-lg text-center">
-                <p className="text-sm text-charcoal/70">Items</p>
-                <p className="font-mono font-bold text-charcoal">
+                <p className="text-sm text-charcoal">Items</p>
+                <p className="font-mono font-medium text-forest-green">
                   {estimate.items.toLocaleString()}
                 </p>
               </div>
               <div className="p-3 bg-light-concrete rounded-lg text-center">
-                <p className="text-sm text-charcoal/70">Size</p>
-                <p className="font-mono font-bold text-charcoal">
+                <p className="text-sm text-charcoal">Size</p>
+                <p className="font-mono font-medium text-forest-green">
                   {estimate.sizeMB > 1 ? `${estimate.sizeMB} MB` : `${estimate.sizeKB} KB`}
                 </p>
               </div>
               <div className="p-3 bg-light-concrete rounded-lg text-center">
-                <p className="text-sm text-charcoal/70">Date Range</p>
-                <p className="font-mono font-bold text-charcoal text-xs">
+                <p className="text-sm text-charcoal">Date Range</p>
+                <p className="font-mono font-medium text-forest-green text-sm">
                   {exportOptions.dateRange ? (
                     `${Math.ceil((exportOptions.dateRange.end.getTime() - exportOptions.dateRange.start.getTime()) / (1000 * 60 * 60 * 24))}d`
                   ) : (
@@ -397,12 +397,13 @@ export function DataExportInterface({
               </div>
             </div>
             
-            {/* Export Button */}
+            {/* Export Button - ENHANCED BUTTON COMPLIANT */}
             <div className="flex justify-center pt-4">
-              <Button
+              <EnhancedButton
                 onClick={simulateExport}
                 disabled={exportStatus !== 'idle' || (!exportOptions.includeResponses && !exportOptions.includeMetrics)}
-                size="lg"
+                variant="primary"
+                size="xl"
                 className="min-w-48"
               >
                 {exportStatus === 'idle' ? (
@@ -416,11 +417,11 @@ export function DataExportInterface({
                     Exporting...
                   </>
                 )}
-              </Button>
+              </EnhancedButton>
             </div>
             
             {!exportOptions.includeResponses && !exportOptions.includeMetrics && (
-              <p className="text-center text-sm text-charcoal/60">
+              <p className="text-center text-base text-charcoal">
                 Please select at least one data type to export
               </p>
             )}

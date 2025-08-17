@@ -9,8 +9,8 @@ import { AlertTriangle, RefreshCw, WifiOff } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
 
 import type { AnalyticsErrorProps } from './types';
 
@@ -41,15 +41,14 @@ export function AnalyticsErrorState({
           <div className="space-y-3">
             <p>{message}</p>
             {onRetry && (
-              <Button 
-                variant="outline" 
+              <EnhancedButton 
+                variant="outline-destructive" 
                 size="sm" 
                 onClick={onRetry}
-                className="border-red-300 text-red-700 hover:bg-red-100"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4" />
                 Try Again
-              </Button>
+              </EnhancedButton>
             )}
           </div>
         </AlertDescription>
@@ -66,14 +65,14 @@ export function AnalyticsErrorState({
           <p className="text-xs text-red-600">{message}</p>
         </div>
         {onRetry && (
-          <Button 
+          <EnhancedButton 
             variant="ghost" 
-            size="sm" 
+            size="icon-sm" 
             onClick={onRetry}
             className="text-red-700 hover:bg-red-100"
           >
             <RefreshCw className="h-4 w-4" />
-          </Button>
+          </EnhancedButton>
         )}
       </div>
     );
@@ -117,15 +116,14 @@ export function AnalyticsErrorState({
         
         {onRetry && (
           <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
+            <EnhancedButton 
+              variant="outline-destructive" 
               size="sm" 
               onClick={onRetry}
-              className="border-red-300 text-red-700 hover:bg-red-100"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4" />
               Retry
-            </Button>
+            </EnhancedButton>
           </div>
         )}
       </CardContent>

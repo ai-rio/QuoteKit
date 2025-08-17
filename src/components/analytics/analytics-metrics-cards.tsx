@@ -12,8 +12,7 @@ import {
   CheckCircle, 
   MessageSquare, 
   Target,
-  TrendingUp, 
-  Users} from 'lucide-react';
+  TrendingUp} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -140,11 +139,11 @@ export function AnalyticsMetricsCards({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-charcoal">
+        <h2 className="text-3xl md:text-4xl font-black text-forest-green">
           Key Metrics
         </h2>
         {loading && (
-          <Badge variant="outline" className="text-charcoal/60">
+          <Badge variant="outline" className="text-charcoal">
             Refreshing...
           </Badge>
         )}
@@ -167,14 +166,14 @@ function MetricCard({ metric }: MetricCardProps) {
   const { title, value, subtitle, icon: Icon, trend, loading, error } = metric;
 
   return (
-    <Card className="bg-paper-white border-stone-gray shadow-sm hover:shadow-md transition-shadow">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs sm:text-sm font-medium text-charcoal truncate pr-2">
+    <Card className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg hover:shadow-xl transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-8">
+        <CardTitle className="text-sm font-bold text-forest-green truncate pr-2">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal/70 flex-shrink-0" />
+        <Icon className="h-4 w-4 lg:h-5 lg:w-5 text-charcoal flex-shrink-0" />
       </CardHeader>
-      <CardContent className="p-4 lg:p-6">
+      <CardContent className="p-8 pt-0">
         {loading ? (
           <div className="space-y-2">
             <Skeleton className="h-8 w-16" />
@@ -185,17 +184,17 @@ function MetricCard({ metric }: MetricCardProps) {
             <div className="text-lg font-mono text-charcoal/40">
               --
             </div>
-            <p className="text-xs text-red-600">
+            <p className="text-sm text-red-600">
               {error}
             </p>
           </div>
         ) : (
           <div className="space-y-1">
-            <div className="font-mono text-xl sm:text-2xl font-bold text-charcoal">
+            <div className="font-mono text-xl sm:text-2xl font-medium text-forest-green">
               {value}
             </div>
             {subtitle && (
-              <p className="text-xs text-charcoal/70">
+              <p className="text-sm text-charcoal">
                 {subtitle}
               </p>
             )}
@@ -204,16 +203,16 @@ function MetricCard({ metric }: MetricCardProps) {
                 <TrendingUp 
                   className={`h-3 w-3 ${
                     trend.direction === 'up' 
-                      ? 'text-success-green' 
+                      ? 'text-forest-green' 
                       : trend.direction === 'down' 
                         ? 'text-red-500 rotate-180' 
                         : 'text-charcoal/50'
                   }`} 
                 />
                 <span 
-                  className={`text-xs font-medium ${
+                  className={`text-sm font-medium ${
                     trend.direction === 'up' 
-                      ? 'text-success-green' 
+                      ? 'text-forest-green' 
                       : trend.direction === 'down' 
                         ? 'text-red-500' 
                         : 'text-charcoal/50'

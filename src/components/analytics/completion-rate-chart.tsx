@@ -143,7 +143,7 @@ export function CompletionRateChart({
         <div className="space-y-4">
           {/* Survey Completion Rates */}
           <div className="space-y-4">
-            {sortedData.map((survey, index) => {
+            {sortedData.map((survey, _index) => {
               const isTopPerformer = survey === chartStats.topPerformer;
               const completionRate = survey.completionRate;
               const rateColor = completionRate >= 70 
