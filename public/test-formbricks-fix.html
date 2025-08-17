@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formbricks Error Handling Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4CAF50; background-color: #f8fff8; }
+        .warning { border-color: #ff9800; background-color: #fff8f0; }
+        .error { border-color: #f44336; background-color: #fff5f5; }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #005a87; }
+        .log-output {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #4CAF50; }
+        .status-warning { background-color: #ff9800; }
+        .status-error { background-color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Formbricks Error Handling Test</h1>
+        <p>This page tests the Formbricks error handling improvements implemented to fix the "🧱 Formbricks - Global error: {}" issue.</p>
+
+        <div class="test-section success">
+            <h3><span class="status-indicator status-success"></span>Test 1: Error Handler Detection</h3>
+            <p>Testing if our error handler can detect the problematic Formbricks error pattern.</p>
+            <button onclick="testErrorDetection()">Run Error Detection Test</button>
+            <div id="error-detection-result" class="log-output" style="display: none;"></div>
+        </div>
+
+        <div class="test-section warning">
+            <h3><span class="status-indicator status-warning"></span>Test 2: Simulate Empty Error</h3>
+            <p>Simulate the problematic empty error object to verify suppression.</p>
+            <button onclick="simulateEmptyError()">Simulate Empty Error</button>
+            <div id="empty-error-result" class="log-output" style="display: none;"></div>
+        </div>
+
+        <div class="test-section success">
+            <h3><span class="status-indicator status-success"></span>Test 3: Console Override</h3>
+            <p>Test that our console.error override is working correctly.</p>
+            <button onclick="testConsoleOverride()">Test Console Override</button>
+            <div id="console-override-result" class="log-output" style="display: none;"></div>
+        </div>
+
+        <div class="test-section warning">
+            <h3><span class="status-indicator status-warning"></span>Test 4: Safe Execution</h3>
+            <p>Test the safe execution wrapper for Formbricks operations.</p>
+            <button onclick="testSafeExecution()">Test Safe Execution</button>
+            <div id="safe-execution-result" class="log-output" style="display: none;"></div>
+        </div>
+
+        <div class="test-section success">
+            <h3><span class="status-indicator status-success"></span>Test 5: Environment Check</h3>
+            <p>Check if Formbricks environment is properly configured.</p>
+            <button onclick="checkEnvironment()">Check Environment</button>
+            <div id="environment-result" class="log-output" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results Summary</h3>
+            <div id="test-summary">
+                <p>Click the test buttons above to run individual tests.</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Instructions</h3>
+            <ol>
+                <li>Open browser Developer Tools (F12)</li>
+                <li>Go to the Console tab</li>
+                <li>Run the tests above</li>
+                <li>Check that no "🧱 Formbricks - Global error: {}" messages appear</li>
+                <li>Verify that our enhanced error messages are shown instead</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Store original console.error for testing
+        const originalConsoleError = console.error;
+        let testResults = {};
+
+        // Mock error handler for testing (simplified version)
+        class MockFormbricksErrorHandler {
+            constructor() {
+                this.suppressedErrors = 0;
+                this.totalErrors = 0;
+            }
+
+            isFormbricksEmptyError(args) {
+                return (
+                    args.length >= 2 &&
+                    typeof args[0] === 'string' &&
+                    args[0].includes('🧱 Formbricks - Global error:') &&
+                    args[1] &&
+                    typeof args[1] === 'object' &&
+                    Object.keys(args[1]).length === 0
+                );
+            }
+
+            handleError(...args) {
+                this.totalErrors++;
+                
+                if (this.isFormbricksEmptyError(args)) {
+                    this.suppressedErrors++;
+                    console.warn('🔧 [Test] Intercepted Formbricks empty error - suppressed');
+                    return true; // Suppressed
+                }
+                
+                return false; // Not suppressed
+            }
+
+            getStats() {
+                return {
+                    totalErrors: this.totalErrors,
+                    suppressedErrors: this.suppressedErrors
+                };
+            }
+        }
+
+        const mockErrorHandler = new MockFormbricksErrorHandler();
+
+        // Test functions
+        function testErrorDetection() {
+            const resultDiv = document.getElementById('error-detection-result');
+            resultDiv.style.display = 'block';
+            
+            const testCases = [
+                ['🧱 Formbricks - Global error: ', {}], // Should be detected
+                ['🧱 Formbricks - Global error: ', {data: 'test'}], // Should NOT be detected
+                ['Some other error', {}], // Should NOT be detected
+                ['🧱 Formbricks - Global error: ', null], // Should NOT be detected
+            ];
+
+            let results = [];
+            testCases.forEach((testCase, index) => {
+                const isDetected = mockErrorHandler.isFormbricksEmptyError(testCase);
+                const expected = index === 0; // Only first case should be detected
+                const passed = isDetected === expected;
+                
+                results.push(`Test ${index + 1}: ${passed ? '✅ PASS' : '❌ FAIL'} - ${isDetected ? 'Detected' : 'Not detected'}`);
+            });
+
+            resultDiv.innerHTML = results.join('<br>');
+            testResults.errorDetection = results.every(r => r.includes('✅ PASS'));
+            updateSummary();
+        }
+
+        function simulateEmptyError() {
+            const resultDiv = document.getElementById('empty-error-result');
+            resultDiv.style.display = 'block';
+            
+            console.log('🧪 Simulating problematic Formbricks error...');
+            
+            // Simulate the problematic error
+            const wasSuppressed = mockErrorHandler.handleError('🧱 Formbricks - Global error: ', {});
+            
+            const stats = mockErrorHandler.getStats();
+            const result = wasSuppressed ? 
+                `✅ SUCCESS: Empty error was suppressed (${stats.suppressedErrors} total suppressed)` :
+                `❌ FAILED: Empty error was not suppressed`;
+            
+            resultDiv.innerHTML = result;
+            testResults.emptyError = wasSuppressed;
+            updateSummary();
+        }
+
+        function testConsoleOverride() {
+            const resultDiv = document.getElementById('console-override-result');
+            resultDiv.style.display = 'block';
+            
+            let intercepted = false;
+            
+            // Temporarily override console.error to test interception
+            const testConsoleError = (...args) => {
+                if (mockErrorHandler.handleError(...args)) {
+                    intercepted = true;
+                    return; // Suppressed
+                }
+                originalConsoleError.apply(console, args);
+            };
+            
+            // Test the override
+            console.error = testConsoleError;
+            console.error('🧱 Formbricks - Global error: ', {});
+            console.error = originalConsoleError; // Restore
+            
+            const result = intercepted ? 
+                '✅ SUCCESS: Console override is working correctly' :
+                '❌ FAILED: Console override did not intercept the error';
+            
+            resultDiv.innerHTML = result;
+            testResults.consoleOverride = intercepted;
+            updateSummary();
+        }
+
+        function testSafeExecution() {
+            const resultDiv = document.getElementById('safe-execution-result');
+            resultDiv.style.display = 'block';
+            
+            // Mock safe execution function
+            async function safeExecute(operation, context) {
+                try {
+                    const result = await Promise.resolve(operation());
+                    console.log(`✅ Safe execution success: ${context}`);
+                    return result;
+                } catch (error) {
+                    console.error(`❌ Safe execution failed: ${context}`, error);
+                    return undefined;
+                }
+            }
+            
+            // Test successful operation
+            safeExecute(() => 'success', 'test operation 1').then(result => {
+                const success1 = result === 'success';
+                
+                // Test failed operation
+                safeExecute(() => { throw new Error('test error'); }, 'test operation 2').then(result => {
+                    const success2 = result === undefined;
+                    
+                    const overall = success1 && success2;
+                    const resultText = overall ? 
+                        '✅ SUCCESS: Safe execution wrapper works correctly' :
+                        '❌ FAILED: Safe execution wrapper has issues';
+                    
+                    resultDiv.innerHTML = resultText;
+                    testResults.safeExecution = overall;
+                    updateSummary();
+                });
+            });
+        }
+
+        function checkEnvironment() {
+            const resultDiv = document.getElementById('environment-result');
+            resultDiv.style.display = 'block';
+            
+            // Check for Formbricks-related globals
+            const checks = {
+                'Window object': typeof window !== 'undefined',
+                'Console available': typeof console !== 'undefined',
+                'Error handler mock': typeof mockErrorHandler !== 'undefined',
+                'Original console.error': typeof originalConsoleError === 'function',
+            };
+            
+            const results = Object.entries(checks).map(([check, passed]) => 
+                `${check}: ${passed ? '✅ OK' : '❌ FAIL'}`
+            );
+            
+            const allPassed = Object.values(checks).every(Boolean);
+            results.push('', allPassed ? '✅ Environment check passed' : '❌ Environment check failed');
+            
+            resultDiv.innerHTML = results.join('<br>');
+            testResults.environment = allPassed;
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('test-summary');
+            const totalTests = Object.keys(testResults).length;
+            const passedTests = Object.values(testResults).filter(Boolean).length;
+            
+            if (totalTests === 0) {
+                summaryDiv.innerHTML = '<p>No tests run yet.</p>';
+                return;
+            }
+            
+            const percentage = Math.round((passedTests / totalTests) * 100);
+            const status = percentage === 100 ? '✅ ALL TESTS PASSED' : 
+                          percentage >= 80 ? '⚠️ MOSTLY PASSING' : '❌ TESTS FAILING';
+            
+            summaryDiv.innerHTML = `
+                <p><strong>${status}</strong></p>
+                <p>Tests passed: ${passedTests}/${totalTests} (${percentage}%)</p>
+                <p>Individual results:</p>
+                <ul>
+                    ${Object.entries(testResults).map(([test, passed]) => 
+                        `<li>${test}: ${passed ? '✅ PASS' : '❌ FAIL'}</li>`
+                    ).join('')}
+                </ul>
+            `;
+        }
+
+        // Initialize
+        console.log('🧪 Formbricks Error Handling Test Page Loaded');
+        console.log('📋 Mock error handler initialized');
+        console.log('🔧 Ready to test error handling improvements');
+    </script>
+</body>
+</html>

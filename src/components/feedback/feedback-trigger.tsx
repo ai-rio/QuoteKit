@@ -88,6 +88,7 @@ export function FeedbackTrigger({
   // State management
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSurveyOpen, setIsSurveyOpen] = useState(false);
+  const [selectedFeedbackType, setSelectedFeedbackType] = useState<FeedbackType | null>(null);
 
   // Refs
   const triggerRef = useRef<HTMLButtonElement>(null);

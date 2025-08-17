@@ -1,6 +1,7 @@
 'use server';
 
 import { updateItemLastUsed } from '@/features/items/actions';
+import { analyzeQuoteComplexityServer, extractOrGenerateSessionId,ServerSideTracker } from '@/libs/formbricks/server-tracking';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
 import { ActionResponse } from '@/types/action-response';
 import { FREE_PLAN_FEATURES,parseStripeMetadata } from '@/types/features';
@@ -9,11 +10,22 @@ import { CreateQuoteData, Quote, SaveDraftData } from './types';
 import { calculateQuote } from './utils';
 
 export async function createQuote(quoteData: CreateQuoteData): Promise<ActionResponse<Quote>> {
+  const startTime = Date.now();
+  const sessionId = extractOrGenerateSessionId();
+  let user: any = null;
+  
   try {
     const supabase = await createSupabaseServerClient();
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+    user = authUser;
     if (userError || !user) {
+      ServerSideTracker.trackServerError(user?.id || 'anonymous', {
+        errorType: 'validation_error',
+        errorMessage: 'User not authenticated',
+        context: { action: 'createQuote' },
+        sessionId,
+      });
       return { data: null, error: { message: 'User not authenticated' } };
     }
 
@@ -56,6 +68,15 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
     const isUnlimited = maxQuotes === -1;
     
     if (!isUnlimited && currentQuotes >= maxQuotes) {
+      // Track feature limit hit
+      ServerSideTracker.trackFeatureLimitHit(user.id, {
+        feature: 'quotes',
+        currentUsage: currentQuotes,
+        limit: maxQuotes,
+        userTier: subscription?.stripe_prices?.stripe_products?.metadata?.plan_name || 'free',
+        sessionId,
+      });
+
       return { 
         data: null, 
         error: { 
@@ -67,18 +88,42 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
 
     // Validation - require either client_id or client_name
     if (!quoteData.client_id && !quoteData.client_name?.trim()) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'validation_error',
+        errorMessage: 'Client information is required',
+        context: { action: 'createQuote', validationField: 'client' },
+        sessionId,
+      });
       return { data: null, error: { message: 'Client information is required' } };
     }
 
     if (!quoteData.quote_data || quoteData.quote_data.length === 0) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'validation_error',
+        errorMessage: 'At least one line item is required',
+        context: { action: 'createQuote', validationField: 'line_items' },
+        sessionId,
+      });
       return { data: null, error: { message: 'At least one line item is required' } };
     }
 
     if (quoteData.tax_rate < 0 || quoteData.tax_rate > 100) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'validation_error',
+        errorMessage: 'Tax rate must be between 0 and 100',
+        context: { action: 'createQuote', validationField: 'tax_rate', value: quoteData.tax_rate },
+        sessionId,
+      });
       return { data: null, error: { message: 'Tax rate must be between 0 and 100' } };
     }
 
     if (quoteData.markup_rate < 0 || quoteData.markup_rate > 1000) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'validation_error',
+        errorMessage: 'Markup rate must be between 0 and 1000',
+        context: { action: 'createQuote', validationField: 'markup_rate', value: quoteData.markup_rate },
+        sessionId,
+      });
       return { data: null, error: { message: 'Markup rate must be between 0 and 1000' } };
     }
 
@@ -104,6 +149,17 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
       .single();
 
     if (error) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'database_error',
+        errorMessage: error.message || 'Failed to insert quote',
+        context: { 
+          action: 'createQuote', 
+          operation: 'database_insert',
+          itemCount: quoteData.quote_data.length,
+          totalValue: calculation.total,
+        },
+        sessionId,
+      });
       return { data: null, error };
     }
 
@@ -133,19 +189,76 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
       console.warn('Failed to update item last_used_at:', updateError);
     }
 
+    // Track successful quote creation with comprehensive analytics
+    const endTime = Date.now();
+    const processingTime = endTime - startTime;
+    const complexity = analyzeQuoteComplexityServer({
+      itemCount: quoteData.quote_data.length,
+      totalValue: calculation.total,
+      hasTax: quoteData.tax_rate > 0,
+      hasMarkup: quoteData.markup_rate > 0,
+    });
+
+    ServerSideTracker.trackQuoteCreated(user.id, {
+      quoteId: data.id,
+      clientId: quoteData.client_id || undefined,
+      itemCount: quoteData.quote_data.length,
+      totalValue: calculation.total,
+      hasTax: quoteData.tax_rate > 0,
+      hasMarkup: quoteData.markup_rate > 0,
+      complexity,
+      creationDuration: processingTime,
+      sessionId,
+    });
+
+    // Track workflow conversion success
+    ServerSideTracker.trackWorkflowConversion(user.id, {
+      quoteId: data.id,
+      success: true,
+      totalValue: calculation.total,
+      itemCount: quoteData.quote_data.length,
+      processingTime,
+      sessionId,
+    });
+
     return { data: data as unknown as Quote, error: null };
   } catch (error) {
     console.error('Error creating quote:', error);
+    
+    // Track unexpected server errors
+    ServerSideTracker.trackServerError(user?.id || 'anonymous', {
+      errorType: 'quote_creation_failed',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      context: { 
+        action: 'createQuote',
+        itemCount: quoteData?.quote_data?.length || 0,
+        hasClient: !!(quoteData?.client_id || quoteData?.client_name),
+        processingTime: Date.now() - startTime,
+      },
+      sessionId,
+    });
+    
     return { data: null, error: { message: 'Failed to create quote' } };
   }
 }
 
 export async function saveDraft(draftData: SaveDraftData): Promise<ActionResponse<Quote>> {
+  const startTime = Date.now();
+  const sessionId = extractOrGenerateSessionId();
+  let user: any = null;
+  
   try {
     const supabase = await createSupabaseServerClient();
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+    user = authUser;
     if (userError || !user) {
+      ServerSideTracker.trackServerError(user?.id || 'anonymous', {
+        errorType: 'validation_error',
+        errorMessage: 'User not authenticated',
+        context: { action: 'saveDraft' },
+        sessionId,
+      });
       return { data: null, error: { message: 'User not authenticated' } };
     }
 
@@ -181,14 +294,43 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
         .single();
 
       if (error) {
+        ServerSideTracker.trackServerError(user.id, {
+          errorType: 'database_error',
+          errorMessage: error.message || 'Failed to update draft',
+          context: { 
+            action: 'saveDraft', 
+            operation: 'database_update',
+            draftId: draftData.id,
+          },
+          sessionId,
+        });
         return { data: null, error };
       }
+
+      // Track successful draft update
+      ServerSideTracker.trackDraftSaved(user.id, {
+        draftId: data.id,
+        isNewDraft: false,
+        itemCount: draftData.quote_data?.length || 0,
+        estimatedValue: calculateQuote(
+          draftData.quote_data || [],
+          draftData.tax_rate || 0,
+          draftData.markup_rate || 0
+        ).total,
+        sessionId,
+      });
 
       return { data: data as unknown as Quote, error: null };
     }
 
     // Create new draft - require either client_id or client_name
     if (!draftData.client_id && !draftData.client_name?.trim()) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'validation_error',
+        errorMessage: 'Client information is required for new draft',
+        context: { action: 'saveDraft', operation: 'create_new' },
+        sessionId,
+      });
       return { data: null, error: { message: 'Client information is required' } };
     }
 
@@ -218,12 +360,45 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
       .single();
 
     if (error) {
+      ServerSideTracker.trackServerError(user.id, {
+        errorType: 'database_error',
+        errorMessage: error.message || 'Failed to create new draft',
+        context: { 
+          action: 'saveDraft', 
+          operation: 'database_insert',
+          itemCount: draftData.quote_data?.length || 0,
+        },
+        sessionId,
+      });
       return { data: null, error };
     }
+
+    // Track successful new draft creation
+    ServerSideTracker.trackDraftSaved(user.id, {
+      draftId: data.id,
+      isNewDraft: true,
+      itemCount: draftData.quote_data?.length || 0,
+      estimatedValue: calculation.total,
+      sessionId,
+    });
 
     return { data: data as unknown as Quote, error: null };
   } catch (error) {
     console.error('Error saving draft:', error);
+    
+    // Track unexpected errors
+    ServerSideTracker.trackServerError(user.id, {
+      errorType: 'draft_save_failed',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      context: { 
+        action: 'saveDraft',
+        itemCount: draftData?.quote_data?.length || 0,
+        hasClient: !!(draftData?.client_id || draftData?.client_name),
+        processingTime: Date.now() - startTime,
+      },
+      sessionId,
+    });
+    
     return { data: null, error: { message: 'Failed to save draft' } };
   }
 }

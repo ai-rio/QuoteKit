@@ -2,6 +2,13 @@
  * Utility functions for Formbricks integration
  */
 
+// Type declaration for gtag
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 import { FormbricksManager } from './formbricks-manager';
 
 /**

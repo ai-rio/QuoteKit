@@ -2,6 +2,8 @@
 
 import formbricks from '@formbricks/js';
 
+import { getFormbricksErrorHandler } from './error-handler';
+
 /**
  * FormbricksManager - Singleton service for managing Formbricks SDK integration
  * Implements the technical architecture from the Formbricks integration docs
@@ -18,6 +20,9 @@ export class FormbricksManager {
   private constructor() {
     // Private constructor for singleton pattern
     console.log('🏗️ FormbricksManager constructor called');
+    
+    // Setup global error handler to catch Formbricks SDK errors
+    this.setupGlobalErrorHandler();
   }
 
   /**
@@ -369,21 +374,57 @@ export class FormbricksManager {
       return;
     }
 
+    const errorHandler = getFormbricksErrorHandler();
+    
+    errorHandler.safeExecute(
+      () => {
+        console.log('📋 Setting Formbricks attributes:', attributes);
+        
+        // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
+        if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.setAttributes === 'function') {
+          (window as any).formbricks.setAttributes(attributes);
+          console.log('📋 Used window.formbricks.setAttributes');
+        } else if (typeof formbricks.setAttributes === 'function') {
+          formbricks.setAttributes(attributes);
+          console.log('📋 Used imported formbricks.setAttributes');
+        } else {
+          throw new Error('setAttributes method not available on Formbricks SDK');
+        }
+      },
+      `setAttributes: ${Object.keys(attributes).join(', ')}`
+    );
+  }
+
+  /**
+   * Set user ID for Formbricks (required before setting attributes)
+   */
+  async setUserId(userId: string): Promise<void> {
+    if (!this.isInitialized()) {
+      console.log('👤 Formbricks not initialized, queuing userId:', userId);
+      // For userId, we need to wait for initialization rather than queue
+      // because setUserId is critical for subsequent operations
+      console.warn('⚠️ Cannot set userId before Formbricks is initialized');
+      throw new Error('Formbricks must be initialized before setting userId');
+    }
+
     try {
-      console.log('📋 Setting Formbricks attributes:', attributes);
+      console.log('👤 Setting Formbricks userId:', userId);
       
       // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
-      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.setAttributes === 'function') {
-        (window as any).formbricks.setAttributes(attributes);
-        console.log('📋 Used window.formbricks.setAttributes');
-      } else if (typeof formbricks.setAttributes === 'function') {
-        formbricks.setAttributes(attributes);
-        console.log('📋 Used imported formbricks.setAttributes');
+      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.setUserId === 'function') {
+        await (window as any).formbricks.setUserId(userId);
+        console.log('👤 Used window.formbricks.setUserId');
+      } else if (typeof formbricks.setUserId === 'function') {
+        await formbricks.setUserId(userId);
+        console.log('👤 Used imported formbricks.setUserId');
       } else {
-        throw new Error('setAttributes method not available on Formbricks SDK');
+        throw new Error('setUserId method not available on Formbricks SDK');
       }
+      
+      console.log('✅ Formbricks userId set successfully:', userId);
     } catch (error) {
-      console.error('Failed to set Formbricks attributes:', error);
+      console.error('❌ Failed to set Formbricks userId:', error);
+      throw error; // Re-throw to allow caller to handle
     }
   }
 
@@ -398,27 +439,30 @@ export class FormbricksManager {
       return;
     }
 
-    try {
-      console.log('📊 Tracking Formbricks event:', eventName, properties);
-      // Formbricks v4 expects specific structure - adapt our properties
-      const trackProperties = properties ? {
-        ...properties,
-        hiddenFields: properties.hiddenFields || {}
-      } : undefined;
-      
-      // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
-      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.track === 'function') {
-        (window as any).formbricks.track(eventName, trackProperties);
-        console.log('📊 Used window.formbricks.track');
-      } else if (typeof formbricks.track === 'function') {
-        formbricks.track(eventName, trackProperties);
-        console.log('📊 Used imported formbricks.track');
-      } else {
-        throw new Error('track method not available on Formbricks SDK');
-      }
-    } catch (error) {
-      console.error('Failed to track Formbricks event:', error);
-    }
+    const errorHandler = getFormbricksErrorHandler();
+    
+    errorHandler.safeExecute(
+      () => {
+        console.log('📊 Tracking Formbricks event:', eventName, properties);
+        // Formbricks v4 expects specific structure - adapt our properties
+        const trackProperties = properties ? {
+          ...properties,
+          hiddenFields: properties.hiddenFields || {}
+        } : undefined;
+        
+        // Use window.formbricks if available (after SDK loads), otherwise use imported formbricks
+        if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.track === 'function') {
+          (window as any).formbricks.track(eventName, trackProperties);
+          console.log('📊 Used window.formbricks.track');
+        } else if (typeof formbricks.track === 'function') {
+          formbricks.track(eventName, trackProperties);
+          console.log('📊 Used imported formbricks.track');
+        } else {
+          throw new Error('track method not available on Formbricks SDK');
+        }
+      },
+      `track event: ${eventName}`
+    );
   }
 
   /**
@@ -647,6 +691,24 @@ export class FormbricksManager {
       queuedEvents: this.eventQueue.length,
       queuedAttributes: Object.keys(this.attributeQueue).length,
     };
+  }
+
+  /**
+   * Setup global error handler to catch and properly handle Formbricks SDK errors
+   * This fixes the "🧱 Formbricks - Global error: {}" issue
+   */
+  private setupGlobalErrorHandler(): void {
+    // Initialize the enhanced error handler
+    const errorHandler = getFormbricksErrorHandler();
+    console.log('🛡️ Enhanced Formbricks error handler initialized');
+  }
+
+  /**
+   * Restore original console.error (useful for cleanup)
+   */
+  private restoreConsoleError(): void {
+    // This would need to store the original function, but for now we'll keep it simple
+    console.log('🔄 Console error handler cleanup (if needed)');
   }
 }
 

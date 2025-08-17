@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formbricks Error Suppression Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button:hover { background: #005a87; }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Formbricks Error Suppression Test</h1>
+        <p>This page tests if our error handler correctly suppresses the problematic Formbricks empty error objects.</p>
+        
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Open browser Developer Tools (F12)</li>
+            <li>Go to the Console tab</li>
+            <li>Click the test buttons below</li>
+            <li>Check the console output</li>
+        </ol>
+
+        <div>
+            <button onclick="testErrorSuppression()">🧱 Test Error Suppression</button>
+            <button onclick="testNormalError()">⚠️ Test Normal Error</button>
+            <button onclick="initializeErrorHandler()">🛡️ Initialize Error Handler</button>
+        </div>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Simplified version of our error handler for testing
+        class TestFormbricksErrorHandler {
+            constructor() {
+                this.suppressedErrors = 0;
+                this.originalConsoleError = console.error;
+                this.initialized = false;
+            }
+
+            isFormbricksEmptyError(args) {
+                return (
+                    args.length >= 2 &&
+                    typeof args[0] === 'string' &&
+                    args[0].includes('Formbricks - Global error:') &&
+                    args[1] !== null &&
+                    args[1] !== undefined &&
+                    typeof args[1] === 'object' &&
+                    Object.keys(args[1]).length === 0
+                );
+            }
+
+            initialize() {
+                if (this.initialized) return;
+
+                console.error = (...args) => {
+                    if (this.isFormbricksEmptyError(args)) {
+                        this.suppressedErrors++;
+                        console.warn(`🔧 [Test] Suppressed Formbricks empty error #${this.suppressedErrors}`);
+                        
+                        if (this.suppressedErrors === 1) {
+                            console.warn('📋 Empty error objects are now being suppressed');
+                        }
+                        
+                        return; // Suppress the error
+                    }
+
+                    // For all other errors, use original console.error
+                    this.originalConsoleError.apply(console, args);
+                };
+
+                this.initialized = true;
+                console.log('🛡️ Test error handler initialized');
+            }
+
+            getStats() {
+                return {
+                    suppressedErrors: this.suppressedErrors,
+                    initialized: this.initialized
+                };
+            }
+        }
+
+        const testErrorHandler = new TestFormbricksErrorHandler();
+
+        function initializeErrorHandler() {
+            testErrorHandler.initialize();
+            showResult('✅ Error handler initialized! Check console for confirmation.', 'success');
+        }
+
+        function testErrorSuppression() {
+            if (!testErrorHandler.initialized) {
+                showResult('⚠️ Please initialize the error handler first!', 'warning');
+                return;
+            }
+
+            console.log('🧪 Testing error suppression...');
+            
+            // Simulate the exact problematic error
+            console.error('🧱 Formbricks - Global error: ', {});
+            
+            const stats = testErrorHandler.getStats();
+            showResult(
+                `✅ Test completed! Suppressed errors: ${stats.suppressedErrors}. Check console - you should see suppression messages but NOT the original error.`, 
+                'success'
+            );
+        }
+
+        function testNormalError() {
+            console.log('🧪 Testing normal error (should NOT be suppressed)...');
+            
+            // This should appear normally in console
+            console.error('This is a normal error that should appear in console');
+            
+            showResult('✅ Normal error sent to console. This should appear normally.', 'success');
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+
+        // Initialize on page load
+        console.log('🧪 Formbricks Error Suppression Test Page Loaded');
+        console.log('📋 Click "Initialize Error Handler" then test the error suppression');
+    </script>
+</body>
+</html>

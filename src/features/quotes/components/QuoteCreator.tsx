@@ -4,6 +4,9 @@ import { HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback,useEffect, useState } from 'react';
 
+// Import survey trigger for post-quote creation feedback
+import { QuoteContext } from '@/components/feedback';
+import { QuoteSurveyManager } from '@/components/feedback/quote-survey-manager';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +24,7 @@ import { createQuote, saveDraft } from '../actions';
 import { CreateQuoteData, Quote, QuoteLineItem, QuoteStatus,SaveDraftData } from '../types';
 import { calculateQuote } from '../utils';
 import { EnhancedLineItemsTable } from './EnhancedLineItemsTable';
+import { QuoteWorkflowTracker, useWorkflowStepTracking } from './quote-workflow-tracker';
 import { QuoteNumbering } from './QuoteNumbering';
 import { SaveDraftButton } from './SaveDraftButton';
 
@@ -31,13 +35,17 @@ interface QuoteCreatorProps {
   templateData?: Quote | null; // For loading from templates
 }
 
-export function QuoteCreator({ 
+// Internal component without tracking wrapper
+function QuoteCreatorInternal({ 
   availableItems, 
   defaultSettings, 
   initialDraft,
   templateData 
 }: QuoteCreatorProps) {
   const router = useRouter();
+  
+  // Workflow tracking hooks
+  const workflowTracking = useWorkflowStepTracking();
   
   // State management
   const [isLoading, setIsLoading] = useState(false);
@@ -108,12 +116,24 @@ export function QuoteCreator({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
 
+  // Survey trigger state for post-quote creation feedback
+  const [quoteCreationStartTime, setQuoteCreationStartTime] = useState<Date | null>(null);
+  const [quoteContext, setQuoteContext] = useState<QuoteContext | null>(null);
+
   // Handle client selection
   const handleClientSelect = (client: ClientOption) => {
     setSelectedClient(client);
     if (client) {
       setClientName(client.name);
       setClientContact(client.email || client.phone || '');
+      
+      // Track client selection workflow step
+      workflowTracking.trackClientSelected({
+        clientId: client.id,
+        clientName: client.name,
+        isNewClient: !client.id, // If no ID, it's a new client
+        selectionMethod: 'search', // Could be enhanced to detect actual method
+      });
     } else {
       setClientName('');
       setClientContact('');
@@ -125,6 +145,14 @@ export function QuoteCreator({
     if (!initialDraft && !templateData) return;
     setHasUnsavedChanges(true);
   }, [selectedClient, clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft, templateData]);
+
+  // Track quote creation start time when user starts working on the quote
+  useEffect(() => {
+    if (clientName.trim() && quoteLineItems.length > 0 && !quoteCreationStartTime) {
+      setQuoteCreationStartTime(new Date());
+      console.log('📊 Quote creation session started');
+    }
+  }, [clientName, quoteLineItems.length, quoteCreationStartTime]);
 
   // Show notification when template is loaded
   useEffect(() => {
@@ -162,18 +190,52 @@ export function QuoteCreator({
         setHasUnsavedChanges(false);
         setLastSaveTime(new Date());
         console.log('Auto-saved draft:', response.data.id);
+        
+        // Track successful autosave
+        workflowTracking.trackAutosave({
+          triggerReason: 'timer',
+          dataChanged: ['quote_data', 'pricing'],
+          saveSuccess: true,
+        });
       } else {
         console.error('Auto-save failed:', response?.error);
+        workflowTracking.trackError({
+          errorType: 'autosave_failed',
+          errorMessage: response?.error?.message || 'Unknown autosave error',
+          errorContext: { draftId, clientName, itemCount: quoteLineItems.length },
+        });
       }
     } catch (error) {
       console.error('Auto-save failed:', error);
+      workflowTracking.trackError({
+        errorType: 'autosave_failed',
+        errorMessage: error instanceof Error ? error.message : 'Unknown autosave error',
+        errorContext: { draftId, clientName, itemCount: quoteLineItems.length },
+      });
     }
-  }, [hasUnsavedChanges, selectedClient?.id, clientName, clientContact, quoteLineItems, taxRate, markupRate, draftId]);
+  }, [hasUnsavedChanges, selectedClient?.id, clientName, clientContact, quoteLineItems, taxRate, markupRate, draftId, workflowTracking]);
 
   useEffect(() => {
     const interval = setInterval(autoSave, 30000); // 30 seconds
     return () => clearInterval(interval);
   }, [autoSave]);
+
+  // Track pricing configuration changes
+  useEffect(() => {
+    if (taxRate !== undefined && markupRate !== undefined && quoteLineItems.length > 0) {
+      const calculation = calculateQuote(quoteLineItems, taxRate, markupRate);
+      const profitMargin = markupRate > 0 ? (markupRate / 100) * calculation.subtotal : 0;
+      
+      workflowTracking.trackPricingSet({
+        taxRate,
+        markupRate,
+        hasTax: taxRate > 0,
+        hasMarkup: markupRate > 0,
+        finalTotal: calculation.total,
+        profitMargin,
+      });
+    }
+  }, [taxRate, markupRate, quoteLineItems, workflowTracking]);
 
   // Line item management functions
   function handleAddItem(itemId: string) {
@@ -198,15 +260,41 @@ export function QuoteCreator({
       quantity: 1,
     };
 
+    const isFirstItem = quoteLineItems.length === 0;
     setQuoteLineItems(prev => [...prev, newQuoteItem]);
+    setHasUnsavedChanges(true);
+
+    // Track item addition workflow step
+    workflowTracking.trackItemAdded({
+      itemId: item.id,
+      itemName: item.name,
+      isFirstItem,
+      additionMethod: 'search', // Could be enhanced to detect actual method
+      quantity: 1,
+      cost: item.cost,
+    });
   }
 
   function handleUpdateItem(itemId: string, field: keyof QuoteLineItem, value: any) {
+    // Track quantity changes specifically
+    if (field === 'quantity') {
+      const currentItem = quoteLineItems.find(item => item.id === itemId);
+      if (currentItem) {
+        workflowTracking.trackQuantityChanged({
+          itemId,
+          oldQuantity: currentItem.quantity,
+          newQuantity: value,
+          changeType: value > currentItem.quantity ? 'increase' : 'decrease',
+        });
+      }
+    }
+
     setQuoteLineItems(prev => 
       prev.map(item => 
         item.id === itemId ? { ...item, [field]: value } : item
       )
     );
+    setHasUnsavedChanges(true);
   }
 
   function handleRemoveItem(itemId: string) {
@@ -309,6 +397,38 @@ export function QuoteCreator({
         setQuoteNumber(response.data.quote_number || '');
         setStatus('sent');
         setHasUnsavedChanges(false);
+
+        // Generate quote context for survey trigger
+        const creationDuration = quoteCreationStartTime 
+          ? Math.round((new Date().getTime() - quoteCreationStartTime.getTime()) / 1000)
+          : undefined;
+
+        // Determine quote complexity based on item count and value
+        const complexity: 'simple' | 'complex' = 
+          quoteLineItems.length >= 5 || calculation.total >= 5000 ? 'complex' : 'simple';
+
+        // Determine quote type based on items (simplified logic)
+        const quoteType: 'service' | 'product' | 'mixed' = 
+          quoteLineItems.length === 1 ? 'service' : 
+          quoteLineItems.length <= 3 ? 'product' : 'mixed';
+
+        // Determine if client is new (simplified - assumes no client_id means new)
+        const clientType: 'new' | 'existing' = selectedClient?.id ? 'existing' : 'new';
+
+        const newQuoteContext: QuoteContext = {
+          quoteId: response.data.id,
+          quoteValue: calculation.total,
+          itemCount: quoteLineItems.length,
+          complexity,
+          quoteType,
+          creationDuration,
+          clientType,
+          isFromTemplate: !!templateData,
+          templateName: templateData?.template_name || undefined,
+        };
+
+        setQuoteContext(newQuoteContext);
+        console.log('📊 Quote context generated for survey trigger:', newQuoteContext);
       }
     } catch (error) {
       toast({
@@ -618,6 +738,35 @@ export function QuoteCreator({
           </CardContent>
         </Card>
       )}
+
+      {/* Survey Manager for Post-Quote Creation Feedback */}
+      {quoteContext && (
+        <QuoteSurveyManager
+          quoteContext={quoteContext}
+          onSurveyTriggered={(surveyType, context) => {
+            console.log(`📋 ${surveyType} survey triggered for quote:`, context.quoteId);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+// Main export with workflow tracking wrapper
+export function QuoteCreator(props: QuoteCreatorProps) {
+  return (
+    <QuoteWorkflowTracker
+      mode="create"
+      templateId={props.templateData?.id}
+      draftId={props.initialDraft?.id}
+      onWorkflowComplete={(sessionData) => {
+        console.log('Quote workflow completed:', sessionData);
+      }}
+      onWorkflowAbandoned={(reason, sessionData) => {
+        console.log('Quote workflow abandoned:', reason, sessionData);
+      }}
+    >
+      <QuoteCreatorInternal {...props} />
+    </QuoteWorkflowTracker>
   );
 }

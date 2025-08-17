@@ -54,6 +54,10 @@ export function useFormbricksTracking() {
       itemCount?: number;
       isTemplate?: boolean;
       complexity?: 'simple' | 'complex';
+      quoteType?: 'service' | 'product' | 'mixed';
+      clientType?: 'new' | 'existing';
+      creationDuration?: number;
+      templateName?: string;
     }
   ) => {
     const eventMap = {
@@ -160,6 +164,47 @@ export function useFormbricksTracking() {
     });
   }, [trackEvent]);
 
+  // Specialized tracking for post-quote creation surveys (FB-010)
+  const trackQuoteCreationSurvey = useCallback((
+    surveyType: 'post_creation' | 'high_value' | 'complex' | 'new_client',
+    quoteContext: {
+      quoteId: string;
+      quoteValue: number;
+      itemCount: number;
+      complexity: 'simple' | 'complex';
+      quoteType: 'service' | 'product' | 'mixed';
+      clientType?: 'new' | 'existing';
+      creationDuration?: number;
+      isFromTemplate?: boolean;
+      templateName?: string;
+    }
+  ) => {
+    const eventMap = {
+      post_creation: FORMBRICKS_EVENTS.POST_QUOTE_CREATION_SURVEY,
+      high_value: FORMBRICKS_EVENTS.HIGH_VALUE_QUOTE_FEEDBACK,
+      complex: FORMBRICKS_EVENTS.COMPLEX_QUOTE_FEEDBACK,
+      new_client: FORMBRICKS_EVENTS.NEW_CLIENT_QUOTE_EXPERIENCE,
+    };
+
+    trackEvent(eventMap[surveyType], {
+      ...quoteContext,
+      surveyType,
+      timestamp: new Date().toISOString(),
+    });
+  }, [trackEvent]);
+
+  const trackQuoteCreationSatisfaction = useCallback((
+    satisfactionData: {
+      quoteId: string;
+      rating?: number;
+      feedback?: string;
+      wouldRecommend?: boolean;
+      timeToComplete?: number;
+    }
+  ) => {
+    trackEvent(FORMBRICKS_EVENTS.QUOTE_CREATION_SATISFACTION, satisfactionData);
+  }, [trackEvent]);
+
   const registerRouteChange = useCallback(() => {
     const manager = FormbricksManager.getInstance();
     manager.registerRouteChange();
@@ -175,11 +220,17 @@ export function useFormbricksTracking() {
     manager.setAttributes(attributes);
   }, []);
 
+  const setUserId = useCallback(async (userId: string) => {
+    const manager = FormbricksManager.getInstance();
+    return manager.setUserId(userId);
+  }, []);
+
   return { 
     // Core tracking
     trackEvent, 
     registerRouteChange, 
     setUserAttributes,
+    setUserId,
     
     // Specialized tracking functions
     trackPageView,
@@ -189,6 +240,10 @@ export function useFormbricksTracking() {
     trackConversion,
     trackError,
     trackSession,
+    
+    // FB-010: Post-quote creation survey tracking
+    trackQuoteCreationSurvey,
+    trackQuoteCreationSatisfaction,
     
     // Status
     isAvailable: (() => {

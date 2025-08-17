@@ -36,6 +36,46 @@ export function DashboardSatisfactionSurvey({
   const [surveyTriggered, setSurveyTriggered] = useState(false);
   const [timeOnDashboard, setTimeOnDashboard] = useState(0);
 
+  /**
+   * Determine user's dashboard experience level based on usage patterns
+   */
+  const getDashboardExperienceLevel = useCallback((): string => {
+    if (stats.totalQuotes === 0) return 'new_user';
+    if (stats.totalQuotes < 5) return 'beginner';
+    if (stats.totalQuotes < 20) return 'intermediate';
+    return 'advanced';
+  }, [stats.totalQuotes]);
+
+  /**
+   * Trigger the dashboard satisfaction survey with contextual data
+   */
+  const triggerDashboardSatisfactionSurvey = useCallback(() => {
+    console.log('🎯 Triggering dashboard satisfaction survey');
+    
+    // Track survey trigger event
+    trackEvent(FORMBRICKS_EVENTS.DASHBOARD_SATISFACTION_SURVEY_TRIGGERED, {
+      userTier,
+      isPremium,
+      experienceLevel: getDashboardExperienceLevel(),
+      timeBeforeTrigger: 30, // seconds
+      hasQuotes: stats.totalQuotes > 0,
+      hasRevenue: stats.totalRevenue > 0,
+      quotesCount: stats.totalQuotes,
+      revenue: stats.totalRevenue,
+      triggerContext: 'dashboard_30_second_engagement',
+      surveyVersion: 'v1.0',
+      timestamp: new Date().toISOString(),
+    });
+
+    // Trigger the actual survey using Formbricks event
+    trackEvent('dashboard_satisfaction_survey_show', {
+      context: 'dashboard_main',
+      userSegment: getDashboardExperienceLevel(),
+      premiumStatus: isPremium ? 'premium' : 'free',
+      engagementLevel: timeOnDashboard >= 30 ? 'engaged' : 'quick_visit',
+    });
+  }, [trackEvent, userTier, isPremium, getDashboardExperienceLevel, stats.totalQuotes, stats.totalRevenue, timeOnDashboard]);
+
   useEffect(() => {
     // Don't trigger if Formbricks isn't available
     if (!isAvailable) {
@@ -86,46 +126,6 @@ export function DashboardSatisfactionSurvey({
       console.log(`📊 Dashboard satisfaction survey: Session ended after ${finalTimeSpent} seconds`);
     };
   }, [isAvailable, userTier, isPremium, stats, surveyTriggered, setUserAttributes, getDashboardExperienceLevel, triggerDashboardSatisfactionSurvey]);
-
-  /**
-   * Determine user's dashboard experience level based on usage patterns
-   */
-  const getDashboardExperienceLevel = useCallback((): string => {
-    if (stats.totalQuotes === 0) return 'new_user';
-    if (stats.totalQuotes < 5) return 'beginner';
-    if (stats.totalQuotes < 20) return 'intermediate';
-    return 'advanced';
-  }, [stats.totalQuotes]);
-
-  /**
-   * Trigger the dashboard satisfaction survey with contextual data
-   */
-  const triggerDashboardSatisfactionSurvey = useCallback(() => {
-    console.log('🎯 Triggering dashboard satisfaction survey');
-    
-    // Track survey trigger event
-    trackEvent(FORMBRICKS_EVENTS.DASHBOARD_SATISFACTION_SURVEY_TRIGGERED, {
-      userTier,
-      isPremium,
-      experienceLevel: getDashboardExperienceLevel(),
-      timeBeforeTrigger: 30, // seconds
-      hasQuotes: stats.totalQuotes > 0,
-      hasRevenue: stats.totalRevenue > 0,
-      quotesCount: stats.totalQuotes,
-      revenue: stats.totalRevenue,
-      triggerContext: 'dashboard_30_second_engagement',
-      surveyVersion: 'v1.0',
-      timestamp: new Date().toISOString(),
-    });
-
-    // Trigger the actual survey using Formbricks event
-    trackEvent('dashboard_satisfaction_survey_show', {
-      context: 'dashboard_main',
-      userSegment: getDashboardExperienceLevel(),
-      premiumStatus: isPremium ? 'premium' : 'free',
-      engagementLevel: timeOnDashboard >= 30 ? 'engaged' : 'quick_visit',
-    });
-  }, [trackEvent, userTier, isPremium, getDashboardExperienceLevel, stats.totalQuotes, stats.totalRevenue, timeOnDashboard]);
 
   // Track dashboard interactions that indicate engagement
   useEffect(() => {

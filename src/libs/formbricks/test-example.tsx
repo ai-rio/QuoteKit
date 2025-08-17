@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useFormbricksTracking } from '@/hooks/use-formbricks-tracking';
-import { FORMBRICKS_EVENTS } from '@/libs/formbricks/types';
+import { useFormbricksTracking } from '../../hooks/use-formbricks-tracking';
+import { FORMBRICKS_EVENTS } from './types';
 
 export function FormbricksTestComponent() {
   const { trackEvent, isAvailable } = useFormbricksTracking();

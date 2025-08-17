@@ -13,7 +13,10 @@ export {
   MinimalFeedbackTrigger 
 } from './feedback-trigger';
 export { FeedbackWidget, useFeedbackWidget } from './feedback-widget';
+export { QuoteSurveyManager } from './quote-survey-manager';
 export { SurveyModal } from './survey-modal';
+export type { QuoteContext, SurveyTriggerConfig } from './survey-trigger';
+export { SURVEY_CONFIGS,SurveyTrigger } from './survey-trigger';
 
 // Re-export types that might be useful for consumers
 export type { 
