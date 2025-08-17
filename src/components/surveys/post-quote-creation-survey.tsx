@@ -53,8 +53,12 @@ export function PostQuoteCreationSurvey({
           itemCount: quoteData.itemCount,
           totalValue: quoteData.total,
           hasCustomItems: false, // Could be enhanced to detect custom items
-          hasTax: true, // Assume tax is applied
+          hasMultipleCategories: false, // Could be enhanced to detect multiple categories
+          hasDiscounts: false, // Could be enhanced to detect discounts
+          hasTaxes: true, // Assume tax is applied
+          hasTax: true, // Alternative naming for compatibility
           hasMarkup: true, // Assume markup is applied
+          estimatedDuration: 30, // Default estimated duration in minutes
         });
 
         console.log('📊 Quote complexity analysis:', complexity);
@@ -77,7 +81,7 @@ export function PostQuoteCreationSurvey({
           quoteId,
           quoteValue: quoteData.total,
           itemCount: quoteData.itemCount,
-          complexity: complexity.level,
+          complexity: complexity.level === 'moderate' ? 'complex' : complexity.level as 'simple' | 'complex',
           quoteType: 'mixed', // Could be enhanced to detect service vs product
           clientType: quoteData.clientType,
           creationDuration: quoteData.creationDuration,
@@ -124,12 +128,16 @@ export function usePostQuoteCreationSurvey() {
 
     // Analyze complexity
     const complexity = analyzeQuoteComplexity({
-      itemCount: quoteData.itemCount,
-      totalValue: quoteData.total,
-      hasCustomItems: false,
-      hasTax: true,
-      hasMarkup: true,
-    });
+          itemCount: quoteData.itemCount,
+          totalValue: quoteData.total,
+          hasCustomItems: false, // Could be enhanced to detect custom items
+          hasMultipleCategories: false, // Could be enhanced to detect multiple categories
+          hasDiscounts: false, // Could be enhanced to detect discounts
+          hasTaxes: true, // Assume tax is applied
+          hasTax: true, // Alternative naming for compatibility
+          hasMarkup: true, // Assume markup is applied
+          estimatedDuration: 30, // Default estimated duration in minutes
+        });
 
     // Determine survey type
     let surveyType: 'post_creation' | 'high_value' | 'complex' | 'new_client' = 'post_creation';
@@ -147,7 +155,7 @@ export function usePostQuoteCreationSurvey() {
       quoteId,
       quoteValue: quoteData.total,
       itemCount: quoteData.itemCount,
-      complexity: complexity.level,
+      complexity: complexity.level === 'moderate' ? 'complex' : complexity.level as 'simple' | 'complex',
       quoteType: 'mixed',
       clientType: quoteData.clientType,
       creationDuration: quoteData.creationDuration,

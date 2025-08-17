@@ -47,7 +47,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
             {/* Cards */}
             <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-8 items-start">
               {/* Free Plan */}
-              <div className="bg-paper-white p-8 rounded-2xl border border-stone-gray/20 shadow-lg h-full flex flex-col">
+              <div className="bg-paper-white p-8 rounded-2xl border border-stone-gray/20 shadow-lg h-full flex flex-col pricing-card" data-pricing-tier="free">
                 <h3 className="text-2xl font-bold text-charcoal">Free</h3>
                 <p className="mt-2 text-charcoal/70">For new businesses getting started and learning the ropes.</p>
                 <p className="mt-6 font-mono text-5xl font-bold text-charcoal">$0</p>
@@ -57,7 +57,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
                 >
                   Start for Free
                 </Button>
-                <div className="mt-8 border-t border-stone-gray/20 pt-8">
+                <div className="mt-8 border-t border-stone-gray/20 pt-8" data-feature-section="free-features">
                   <p className="font-bold text-charcoal mb-4">Core features include:</p>
                   <ul className="space-y-3 text-charcoal/80">
                     <li className="flex items-center">
@@ -81,7 +81,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
               </div>
 
               {/* Pro Plan */}
-              <div className="bg-forest-green text-paper-white p-8 rounded-2xl shadow-2xl relative overflow-hidden flex flex-col">
+              <div className="bg-forest-green text-paper-white p-8 rounded-2xl shadow-2xl relative overflow-hidden flex flex-col pricing-card" data-pricing-tier="pro">
                 <span className="absolute top-0 right-0 bg-equipment-yellow text-charcoal text-xs font-bold px-4 py-1 rounded-bl-lg">MOST POPULAR</span>
                 <div className="flex justify-between items-start">
                   <div>
@@ -122,7 +122,7 @@ export default function LawnQuotePricing({ onSelectPlan }: LawnQuotePricingProps
                 >
                   Upgrade to Pro
                 </Button>
-                <div className="mt-8 border-t border-paper-white/20 pt-8">
+                <div className="mt-8 border-t border-paper-white/20 pt-8" data-feature-section="pro-features">
                   <p className="font-bold text-paper-white mb-4">Everything in Free, plus:</p>
                   <ul className="space-y-3 text-stone-gray">
                     <li className="flex items-center">

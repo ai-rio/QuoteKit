@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import { UpgradeFlowTracker } from '@/components/feedback/upgrade-flow-tracker';
 import { MarketingLayout } from '@/components/layout/marketing-layout';
 import LawnQuotePricing from '@/components/pricing/LawnQuotePricing';
 import { STRIPE_PRICE_IDS } from '@/constants/stripe-prices';
@@ -76,9 +77,10 @@ export default async function PricingPage() {
   return (
     <MarketingLayout 
       showBreadcrumbs={true}
-      
     >
-      <LawnQuotePricing onSelectPlan={handlePlanSelection} />
+      <UpgradeFlowTracker page="pricing" isActive={true}>
+        <LawnQuotePricing onSelectPlan={handlePlanSelection} />
+      </UpgradeFlowTracker>
     </MarketingLayout>
   );
 }

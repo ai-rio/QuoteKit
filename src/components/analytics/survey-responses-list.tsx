@@ -519,7 +519,7 @@ export function SurveyResponsesList({
                   <div className="flex flex-wrap gap-2">
                     {selectedResponse.tags.map((tag, index) => (
                       <Badge key={index} variant="outline">
-                        {tag}
+                        {typeof tag === 'string' ? tag : tag.name || tag.id}
                       </Badge>
                     ))}
                   </div>

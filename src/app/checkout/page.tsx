@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import { UpgradeFlowTracker } from '@/components/feedback/upgrade-flow-tracker';
 import { createCheckoutAction } from '@/features/pricing/actions/create-checkout-action';
 import { transformPriceRow } from '@/features/pricing/types';
 import { createSupabaseServerClient } from '@/libs/supabase/supabase-server-client';
@@ -57,11 +58,13 @@ export default async function CheckoutPage({
 
   // This should never be reached due to the redirect in createCheckoutAction
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p>Redirecting to checkout...</p>
+    <UpgradeFlowTracker page="checkout" isActive={true}>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Redirecting to checkout...</p>
+        </div>
       </div>
-    </div>
+    </UpgradeFlowTracker>
   );
 }

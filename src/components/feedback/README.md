@@ -80,6 +80,64 @@ import { FeedbackTrigger, FeedbackFAB, InlineFeedbackButton } from '@/components
 - `inline`: Inline button for menus and toolbars
 - `minimal`: Minimal icon-only trigger
 
+### 4. SegmentSurveyManager (FB-019)
+Intelligent survey manager that displays targeted surveys based on user segments and behavior patterns.
+
+```tsx
+import { SegmentSurveyManager } from '@/components/feedback';
+
+// Basic usage - automatically determines user segment
+<SegmentSurveyManager />
+
+// With custom context
+<SegmentSurveyManager
+  currentPage="/quotes/create"
+  contextData={{ source: 'navigation' }}
+  debug={true} // Enable debug logging
+  onSurveyTriggered={(surveyId, segment, context) => {
+    console.log(`Survey ${surveyId} triggered for ${segment} segment`);
+  }}
+/>
+```
+
+**Features:**
+- **Automatic Segmentation**: Users are categorized as free, pro, enterprise, heavy_user, new_user, or light_user
+- **Targeted Surveys**: Different surveys for each segment focusing on relevant feedback
+- **Smart Frequency Control**: Respects daily/weekly limits and cooldown periods
+- **Context Aware**: Considers user activity, tier, and current page
+- **Priority Based**: Higher priority surveys are shown first
+
+**User Segments:**
+- `free`: Free tier users - focuses on feature discovery and upgrade barriers
+- `pro`: Pro users - focuses on feature usage and satisfaction  
+- `enterprise`: Enterprise users - focuses on advanced features and scalability
+- `heavy_user`: High activity users - focuses on workflow optimization
+- `new_user`: Users less than 14 days old - focuses on onboarding experience
+- `light_user`: Low activity users - focuses on engagement barriers
+
+### 5. FeedbackIntegrationWrapper
+Comprehensive wrapper that enables all feedback features in one component.
+
+```tsx
+import { FeedbackIntegrationWrapper } from '@/components/feedback';
+
+// Enable all features (recommended)
+<FeedbackIntegrationWrapper />
+
+// Custom configuration
+<FeedbackIntegrationWrapper
+  features={{
+    floatingWidget: true,
+    contextTracking: true,
+    segmentSurveys: true
+  }}
+  segmentSurveyConfig={{
+    currentPage: router.pathname,
+    debug: process.env.NODE_ENV === 'development'
+  }}
+/>
+```
+
 ## Integration
 
 ### 1. Formbricks Integration
@@ -175,6 +233,52 @@ export function QuotePage() {
 }
 ```
 
+### 4. Segment-Specific Surveys (FB-019)
+```tsx
+import { SegmentSurveyManager } from '@/components/feedback';
+
+export function AppLayout({ children }) {
+  return (
+    <div>
+      {children}
+      {/* Automatically shows relevant surveys based on user segment */}
+      <SegmentSurveyManager 
+        currentPage={usePathname()}
+        contextData={{ 
+          section: 'main-app',
+          timestamp: Date.now() 
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### 5. Complete Integration
+```tsx
+import { FeedbackIntegrationWrapper } from '@/components/feedback';
+
+export function RootLayout({ children }) {
+  return (
+    <div>
+      {children}
+      {/* All-in-one solution with segment surveys, floating widget, and tracking */}
+      <FeedbackIntegrationWrapper
+        features={{
+          floatingWidget: true,
+          contextTracking: true,
+          segmentSurveys: true
+        }}
+        segmentSurveyConfig={{
+          currentPage: window?.location?.pathname,
+          debug: process.env.NODE_ENV === 'development'
+        }}
+      />
+    </div>
+  );
+}
+```
+
 ## Customization
 
 ### 1. Custom Surveys
@@ -204,6 +308,50 @@ const customSurvey = {
   position="bottom-left"
 />
 ```
+
+### 3. Segment Survey Configuration (FB-019)
+Customize surveys for different user segments by modifying the configuration:
+
+```tsx
+import { SEGMENT_SURVEY_CONFIGS, getSegmentConfigs } from '@/components/feedback';
+
+// Get all surveys for a specific segment
+const freeTierSurveys = getSegmentConfigs('free');
+
+// Custom trigger conditions
+const customConfig = {
+  segment: 'pro',
+  surveyIds: ['custom-pro-survey'],
+  triggerConditions: [
+    {
+      type: 'activity',
+      operator: 'greater_than',
+      value: 20,
+      field: 'quotesCreated'
+    }
+  ],
+  frequency: {
+    maxPerDay: 1,
+    maxPerWeek: 3,
+    cooldownDays: 5,
+    respectGlobalLimits: true
+  },
+  priority: 8,
+  enabled: true
+};
+```
+
+**Trigger Condition Types:**
+- `activity`: Based on user activity metrics (quotesCreated, accountAge, etc.)
+- `segment`: Based on user segment
+- `event`: Based on current page or event
+- `time`: Based on time-related conditions
+
+**Frequency Controls:**
+- `maxPerDay`: Maximum surveys per day per segment
+- `maxPerWeek`: Maximum surveys per week per segment  
+- `cooldownDays`: Days to wait between surveys for the same user
+- `respectGlobalLimits`: Whether to respect system-wide frequency limits
 
 ## Testing
 

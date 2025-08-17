@@ -205,6 +205,53 @@ export function useFormbricksTracking() {
     trackEvent(FORMBRICKS_EVENTS.QUOTE_CREATION_SATISFACTION, satisfactionData);
   }, [trackEvent]);
 
+  // FB-019: Segment-specific survey tracking
+  const trackSegmentSurvey = useCallback((
+    surveyId: string,
+    userSegment: string,
+    context: {
+      userId: string;
+      userSegment: string;
+      userActivity: any;
+      currentPage: string;
+      sessionData: Record<string, any>;
+      timestamp: number;
+    }
+  ) => {
+    trackEvent('segment_survey_triggered', {
+      surveyId,
+      userSegment,
+      context: {
+        ...context,
+        userActivity: {
+          quotesCreated: context.userActivity.quotesCreated,
+          accountAge: context.userActivity.accountAge,
+          loginFrequency: context.userActivity.loginFrequency,
+          averageQuoteValue: context.userActivity.averageQuoteValue
+        }
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }, [trackEvent]);
+
+  const trackSegmentSurveyResponse = useCallback((
+    surveyId: string,
+    userSegment: string,
+    responseData: {
+      responses: Record<string, any>;
+      completedAt: number;
+      timeToComplete: number;
+      abandonedAt?: number;
+    }
+  ) => {
+    trackEvent('segment_survey_response', {
+      surveyId,
+      userSegment,
+      ...responseData,
+      timestamp: new Date().toISOString(),
+    });
+  }, [trackEvent]);
+
   const registerRouteChange = useCallback(() => {
     const manager = FormbricksManager.getInstance();
     manager.registerRouteChange();
@@ -244,6 +291,10 @@ export function useFormbricksTracking() {
     // FB-010: Post-quote creation survey tracking
     trackQuoteCreationSurvey,
     trackQuoteCreationSatisfaction,
+    
+    // FB-019: Segment-specific survey tracking
+    trackSegmentSurvey,
+    trackSegmentSurveyResponse,
     
     // Status
     isAvailable: (() => {

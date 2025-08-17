@@ -173,7 +173,12 @@ export class FormbricksAnalyticsAPI {
       const metrics = this.calculateMetrics(surveys, responses);
       
       // Generate time series data
-      const responsesByPeriod = this.generateResponsesByPeriod(responses, filters?.dateRange);
+      const responsesByPeriod = this.generateResponsesByPeriod(responses, 
+        filters?.dateRange ? {
+          start: filters.dateRange.start || filters.dateRange.from,
+          end: filters.dateRange.end || filters.dateRange.to
+        } : undefined
+      );
       
       // Calculate completion rates by survey
       const completionRates = this.calculateCompletionRates(surveys, responses);
@@ -181,9 +186,14 @@ export class FormbricksAnalyticsAPI {
       const analyticsData: FormbricksAnalyticsData = {
         surveys,
         responses,
-        metrics,
+        totalResponses: metrics.totalResponses,
+        completionRate: metrics.completionRate,
+        averageCompletionTime: metrics.averageCompletionTime,
         responsesByPeriod,
         completionRates,
+        topTags: [], // Mock empty array for now
+        lastUpdated: new Date().toISOString(),
+        metrics,
       };
       
       console.log('✅ Analytics data compiled:', {
@@ -310,8 +320,10 @@ export class FormbricksAnalyticsAPI {
     const params = new URLSearchParams();
     
     if (filters?.dateRange) {
-      params.append('startDate', filters.dateRange.start.toISOString());
-      params.append('endDate', filters.dateRange.end.toISOString());
+      const startDate = filters.dateRange.start || filters.dateRange.from;
+      const endDate = filters.dateRange.end || filters.dateRange.to;
+      if (startDate) params.append('startDate', startDate.toISOString());
+      if (endDate) params.append('endDate', endDate.toISOString());
     }
     
     if (filters?.surveyIds?.length) {
@@ -351,13 +363,31 @@ export class FormbricksAnalyticsAPI {
       : 0;
     
     const responseRate = totalSurveys > 0 ? totalResponses / totalSurveys : 0;
+    const completionRate = totalResponses > 0 ? completedResponses / totalResponses : 0;
+    
+    // Calculate average completion time (mock data for now)
+    const averageCompletionTime = 120; // 2 minutes average
+    
+    // Find top performing survey
+    const topPerformingSurvey = surveys.length > 0 
+      ? surveys.reduce((top, survey) => 
+          (survey.completionRate || 0) > (top.completionRate || 0) ? survey : top
+        ).name || 'N/A'
+      : 'N/A';
+    
+    // Calculate conversion rate (mock for now)
+    const conversionRate = completionRate * 0.8; // Assume 80% of completions are conversions
     
     return {
       totalSurveys,
       totalResponses,
+      completionRate: Math.round(completionRate * 100) / 100,
+      averageCompletionTime,
       averageCompletionRate: Math.round(averageCompletionRate * 100) / 100,
       responseRate: Math.round(responseRate * 100) / 100,
       activeSurveys,
+      topPerformingSurvey,
+      conversionRate: Math.round(conversionRate * 100) / 100,
     };
   }
 
@@ -395,6 +425,7 @@ export class FormbricksAnalyticsAPI {
         surveyId: survey.id,
         surveyName: survey.name,
         completionRate: Math.round(completionRate * 100) / 100,
+        responseCount: surveyResponses.length,
         totalResponses: surveyResponses.length,
         completedResponses: completedResponses.length,
       };

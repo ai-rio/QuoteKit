@@ -75,7 +75,7 @@ export class SurveyTriggerManager {
     });
 
     // Set user attributes for survey targeting
-    await this.formbricks.setUserAttributes({
+    await this.formbricks.setAttributes({
       hasCompletedFirstQuote: true,
       firstQuoteValue: quoteData.totalValue,
       firstQuoteItemCount: quoteData.itemCount,
@@ -128,7 +128,7 @@ export class SurveyTriggerManager {
         daysSinceActive
       });
 
-      await this.formbricks.setUserAttributes({
+      await this.formbricks.setAttributes({
         weekOneMilestoneReached: true,
         quotesAtWeekOne: userData.quotesCreated,
         daysSinceSignup
@@ -178,7 +178,7 @@ export class SurveyTriggerManager {
         estimatedValue: abandonmentData.estimatedValue
       });
 
-      await this.formbricks.setUserAttributes({
+      await this.formbricks.setAttributes({
         hasAbandonedQuote: true,
         lastAbandonedQuoteStep: abandonmentData.currentStep,
         abandonedQuoteValue: abandonmentData.estimatedValue
@@ -226,7 +226,7 @@ export class SurveyTriggerManager {
         monthlyValue: subscriptionData.monthlyValue
       });
 
-      await this.formbricks.setUserAttributes({
+      await this.formbricks.setAttributes({
         premiumMilestone30Days: true,
         premiumPlanType: subscriptionData.planType,
         premiumMonthlyValue: subscriptionData.monthlyValue,
@@ -278,7 +278,7 @@ export class SurveyTriggerManager {
         daysSinceLastSurvey
       });
 
-      await this.formbricks.setUserAttributes({
+      await this.formbricks.setAttributes({
         monthlyQuotesCount: userData.quotesThisMonth,
         subscriptionType: userData.subscriptionType,
         daysSinceLastSatisfactionSurvey: daysSinceLastSurvey

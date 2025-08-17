@@ -1,9 +1,10 @@
 'use client';
 
 import { User } from '@supabase/supabase-js';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-// import { useUser } from '../../hooks/use-user'; // Temporarily disabled for type-checking
+import { createSupabaseClientClient } from '@/libs/supabase/supabase-client-client';
+
 import { FormbricksManager } from './formbricks-manager';
 import { FormbricksUserAttributes } from './types';
 
@@ -12,8 +13,35 @@ import { FormbricksUserAttributes } from './types';
  * and handles user context synchronization throughout the app
  */
 export function FormbricksProvider() {
-  // const { data: user } = useUser(); // Temporarily disabled for type-checking
-  const user: User | null = null; // Temporary placeholder
+  const [user, setUser] = useState<User | null>(null);
+  const [formbricksInitialized, setFormbricksInitialized] = useState(false);
+  const [initializationTimeout, setInitializationTimeout] = useState(false);
+  
+  // Get current user from Supabase
+  useEffect(() => {
+    const supabase = createSupabaseClientClient();
+    
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUser = session?.user ?? null;
+      
+      // If user logged out, reset Formbricks session
+      if (!newUser && user) {
+        console.log('🔄 User logged out, resetting Formbricks session');
+        const manager = FormbricksManager.getInstance();
+        manager.resetUser();
+      }
+      
+      setUser(newUser);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     console.log('🚀 FormbricksProvider useEffect triggered - START');
@@ -92,6 +120,9 @@ export function FormbricksProvider() {
       console.log('🏁 FormbricksProvider initialization promise resolved - SUCCESS!');
       console.log('📊 Manager status after initialization:', manager.getStatus());
       
+      // Mark Formbricks as initialized
+      setFormbricksInitialized(true);
+      
       // Test that the manager is working
       setTimeout(() => {
         const finalStatus = manager.getStatus();
@@ -107,6 +138,9 @@ export function FormbricksProvider() {
       
     }).catch((error) => {
       console.error('💥 FormbricksProvider initialization promise rejected:', error);
+      
+      // Reset initialization state on error
+      setFormbricksInitialized(false);
       console.error('🔍 Error message:', error?.message);
       
       // Provide specific guidance for environment ID errors
@@ -135,11 +169,34 @@ export function FormbricksProvider() {
     });
     
     console.log('🚀 FormbricksProvider useEffect triggered - END');
+    
+    // Set a timeout to prevent waiting indefinitely
+    const timeoutId = setTimeout(() => {
+      if (!formbricksInitialized) {
+        console.warn('⏰ Formbricks initialization timeout after 10 seconds');
+        console.warn('🔍 This may indicate a network issue or invalid configuration');
+        setInitializationTimeout(true);
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
-    if (user) {
+    console.log('👤 User effect triggered:', { 
+      hasUser: !!user?.id, 
+      userId: user?.id, 
+      formbricksInitialized 
+    });
+    
+    if (user?.id && formbricksInitialized) {
       const manager = FormbricksManager.getInstance();
+      
+      // Double-check that the manager is ready for user operations
+      if (!manager.isReadyForUser()) {
+        console.log('⏳ Manager not ready for user operations yet, waiting...');
+        return;
+      }
       
       // CRITICAL FIX: Set userId BEFORE setting attributes
       // This fixes the "Formbricks can't set attributes without a userId" error
@@ -148,6 +205,11 @@ export function FormbricksProvider() {
       console.log('👤 Setting Formbricks userId:', userId);
       
       // Set the userId first (required by Formbricks v4+)
+      if (!userId) {
+        console.error('❌ Cannot set Formbricks userId: userId is null or undefined');
+        return;
+      }
+      
       manager.setUserId(userId).then(() => {
         console.log('✅ UserId set successfully, now setting attributes');
         
@@ -160,8 +222,16 @@ export function FormbricksProvider() {
         console.error('❌ Failed to set Formbricks userId:', error);
         console.error('🔍 This will prevent attributes from being set');
       });
+    } else if (user?.id && !formbricksInitialized) {
+      if (initializationTimeout) {
+        console.error('❌ Formbricks initialization timed out, cannot set user');
+      } else {
+        console.log('⏳ User found but Formbricks not initialized yet, waiting...');
+      }
+    } else if (!user?.id && formbricksInitialized) {
+      console.log('🔍 Formbricks initialized but no user found');
     }
-  }, [user]);
+  }, [user, formbricksInitialized, initializationTimeout]);
 
   return null; // This component doesn't render anything
 }

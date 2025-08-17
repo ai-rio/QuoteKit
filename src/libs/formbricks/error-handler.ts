@@ -42,21 +42,38 @@ export class FormbricksErrorHandler {
 
     console.error = (...args: any[]) => {
       this.errorCount++;
+      
+      // Early exit for any Formbricks error with empty object
+      if (args.length >= 1 && typeof args[0] === 'string' && args[0].includes('Formbricks')) {
+        // Check for empty error patterns
+        const hasEmptyError = args[0].includes('Global error:  {}') || 
+                             args[0].includes('Global error: {}') ||
+                             (args[1] && typeof args[1] === 'object' && Object.keys(args[1]).length === 0);
+        
+        if (hasEmptyError) {
+          this.suppressedErrors++;
+          console.debug(`🔇 [Quick Suppression] Formbricks empty error #${this.suppressedErrors}`);
+          return;
+        }
+      }
 
-      // Very specific check for the exact Formbricks empty error pattern
-      const isExactEmptyError = (
-        args.length >= 2 &&
-        typeof args[0] === 'string' &&
-        args[0].includes('Formbricks - Global error:') &&
-        args[1] !== null &&
-        args[1] !== undefined &&
-        typeof args[1] === 'object' &&
-        Object.keys(args[1]).length === 0
-      );
+      // Check for Formbricks empty error patterns
+      const isExactEmptyError = this.isFormbricksEmptyError(args);
 
       if (isExactEmptyError) {
         this.suppressedErrors++;
         console.warn(`🔧 [FormbricksErrorHandler] Suppressed Formbricks empty error #${this.suppressedErrors}`);
+        
+        // Debug logging to understand what we're catching
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('🔍 Suppressed error details:', {
+            argsLength: args.length,
+            firstArg: args[0],
+            secondArg: args[1],
+            secondArgType: typeof args[1],
+            secondArgKeys: args[1] ? Object.keys(args[1]) : 'N/A'
+          });
+        }
         
         // Only show detailed message on first suppression
         if (this.suppressedErrors === 1) {
@@ -77,15 +94,27 @@ export class FormbricksErrorHandler {
    * Check if this is the problematic Formbricks empty error
    */
   private isFormbricksEmptyError(args: any[]): boolean {
-    return (
-      args.length >= 2 &&
-      typeof args[0] === 'string' &&
-      args[0].includes('Formbricks - Global error:') &&
-      args[1] !== null &&
-      args[1] !== undefined &&
-      typeof args[1] === 'object' &&
-      Object.keys(args[1]).length === 0
-    );
+    // Check for various patterns of Formbricks empty errors
+    const hasFormbricksError = args.length >= 1 && 
+      typeof args[0] === 'string' && 
+      (args[0].includes('🧱 Formbricks - Global error:') || 
+       args[0].includes('Formbricks - Global error:'));
+    
+    if (!hasFormbricksError) return false;
+    
+    // Check if there's an empty object as the second argument
+    if (args.length >= 2) {
+      const errorObj = args[1];
+      return (
+        errorObj !== null &&
+        errorObj !== undefined &&
+        typeof errorObj === 'object' &&
+        Object.keys(errorObj).length === 0
+      );
+    }
+    
+    // Also catch cases where the error message itself indicates empty error
+    return args[0].includes('Global error:  {}') || args[0].includes('Global error: {}');
   }
 
   /**

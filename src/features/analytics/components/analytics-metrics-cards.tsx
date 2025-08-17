@@ -1,30 +1,27 @@
-/**
- * Analytics Metrics Cards Component
- * 
- * Displays key metrics for Formbricks survey analytics in card format.
- */
-
 'use client';
 
 import { 
-  AlertCircle, 
+  AlertCircle,
   BarChart3, 
-  CheckCircle,
+  CheckCircle, 
   MessageSquare, 
-  TrendingUp, 
-  Users} from 'lucide-react';
+  TrendingUp} from 'lucide-react';
+import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FormbricksAnalyticsData } from '@/libs/formbricks/types';
 
 interface AnalyticsMetricsCardsProps {
-  data: FormbricksAnalyticsData | null;
-  loading: boolean;
-  error: string | null;
+  data: any;
+  loading?: boolean;
+  error?: string | null;
 }
 
+/**
+ * Analytics Metrics Cards Component
+ * Displays key survey metrics in card format with trend indicators
+ */
 export function AnalyticsMetricsCards({ data, loading, error }: AnalyticsMetricsCardsProps) {
   if (loading) {
     return (
@@ -60,40 +57,40 @@ export function AnalyticsMetricsCards({ data, loading, error }: AnalyticsMetrics
     );
   }
 
-  if (!data) {
+  if (!data || !data.metrics) {
     return null;
   }
 
   const metrics = [
     {
       title: "Total Surveys",
-      value: data.metrics.totalSurveys,
-      description: `${data.metrics.activeSurveys} active`,
+      value: data.metrics?.totalSurveys || 0,
+      description: `${data.metrics?.activeSurveys || 0} active`,
       icon: BarChart3,
-      trend: data.metrics.activeSurveys > 0 ? "positive" : "neutral",
+      trend: (data.metrics?.activeSurveys || 0) > 0 ? "positive" : "neutral",
     },
     {
       title: "Total Responses",
-      value: data.metrics.totalResponses,
+      value: data.metrics?.totalResponses || 0,
       description: "All survey responses",
       icon: MessageSquare,
-      trend: data.metrics.totalResponses > 0 ? "positive" : "neutral",
+      trend: (data.metrics?.totalResponses || 0) > 0 ? "positive" : "neutral",
     },
     {
-      title: "Completion Rate", // completionRate metric
-      value: `${data.metrics.averageCompletionRate}%`,
+      title: "Completion Rate",
+      value: `${data.metrics?.averageCompletionRate || 0}%`,
       description: "Average across all surveys",
       icon: CheckCircle,
-      trend: data.metrics.averageCompletionRate > 70 ? "positive" : 
-             data.metrics.averageCompletionRate > 40 ? "neutral" : "negative",
+      trend: (data.metrics?.averageCompletionRate || 0) > 70 ? "positive" : 
+             (data.metrics?.averageCompletionRate || 0) > 40 ? "neutral" : "negative",
     },
     {
       title: "Response Rate",
-      value: data.metrics.responseRate.toFixed(1),
+      value: (data.metrics?.responseRate || 0).toFixed(1),
       description: "Responses per survey",
       icon: TrendingUp,
-      trend: data.metrics.responseRate > 10 ? "positive" : 
-             data.metrics.responseRate > 5 ? "neutral" : "negative",
+      trend: (data.metrics?.responseRate || 0) > 10 ? "positive" : 
+             (data.metrics?.responseRate || 0) > 5 ? "neutral" : "negative",
     },
   ];
 

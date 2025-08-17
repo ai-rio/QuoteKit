@@ -101,3 +101,76 @@ export type SizeOption = 'sm' | 'md' | 'lg';
  * Position options for popovers
  */
 export type PopoverPosition = 'top' | 'bottom' | 'left' | 'right';
+
+/**
+ * User segments for targeted surveys
+ */
+export type UserSegment = 'free' | 'pro' | 'enterprise' | 'heavy_user' | 'new_user' | 'light_user';
+
+/**
+ * User activity patterns for survey targeting
+ */
+export interface UserActivity {
+  quotesCreated: number;
+  lastActiveDate: Date;
+  accountAge: number; // days since registration
+  averageQuoteValue: number;
+  subscriptionTier?: string; // Add missing property
+  featureUsage: Record<string, number>;
+  loginFrequency: 'daily' | 'weekly' | 'monthly' | 'rarely';
+}
+
+/**
+ * Survey trigger conditions
+ */
+export interface TriggerCondition {
+  type: 'activity' | 'time' | 'event' | 'segment' | 'page_context' | 'user_activity' | 'time_based';
+  operator: 'equals' | 'greater_than' | 'less_than' | 'contains' | 'gte' | 'lt';
+  value: string | number | boolean;
+  field?: string;
+}
+
+/**
+ * Survey frequency settings
+ */
+export interface SurveyFrequency {
+  maxPerDay: number;
+  maxPerWeek: number;
+  cooldownDays: number;
+  respectGlobalLimits: boolean;
+}
+
+/**
+ * Segment-specific survey configuration
+ */
+export interface SegmentSurveyConfig {
+  segment: UserSegment;
+  surveyIds: string[];
+  triggerConditions: TriggerCondition[];
+  frequency: SurveyFrequency;
+  priority: number; // Higher numbers = higher priority
+  enabled: boolean;
+}
+
+/**
+ * Survey context for targeting
+ */
+export interface SurveyContext {
+  userId: string;
+  userSegment: UserSegment;
+  userActivity: UserActivity;
+  currentPage: string;
+  sessionData: Record<string, any>;
+  timestamp: number;
+  timeOnPage?: number;
+}
+
+/**
+ * User tier information for survey targeting
+ */
+export interface UserTierData {
+  tier: 'free' | 'pro' | 'enterprise';
+  subscription?: any;
+  canAccess: (feature: string) => boolean;
+  isLoading: boolean;
+}

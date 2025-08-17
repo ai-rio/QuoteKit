@@ -16,13 +16,18 @@ export class FormbricksManager {
   private isAvailable = false;
   private eventQueue: Array<{ eventName: string; properties?: Record<string, any> }> = [];
   private attributeQueue: Record<string, any> = {};
+  private currentUserId: string | null = null;
+  private currentAttributes: Record<string, any> = {};
 
   private constructor() {
     // Private constructor for singleton pattern
     console.log('🏗️ FormbricksManager constructor called');
     
-    // Setup global error handler to catch Formbricks SDK errors
+    // Setup global error handler to catch Formbricks SDK errors IMMEDIATELY
     this.setupGlobalErrorHandler();
+    
+    // Also set up immediate error suppression for known Formbricks issues
+    this.setupImmediateErrorSuppression();
   }
 
   /**
@@ -367,6 +372,15 @@ export class FormbricksManager {
    * Set user attributes for personalized surveys
    */
   setAttributes(attributes: Record<string, any>): void {
+    // Check if attributes are the same to prevent duplicate calls
+    const attributesString = JSON.stringify(attributes);
+    const currentAttributesString = JSON.stringify(this.currentAttributes);
+    
+    if (attributesString === currentAttributesString) {
+      console.log('📋 Attributes already set - skipping duplicate call');
+      return;
+    }
+    
     if (!this.isInitialized()) {
       console.log('📋 Formbricks not initialized, queuing attributes:', attributes);
       // Queue attributes for later processing
@@ -390,6 +404,9 @@ export class FormbricksManager {
         } else {
           throw new Error('setAttributes method not available on Formbricks SDK');
         }
+        
+        // Store current attributes to prevent duplicates
+        this.currentAttributes = { ...attributes };
       },
       `setAttributes: ${Object.keys(attributes).join(', ')}`
     );
@@ -399,12 +416,20 @@ export class FormbricksManager {
    * Set user ID for Formbricks (required before setting attributes)
    */
   async setUserId(userId: string): Promise<void> {
+    // Check if userId is already set to prevent duplicate calls
+    if (this.currentUserId === userId) {
+      console.log('👤 UserId already set to:', userId, '- skipping duplicate call');
+      return;
+    }
+    
     if (!this.isInitialized()) {
-      console.log('👤 Formbricks not initialized, queuing userId:', userId);
-      // For userId, we need to wait for initialization rather than queue
-      // because setUserId is critical for subsequent operations
+      console.log('👤 Formbricks not initialized, cannot set userId:', userId);
       console.warn('⚠️ Cannot set userId before Formbricks is initialized');
-      throw new Error('Formbricks must be initialized before setting userId');
+      console.warn('🔍 This usually means the provider is trying to set user before initialization completes');
+      console.warn('💡 The provider should wait for initialization before calling setUserId');
+      
+      // Return a rejected promise instead of throwing synchronously
+      return Promise.reject(new Error('Formbricks must be initialized before setting userId'));
     }
 
     try {
@@ -421,10 +446,37 @@ export class FormbricksManager {
         throw new Error('setUserId method not available on Formbricks SDK');
       }
       
+      this.currentUserId = userId;
       console.log('✅ Formbricks userId set successfully:', userId);
     } catch (error) {
       console.error('❌ Failed to set Formbricks userId:', error);
       throw error; // Re-throw to allow caller to handle
+    }
+  }
+
+  /**
+   * Check if the manager is ready for user operations (initialized and available)
+   */
+  isReadyForUser(): boolean {
+    return this.isInitialized() && this.isAvailable;
+  }
+
+  /**
+   * Reset user session (useful for logout)
+   */
+  resetUser(): void {
+    console.log('🔄 Resetting Formbricks user session');
+    this.currentUserId = null;
+    this.currentAttributes = {};
+    
+    try {
+      // Reset user in Formbricks SDK if available
+      if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.reset === 'function') {
+        (window as any).formbricks.reset();
+        console.log('✅ Formbricks user session reset successfully');
+      }
+    } catch (error) {
+      console.error('❌ Failed to reset Formbricks user session:', error);
     }
   }
 
@@ -701,6 +753,39 @@ export class FormbricksManager {
     // Initialize the enhanced error handler
     const errorHandler = getFormbricksErrorHandler();
     console.log('🛡️ Enhanced Formbricks error handler initialized');
+  }
+
+  /**
+   * Set up immediate error suppression for known Formbricks issues
+   */
+  private setupImmediateErrorSuppression(): void {
+    if (typeof window === 'undefined') return;
+    
+    // Store original console.error if not already stored
+    if (!(window as any).__originalConsoleError) {
+      (window as any).__originalConsoleError = console.error;
+    }
+    
+    const originalError = (window as any).__originalConsoleError;
+    
+    console.error = (...args: any[]) => {
+      // Immediate suppression of known Formbricks empty errors
+      if (args.length >= 1 && typeof args[0] === 'string') {
+        const errorMsg = args[0];
+        
+        // Check for the specific pattern: "🧱 Formbricks - Global error: {}"
+        if (errorMsg.includes('🧱 Formbricks - Global error:') && 
+            (errorMsg.includes('{}') || (args[1] && typeof args[1] === 'object' && Object.keys(args[1]).length === 0))) {
+          console.debug('🚫 [Immediate Suppression] Blocked Formbricks empty error');
+          return;
+        }
+      }
+      
+      // Call original console.error for all other errors
+      originalError.apply(console, args);
+    };
+    
+    console.log('⚡ Immediate Formbricks error suppression active');
   }
 
   /**

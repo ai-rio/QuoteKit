@@ -33,11 +33,11 @@ export function AnalyticsMetricsCards({
   error = null
 }: AnalyticsMetricsCardsProps) {
   // Calculate derived metrics
-  const totalSurveys = data.metrics.totalSurveys;
-  const totalResponses = data.metrics.totalResponses;
-  const avgCompletionRate = data.metrics.averageCompletionRate;
-  const responseRate = data.metrics.responseRate;
-  const activeSurveys = data.metrics.activeSurveys;
+  const totalSurveys = data.metrics?.totalSurveys || 0;
+  const totalResponses = data.metrics?.totalResponses || 0;
+  const avgCompletionRate = data.metrics?.averageCompletionRate || 0;
+  const responseRate = data.metrics?.responseRate || 0;
+  const activeSurveys = data.metrics?.activeSurveys || 0;
   
   // Recent responses (last 7 days vs previous 7 days)
   const now = new Date();

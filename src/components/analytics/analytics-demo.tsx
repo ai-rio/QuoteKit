@@ -137,24 +137,45 @@ const generateMockData = (): FormbricksAnalyticsData => {
     surveyId: survey.id,
     surveyName: survey.name,
     completionRate: survey.completionRate,
+    responseCount: survey.responseCount,
     totalResponses: survey.responseCount,
     completedResponses: Math.floor(survey.responseCount * (survey.completionRate / 100))
   }));
   
+  const avgCompletionRate = mockSurveys.reduce((sum, s) => sum + s.completionRate, 0) / mockSurveys.length;
+  const totalResponses = mockResponses.length;
+  
+  // Generate top tags
+  const topTags = [
+    { name: 'high-value-user', count: 23, color: '#22c55e' },
+    { name: 'new-user', count: 18, color: '#3b82f6' },
+    { name: 'enterprise', count: 12, color: '#f59e0b' },
+    { name: 'feedback', count: 8, color: '#ec4899' }
+  ];
+  
   return {
     surveys: mockSurveys,
     responses: mockResponses,
+    totalResponses,
+    completionRate: avgCompletionRate,
+    averageCompletionTime: 120, // seconds
+    responsesByPeriod,
+    completionRates,
+    topTags,
+    lastUpdated: now.toISOString(),
     metrics: {
       totalSurveys: mockSurveys.length,
-      totalResponses: mockResponses.length,
-      averageCompletionRate: mockSurveys.reduce((sum, s) => sum + s.completionRate, 0) / mockSurveys.length,
+      totalResponses,
+      completionRate: avgCompletionRate,
+      averageCompletionTime: 120,
+      averageCompletionRate: avgCompletionRate,
+      activeSurveys: mockSurveys.filter(s => s.status === 'inProgress').length,
       responseRate: 68.5,
-      activeSurveys: mockSurveys.filter(s => s.status === 'inProgress').length
-    },
-    responsesByPeriod,
-    completionRates
+      topPerformingSurvey: mockSurveys.sort((a, b) => b.completionRate - a.completionRate)[0]?.name || 'N/A',
+      conversionRate: 45.2
+    }
   };
-};
+};;;
 
 export function AnalyticsDemo() {
   const [mockData, setMockData] = useState<FormbricksAnalyticsData>(generateMockData());
@@ -218,7 +239,7 @@ export function AnalyticsDemo() {
             <div className="text-center p-3 bg-white/50 rounded-lg">
               <p className="text-sm text-charcoal/70">Avg Completion</p>
               <p className="text-lg font-bold text-charcoal">
-                {mockData.metrics.averageCompletionRate.toFixed(1)}%
+                {mockData.metrics?.averageCompletionRate?.toFixed(1) || '0'}%
               </p>
             </div>
           </div>

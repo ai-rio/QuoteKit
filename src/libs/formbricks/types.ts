@@ -144,6 +144,20 @@ export const FORMBRICKS_EVENTS = {
   COMPLEX_QUOTE_FEEDBACK: 'complex_quote_feedback',
   NEW_CLIENT_QUOTE_EXPERIENCE: 'new_client_quote_experience',
   QUOTE_CREATION_SATISFACTION: 'quote_creation_satisfaction',
+
+  // Upgrade Flow Feedback Events (FB-020)
+  UPGRADE_PAGE_VISITED: 'upgrade_page_visited',
+  UPGRADE_EXIT_INTENT_DETECTED: 'upgrade_exit_intent_detected',
+  UPGRADE_HESITATION_DETECTED: 'upgrade_hesitation_detected',
+  FEATURE_COMPARISON_VIEWED: 'feature_comparison_viewed',
+  PRICING_TIER_COMPARED: 'pricing_tier_compared',
+  UPGRADE_SURVEY_COMPLETED: 'upgrade_survey_completed',
+  UPGRADE_ABANDONMENT_SURVEY: 'upgrade_abandonment_survey',
+  UPGRADE_HESITATION_SURVEY: 'upgrade_hesitation_survey',
+  FEATURE_VALUE_ASSESSMENT: 'feature_value_assessment',
+  PRICE_SENSITIVITY_FEEDBACK: 'price_sensitivity_feedback',
+  UPGRADE_FLOW_SESSION_START: 'upgrade_flow_session_start',
+  UPGRADE_FLOW_SESSION_END: 'upgrade_flow_session_end',
 } as const;
 
 export type FormbricksEventName = typeof FORMBRICKS_EVENTS[keyof typeof FORMBRICKS_EVENTS];

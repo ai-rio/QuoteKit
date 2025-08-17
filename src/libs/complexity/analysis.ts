@@ -19,6 +19,7 @@ export interface QuoteComplexityData {
   hasDiscounts: boolean;
   hasTaxes: boolean;
   hasTax?: boolean; // Alternative naming used in some places
+  hasMarkup?: boolean; // Add missing property for markup tracking
   estimatedDuration: number;
 }
 

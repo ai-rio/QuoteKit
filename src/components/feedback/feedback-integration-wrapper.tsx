@@ -3,12 +3,14 @@
 import { UserContextTracker } from '@/components/tracking/user-context-tracker';
 
 import { FloatingFeedbackWidget } from './floating-feedback-widget';
+import { SegmentSurveyManager } from './segment-specific-survey-manager';
 
 interface FeedbackIntegrationWrapperProps {
   /** Which features to enable */
   features?: {
     floatingWidget?: boolean;
     contextTracking?: boolean;
+    segmentSurveys?: boolean; // FB-019: Segment-specific surveys
   };
   /** Floating widget configuration */
   widgetConfig?: {
@@ -25,19 +27,28 @@ interface FeedbackIntegrationWrapperProps {
     trackSessionEvents?: boolean;
     customAttributes?: Record<string, any>;
   };
+  /** Segment survey configuration - FB-019 */
+  segmentSurveyConfig?: {
+    currentPage?: string;
+    contextData?: Record<string, any>;
+    debug?: boolean;
+  };
 }
 
 /**
  * Comprehensive wrapper for all Formbricks feedback and tracking features
- * Use this component to enable FB-006 (floating widget) and FB-008 (context tracking)
+ * Use this component to enable FB-006 (floating widget), FB-008 (context tracking),
+ * and FB-019 (segment-specific surveys)
  */
 export function FeedbackIntegrationWrapper({
   features = {
     floatingWidget: true,
-    contextTracking: true
+    contextTracking: true,
+    segmentSurveys: true // Enable by default
   },
   widgetConfig = {},
-  trackingConfig = {}
+  trackingConfig = {},
+  segmentSurveyConfig = {}
 }: FeedbackIntegrationWrapperProps) {
   return (
     <>
@@ -59,6 +70,15 @@ export function FeedbackIntegrationWrapper({
           autoHideAfter={widgetConfig.autoHideAfter}
           hideOnPages={widgetConfig.hideOnPages}
           showOnPages={widgetConfig.showOnPages}
+        />
+      )}
+
+      {/* Segment-Specific Surveys - FB-019 */}
+      {features.segmentSurveys && (
+        <SegmentSurveyManager
+          currentPage={segmentSurveyConfig.currentPage}
+          contextData={segmentSurveyConfig.contextData}
+          debug={segmentSurveyConfig.debug}
         />
       )}
     </>
