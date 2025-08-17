@@ -136,7 +136,7 @@ test.describe('Quote Creation Feedback System (Sprint 3)', () => {
         }
         
         // Wait for success message or survey
-        await page.waitForTimeout(4000); // Wait for 3s delay + buffer
+        await page.waitForTimeout(6000); // Wait for 5s delay + buffer
         
         // Look for survey elements
         const surveySelectors = [
@@ -183,7 +183,7 @@ test.describe('Quote Creation Feedback System (Sprint 3)', () => {
       return false;
     });
     
-    await page.waitForTimeout(4000); // Wait for survey to appear
+    await page.waitForTimeout(6000); // Wait for 5s delay + buffer for survey to appear
     
     // Check if any survey-related network requests were made
     // This test passes if we can trigger the survey mechanism
@@ -203,7 +203,7 @@ test.describe('Quote Creation Feedback System (Sprint 3)', () => {
       }
     });
     
-    await page.waitForTimeout(4000);
+    await page.waitForTimeout(6000); // Wait for 5s delay + buffer
     
     // Test complex quote survey
     await page.evaluate(() => {

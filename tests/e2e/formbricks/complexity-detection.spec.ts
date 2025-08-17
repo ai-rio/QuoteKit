@@ -242,7 +242,7 @@ test.describe('Quote Complexity Detection (FB-011)', () => {
       });
     });
     
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(6000); // Wait for 5s delay + buffer
     
     expect(surveySelections.length).toBeGreaterThan(0);
     console.log('✅ Complexity-based survey selection tested, surveys triggered:', surveySelections.length);
