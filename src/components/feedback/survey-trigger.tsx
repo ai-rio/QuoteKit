@@ -340,7 +340,7 @@ function getWeekNumber(date: Date): number {
 export const SURVEY_CONFIGS = {
   POST_QUOTE_CREATION: {
     eventName: 'post_quote_creation_survey',
-    delayMs: 3000, // 3 second delay to let user process the success
+    delayMs: 5000, // FB-010: 5 second delay to let user process the success
     frequencyCap: {
       maxPerDay: 2,
       maxPerWeek: 5,
