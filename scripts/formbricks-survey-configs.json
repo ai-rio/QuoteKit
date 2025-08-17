@@ -1,0 +1,127 @@
+{
+  "surveys": [
+    {
+      "name": "Post-Quote Creation Feedback (FB-010)",
+      "description": "Strategic survey for 5-second post-quote creation feedback",
+      "trigger_action": "post_quote_creation_survey",
+      "delay_seconds": 5,
+      "priority": "high",
+      "configuration": {
+        "survey_type": "app",
+        "display_option": "displayOnce",
+        "auto_close": 10,
+        "questions": [
+          {
+            "id": "ease_of_creation",
+            "type": "rating",
+            "question": "How easy was it to create this quote?",
+            "description": "Your feedback helps us improve the quote creation experience",
+            "required": true,
+            "scale": 5,
+            "labels": {
+              "low": "Very Hard",
+              "high": "Very Easy"
+            }
+          },
+          {
+            "id": "improvement_suggestions", 
+            "type": "open_text",
+            "question": "What would make quote creation even better?",
+            "description": "Any suggestions to improve the experience... (optional)",
+            "required": false,
+            "placeholder": "Share your ideas for improvement..."
+          }
+        ],
+        "thank_you": {
+          "title": "Thank you for your feedback! 🎉",
+          "message": "Your input helps us make QuoteKit better for everyone."
+        },
+        "styling": {
+          "brand_color": "#10B981",
+          "background_color": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "name": "Upgrade Opportunity - Quote Limit Reached",
+      "description": "Strategic survey for conversion when monthly limit is reached",
+      "trigger_action": "monthly_quote_limit_reached",
+      "delay_seconds": 0,
+      "priority": "high",
+      "configuration": {
+        "survey_type": "app",
+        "display_option": "displayOnce",
+        "auto_close": 15,
+        "questions": [
+          {
+            "id": "biggest_need",
+            "type": "multiple_choice_single",
+            "question": "You've reached your monthly quote limit. What's your biggest need?",
+            "description": "Help us understand how to better serve you",
+            "required": true,
+            "choices": [
+              "More quotes per month",
+              "Advanced features", 
+              "Better organization tools",
+              "Premium support",
+              "Other"
+            ]
+          },
+          {
+            "id": "upgrade_barrier",
+            "type": "multiple_choice_single", 
+            "question": "What's the main reason you haven't upgraded yet?",
+            "description": "Understanding barriers helps us improve our offering",
+            "required": false,
+            "choices": [
+              "Price concerns",
+              "Don't need more features",
+              "Still evaluating", 
+              "Need approval from team/boss",
+              "Other"
+            ]
+          }
+        ],
+        "thank_you": {
+          "title": "Thanks for your feedback! 💼",
+          "message": "We're working on making QuoteKit even better for growing businesses like yours.",
+          "button_text": "Explore Upgrade Options",
+          "button_link": "/pricing"
+        },
+        "styling": {
+          "brand_color": "#F59E0B",
+          "background_color": "#FFFFFF"
+        }
+      }
+    }
+  ],
+  "actions_required": [
+    {
+      "name": "post_quote_creation_survey",
+      "display_name": "Post Quote Creation Survey",
+      "description": "Triggered 5 seconds after successful quote creation for user feedback"
+    },
+    {
+      "name": "monthly_quote_limit_reached", 
+      "display_name": "Monthly Quote Limit Reached",
+      "description": "Triggered when user hits their monthly quote limit - upgrade opportunity"
+    }
+  ],
+  "setup_instructions": {
+    "step_1": "Go to https://app.formbricks.com",
+    "step_2": "Select your LawnQuote project (Environment ID: cme8xkymlkaijvz01unvdxciq)",
+    "step_3": "Create the 2 actions listed in 'actions_required'",
+    "step_4": "Create the 2 surveys using the configurations above",
+    "step_5": "Update your .env file: NEXT_PUBLIC_FORMBRICKS_ENV_ID=cme8xkymlkaijvz01unvdxciq",
+    "step_6": "Restart your Next.js server: npm run dev",
+    "step_7": "Test by creating a quote - survey should appear after 5 seconds"
+  },
+  "testing_checklist": [
+    "✅ Actions created in Formbricks dashboard",
+    "✅ Surveys created and linked to actions", 
+    "✅ Environment ID updated in .env",
+    "✅ Next.js server restarted",
+    "✅ Quote creation triggers FB-010 survey after 5 seconds",
+    "✅ Survey responses appear in Formbricks dashboard"
+  ]
+}
