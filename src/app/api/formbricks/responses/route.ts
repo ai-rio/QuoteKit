@@ -20,9 +20,13 @@ export async function GET(request: NextRequest) {
     // Get API credentials from server environment
     const apiKey = process.env.FORMBRICKS_API_KEY;
     const apiHost = process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST || 'https://app.formbricks.com';
+    const environmentId = process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID;
     
-    if (!apiKey) {
-      console.warn('Formbricks API key not configured');
+    if (!apiKey || !environmentId) {
+      console.warn('Formbricks API credentials not fully configured', {
+        hasApiKey: !!apiKey,
+        hasEnvId: !!environmentId
+      });
       return NextResponse.json({ 
         data: [], 
         total: 0, 
@@ -43,7 +47,14 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const url = `${apiHost}/api/v1/management/responses?${queryParams.toString()}`;
+    // Use environment-specific endpoint for responses
+    const url = `${apiHost}/api/v1/management/environments/${environmentId}/responses?${queryParams.toString()}`;
+    
+    console.log('Fetching responses from Formbricks API:', { 
+      url, 
+      hasApiKey: !!apiKey, 
+      queryParams: queryParams.toString() 
+    });
 
     // Make request to Formbricks API
     const response = await fetch(url, {
@@ -56,10 +67,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unable to read error response');
       console.warn('Formbricks responses API failed:', {
         status: response.status,
         statusText: response.statusText,
-        url
+        url,
+        error: errorText
       });
       // Return empty result instead of error
       return NextResponse.json({ 
@@ -70,6 +83,12 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
+    console.log('Formbricks responses API response:', { 
+      dataType: typeof data, 
+      isArray: Array.isArray(data),
+      hasData: !!(data && data.data),
+      dataLength: data && data.data ? data.data.length : 'N/A'
+    });
     
     // Ensure we return data in expected format
     let responses: FormbricksSurveyResponse[] = [];
@@ -85,6 +104,12 @@ export async function GET(request: NextRequest) {
       total = data.total || data.data.length;
       hasMore = data.hasMore || false;
     }
+
+    console.log('Returning responses data:', { 
+      count: responses.length, 
+      total, 
+      hasMore 
+    });
 
     return NextResponse.json({ 
       data: responses,

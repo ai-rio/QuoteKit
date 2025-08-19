@@ -58,7 +58,8 @@ const config = {
         '<rootDir>/tests/integration/edge-case-handling.test.ts',
         '<rootDir>/tests/integration/quote-calculation-simple.test.ts',
         '<rootDir>/tests/integration/quote-management.test.ts',
-        '<rootDir>/tests/integration/end-to-end-workflow.test.ts'
+        '<rootDir>/tests/integration/end-to-end-workflow.test.ts',
+        '<rootDir>/tests/integration/formbricks-api-integration.test.ts'
       ],
       testEnvironment: 'node',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
