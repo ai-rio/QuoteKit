@@ -3,6 +3,17 @@
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "brave-search-mcp@latest"],
+      "env": {
+        "BRAVE_API_KEY": "BSAnvp-gWxQKFORwwgR_9MSr0VG3odR"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
     }
   }
 }

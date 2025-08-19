@@ -201,6 +201,7 @@ hive-mind-prompt-*.txt
 mcp-server/*
 .serena/
 .amazonq/
+.q/*
 
 # =====================================================
 # SECURITY NOTES

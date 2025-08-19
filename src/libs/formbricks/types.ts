@@ -293,6 +293,7 @@ export interface FormbricksSurveyResponse {
     userAgent?: string;
     url?: string;
     source?: string; // Additional field used in components
+    userId?: string; // Additional field used in admin segmentation
   };
   tags: Array<{
     id: string;

@@ -76,13 +76,13 @@ export async function GET(request: NextRequest) {
       .from('subscriptions')
       .select(`
         *,
-        prices (
+        stripe_prices (
           id,
           unit_amount,
           currency,
           interval,
-          product_id,
-          products (
+          stripe_product_id,
+          stripe_products (
             name,
             description
           )
@@ -111,12 +111,12 @@ export async function GET(request: NextRequest) {
     ) || [];
 
     const monthlyRevenue = activeAndTrialingSubs
-      .filter((sub: any) => sub.prices?.interval === 'month')
-      .reduce((sum: any, sub: any) => sum + (sub.prices?.unit_amount || 0) * (sub.quantity || 1), 0) / 100;
+      .filter((sub: any) => sub.stripe_prices?.interval === 'month')
+      .reduce((sum: any, sub: any) => sum + (sub.stripe_prices?.unit_amount || 0) * (sub.quantity || 1), 0) / 100;
 
     const annualRevenue = activeAndTrialingSubs
-      .filter((sub: any) => sub.prices?.interval === 'year')
-      .reduce((sum: any, sub: any) => sum + (sub.prices?.unit_amount || 0) * (sub.quantity || 1), 0) / 100;
+      .filter((sub: any) => sub.stripe_prices?.interval === 'year')
+      .reduce((sum: any, sub: any) => sum + (sub.stripe_prices?.unit_amount || 0) * (sub.quantity || 1), 0) / 100;
 
     const monthlyRecurringRevenue = monthlyRevenue + (annualRevenue / 12);
     const annualRecurringRevenue = (monthlyRevenue * 12) + annualRevenue;
@@ -146,10 +146,10 @@ export async function GET(request: NextRequest) {
       current_period_start: sub.current_period_start,
       current_period_end: sub.current_period_end,
       price_id: sub.stripe_price_id,
-      product_name: sub.prices?.products?.name || 'Unknown Product',
-      amount: (sub.prices?.unit_amount || 0) / 100,
-      currency: sub.prices?.currency || 'usd',
-      interval: sub.prices?.interval || 'month'
+      product_name: sub.stripe_prices?.stripe_products?.name || 'Unknown Product',
+      amount: (sub.stripe_prices?.unit_amount || 0) / 100,
+      currency: sub.stripe_prices?.currency || 'usd',
+      interval: sub.stripe_prices?.interval || 'month'
     })) || [];
 
     // Calculate revenue by month (last 6 months)
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
       }) || [];
 
       const revenue = monthSubs.reduce((sum: any, sub: any) => 
-        sum + ((sub.prices?.unit_amount || 0) / 100) * (sub.quantity || 1), 0
+        sum + ((sub.stripe_prices?.unit_amount || 0) / 100) * (sub.quantity || 1), 0
       );
 
       revenueByMonth.push({

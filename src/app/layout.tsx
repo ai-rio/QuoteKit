@@ -7,6 +7,7 @@ import { Inter, Kalam, Roboto_Mono } from 'next/font/google';
 import { PropsWithChildren } from 'react';
 
 import { CookieConsentBanner } from '@/components/cookie-consent-banner';
+import { PostHogProvider } from '@/components/providers/posthog-provider';
 import { NavigationTracker } from '@/components/tracking/navigation-tracker';
 import { Toaster } from '@/components/ui/toaster';
 import { CookieConsentProvider } from '@/contexts/cookie-consent-context';
@@ -61,14 +62,16 @@ export default function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body className={cn('font-sans antialiased', inter.variable, robotoMono.variable, kalam.variable)}>
         <CookieConsentProvider>
-          <FormbricksProvider />
-          <NavigationTracker />
-          <div className='flex min-h-screen flex-col'>
-            {children}
-          </div>
-          <CookieConsentBanner />
-          <Toaster />
-          <Analytics />
+          <PostHogProvider>
+            <FormbricksProvider />
+            <NavigationTracker />
+            <div className='flex min-h-screen flex-col'>
+              {children}
+            </div>
+            <CookieConsentBanner />
+            <Toaster />
+            <Analytics />
+          </PostHogProvider>
         </CookieConsentProvider>
       </body>
     </html>

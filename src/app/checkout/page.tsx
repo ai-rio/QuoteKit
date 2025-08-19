@@ -26,10 +26,10 @@ export default async function CheckoutPage({
 
   // Get the price details from database
   const { data: priceData, error } = await supabase
-    .from('prices')
+    .from('stripe_prices')
     .select(`
       *,
-      products (*)
+      stripe_products (*)
     `)
     .eq('id', price_id)
     .single();

@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
 
 import { supabaseAdminClient } from '@/libs/supabase/supabase-admin';
-import type { Database } from '@/libs/supabase/types';
+import type { Database } from '@/types/supabase';
 
-type StripePrice = Database['public']['Tables']['prices']['Row'];
+type StripePrice = Database['public']['Tables']['stripe_prices']['Row'];
 
 export async function upsertPrice(price: Stripe.Price) {
   const priceData = {
@@ -16,7 +16,7 @@ export async function upsertPrice(price: Stripe.Price) {
     active: price.active,
   };
 
-  const { error } = await supabaseAdminClient.from('prices').upsert([priceData], {
+  const { error } = await supabaseAdminClient.from('stripe_prices').upsert([priceData], {
     onConflict: 'stripe_price_id'
   });
 

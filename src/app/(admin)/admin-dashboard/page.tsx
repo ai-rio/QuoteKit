@@ -283,12 +283,12 @@ export default function AdminDashboard() {
                 Manage Users
               </Button>
             </Link>
-            <Link href="/analytics/custom-queries">
+            <Link href="/admin-analytics/surveys">
               <Button 
                 className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
-                View Analytics
+                Survey Analytics
               </Button>
             </Link>
             <Link href="/global-items">
@@ -321,6 +321,54 @@ export default function AdminDashboard() {
               >
                 <Activity className="w-4 h-4 mr-2" />
                 System Settings
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Advanced Analytics Features */}
+      <Card className="bg-paper-white border-stone-gray shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-section-title text-charcoal">
+            Advanced Analytics
+          </CardTitle>
+          <CardDescription className="text-charcoal/70">
+            AI-powered insights and advanced user analytics from Formbricks integration
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href="/admin-analytics/segments">
+              <Button 
+                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                User Segments
+              </Button>
+            </Link>
+            <Link href="/admin-analytics/trends">
+              <Button 
+                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+              >
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Trend Analysis
+              </Button>
+            </Link>
+            <Link href="/admin-analytics/cohorts">
+              <Button 
+                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+              >
+                <Activity className="w-4 h-4 mr-2" />
+                Cohort Analysis
+              </Button>
+            </Link>
+            <Link href="/admin-analytics/insights">
+              <Button 
+                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+              >
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                AI Insights
               </Button>
             </Link>
           </div>

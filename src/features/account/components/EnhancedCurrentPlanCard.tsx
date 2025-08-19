@@ -283,12 +283,12 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
   
   // Extract plan data for display (either from subscription or fallback)
   const planData = hasSubscription ? {
-    name: subscription.prices?.products?.name || (subscription.prices ? 'Premium Plan' : 'Unknown Plan'),
-    price: subscription.prices?.unit_amount || 0,
-    interval: subscription.prices?.interval || 'month',
+    name: subscription.stripe_prices?.stripe_products?.name || (subscription.stripe_prices ? 'Premium Plan' : 'Unknown Plan'),
+    price: subscription.stripe_prices?.unit_amount || 0,
+    interval: (subscription.stripe_prices as any)?.interval || 'month',
     status: subscription.status || 'unknown'
   } : hasFallbackPlan ? {
-    name: freePlanInfo.products?.name || 'Free Plan',
+    name: freePlanInfo.stripe_products?.name || 'Free Plan',
     price: freePlanInfo.unit_amount || 0,
     interval: freePlanInfo.interval || 'month',
     status: 'free'
@@ -544,7 +544,7 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
             isOpen={showPlanDialog}
             onClose={() => setShowPlanDialog(false)}
             currentPlan={{
-              id: hasSubscription ? (subscription.prices?.stripe_price_id || '') : (freePlanInfo?.stripe_price_id || ''),
+              id: hasSubscription ? ((subscription.stripe_prices as any)?.id || '') : ((freePlanInfo as any)?.id || ''),
               name: planData.name,
               price: planData.price / 100,
               interval: planData.interval,
@@ -567,9 +567,9 @@ export function EnhancedCurrentPlanCard({ subscription, freePlanInfo, availableP
           isOpen={showCancelDialog}
           onClose={() => setShowCancelDialog(false)}
           currentPlan={{
-            name: subscription.prices?.products?.name || '',
-            price: (subscription.prices?.unit_amount || 0) / 100,
-            interval: subscription.prices?.interval || 'month',
+            name: subscription.stripe_prices?.stripe_products?.name || '',
+            price: (subscription.stripe_prices?.unit_amount || 0) / 100,
+            interval: (subscription.stripe_prices as any)?.interval || 'month',
             nextBillingDate: subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A',
           }}
           onCancel={handleCancellation}

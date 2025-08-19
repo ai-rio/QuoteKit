@@ -198,14 +198,6 @@ export function FeatureValueSurvey({
     setResponses(prev => ({ ...prev, additionalFeatureRequests: value }));
   }, []);
 
-  const handleNext = useCallback(() => {
-    if (currentStep < 4) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      handleComplete();
-    }
-  }, [currentStep, handleComplete]);
-
   const handleComplete = useCallback(() => {
     const completionTime = Date.now() - startTime;
     const completeResponses: FeatureValueResponses = {
@@ -223,6 +215,14 @@ export function FeatureValueSurvey({
     
     onComplete(completeResponses);
   }, [responses, startTime, onComplete]);
+
+  const handleNext = useCallback(() => {
+    if (currentStep < 4) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleComplete();
+    }
+  }, [currentStep, handleComplete]);
 
   const canProceed = () => {
     switch (currentStep) {

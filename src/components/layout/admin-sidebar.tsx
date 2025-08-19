@@ -3,10 +3,12 @@
 import { 
   ArrowLeft,
   BarChart3, 
+  Brain,
   CreditCard,
   Database,
   DollarSign,
   Home, 
+  Lightbulb,
   LogOut, 
   Mail, 
   MoreVertical,
@@ -14,6 +16,7 @@ import {
   Search,
   Send,
   Settings,
+  Target,
   TrendingUp,
   Users} from "lucide-react"
 import Link from "next/link"
@@ -124,24 +127,44 @@ const navGroups = [
     title: "Analytics",
     items: [
       {
-        title: "Subscription Analytics",
-        url: "/analytics/subscriptions",
+        title: "Survey Analytics",
+        url: "/admin-analytics/surveys",
+        icon: BarChart3,
+      },
+      {
+        title: "Subscription Analytics", 
+        url: "/admin-analytics/subscriptions",
         icon: DollarSign,
       },
       {
         title: "Custom Queries",
-        url: "/analytics/custom-queries",
+        url: "/admin-analytics/custom-queries",
         icon: Search,
       },
+    ]
+  },
+  {
+    title: "Advanced Analytics",
+    items: [
       {
-        title: "Funnels",
-        url: "/analytics/funnels",
+        title: "User Segments",
+        url: "/admin-analytics/segments",
+        icon: Users,
+      },
+      {
+        title: "Trend Analysis",
+        url: "/admin-analytics/trends", 
         icon: TrendingUp,
       },
       {
-        title: "Cohorts",
-        url: "/analytics/cohorts",
+        title: "Cohort Analysis",
+        url: "/admin-analytics/cohorts",
         icon: BarChart3,
+      },
+      {
+        title: "AI Insights",
+        url: "/admin-analytics/insights",
+        icon: Lightbulb,
       },
     ]
   },
@@ -214,8 +237,10 @@ export function AdminSidebar({ ...props }: AdminSidebarProps) {
                   <span className="flex items-center gap-2">
                     {group.title === 'User Management' && <Users className="w-4 h-4" />}
                     {group.title === 'Billing & Payments' && <CreditCard className="w-4 h-4" />}
+                    {group.title === 'Content Management' && <Package className="w-4 h-4" />}
                     {group.title === 'Email System' && <Mail className="w-4 h-4" />}
                     {group.title === 'Analytics' && <BarChart3 className="w-4 h-4" />}
+                    {group.title === 'Advanced Analytics' && <Brain className="w-4 h-4" />}
                     {group.title}
                   </span>
                   <svg

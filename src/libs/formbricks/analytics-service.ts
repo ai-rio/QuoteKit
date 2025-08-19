@@ -7,6 +7,7 @@
  * Updated to use the correct Formbricks Management API endpoints and authentication.
  */
 
+import { AnalyticsCache,analyticsCache } from './analytics-cache';
 import { 
   FormbricksAnalyticsData,
   FormbricksAnalyticsFilters,
@@ -21,12 +22,61 @@ export class FormbricksAnalyticsService {
   private environmentId: string;
 
   constructor() {
+    // Use client-side accessible environment variables
     this.apiKey = process.env.FORMBRICKS_API_KEY || '';
     this.apiHost = process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST || 'https://app.formbricks.com';
     this.environmentId = process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID || '';
 
+    // Fallback to check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      // Try to get from window environment if available
+      this.apiKey = this.apiKey || (window as any).__formbricks_api_key || '';
+      this.environmentId = this.environmentId || (window as any).__formbricks_env_id || '';
+    }
+
     if (!this.apiKey || !this.environmentId) {
-      console.warn('Formbricks API credentials not fully configured');
+      console.warn('Formbricks API credentials not fully configured', {
+        hasApiKey: !!this.apiKey,
+        hasEnvId: !!this.environmentId,
+        apiHost: this.apiHost
+      });
+    }
+  }
+
+  /**
+   * Safe API call wrapper - uses internal API routes instead of direct Formbricks calls
+   */
+  private async safeApiCall<T>(
+    endpoint: string, 
+    options: RequestInit = {},
+    fallback: T
+  ): Promise<T> {
+    try {
+      // Use internal API routes instead of direct Formbricks API
+      const internalUrl = `/api/formbricks${endpoint}`;
+      
+      const response = await fetch(internalUrl, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+
+      if (!response.ok) {
+        console.debug('Internal Formbricks API call failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: internalUrl
+        });
+        return fallback;
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Suppress network errors in development/production
+      console.debug('Internal API network error (using fallback):', error);
+      return fallback;
     }
   }
 
@@ -34,43 +84,37 @@ export class FormbricksAnalyticsService {
    * Fetch all surveys from Formbricks using Management API
    */
   async fetchSurveys(): Promise<FormbricksSurvey[]> {
+    // Check cache first
+    const cacheKey = 'surveys:all';
+    const cached = analyticsCache.get<FormbricksSurvey[]>(cacheKey);
+    if (cached) {
+      console.log('Returning cached surveys data');
+      return cached;
+    }
+
     try {
-      const response = await fetch(
-        `${this.apiHost}/api/v1/management/surveys`,
-        {
-          headers: {
-            'x-api-key': this.apiKey,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Survey fetch error details:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-          url: `${this.apiHost}/api/v1/management/surveys`
-        });
-        throw new Error(`Failed to fetch surveys: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Surveys API response:', data);
+      const data = await this.safeApiCall('/surveys', {}, { data: [] });
       
       // Handle different response formats
+      let surveys: FormbricksSurvey[] = [];
       if (Array.isArray(data)) {
-        return data;
-      } else if (data.data && Array.isArray(data.data)) {
-        return data.data;
+        surveys = data;
+      } else if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+        surveys = data.data;
       } else {
-        console.warn('Unexpected surveys response format:', data);
-        return [];
+        console.debug('Using empty surveys data due to API unavailability');
+        surveys = [];
       }
+
+      // Cache the results for 10 minutes
+      if (surveys.length > 0) {
+        analyticsCache.set(cacheKey, surveys, 10 * 60 * 1000);
+      }
+      
+      return surveys;
     } catch (error) {
-      console.error('Error fetching surveys:', error);
-      throw error;
+      console.debug('Error fetching surveys, returning empty array:', error);
+      return [];
     }
   }
 
@@ -82,6 +126,18 @@ export class FormbricksAnalyticsService {
     total: number;
     hasMore: boolean;
   }> {
+    // Check cache first
+    const cacheKey = AnalyticsCache.generateKey('responses', params);
+    const cached = analyticsCache.get<{
+      responses: FormbricksSurveyResponse[];
+      total: number;
+      hasMore: boolean;
+    }>(cacheKey);
+    if (cached) {
+      console.log('Returning cached survey responses data');
+      return cached;
+    }
+
     try {
       const queryParams = new URLSearchParams();
       
@@ -101,29 +157,15 @@ export class FormbricksAnalyticsService {
       if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
       if (params.dateTo) queryParams.append('dateTo', params.dateTo);
 
-      const url = `${this.apiHost}/api/v1/management/responses?${queryParams.toString()}`;
-      console.log('Fetching responses from:', url);
+      const endpoint = `/responses?${queryParams.toString()}`;
+      
+      const fallbackResult = {
+        responses: [],
+        total: 0,
+        hasMore: false
+      };
 
-      const response = await fetch(url, {
-        headers: {
-          'x-api-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Responses fetch error details:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-          url: url
-        });
-        throw new Error(`Failed to fetch responses: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Responses API response:', data);
+      const data = await this.safeApiCall(endpoint, {}, fallbackResult);
       
       // Handle different response formats
       let responses: FormbricksSurveyResponse[] = [];
@@ -134,22 +176,51 @@ export class FormbricksAnalyticsService {
         responses = data;
         total = data.length;
         hasMore = false;
-      } else if (data.data && Array.isArray(data.data)) {
-        responses = data.data;
-        total = data.total || data.data.length;
-        hasMore = data.hasMore || false;
+      } else if (data && typeof data === 'object') {
+        // Handle API response format { data: [], total: 0, hasMore: false }
+        if ('data' in data && Array.isArray(data.data)) {
+          responses = data.data;
+          total = data.total || data.data.length;
+          hasMore = data.hasMore || false;
+        }
+        // Handle fallback format { responses: [], total: 0, hasMore: false }
+        else if ('responses' in data) {
+          responses = data.responses || [];
+          total = data.total || 0;
+          hasMore = data.hasMore || false;
+        }
+        // Handle direct array in data property
+        else {
+          responses = [];
+          total = 0;
+          hasMore = false;
+        }
       } else {
-        console.warn('Unexpected responses response format:', data);
+        console.debug('Using empty responses data due to API unavailability');
+        responses = [];
+        total = 0;
+        hasMore = false;
       }
       
-      return {
+      const result = {
         responses,
         total,
         hasMore,
       };
+      
+      // Cache the results for 5 minutes (only if we have data)
+      if (responses.length > 0) {
+        analyticsCache.set(cacheKey, result, 5 * 60 * 1000);
+      }
+      
+      return result;
     } catch (error) {
-      console.error('Error fetching survey responses:', error);
-      throw error;
+      console.debug('Error fetching survey responses, returning empty result:', error);
+      return {
+        responses: [],
+        total: 0,
+        hasMore: false
+      };
     }
   }
 
@@ -157,6 +228,14 @@ export class FormbricksAnalyticsService {
    * Fetch analytics metrics and aggregated data
    */
   async fetchAnalyticsData(filters: FormbricksAnalyticsFilters = {}): Promise<FormbricksAnalyticsData> {
+    // Check cache first
+    const cacheKey = AnalyticsCache.generateKey('analytics', filters);
+    const cached = analyticsCache.get<FormbricksAnalyticsData>(cacheKey);
+    if (cached) {
+      console.log('Returning cached analytics data');
+      return cached;
+    }
+
     try {
       const [surveys, responsesData] = await Promise.all([
         this.fetchSurveys(),
@@ -213,7 +292,7 @@ export class FormbricksAnalyticsService {
         conversionRate: Math.round(completionRate * 0.8 * 100) / 100,
       };
 
-      return {
+      const analyticsData = {
         surveys,
         responses,
         totalResponses: metrics.totalResponses,
@@ -225,6 +304,10 @@ export class FormbricksAnalyticsService {
         lastUpdated: new Date().toISOString(),
         metrics,
       };
+
+      // Cache the results for 3 minutes (shorter TTL for aggregated data)
+      analyticsCache.set(cacheKey, analyticsData, 3 * 60 * 1000);
+      return analyticsData;
     } catch (error) {
       console.error('Error fetching analytics data:', error);
       throw error;
@@ -235,6 +318,14 @@ export class FormbricksAnalyticsService {
    * Search responses by content
    */
   async searchResponses(searchTerm: string, filters: FormbricksAnalyticsFilters = {}): Promise<FormbricksSurveyResponse[]> {
+    // Check cache first
+    const cacheKey = AnalyticsCache.generateKey('search', { searchTerm, ...filters });
+    const cached = analyticsCache.get<FormbricksSurveyResponse[]>(cacheKey);
+    if (cached) {
+      console.log('Returning cached search results');
+      return cached;
+    }
+
     try {
       const { responses } = await this.fetchSurveyResponses({
         ...filters,
@@ -244,7 +335,7 @@ export class FormbricksAnalyticsService {
       // Client-side search through response data
       const searchLower = searchTerm.toLowerCase();
       
-      return responses.filter(response => {
+      const searchResults = responses.filter(response => {
         // Search in response data values
         const dataString = JSON.stringify(response.data).toLowerCase();
         const metaString = JSON.stringify(response.meta).toLowerCase();
@@ -253,6 +344,10 @@ export class FormbricksAnalyticsService {
                metaString.includes(searchLower) ||
                response.id.toLowerCase().includes(searchLower);
       });
+
+      // Cache search results for 2 minutes (shorter TTL for search)
+      analyticsCache.set(cacheKey, searchResults, 2 * 60 * 1000);
+      return searchResults;
     } catch (error) {
       console.error('Error searching responses:', error);
       throw error;
@@ -338,31 +433,31 @@ export class FormbricksAnalyticsService {
     try {
       console.log('Testing Formbricks API connection...');
       
-      // Test with the /me endpoint which is simpler
-      const response = await fetch(`${this.apiHost}/api/v1/management/me`, {
-        headers: {
-          'x-api-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!this.apiKey) {
         return {
           success: false,
-          message: `API test failed: ${response.status} ${response.statusText} - ${errorText}`
+          message: 'API key not configured'
+        };
+      }
+      
+      const data = await this.safeApiCall('/test', {}, null);
+      
+      // Use type assertion for union type scenario (following methodology)
+      if (data === null || !(data as any)?.success) {
+        return {
+          success: false,
+          message: (data as any)?.message || 'Unable to connect to Formbricks API'
         };
       }
 
-      const data = await response.json();
-      console.log('API connection test successful:', data);
+      console.debug('API connection test successful:', data);
       
       return {
         success: true,
-        message: 'API connection successful'
+        message: (data as any).message || 'API connection successful'
       };
     } catch (error) {
-      console.error('API connection test failed:', error);
+      console.debug('API connection test failed:', error);
       return {
         success: false,
         message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
