@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback } from 'react'
+import { useCallback, useEffect,useState } from 'react'
 
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { getTourConfig } from '@/libs/onboarding/tour-configs'
@@ -13,18 +13,33 @@ import { tourManager } from '@/libs/onboarding/tour-manager'
 export function useTourReplay() {
   const { startTour, activeTour } = useOnboarding()
 
+  // Import the simplified tour starter dynamically (following OnboardingManager pattern)
+  const [simpleTourStarter, setSimpleTourStarter] = useState<any>(null)
+  
+  useEffect(() => {
+    // Dynamic import to avoid SSR issues
+    import('@/libs/onboarding/simple-tour-starter').then(module => {
+      setSimpleTourStarter(module)
+    })
+  }, [])
+
   /**
    * Replay a tour regardless of completion status
-   * Following Driver.js best practices for manual tour triggering
+   * FIXED: Following official Driver.js patterns for manual tour triggering
    * @param tourId - The ID of the tour to replay
    * @param startAtStep - Optional step index to start from (defaults to 0)
    */
   const replayTour = useCallback(async (tourId: string, startAtStep: number = 0) => {
+    if (!simpleTourStarter) {
+      console.warn('Simple tour starter not loaded yet')
+      throw new Error('Tour system not ready')
+    }
+
     try {
-      // Check if there's already an active tour and destroy it
-      if (activeTour && tourManager.isActive()) {
-        console.log(`🔄 Stopping current tour: ${activeTour.tourId}`)
-        await tourManager.destroyTour()
+      // Clean up any existing active tour first (official Driver.js best practice)
+      if (simpleTourStarter.isTourActive()) {
+        console.log(`🔄 Stopping current tour before starting: ${tourId}`)
+        simpleTourStarter.destroyActiveTour()
       }
 
       // Get tour configuration
@@ -33,34 +48,47 @@ export function useTourReplay() {
         throw new Error(`Tour configuration not found: ${tourId}`)
       }
 
-      console.log(`🚀 Starting tour replay: ${tourId} (starting at step ${startAtStep})`)
+      console.log(`🚀 Starting manual tour using official driver.js pattern: ${tourId}`)
 
-      // CRITICAL FIX: Initialize tour manager first
-      await tourManager.initializeTour(tourId, tourConfig)
-      
-      // CRITICAL FIX: Start the Driver.js tour immediately after initialization
-      // This ensures the tour actually starts and becomes visible
-      await tourManager.startTour()
-      
-      // Update onboarding context state after successful start
+      // FIXED: Use simplified tour starter following official Driver.js documentation
+      // This replaces the complex tourManager.initializeTour() + tourManager.startTour() pattern
+      simpleTourStarter.startTourWithValidation(tourConfig, {
+        onCompleted: async (completedTourId: string) => {
+          console.log(`✅ Manual tour completed: ${completedTourId}`)
+          // Note: Don't automatically update completion state for manual replays
+          // User might want to replay tours for reference
+        },
+        onSkipped: async (skippedTourId: string) => {
+          console.log(`⏭️ Manual tour skipped: ${skippedTourId}`)
+        },
+        onDestroyed: (destroyedTourId: string) => {
+          console.log(`🧹 Manual tour cleanup completed: ${destroyedTourId}`)
+        }
+      }, {
+        retryAttempts: 2, // Retry if elements not found initially
+        skipValidation: false // Always validate for manual tours
+      })
+
+      // Update onboarding context state (for tracking active tour)
       await startTour(tourId)
       
-      // CRITICAL FIX: Handle step navigation after tour is running
+      // FIXED: Handle step navigation using official Driver.js API
       if (startAtStep > 0) {
-        // Use TourManager's moveTo method for precise step navigation
+        // Use official driver.js navigation method
         setTimeout(() => {
-          if (tourManager.isActive()) {
-            tourManager.moveTo(startAtStep)
+          if (simpleTourStarter.isTourActive()) {
+            console.log(`📍 Navigating to step ${startAtStep}`)
+            simpleTourStarter.tourNavigation.moveTo(startAtStep)
           }
-        }, 300) // Increased delay to ensure tour is fully initialized
+        }, 300) // Brief delay to ensure tour is fully started
       }
 
-      console.log(`✅ Tour replay started successfully: ${tourId}`)
+      console.log(`✅ Manual tour started successfully: ${tourId}`)
     } catch (error) {
-      console.error(`❌ Error replaying tour ${tourId}:`, error)
+      console.error(`❌ Error starting manual tour ${tourId}:`, error)
       throw error
     }
-  }, [startTour, activeTour])
+  }, [startTour, simpleTourStarter])
 
   /**
    * Quick replay - restart current tour from beginning
@@ -82,6 +110,46 @@ export function useTourReplay() {
   }, [replayTour])
 
   /**
+   * Get page-appropriate tour for current location
+   * ADDED: Page-aware tour selection for manual triggering
+   */
+  const getPageTour = useCallback(async (tourId?: string): Promise<string | null> => {
+    try {
+      // Import page tour router dynamically
+      const { pageTourRouter } = await import('@/libs/onboarding/page-tour-router')
+      
+      if (tourId) {
+        // Validate provided tour ID exists
+        const tourConfig = getTourConfig(tourId)
+        return tourConfig ? tourId : null
+      }
+      
+      // Get page-appropriate tour if no specific tour requested
+      return pageTourRouter.getPageWelcomeTour()
+    } catch (error) {
+      console.error('Error getting page tour:', error)
+      return null
+    }
+  }, [])
+
+  /**
+   * Smart replay - uses page-appropriate tour if none specified
+   * ADDED: Page-aware manual tour triggering
+   */
+  const smartReplayTour = useCallback(async (tourId?: string, startAtStep: number = 0) => {
+    const actualTourId = await getPageTour(tourId)
+    
+    if (!actualTourId) {
+      throw new Error(tourId 
+        ? `Tour "${tourId}" not found`
+        : 'No tour available for current page'
+      )
+    }
+    
+    await replayTour(actualTourId, startAtStep)
+  }, [replayTour, getPageTour])
+
+  /**
    * Check if a tour can be replayed
    */
   const canReplayTour = useCallback((tourId: string): boolean => {
@@ -91,10 +159,12 @@ export function useTourReplay() {
 
   return {
     replayTour,
+    smartReplayTour, // NEW: Page-aware tour triggering
     restartCurrentTour,
     continueFromStep,
     canReplayTour,
-    isActive: !!activeTour,
+    getPageTour, // NEW: Get appropriate tour for current page
+    isActive: simpleTourStarter?.isTourActive() ?? false, // FIXED: Use official Driver.js active check
     currentTour: activeTour?.tourId
   }
 }
