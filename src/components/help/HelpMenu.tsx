@@ -46,7 +46,7 @@ const TOUR_OPTIONS: TourOption[] = [
     userTiers: ['free', 'pro', 'enterprise']
   },
   {
-    id: 'enhanced-quote-creation',
+    id: 'quote-creation',
     name: 'Quote Creation Guide',
     description: 'Complete walkthrough of creating professional quotes',
     icon: FileText,
@@ -55,7 +55,7 @@ const TOUR_OPTIONS: TourOption[] = [
     userTiers: ['free', 'pro', 'enterprise']
   },
   {
-    id: 'enhanced-item-library',
+    id: 'item-library',
     name: 'Item Library Management',
     description: 'Master your services and materials database',
     icon: Package,
