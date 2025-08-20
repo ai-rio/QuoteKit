@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Use environment-specific endpoint for responses
-    const url = `${apiHost}/api/v1/management/environments/${environmentId}/responses?${queryParams.toString()}`;
+    // Use the updated Management API endpoint for responses
+    const url = `${apiHost}/api/v1/management/responses?${queryParams.toString()}`;
     
     console.log('Fetching responses from Formbricks API:', { 
       url, 

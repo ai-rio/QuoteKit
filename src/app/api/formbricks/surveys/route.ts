@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: [] }, { status: 200 });
     }
 
-    // Use environment-specific endpoint for surveys
-    const url = `${apiHost}/api/v1/management/environments/${environmentId}/surveys`;
+    // Use the updated Management API endpoint for surveys
+    const url = `${apiHost}/api/v1/management/surveys`;
     
     console.log('Fetching surveys from Formbricks API:', { url, hasApiKey: !!apiKey });
 

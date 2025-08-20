@@ -134,7 +134,7 @@ export default function SubscriptionAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-charcoal/70 mb-4">{error}</p>
-            <Button onClick={fetchMetrics} className="bg-forest-green hover:bg-forest-green/90">
+            <Button onClick={fetchMetrics} className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg">
               Try Again
             </Button>
           </CardContent>
@@ -165,7 +165,7 @@ export default function SubscriptionAnalyticsPage() {
             onClick={fetchMetrics} 
             variant="outline"
             size="sm"
-            className="border-stone-gray text-charcoal hover:bg-stone-gray/10"
+            className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-4 py-2 rounded-lg transition-all duration-200"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh

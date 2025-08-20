@@ -53,7 +53,15 @@ export class FormbricksAnalyticsService {
   ): Promise<T> {
     try {
       // Use internal API routes instead of direct Formbricks API
-      const internalUrl = `/api/formbricks${endpoint}`;
+      let internalUrl = `/api/formbricks${endpoint}`;
+      
+      // For server-side calls, we need to construct absolute URLs
+      if (typeof window === 'undefined') {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}`
+          : 'http://localhost:3000';
+        internalUrl = `${baseUrl}/api/formbricks${endpoint}`;
+      }
       
       const response = await fetch(internalUrl, {
         ...options,
