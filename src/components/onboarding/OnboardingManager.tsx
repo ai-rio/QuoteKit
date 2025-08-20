@@ -1,14 +1,15 @@
 "use client"
 
-import React, { useCallback,useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react'
 
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { useUser } from '@/hooks/use-user'
 import { useUserTier } from '@/hooks/use-user-tier'
-import { enhancedTourManager } from '@/libs/onboarding/enhanced-tour-manager'
-import { getTourConfig, getToursForTier } from '@/libs/onboarding/tour-configs'
-import { tourManager } from '@/libs/onboarding/tour-manager'
-import { onboardingDebug } from '@/utils/onboarding-debug'
+import { getTourConfig } from '@/libs/onboarding/tour-configs'
+// Removed complex TourManager dependencies - using official driver.js patterns directly
+// import { enhancedTourManager } from '@/libs/onboarding/enhanced-tour-manager'
+// import { tourManager } from '@/libs/onboarding/tour-manager'
+// import { onboardingDebug } from '@/utils/onboarding-debug'
 
 interface OnboardingManagerProps {
   autoStartWelcome?: boolean
@@ -30,9 +31,18 @@ export function OnboardingManager({
     getTourProgress
   } = useOnboarding()
 
-  // Debounce mechanism to prevent cascading skip events
-  const skipDebounceRef = React.useRef<Set<string>>(new Set())
-  const skipTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  // Import the simplified tour starter following official Driver.js patterns
+  const [simpleTourStarter, setSimpleTourStarter] = React.useState<any>(null)
+  
+  React.useEffect(() => {
+    // Dynamic import to avoid SSR issues
+    import('@/libs/onboarding/simple-tour-starter').then(module => {
+      setSimpleTourStarter(module)
+    })
+  }, [])
+
+  // Debounce mechanism to prevent cascading events (simplified)
+  const tourStartTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   
   // Adapt context properties to component expectations  
   const currentTour = activeTour?.tourId
@@ -45,71 +55,23 @@ export function OnboardingManager({
   const { data: user } = useUser()
   const { tier: userTier, isLoading: tierLoading, canAccess } = useUserTier()
 
-  // Handle tour completion with Sprint 3 enhancements
+  // Simplified tour completion handler using official Driver.js callbacks
   const handleTourComplete = useCallback(async (tourId: string) => {
     if (debugMode) {
-      console.log(`Tour completed: ${tourId}`)
+      console.log(`✅ Tour completed (official driver.js callback): ${tourId}`)
     }
     
     await completeTour(tourId)
     
-    // Auto-start next recommended tour based on completion and user tier
-    if (enableTierBasedTours && !tierLoading) {
-      // Use enhanced tour manager for Sprint 3 features
-      const recommendedTours = await enhancedTourManager.getRecommendedTours()
-      
-      // Define enhanced tour sequence with Sprint 3 features
-      const tourSequence: Record<string, string> = {
-        'welcome': 'personalized-onboarding', // Start with personalized experience
-        'personalized-onboarding': 'settings',
-        'settings': 'quote-creation', 
-        'quote-creation': 'item-library',
-        'item-library': 'contextual-help'
-      }
-      
-      // Add tier-specific tours
-      if (userTier === 'free' && tourId === 'contextual-help') {
-        tourSequence['contextual-help'] = 'freemium-highlights'
-      } else if ((userTier === 'pro' || userTier === 'enterprise') && tourId === 'contextual-help') {
-        tourSequence['contextual-help'] = 'pro-features'
-      }
-      
-      // Add interactive tutorial for advanced users
-      if (userTier !== 'free' && tourId === 'pro-features') {
-        tourSequence['pro-features'] = 'interactive-tutorial'
-      }
-      
-      const nextTourId = tourSequence[tourId]
-      if (nextTourId && shouldShowTour(nextTourId) && recommendedTours.includes(nextTourId)) {
-        // Check if next tour is available for user's tier
-        const nextTourConfig = getTourConfig(nextTourId)
-        if (nextTourConfig?.userTiers?.includes(userTier)) {
-          // Delay next tour to avoid overwhelming user
-          setTimeout(() => {
-            if (shouldShowTour(nextTourId)) {
-              startNextTour(nextTourId)
-            }
-          }, 3000)
-        }
-      }
-    }
-  }, [completeTour, enableTierBasedTours, userTier, tierLoading, shouldShowTour, debugMode])
+    // Note: Removed complex cascading tour logic as per official Driver.js best practices
+    // Each tour should be started independently based on user navigation
+    
+  }, [completeTour, debugMode])
 
-  // Handle tour skip with debouncing to prevent cascading events
+  // Simplified tour skip handler using official Driver.js callbacks
   const handleTourSkip = useCallback(async (tourId: string) => {
-    // Prevent rapid cascading skip events
-    if (skipDebounceRef.current.has(tourId)) {
-      if (debugMode) {
-        console.log(`Skip already in progress for tour: ${tourId} - ignoring duplicate`)
-      }
-      return
-    }
-
-    // Add to debounce set
-    skipDebounceRef.current.add(tourId)
-
     if (debugMode) {
-      console.log(`Tour skipped: ${tourId}`)
+      console.log(`⏭️ Tour skipped (official driver.js callback): ${tourId}`)
     }
     
     try {
@@ -117,19 +79,15 @@ export function OnboardingManager({
     } catch (error) {
       console.error(`Error skipping tour ${tourId}:`, error)
     }
-
-    // Clear debounce after a delay
-    if (skipTimeoutRef.current) {
-      clearTimeout(skipTimeoutRef.current)
-    }
-    skipTimeoutRef.current = setTimeout(() => {
-      skipDebounceRef.current.delete(tourId)
-    }, 2000) // Clear after 2 seconds
-
   }, [skipTour, debugMode])
 
-  // Start next tour in sequence with enhanced features
-  const startNextTour = useCallback(async (tourId: string) => {
+  // Simplified tour starter following official Driver.js documentation
+  const startSimpleTour = useCallback((tourId: string) => {
+    if (!simpleTourStarter) {
+      console.warn('Simple tour starter not loaded yet')
+      return
+    }
+
     try {
       const tourConfig = getTourConfig(tourId)
       if (!tourConfig) {
@@ -137,122 +95,139 @@ export function OnboardingManager({
         return
       }
 
-      // Use enhanced tour manager for Sprint 3 tours
-      const sprint3Tours = ['freemium-highlights', 'interactive-tutorial', 'personalized-onboarding', 'mobile-welcome']
-      
-      if (sprint3Tours.includes(tourId)) {
-        await enhancedTourManager.startTour(tourId)
-      } else {
-        // Use regular tour manager for existing tours
-        await tourManager.initializeTour(tourId, tourConfig)
-        await startTour(tourId)
-        
-        // Add slight delay to ensure proper initialization
-        setTimeout(async () => {
-          await tourManager.startTour()
-        }, 100)
+      if (debugMode) {
+        console.log(`🚀 Starting tour using official driver.js pattern: ${tourId}`)
       }
+
+      // Use the simplified tour starter with official Driver.js patterns
+      simpleTourStarter.startTourWithValidation(tourConfig, {
+        onCompleted: handleTourComplete,
+        onSkipped: handleTourSkip,
+        onDestroyed: (completedTourId: string) => {
+          if (debugMode) {
+            console.log(`🧹 Tour cleanup completed: ${completedTourId}`)
+          }
+        }
+      }, {
+        retryAttempts: 2 // Retry if elements not found initially
+      })
       
     } catch (error) {
-      console.error(`Error starting next tour ${tourId}:`, error)
+      console.error(`Error starting tour ${tourId}:`, error)
     }
-  }, [startTour])
+  }, [simpleTourStarter, handleTourComplete, handleTourSkip, debugMode])
 
-  // Initialize tour manager event handlers
-  useEffect(() => {
-    if (!user?.id) return
-
-    // Set up global tour event handlers
-    tourManager.onTourComplete(handleTourComplete)
-    tourManager.onTourSkip(handleTourSkip)
-
-    return () => {
-      // Cleanup event handlers
-      tourManager.removeTourCompleteCallback(handleTourComplete)
-      tourManager.removeTourSkipCallback(handleTourSkip)
-      
-      // Cleanup skip timeout
-      if (skipTimeoutRef.current) {
-        clearTimeout(skipTimeoutRef.current)
-        skipTimeoutRef.current = null
-      }
-      // Clear skip debounce set
-      skipDebounceRef.current.clear()
-    }
-  }, [user?.id, handleTourComplete, handleTourSkip])
-
-  // Auto-start welcome tour for new users with Sprint 3 enhancements
+  // Auto-start page-appropriate tours using simplified logic
   useEffect(() => {
     if (debugMode) {
-      console.log('🎯 OnboardingManager: Auto-start check conditions:')
+      console.log('🎯 OnboardingManager: Auto-start check (simplified approach)')
       console.log('  autoStartWelcome:', autoStartWelcome)
       console.log('  user?.id:', user?.id)
       console.log('  tierLoading:', tierLoading)
       console.log('  userTier:', userTier)
-      console.log('  shouldShowTour("welcome"):', shouldShowTour('welcome'))
       console.log('  isActive:', isActive)
       console.log('  activeTour:', activeTour)
       console.log('  currentTour:', currentTour)
       console.log('  window?.location?.pathname:', typeof window !== 'undefined' ? window.location.pathname : 'SSR')
-      
-      // Enhanced debugging for phantom active tour
-      if (isActive && typeof window !== 'undefined') {
-        console.log('🔍 OnboardingManager: Investigating phantom active tour...')
-        const hasPhantom = onboardingDebug.checkForPhantomActiveTour()
-        if (hasPhantom) {
-          console.log('🔧 OnboardingManager: Phantom tour detected! Use onboardingDebug.clearPhantomActiveTour() to fix')
-        }
-      }
     }
     
-    if (
-      autoStartWelcome &&
-      user?.id &&
-      !tierLoading &&
-      shouldShowTour('welcome') &&
-      !isActive &&
-      typeof window !== 'undefined' &&
-      window.location.pathname === '/dashboard'
-    ) {
-      // Check if user is truly new (no completed tours)
-      const availableTours = getToursForTier(userTier)
-      const hasCompletedAnyTour = availableTours.some(tour => isTourCompleted(tour.id))
-      
-      if (debugMode) {
-        console.log('🎯 OnboardingManager: All conditions met!')
-        console.log('  availableTours:', availableTours.map(t => t.id))
-        console.log('  hasCompletedAnyTour:', hasCompletedAnyTour)
-      }
-      
-      if (!hasCompletedAnyTour) {
+    // Import page tour router dynamically to avoid SSR issues
+    if (typeof window !== 'undefined' && simpleTourStarter) {
+      import('@/libs/onboarding/page-tour-router').then(({ pageTourRouter }) => {
+        const recommendedTour = pageTourRouter.getPageWelcomeTour()
+        const isAppRoute = pageTourRouter.isAppRoute()
+        
         if (debugMode) {
-          console.log('🚀 OnboardingManager: Starting personalized onboarding in 2 seconds...')
+          console.log('🗺️ PageTourRouter: Current page analysis:')
+          console.log('  isAppRoute:', isAppRoute)
+          console.log('  recommendedTour:', recommendedTour)
+          console.log('  canStartTour:', recommendedTour ? pageTourRouter.canStartTour(recommendedTour) : false)
+          console.log('  availableTours:', pageTourRouter.getCurrentPageTours())
         }
-        // Delay to ensure page is fully loaded
-        const timer = setTimeout(async () => {
+        
+        // Validate that the recommended tour actually exists
+        let validTour = recommendedTour
+        if (recommendedTour) {
+          const tourConfig = getTourConfig(recommendedTour)
+          if (!tourConfig) {
+            console.warn(`⚠️ Recommended tour "${recommendedTour}" not found in TOUR_CONFIGS, falling back to welcome`)
+            validTour = 'welcome'
+          }
+        }
+        
+        if (
+          autoStartWelcome &&
+          user?.id &&
+          !tierLoading &&
+          !isActive &&
+          isAppRoute &&
+          validTour &&
+          shouldShowTour(validTour) &&
+          pageTourRouter.canStartTour(validTour)
+        ) {
+          // FIXED LOGIC: Check if this specific tour has been completed
+          // Following official Driver.js best practices - each tour is independent
+          const isSpecificTourCompleted = isTourCompleted(validTour)
+          
           if (debugMode) {
-            console.log('🚀 OnboardingManager: Executing enhanced personalized onboarding')
+            console.log('🎯 OnboardingManager: Tour-specific checks (following official driver.js patterns):')
+            console.log('  validTour:', validTour)
+            console.log('  isSpecificTourCompleted:', isSpecificTourCompleted)
           }
           
-          // Use enhanced tour manager for personalized onboarding
-          await enhancedTourManager.startPersonalizedOnboarding()
-          
-          // Show freemium highlights for free users after delay
-          if (userTier === 'free') {
-            setTimeout(async () => {
-              if (shouldShowTour('freemium-highlights')) {
-                await enhancedTourManager.showFreemiumHighlights()
+          // Start tour if this specific tour hasn't been completed
+          // This follows the official Driver.js documentation pattern:
+          // - Each tour is independent
+          // - Tours can be started based on page context
+          // - No complex inter-tour dependencies
+          if (!isSpecificTourCompleted) {
+            if (debugMode) {
+              console.log(`🚀 OnboardingManager: Starting ${validTour} tour using official driver.js pattern`)
+            }
+            
+            // Clear any existing timeout to prevent double starts
+            if (tourStartTimeoutRef.current) {
+              clearTimeout(tourStartTimeoutRef.current)
+            }
+            
+            // Start tour with delay to ensure page is fully loaded
+            // This follows official Driver.js best practice for SPA navigation
+            tourStartTimeoutRef.current = setTimeout(() => {
+              if (debugMode) {
+                console.log(`🎬 OnboardingManager: Executing ${validTour} tour with official driver.js`)
               }
-            }, 10000) // Show after 10 seconds
-          }
-        }, 2000)
+              
+              try {
+                startSimpleTour(validTour)
+              } catch (error) {
+                console.error(`Error starting ${validTour} tour:`, error)
+              }
+            }, 1500) // Reduced delay - official driver.js handles timing better
 
-        return () => clearTimeout(timer)
-      } else if (debugMode) {
-        console.log('❌ OnboardingManager: User has already completed tours, not starting welcome tour')
-      }
-    } else if (debugMode) {
-      console.log('❌ OnboardingManager: Conditions not met for auto-start')
+            return () => {
+              if (tourStartTimeoutRef.current) {
+                clearTimeout(tourStartTimeoutRef.current)
+              }
+            }
+          } else if (debugMode) {
+            console.log('❌ OnboardingManager: Specific tour already completed, not starting')
+          }
+        } else if (debugMode) {
+          console.log('❌ OnboardingManager: Conditions not met for auto-start')
+          console.log('  Missing conditions:', {
+            autoStartWelcome,
+            hasUserId: !!user?.id,
+            tierLoaded: !tierLoading,
+            notActive: !isActive,
+            isAppRoute,
+            hasRecommendedTour: !!validTour,
+            shouldShow: validTour ? shouldShowTour(validTour) : false,
+            canStart: validTour ? pageTourRouter.canStartTour(validTour) : false
+          })
+        }
+      }).catch(error => {
+        console.error('Error loading page tour router:', error)
+      })
     }
   }, [
     autoStartWelcome,
@@ -262,25 +237,49 @@ export function OnboardingManager({
     shouldShowTour,
     isActive,
     isTourCompleted,
-    startNextTour
+    startSimpleTour,
+    simpleTourStarter
   ])
 
-  // Debug logging
+  // Debug logging for active tours using official Driver.js state methods
   useEffect(() => {
-    if (debugMode && activeTour?.tourId) {
-      console.log(`Active tour: ${activeTour?.tourId}`)
-      console.log(`Tour manager active: ${tourManager.isActive()}`)
-      console.log(`Enhanced tour manager device: ${enhancedTourManager.getDeviceType()}`)
-      console.log(`Enhanced tour manager tier: ${enhancedTourManager.getUserTierInfo()?.tier}`)
-      console.log(`Current step: ${tourManager.getCurrentStep()}`)
+    if (debugMode && activeTour?.tourId && simpleTourStarter) {
+      console.log(`🔍 Active tour debug info:`)
+      console.log(`  Tour ID: ${activeTour?.tourId}`)
+      console.log(`  Simple tour starter active:`, simpleTourStarter.isTourActive())
+      
+      const tourState = simpleTourStarter.getCurrentTourState()
+      if (tourState) {
+        console.log(`  Current step: ${tourState.currentStep}/${tourState.totalSteps}`)
+        console.log(`  Navigation: hasNext=${tourState.hasNext}, hasPrev=${tourState.hasPrevious}`)
+        console.log(`  Position: isFirst=${tourState.isFirst}, isLast=${tourState.isLast}`)
+      }
     }
-  }, [debugMode, activeTour?.tourId])
+  }, [debugMode, activeTour?.tourId, simpleTourStarter])
 
-  // This component doesn't render anything visible
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (tourStartTimeoutRef.current) {
+        clearTimeout(tourStartTimeoutRef.current)
+      }
+      
+      // Clean up any active tours using official Driver.js method
+      if (simpleTourStarter?.isTourActive()) {
+        if (debugMode) {
+          console.log('🧹 OnboardingManager unmounting - cleaning up active tour')
+        }
+        simpleTourStarter.destroyActiveTour()
+      }
+    }
+  }, [simpleTourStarter, debugMode])
+
+  // This component doesn't render anything visible - it's a controller
+  // Following React best practices for manager components
   return null
 }
 
-// Hook for manual tour management
+// Hook for manual tour management using official driver.js patterns
 export function useOnboardingManager() {
   const { startTour, completeTour, skipTour, resetProgress } = useOnboarding()
 
@@ -291,18 +290,25 @@ export function useOnboardingManager() {
         throw new Error(`Tour configuration not found: ${tourId}`)
       }
 
-      await tourManager.initializeTour(tourId, tourConfig)
+      // Use simplified tour starter following official driver.js patterns
+      const { startTourWithValidation } = await import('@/libs/onboarding/simple-tour-starter')
+      
       await startTour(tourId)
-      await tourManager.startTour()
+      startTourWithValidation(tourConfig, {
+        onCompleted: () => completeTour(tourId),
+        onSkipped: () => skipTour(tourId)
+      })
     } catch (error) {
       console.error(`Error starting tour ${tourId}:`, error)
       throw error
     }
-  }, [startTour])
+  }, [startTour, completeTour, skipTour])
 
   const stopCurrentTour = useCallback(async () => {
     try {
-      await tourManager.destroyTour()
+      // Use official driver.js cleanup method
+      const { destroyActiveTour } = await import('@/libs/onboarding/simple-tour-starter')
+      destroyActiveTour()
     } catch (error) {
       console.error('Error stopping tour:', error)
       throw error
@@ -311,7 +317,12 @@ export function useOnboardingManager() {
 
   const completeCurrentTour = useCallback(async () => {
     try {
-      await tourManager.completeTour()
+      // Use official driver.js navigation to complete
+      const { tourNavigation } = await import('@/libs/onboarding/simple-tour-starter')
+      // Move to last step to trigger completion
+      while (tourNavigation.moveNext()) {
+        // Continue until tour completes
+      }
     } catch (error) {
       console.error('Error completing tour:', error)
       throw error
@@ -320,7 +331,9 @@ export function useOnboardingManager() {
 
   const resetAllProgress = useCallback(async () => {
     try {
-      await tourManager.destroyTour()
+      // Clean up active tour and reset progress
+      const { destroyActiveTour } = await import('@/libs/onboarding/simple-tour-starter')
+      destroyActiveTour()
       await resetProgress()
     } catch (error) {
       console.error('Error resetting progress:', error)
