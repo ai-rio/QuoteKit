@@ -250,7 +250,7 @@ export function CohortsAnalysisPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <Select value={selectedCohortType} onValueChange={setSelectedCohortType}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                   <Calendar className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -262,7 +262,7 @@ export function CohortsAnalysisPage() {
               </Select>
               
               <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -274,7 +274,7 @@ export function CohortsAnalysisPage() {
               </Select>
               
               <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-                <SelectTrigger className="w-52">
+                <SelectTrigger className="w-52 bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>

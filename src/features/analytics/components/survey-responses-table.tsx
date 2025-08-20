@@ -182,7 +182,7 @@ export function SurveyResponsesTable({
                 })
               }
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[160px] bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                 <SelectValue placeholder="All Surveys" />
               </SelectTrigger>
               <SelectContent>
@@ -204,7 +204,7 @@ export function SurveyResponsesTable({
                 })
               }
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[140px] bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>

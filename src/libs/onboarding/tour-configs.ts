@@ -157,7 +157,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
   },
   
   // Global lifecycle hooks for enhanced reliability
-  onHighlightStarted: (_element?: Element, _step?: any, _options?: any) => {
+  onHighlightStarted: (element?: Element, step?: any, options?: any) => {
     try {
       if (!element) {
         // Use comprehensive error handling system
@@ -233,7 +233,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
     }
   },
 
-  onHighlighted: (_element?: Element, _step?: any, _options?: any) => {
+  onHighlighted: (element?: Element, step?: any, options?: any) => {
     try {
       // Confirm element is properly highlighted
       if (element) {
@@ -276,7 +276,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
     }
   },
 
-  onDeselected: (_element?: Element, _step?: any, _options?: any) => {
+  onDeselected: (element?: Element, step?: any, options?: any) => {
     try {
       // Cleanup when leaving step
       if (element) {
@@ -384,7 +384,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
         },
         
         // Enhanced system validation with comprehensive coverage
-        onNextClick: (_element?: Element, _step?: any, _options?: any) => {
+        onNextClick: (element?: Element, step?: any, options?: any) => {
           // Use comprehensive step validation system
           const stepValidation = validateStep('client-selector-interaction');
           
@@ -442,7 +442,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
       },
       
       // Step-specific lifecycle hooks with enhanced error handling
-      onHighlightStarted: async (_element?: Element, _step?: any, _options?: any) => {
+      onHighlightStarted: async (element?: Element, step?: any, options?: any) => {
         try {
           if (!element) {
             console.warn('Client selector element not found, using dynamic content support...');
@@ -506,7 +506,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
         }
       },
       
-      onHighlighted: (_element?: Element, _step?: any, _options?: any) => {
+      onHighlighted: (element?: Element, step?: any, options?: any) => {
         try {
           // Add helpful visual cues
           if (element) {
@@ -520,7 +520,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
         }
       },
       
-      onDeselected: (_element?: Element, _step?: any, _options?: any) => {
+      onDeselected: (element?: Element, step?: any, options?: any) => {
         try {
           if (element) {
             element.removeAttribute('data-tour-hint');
@@ -549,7 +549,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
       showButtons: ['next', 'previous', 'close'],
       
       // Enhanced error handling for line items section
-      onHighlightStarted: async (_element?: Element, _step?: any, _options?: any) => {
+      onHighlightStarted: async (element?: Element, step?: any, options?: any) => {
         try {
           if (!element) {
             console.warn('Line items section not found, checking for dynamic loading...');
@@ -642,7 +642,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
         },
         
         // Comprehensive system validation for line items
-        onNextClick: (_element?: Element, _step?: any, _options?: any) => {
+        onNextClick: (element?: Element, step?: any, options?: any) => {
           // Use comprehensive step validation system
           const stepValidation = validateStep('add-items-process');
           
@@ -819,7 +819,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
         showEstimatedTime: false,
         
         // Final validation before completion
-        onCloseClick: (_element?: Element, _step?: any, _options?: any) => {
+        onCloseClick: (element?: Element, step?: any, options?: any) => {
           // Perform comprehensive system validation
           const workflow = validateQuoteWorkflow();
           // const coverage = getSystemCoverage(); // Available for future use

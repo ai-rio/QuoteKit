@@ -186,13 +186,13 @@ export function UserEditModal({ user, isOpen, onClose, onUserUpdated }: UserEdit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-black text-section-title flex items-center gap-2 font-bold">
-            <User className="h-5 w-5 text-black" />
+          <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green flex items-center gap-2">
+            <User className="h-5 w-5 text-forest-green" />
             Edit User
           </DialogTitle>
-          <DialogDescription className="text-charcoal">
+          <DialogDescription className="text-lg text-charcoal">
             Manage user profile, permissions, and account status
           </DialogDescription>
         </DialogHeader>

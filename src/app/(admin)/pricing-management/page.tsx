@@ -768,10 +768,10 @@ export default function PricingManagementPage() {
                     Add Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-charcoal text-section-title">Create New Product</DialogTitle>
-                    <DialogDescription className="text-charcoal/70">
+                    <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">Create New Product</DialogTitle>
+                    <DialogDescription className="text-lg text-charcoal">
                       Add a new product to your Stripe catalog with feature configuration
                     </DialogDescription>
                   </DialogHeader>
@@ -1049,10 +1049,10 @@ export default function PricingManagementPage() {
                     Add Price
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-paper-white border-stone-gray">
+                <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8">
                   <DialogHeader>
-                    <DialogTitle className="text-charcoal text-section-title">Create New Price</DialogTitle>
-                    <DialogDescription className="text-charcoal/70">
+                    <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">Create New Price</DialogTitle>
+                    <DialogDescription className="text-lg text-charcoal">
                       Add a new price for one of your products
                     </DialogDescription>
                   </DialogHeader>
@@ -1220,10 +1220,10 @@ export default function PricingManagementPage() {
 
       {/* Edit Product Dialog */}
       <Dialog open={showEditProductDialog} onOpenChange={setShowEditProductDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-charcoal text-section-title">Edit Product</DialogTitle>
-            <DialogDescription className="text-charcoal/70">
+            <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">Edit Product</DialogTitle>
+            <DialogDescription className="text-lg text-charcoal">
               Update product information and feature configuration
             </DialogDescription>
           </DialogHeader>
@@ -1326,10 +1326,10 @@ export default function PricingManagementPage() {
 
       {/* Edit Price Dialog */}
       <Dialog open={showEditPriceDialog} onOpenChange={setShowEditPriceDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray">
+        <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8">
           <DialogHeader>
-            <DialogTitle className="text-charcoal text-section-title">Edit Price</DialogTitle>
-            <DialogDescription className="text-charcoal/70">
+            <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">Edit Price</DialogTitle>
+            <DialogDescription className="text-lg text-charcoal">
               Update price settings (Note: Amount and billing frequency cannot be changed)
             </DialogDescription>
           </DialogHeader>
@@ -1390,12 +1390,12 @@ export default function PricingManagementPage() {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray">
+        <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8">
           <DialogHeader>
-            <DialogTitle className={`text-section-title ${confirmAction?.destructive ? 'text-error-red' : 'text-charcoal'}`}>
+            <DialogTitle className={`text-xl md:text-2xl font-bold ${confirmAction?.destructive ? 'text-error-red' : 'text-forest-green'}`}>
               {confirmAction?.title}
             </DialogTitle>
-            <DialogDescription className="text-charcoal/70">
+            <DialogDescription className="text-lg text-charcoal">
               {confirmAction?.message}
             </DialogDescription>
           </DialogHeader>

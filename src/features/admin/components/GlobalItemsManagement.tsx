@@ -347,15 +347,15 @@ export function GlobalItemsManagement() {
                 
                 <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
                   <DialogTrigger asChild>
-                    <Button className="bg-forest-green text-paper-white hover:opacity-90">
+                    <Button className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Item
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-paper-white border-stone-gray max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle className="text-charcoal">Add New Global Item</DialogTitle>
-                      <DialogDescription className="text-charcoal/60">
+                      <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">Add New Global Item</DialogTitle>
+                      <DialogDescription className="text-lg text-charcoal">
                         Create a new item for the global library
                       </DialogDescription>
                     </DialogHeader>
@@ -620,10 +620,10 @@ export function GlobalItemsManagement() {
 
       {/* Edit Item Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-charcoal">Edit Global Item</DialogTitle>
-            <DialogDescription className="text-charcoal/60">
+            <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">Edit Global Item</DialogTitle>
+            <DialogDescription className="text-lg text-charcoal">
               Update the item information
             </DialogDescription>
           </DialogHeader>
@@ -816,7 +816,7 @@ function AddItemForm({
         <Button 
           type="submit" 
           disabled={loading}
-          className="bg-forest-green text-paper-white hover:opacity-90"
+          className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
         >
           {loading ? 'Creating...' : 'Create Item'}
         </Button>
@@ -1037,14 +1037,14 @@ function EditItemForm({
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="bg-paper-white text-charcoal border-stone-gray hover:bg-stone-gray/20"
+          className="bg-paper-white border border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-6 py-3 rounded-lg transition-all duration-200"
         >
           Cancel
         </Button>
         <Button 
           type="submit" 
           disabled={loading}
-          className="bg-forest-green text-paper-white hover:opacity-90"
+          className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
         >
           {loading ? 'Updating...' : 'Update Item'}
         </Button>

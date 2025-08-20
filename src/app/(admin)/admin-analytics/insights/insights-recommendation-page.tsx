@@ -406,7 +406,7 @@ export function InsightsRecommendationPage() {
               </div>
               
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
@@ -421,7 +421,7 @@ export function InsightsRecommendationPage() {
               </Select>
               
               <Select value={filterImpact} onValueChange={setFilterImpact}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                   <Target className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>

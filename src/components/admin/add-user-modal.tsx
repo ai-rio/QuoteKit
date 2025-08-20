@@ -112,13 +112,13 @@ export function AddUserModal({ isOpen, onClose, onUserCreated }: AddUserModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-paper-white border-stone-gray max-w-md">
+      <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-charcoal text-section-title flex items-center gap-2">
+          <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
             Add New User
           </DialogTitle>
-          <DialogDescription className="text-charcoal/70">
+          <DialogDescription className="text-lg text-charcoal">
             Create a new user account and assign permissions
           </DialogDescription>
         </DialogHeader>

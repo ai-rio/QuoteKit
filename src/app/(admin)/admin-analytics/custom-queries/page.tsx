@@ -479,12 +479,12 @@ export default function CustomQueriesPage() {
 
       {/* Save Query Dialog */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray">
+        <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8">
           <DialogHeader>
-            <DialogTitle className="text-charcoal">
+            <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">
               {editingQuery ? 'Edit Query' : 'Save Query'}
             </DialogTitle>
-            <DialogDescription className="text-charcoal/70">
+            <DialogDescription className="text-lg text-charcoal">
               {editingQuery ? 'Update your saved query' : 'Save this query for future use'}
             </DialogDescription>
           </DialogHeader>

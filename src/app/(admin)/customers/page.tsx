@@ -214,7 +214,7 @@ export default function CustomersPage() {
                     <Button
                       size="sm"
                       onClick={() => handleRetryPayment(payment.id)}
-                      className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                      className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-lg"
                     >
                       Retry Payment
                     </Button>
@@ -426,7 +426,7 @@ export default function CustomersPage() {
                               <Button
                                 size="sm"
                                 onClick={() => handleReactivateSubscription(customer.subscription?.id!)}
-                                className="bg-forest-green text-paper-white hover:bg-forest-green/90"
+                                className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-lg"
                               >
                                 Reactivate
                               </Button>
@@ -435,7 +435,7 @@ export default function CustomersPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleCancelSubscription(customer.subscription?.id!)}
-                                className="border-stone-gray text-charcoal hover:bg-light-concrete"
+                                className="bg-paper-white border border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-4 py-2 rounded-lg transition-all duration-200"
                               >
                                 Cancel
                               </Button>

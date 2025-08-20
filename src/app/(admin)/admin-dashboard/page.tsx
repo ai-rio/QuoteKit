@@ -277,7 +277,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/users/overview">
               <Button 
-                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+                className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-12 justify-start w-full"
               >
                 <Users className="w-4 h-4 mr-2" />
                 Manage Users
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/admin-analytics/surveys">
               <Button 
-                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+                className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 h-12 justify-start w-full"
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Survey Analytics
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/global-items">
               <Button 
-                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+                className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-12 justify-start w-full"
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 Global Items
@@ -301,7 +301,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/pricing-management">
               <Button 
-                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+                className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 h-12 justify-start w-full"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
                 Pricing Management
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/email-system/campaigns">
               <Button 
-                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+                className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-12 justify-start w-full"
               >
                 <Mail className="w-4 h-4 mr-2" />
                 Email Campaigns
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/admin-settings">
               <Button 
-                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+                className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 h-12 justify-start w-full"
               >
                 <Activity className="w-4 h-4 mr-2" />
                 System Settings
@@ -341,7 +341,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/admin-analytics/segments">
               <Button 
-                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+                className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-12 justify-start w-full"
               >
                 <Users className="w-4 h-4 mr-2" />
                 User Segments
@@ -349,7 +349,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/admin-analytics/trends">
               <Button 
-                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+                className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 h-12 justify-start w-full"
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Trend Analysis
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/admin-analytics/cohorts">
               <Button 
-                className="bg-forest-green text-white hover:opacity-90 font-bold h-12 justify-start w-full"
+                className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg h-12 justify-start w-full"
               >
                 <Activity className="w-4 h-4 mr-2" />
                 Cohort Analysis
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/admin-analytics/insights">
               <Button 
-                className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold h-12 justify-start w-full"
+                className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 h-12 justify-start w-full"
               >
                 <AlertTriangle className="w-4 h-4 mr-2" />
                 AI Insights

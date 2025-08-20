@@ -137,14 +137,14 @@ export default function UsersOverview() {
         <div className="flex space-x-3">
           <Button 
             onClick={handleExportData}
-            className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold"
+            className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Data
           </Button>
           <Button 
             onClick={handleAddUser}
-            className="bg-forest-green text-white hover:opacity-90 font-bold"
+            className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-6 py-3 rounded-lg transition-all duration-200 shadow-lg"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Add User
@@ -356,7 +356,7 @@ export default function UsersOverview() {
                         <Button 
                           size="sm"
                           onClick={() => handleEditUser(user)}
-                          className="bg-forest-green text-white hover:opacity-90"
+                          className="bg-forest-green text-paper-white hover:bg-forest-green/90 font-bold px-4 py-2 rounded-lg transition-all duration-200 shadow-lg"
                         >
                           <Settings className="w-4 h-4 mr-1" />
                           Edit

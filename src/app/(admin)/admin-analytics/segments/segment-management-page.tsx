@@ -221,7 +221,7 @@ export function SegmentManagementPage() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-48 bg-light-concrete text-charcoal border-0 py-3 px-4 rounded-lg shadow-sm ring-1 ring-inset ring-stone-gray/50 focus:ring-2 focus:ring-inset focus:ring-forest-green">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -417,7 +417,7 @@ function CreateSegmentDialog({ onClose }: { onClose: () => void }) {
   const [criteria, setCriteria] = useState<SegmentCriteria[]>([]);
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="bg-paper-white rounded-2xl border border-stone-gray/20 shadow-lg p-8 max-w-2xl">
       <DialogHeader>
         <DialogTitle className="text-xl md:text-2xl font-bold text-forest-green">
           Create New Segment
