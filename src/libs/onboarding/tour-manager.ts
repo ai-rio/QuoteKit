@@ -17,6 +17,33 @@ export interface TourStep {
   onAfterHighlight?: (element?: Element) => Promise<void> | void
   validation?: () => boolean
   interactive?: boolean
+  
+  // Enhanced popover configuration
+  popover?: {
+    title: string;
+    description: string;
+    side?: 'top' | 'right' | 'bottom' | 'left' | 'auto';
+    align?: 'start' | 'center' | 'end';
+    showButtons?: string[];
+    showProgress?: boolean;
+    progressText?: string;
+    className?: string;
+    showEstimatedTime?: boolean;
+    estimatedTimeMinutes?: number;
+    responsive?: {
+      mobile?: any;
+      tablet?: any;
+      desktop?: any;
+    };
+    onNextClick?: (_element?: Element, _step?: any, _options?: any) => void | boolean;
+    onPrevClick?: (_element?: Element, _step?: any, _options?: any) => void | boolean;
+    onCloseClick?: (_element?: Element, _step?: any, _options?: any) => void | boolean;
+  };
+  
+  // Enhanced lifecycle hooks for step-level control
+  onHighlightStarted?: (_element?: Element, _step?: any, _options?: any) => void
+  onHighlighted?: (_element?: Element, _step?: any, _options?: any) => void
+  onDeselected?: (_element?: Element, _step?: any, _options?: any) => void
 }
 
 export interface TourConfig {
@@ -31,11 +58,19 @@ export interface TourConfig {
   showProgress?: boolean
   allowClose?: boolean
   overlayClickBehavior?: 'close' | 'next' | 'ignore'
+  progressText?: string
+  
+  // Lifecycle hooks for enhanced reliability
+  onHighlightStarted?: (_element?: Element, _step?: any, _options?: any) => void
+  onHighlighted?: (_element?: Element, _step?: any, _options?: any) => void
+  onDeselected?: (_element?: Element, _step?: any, _options?: any) => void
+  onDestroyed?: () => void
+  onDestroyStarted?: () => void
 }
 
 export type StepChangeCallback = (currentStep: number, totalSteps: number, stepData: TourStep) => void
-export type TourCompleteCallback = (tourId: string) => void
-export type TourSkipCallback = (tourId: string) => void
+export type TourCompleteCallback = (_tourId: string) => void
+export type TourSkipCallback = (_tourId: string) => void
 
 class TourManager {
   private driverInstance: Driver | null = null

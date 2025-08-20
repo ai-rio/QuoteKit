@@ -4,6 +4,7 @@ import { Plus,Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,9 +16,9 @@ import { QuoteLineItem } from '../types';
 interface EnhancedLineItemsTableProps {
   availableItems: LineItem[];
   quoteLineItems: QuoteLineItem[];
-  onAddItem: (itemId: string) => void;
-  onUpdateItem: (itemId: string, field: keyof QuoteLineItem, value: any) => void;
-  onRemoveItem: (itemId: string) => void;
+  onAddItem: (_itemId: string) => void;
+  onUpdateItem: (_itemId: string, _field: keyof QuoteLineItem, _value: any) => void;
+  onRemoveItem: (_itemId: string) => void;
 }
 
 export function EnhancedLineItemsTable({
@@ -64,6 +65,8 @@ export function EnhancedLineItemsTable({
                 <DialogTrigger asChild>
                   <Button
                     className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
+                    data-testid="item-search-add"
+                    data-tour="item-search-add"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Your First Item
@@ -92,6 +95,28 @@ export function EnhancedLineItemsTable({
 
   return (
     <div className="space-y-4">
+      {/* Add Item Button - shown when items exist */}
+      <div className="flex justify-end">
+        <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
+          <DialogTrigger asChild>
+            <Button
+              className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation"
+              data-testid="item-search-add"
+              data-tour="item-search-add"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Item
+            </Button>
+          </DialogTrigger>
+          <ItemSelectorDialog
+            availableItems={filteredItems}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onAddItem={handleAddItemFromDialog}
+          />
+        </Dialog>
+      </div>
+
       {/* Desktop Table View */}
       <div className="hidden md:block">
         <Table>
@@ -122,26 +147,39 @@ export function EnhancedLineItemsTable({
                     step="0.01"
                     value={item.quantity}
                     onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                    className="w-20 text-right font-mono border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green ml-auto"
+                    className="w-20 text-right border-0 bg-transparent p-0 font-mono text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2"
+                    data-testid="quantity-input"
+                    data-tour="quantity-input"
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className="font-mono text-lg">${item.cost.toFixed(2)}</span>
+                  <span className="font-mono text-charcoal">${item.cost.toFixed(2)}</span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className="font-mono text-lg font-bold">
+                  <span className="font-mono font-bold text-charcoal">
                     ${(item.quantity * item.cost).toFixed(2)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onRemoveItem(item.id)}
-                    className="text-charcoal/50 hover:text-charcoal hover:bg-stone-gray/20"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex justify-end" data-testid="item-actions" data-tour="item-actions">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onRemoveItem(item.id)}
+                            className="text-charcoal/40 hover:text-red-500 hover:bg-red-50 h-8 w-8 p-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                          <p className="text-xs">Remove item</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -150,87 +188,63 @@ export function EnhancedLineItemsTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden space-y-4">
+      <div className="md:hidden space-y-3">
         {quoteLineItems.map((item) => (
-          <div key={item.id} className="bg-light-concrete p-4 rounded-lg border border-stone-gray">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1 pr-2">
-                <Input
-                  value={item.name}
-                  onChange={(e) => handleNameChange(item.id, e.target.value)}
-                  className="border-0 bg-transparent p-0 text-base font-medium text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2 w-full"
-                />
-                <div className="text-sm text-charcoal/60 mt-1">{item.unit || 'unit'}</div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemoveItem(item.id)}
-                className="text-charcoal/50 hover:text-charcoal hover:bg-stone-gray/20 min-h-[44px] min-w-[44px] touch-manipulation"
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <div className="text-xs text-charcoal/60 mb-1">QTY</div>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.quantity}
-                  onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                  className="text-center font-mono border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green min-h-[44px] touch-manipulation"
-                />
-              </div>
-              <div>
-                <div className="text-xs text-charcoal/60 mb-1">PRICE</div>
-                <div className="h-11 flex items-center justify-center font-mono text-sm">
-                  ${item.cost.toFixed(2)}
+          <Card key={item.id} className="bg-light-concrete border-stone-gray">
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 mr-2">
+                    <Input
+                      value={item.name}
+                      onChange={(e) => handleNameChange(item.id, e.target.value)}
+                      className="border-0 bg-transparent p-0 text-base font-medium text-charcoal focus:bg-light-concrete focus:border focus:border-forest-green focus:ring-forest-green rounded-md focus:px-3 focus:py-2"
+                    />
+                    <div className="text-sm text-charcoal/60 mt-1">{item.unit || 'unit'}</div>
+                  </div>
+                  <div data-testid="item-actions" data-tour="item-actions">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRemoveItem(item.id)}
+                      className="text-charcoal/40 hover:text-red-500 hover:bg-red-50 h-8 w-8 p-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <div className="text-charcoal/60 font-medium">QTY</div>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.quantity}
+                      onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                      className="mt-1 text-center font-mono min-h-[36px] touch-manipulation"
+                      data-testid="quantity-input"
+                    data-tour="quantity-input"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-charcoal/60 font-medium">PRICE</div>
+                    <div className="mt-1 text-center font-mono text-charcoal pt-2">
+                      ${item.cost.toFixed(2)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-charcoal/60 font-medium">TOTAL</div>
+                    <div className="mt-1 text-center font-mono font-bold text-charcoal pt-2">
+                      ${(item.quantity * item.cost).toFixed(2)}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-charcoal/60 mb-1">TOTAL</div>
-                <div className="h-11 flex items-center justify-center font-mono text-sm font-bold">
-                  ${(item.quantity * item.cost).toFixed(2)}
-                </div>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
-      </div>
-
-      {/* Add Item Button */}
-      <div className="flex justify-center pt-4">
-        <Dialog open={isItemSelectorOpen} onOpenChange={setIsItemSelectorOpen}>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DialogTrigger asChild>
-                  <Button
-                    className="bg-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 hover:text-charcoal font-bold min-h-[44px] touch-manipulation w-full sm:w-auto"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Another Item
-                  </Button>
-                </DialogTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
-                <p className="text-xs">
-                  Browse your {availableItems.length} items or search by name, category, or unit type
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <ItemSelectorDialog
-            availableItems={availableItems.filter(item =>
-              item.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onAddItem={handleAddItemFromDialog}
-          />
-        </Dialog>
       </div>
     </div>
   );
@@ -245,8 +259,8 @@ function ItemSelectorDialog({
 }: {
   availableItems: LineItem[];
   searchTerm: string;
-  onSearchChange: (value: string) => void;
-  onAddItem: (item: LineItem) => void;
+  onSearchChange: (_value: string) => void;
+  onAddItem: (_item: LineItem) => void;
 }) {
   const filteredItems = availableItems.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -291,12 +305,14 @@ function ItemSelectorDialog({
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
+                  data-testid="item-library-search"
+                  data-tour="item-library-search"
                 />
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
               <p className="text-xs">
-                Search by item name, category, or unit type. Try &ldquo;mulch&rdquo;, &ldquo;labor&rdquo;, or &ldquo;sq ft&rdquo;
+                Search by item name, category, or unit type. Try &quot;mulch&quot;, &quot;labor&quot;, or &quot;sq ft&quot;
               </p>
             </TooltipContent>
           </Tooltip>
@@ -308,7 +324,7 @@ function ItemSelectorDialog({
               {isSearching ? (
                 <>
                   <div className="text-sm">
-                    No items found for &ldquo;{searchTerm}&rdquo;
+                    No items found for &quot;{searchTerm}&quot;
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs text-charcoal/50">
@@ -322,7 +338,6 @@ function ItemSelectorDialog({
                             size="sm"
                             className="text-xs border-stone-gray text-charcoal hover:bg-light-concrete"
                             onClick={() => {
-                              // Navigate to items library to add new item
                               window.open('/items', '_blank');
                             }}
                           >

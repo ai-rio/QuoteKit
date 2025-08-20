@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 Tour Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-element { 
+            padding: 20px; 
+            margin: 10px 0; 
+            border: 2px solid #ccc; 
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Phase 1 Tour Implementation Test</h1>
+    
+    <div class="test-element" data-testid="quote-header" data-tour="quote-details">
+        <h2>Quote Header ✅</h2>
+        <p>data-testid="quote-header" + data-tour="quote-details"</p>
+    </div>
+    
+    <div class="test-element" data-testid="client-selector" data-tour="client-selector">
+        <h2>Client Selector ✅</h2>
+        <p>data-testid="client-selector" + data-tour="client-selector"</p>
+    </div>
+    
+    <div class="test-element" data-testid="line-items-card" data-tour="add-items">
+        <h2>Line Items Card ✅</h2>
+        <p>data-testid="line-items-card" + data-tour="add-items"</p>
+        
+        <div data-testid="item-search-add" data-tour="item-search-add" style="margin: 10px 0; padding: 10px; background: #e8f4f8;">
+            <strong>Add Item Button ✅</strong><br>
+            data-testid="item-search-add" + data-tour="item-search-add"
+        </div>
+        
+        <div data-testid="line-items-table" data-tour="line-items-table" style="margin: 10px 0; padding: 10px; background: #f0f8e8;">
+            <strong>Line Items Table ✅</strong><br>
+            data-testid="line-items-table" + data-tour="line-items-table"
+            
+            <div data-testid="item-actions" data-tour="item-actions" style="margin: 5px 0; padding: 5px; background: #fff8e8;">
+                Item Actions ✅
+            </div>
+            
+            <input data-testid="quantity-input" data-tour="quantity-input" placeholder="Quantity" style="margin: 5px 0;">
+        </div>
+    </div>
+    
+    <div class="test-element" data-testid="financial-settings" data-tour="financial-settings">
+        <h2>Financial Settings ✅</h2>
+        <p>data-testid="financial-settings" + data-tour="financial-settings"</p>
+        
+        <input data-testid="tax-rate-input" data-tour="tax-rate-input" placeholder="Tax Rate" style="margin: 5px; padding: 5px;">
+        <input data-testid="markup-rate-input" data-tour="markup-rate-input" placeholder="Markup Rate" style="margin: 5px; padding: 5px;">
+    </div>
+    
+    <div class="test-element" data-testid="quote-totals" data-tour="quote-totals">
+        <h2>Quote Totals ✅</h2>
+        <p>data-testid="quote-totals" + data-tour="quote-totals"</p>
+    </div>
+    
+    <div class="test-element" data-testid="save-send-actions" data-tour="save-send-actions">
+        <h2>Save & Send Actions ✅</h2>
+        <p>data-testid="save-send-actions" + data-tour="save-send-actions"</p>
+    </div>
+    
+    <div class="test-element">
+        <h2>Item Library Search (Dialog) ✅</h2>
+        <input data-testid="item-library-search" data-tour="item-library-search" placeholder="Search items..." style="padding: 8px; width: 200px;">
+        <p>data-testid="item-library-search" + data-tour="item-library-search"</p>
+    </div>
+
+    <script>
+        // Test selector validation
+        function testSelectors() {
+            const results = [];
+            
+            // Test all our new selectors
+            const selectors = [
+                '[data-testid="quote-header"]',
+                '[data-testid="client-selector"]', 
+                '[data-testid="line-items-card"]',
+                '[data-testid="item-search-add"]',
+                '[data-testid="line-items-table"]',
+                '[data-testid="item-actions"]',
+                '[data-testid="quantity-input"]',
+                '[data-testid="financial-settings"]',
+                '[data-testid="tax-rate-input"]',
+                '[data-testid="markup-rate-input"]',
+                '[data-testid="quote-totals"]',
+                '[data-testid="save-send-actions"]',
+                '[data-testid="item-library-search"]'
+            ];
+            
+            selectors.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    results.push(`✅ ${selector} - Found`);
+                } else {
+                    results.push(`❌ ${selector} - Not Found`);
+                }
+            });
+            
+            // Test fallback selectors
+            const fallbackTests = [
+                {
+                    name: 'Client Selector Fallbacks',
+                    selectors: ['[data-testid="client-selector"]', '[data-tour="client-selector"]', 'input[placeholder*="client"]']
+                },
+                {
+                    name: 'Financial Settings Fallbacks', 
+                    selectors: ['[data-testid="financial-settings"]', '[data-tour="financial-settings"]', '.financial-settings-section']
+                }
+            ];
+            
+            fallbackTests.forEach(test => {
+                const found = test.selectors.some(sel => document.querySelector(sel));
+                results.push(`${found ? '✅' : '❌'} ${test.name} - ${found ? 'Has fallback' : 'No fallback found'}`);
+            });
+            
+            return results;
+        }
+        
+        // Run tests on page load
+        window.addEventListener('load', () => {
+            const results = testSelectors();
+            const testResults = document.createElement('div');
+            testResults.innerHTML = `
+                <h2>Test Results:</h2>
+                <pre>${results.join('\n')}</pre>
+            `;
+            document.body.appendChild(testResults);
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,20 @@
-import { navigateForTour, validatePageForTour } from './navigation-helper'
+import { navigateForTour } from './navigation-helper'
+import {
+  showValidationMessage
+} from './popover-config'
 import { SPRINT3_TOUR_CONFIGS } from './sprint3-tour-configs'
+import {
+  generateCoverageReport,
+  markOperationCompleted,
+  validateQuoteWorkflow,
+  validateStep
+} from './step-validation-system'
+import { 
+  handleMissingElement, 
+  showTourError, 
+  tourErrorHandler, 
+  validateStepContext,
+  waitForElement} from './tour-error-handler'
 import { TourConfig } from './tour-manager'
 
 // Welcome Tour - Dashboard Overview (M1.3 Specification)
@@ -85,106 +100,775 @@ export const WELCOME_TOUR: TourConfig = {
 export const QUOTE_CREATION_TOUR: TourConfig = {
   id: 'quote-creation',
   name: 'Create Your First Quote',
-  description: 'Learn how to create professional quotes for your clients',
+  description: 'Learn how to create professional quotes step by step',
   prerequisites: ['welcome'],
   userTiers: ['free', 'pro', 'enterprise'],
   deviceTypes: ['desktop', 'mobile', 'tablet'],
   showProgress: true,
   allowClose: true,
   overlayClickBehavior: 'ignore',
+  
+  // Enhanced progress configuration
+  progressText: 'Step {{current}} of {{total}} • {{percent}}% complete',
+  popoverClass: 'enhanced-tour-popover tour-popover-with-progress',
+  
+  // Tour-level error recovery configuration
+  onDestroyed: () => {
+    try {
+      // Clean up any tour-specific state
+      document.querySelectorAll('[data-tour-active]').forEach(el => {
+        el.removeAttribute('data-tour-active');
+        el.removeAttribute('data-tour-hint');
+        el.removeAttribute('aria-describedby');
+      });
+      
+      // Clear any error notifications
+      document.querySelectorAll('.tour-error-notification').forEach(notification => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      });
+      
+      console.log('Quote creation tour destroyed and cleaned up');
+      
+    } catch (error) {
+      console.error('Error during tour cleanup:', error);
+    }
+  },
+  
+  onDestroyStarted: () => {
+    try {
+      // Log tour completion/cancellation
+      const errorStats = tourErrorHandler.getErrorStats();
+      console.log('Tour ending with error stats:', errorStats);
+      
+      // Track tour completion
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'tour_ended', {
+          tour_id: 'quote-creation',
+          total_errors: errorStats.totalErrors,
+          completed: true
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error during tour destroy start:', error);
+    }
+  },
+  
+  // Global lifecycle hooks for enhanced reliability
+  onHighlightStarted: (_element?: Element, _step?: any, _options?: any) => {
+    try {
+      if (!element) {
+        // Use comprehensive error handling system
+        const stepId = step?.id || 'unknown';
+        const selectors = step?.element ? step.element.split(', ') : [];
+        
+        console.warn(`Tour step element not found: ${stepId}`);
+        
+        // Try to find element using error handler
+        const foundElement = handleMissingElement(
+          stepId,
+          'quote-creation',
+          selectors,
+          {
+            skipStep: false,
+            retryCount: 2,
+            showUserMessage: true,
+            continueOnError: true
+          }
+        );
+
+        if (!foundElement) {
+          showTourError(
+            `Step "${stepId}" is not available right now. The tour will continue with the next step.`,
+            { type: 'warning', duration: 4000 }
+          );
+          return;
+        }
+
+        // Track missing element for analytics
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'tour_element_missing', {
+            step_id: stepId,
+            tour_id: 'quote-creation',
+            recovered: !!foundElement
+          });
+        }
+        return;
+      }
+
+      // Validate step context
+      const validation = validateStepContext(step?.id || 'unknown');
+      if (!validation.isValid) {
+        console.warn('Step context validation failed:', validation);
+        if (validation.suggestions.length > 0) {
+          showTourError(
+            `${validation.suggestions[0]}`,
+            { type: 'info', duration: 3000 }
+          );
+        }
+      }
+
+      // Ensure element is visible and properly positioned
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      });
+
+      // Add visual emphasis for better UX
+      (element as HTMLElement).style.transition = 'all 0.3s ease';
+      
+      // Track successful step start
+      console.log(`Tour step started: ${step?.id || 'unknown'}`);
+      
+    } catch (error) {
+      console.error('Tour highlight error:', error);
+      // Use error handler for user notification
+      showTourError(
+        'There was an issue with the tour. Please try refreshing the page.',
+        { type: 'error', duration: 5000 }
+      );
+    }
+  },
+
+  onHighlighted: (_element?: Element, _step?: any, _options?: any) => {
+    try {
+      // Confirm element is properly highlighted
+      if (element) {
+        // Add accessibility attributes
+        element.setAttribute('aria-describedby', 'driver-popover');
+        element.setAttribute('data-tour-active', 'true');
+        
+        // Validate element is interactive if required
+        const stepId = step?.id || 'unknown';
+        if (step?.interactive) {
+          const isInteractive = element.matches('button, input, select, textarea, [role="button"], [tabindex]');
+          if (!isInteractive) {
+            console.warn(`Step ${stepId} marked as interactive but element is not interactive`);
+            showTourError(
+              'This element may not be ready for interaction yet.',
+              { type: 'warning', duration: 2000 }
+            );
+          }
+        }
+        
+        // Track step completion for analytics
+        console.log(`Tour step highlighted: ${stepId}`);
+        
+        // Track successful highlight
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'tour_step_highlighted', {
+            step_id: stepId,
+            tour_id: 'quote-creation'
+          });
+        }
+      } else {
+        console.warn('Element is null in onHighlighted hook');
+      }
+    } catch (error) {
+      console.error('Tour highlighted error:', error);
+      showTourError(
+        'There was an issue highlighting this step.',
+        { type: 'warning', duration: 2000 }
+      );
+    }
+  },
+
+  onDeselected: (_element?: Element, _step?: any, _options?: any) => {
+    try {
+      // Cleanup when leaving step
+      if (element) {
+        // Remove accessibility attributes
+        element.removeAttribute('aria-describedby');
+        element.removeAttribute('data-tour-active');
+        element.removeAttribute('data-tour-hint');
+        
+        // Reset any visual changes
+        (element as HTMLElement).style.transition = '';
+        
+        const stepId = step?.id || 'unknown';
+        console.log(`Tour step deselected: ${stepId}`);
+        
+        // Track step completion
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'tour_step_completed', {
+            step_id: stepId,
+            tour_id: 'quote-creation'
+          });
+        }
+      }
+      
+      // Perform any step-specific cleanup
+      const stepId = step?.id;
+      if (stepId === 'client-selector-interaction') {
+        // Ensure client selector is properly reset
+        const clientInput = document.querySelector('[data-testid="client-selector"] input');
+        if (clientInput && 'blur' in clientInput) {
+          (clientInput as HTMLInputElement).blur();
+        }
+      }
+      
+    } catch (error) {
+      console.error('Tour deselected error:', error);
+      // Don't show user error for cleanup issues - just log
+    }
+  },
   steps: [
     {
-      id: 'navigate-to-quotes',
-      element: '[data-tour="create-quote"]',
-      title: 'Create New Quote 📝',
-      description: 'Click here to start creating a new quote for your clients. We\'ll guide you through the entire process step by step.',
+      id: 'welcome-overview',
+      title: 'Welcome to Quote Creation! 🎯',
+      description: 'Let\'s walk through the complete quote creation process. This comprehensive tour will show you every step from client selection to final PDF generation. You\'ll learn best practices and time-saving tips along the way.',
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'close'],
       onBeforeHighlight: async () => {
-        // Ensure we're on the dashboard page
-        await navigateForTour('/dashboard');
-      }
-    },
-    {
-      id: 'client-selection-intro',
-      title: 'Client Information Setup 👤',
-      description: 'First, you\'ll need to select or add a new client. You can store client information for quick access in future quotes. Let\'s navigate to the quote creation page.',
-      position: 'bottom',
-      align: 'center',
-      showButtons: ['next', 'previous', 'close'],
-      onBeforeHighlight: async () => {
-        // Navigate to quote creation page if not already there
         await navigateForTour('/quotes/new');
       }
     },
     {
-      id: 'client-selector',
-      element: '[data-tour="client-selector"]',
-      title: 'Select Your Client',
-      description: 'Choose an existing client from your database or create a new one. Client information will be saved for future quotes.',
+      id: 'page-overview-autosave',
+      title: 'Smart Auto-Save System 💾',
+      description: 'This quote creation page features intelligent auto-save every 30 seconds once you select a client. Your work is automatically preserved as drafts so you never lose progress, even if you close the browser.',
       position: 'bottom',
-      align: 'start',
+      align: 'center',
       showButtons: ['next', 'previous', 'close'],
       validation: () => {
-        // Check if client selector is visible
-        const clientSelector = document.querySelector('[data-tour="client-selector"]')
-        return !!clientSelector
+        // Ensure we're on the quote creation page
+        return window.location.pathname === '/quotes/new';
       }
     },
     {
-      id: 'quote-details',
-      element: '[data-tour="quote-details"]',
-      title: 'Quote Details & Numbering',
-      description: 'Set your quote number and basic details. The system can auto-generate quote numbers for you.',
+      id: 'client-selection-intro',
+      title: 'Client Information is Essential 👤',
+      description: 'Every professional quote starts with client information. This appears on your final PDF and enables auto-save functionality. You can search existing clients or create new ones seamlessly.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close']
+    },
+    {
+      id: 'client-selector-interaction',
+      element: '[data-testid="client-selector"], [data-tour="client-selector"], .client-selector-container, input[placeholder*="client"]',
+      title: 'Smart Client Selector',
+      description: 'Click here to search your client database or add a new client. Start typing to find existing clients, or select "Add New Client" to create one.',
+      position: 'bottom',
+      align: 'start',
+      showButtons: ['next', 'previous', 'close'],
+      
+      // Enhanced popover configuration with responsive design
+      popover: {
+        title: 'Smart Client Selector 👤',
+        description: 'Click here to search your client database or add a new client. Start typing to find existing clients, or select "Add New Client" to create one. Client data is automatically saved for future quotes.',
+        side: 'auto',
+        align: 'start',
+        showProgress: true,
+        showEstimatedTime: true,
+        estimatedTimeMinutes: 5,
+        
+        // Responsive configuration
+        responsive: {
+          mobile: {
+            side: 'bottom',
+            align: 'center',
+            description: 'Tap to search clients or add new ones. Client data saves automatically for future quotes.'
+          },
+          tablet: {
+            side: 'right',
+            align: 'start'
+          },
+          desktop: {
+            side: 'bottom',
+            align: 'start'
+          }
+        },
+        
+        // Enhanced system validation with comprehensive coverage
+        onNextClick: (_element?: Element, _step?: any, _options?: any) => {
+          // Use comprehensive step validation system
+          const stepValidation = validateStep('client-selector-interaction');
+          
+          if (!stepValidation.isValid || !stepValidation.canProceed) {
+            // Show specific validation messages
+            if (stepValidation.missingOperations.length > 0) {
+              const missingOps = stepValidation.missingOperations.map(op => op.name).join(', ');
+              showValidationMessage(
+                `Please complete these steps first: ${missingOps}`,
+                'warning'
+              );
+            } else {
+              showValidationMessage(
+                'Please select or add a client before continuing. This is essential for creating a professional quote.',
+                'warning'
+              );
+            }
+            
+            // Highlight the client selector to guide user
+            const clientSelector = document.querySelector('[data-testid="client-selector"]');
+            if (clientSelector) {
+              (clientSelector as HTMLElement).style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.3)';
+              setTimeout(() => {
+                (clientSelector as HTMLElement).style.boxShadow = '';
+              }, 2000);
+            }
+            
+            return false; // Don't proceed
+          }
+          
+          // Mark operation as completed
+          markOperationCompleted('client_selection');
+          
+          // Show progress feedback
+          const workflow = validateQuoteWorkflow();
+          if (workflow.overallCompletion > 0) {
+            showValidationMessage(
+              `Great! Quote is ${Math.round(workflow.overallCompletion)}% complete. ${workflow.canCreateQuote ? 'Ready to create quote!' : 'Keep going!'}`,
+              'info'
+            );
+          }
+          
+          return true; // Proceed to next step
+        },
+        
+        className: 'client-selector-popover'
+      },
+      validation: () => {
+        // Check multiple fallback selectors
+        const clientSelector = document.querySelector('[data-testid="client-selector"]') ||
+                              document.querySelector('[data-tour="client-selector"]') ||
+                              document.querySelector('.client-selector-container') ||
+                              document.querySelector('input[placeholder*="client"]');
+        return !!clientSelector;
+      },
+      
+      // Step-specific lifecycle hooks with enhanced error handling
+      onHighlightStarted: async (_element?: Element, _step?: any, _options?: any) => {
+        try {
+          if (!element) {
+            console.warn('Client selector element not found, using dynamic content support...');
+            
+            // Use error handler's dynamic content support
+            const selectors = [
+              '[data-testid="client-selector"]',
+              '[data-tour="client-selector"]',
+              '.client-selector-container',
+              'input[placeholder*="client"]'
+            ];
+            
+            const foundElement = await waitForElement(selectors, 3000, 200);
+            
+            if (foundElement) {
+              console.log('Client selector found with dynamic loading support');
+              // Refresh the tour to use the found element
+              if (options?.driver?.refresh) {
+                options.driver.refresh();
+              }
+              return;
+            } else {
+              // Show helpful error message
+              showTourError(
+                'The client selector is not available yet. Make sure you\'re on the quote creation page.',
+                { type: 'warning', duration: 4000 }
+              );
+              return;
+            }
+          }
+          
+          // Validate that client selector is functional
+          const validation = validateStepContext('client-selector-interaction', [
+            '[data-testid="client-selector"]'
+          ]);
+          
+          if (!validation.isValid) {
+            showTourError(
+              validation.suggestions[0] || 'Client selector may not be ready yet.',
+              { type: 'info', duration: 3000 }
+            );
+          }
+          
+          // Ensure client selector is ready for interaction
+          const input = element.querySelector('input') || element;
+          if (input && 'focus' in input) {
+            // Briefly focus to show it's interactive (then blur to avoid keyboard on mobile)
+            (input as HTMLInputElement).focus();
+            setTimeout(() => (input as HTMLInputElement).blur(), 100);
+          }
+          
+          // Add visual hint
+          element.setAttribute('data-tour-hint', 'Click to search or add clients');
+          
+        } catch (error) {
+          console.error('Client selector highlight error:', error);
+          showTourError(
+            'There was an issue with the client selector step.',
+            { type: 'error', duration: 3000 }
+          );
+        }
+      },
+      
+      onHighlighted: (_element?: Element, _step?: any, _options?: any) => {
+        try {
+          // Add helpful visual cues
+          if (element) {
+            element.setAttribute('data-tour-hint', 'Click to search or add clients');
+            
+            // Track that user reached client selection step
+            console.log('User reached client selection step');
+          }
+        } catch (error) {
+          console.error('Client selector highlighted error:', error);
+        }
+      },
+      
+      onDeselected: (_element?: Element, _step?: any, _options?: any) => {
+        try {
+          if (element) {
+            element.removeAttribute('data-tour-hint');
+          }
+        } catch (error) {
+          console.error('Client selector deselected error:', error);
+        }
+      }
+    },
+    {
+      id: 'client-management-tips',
+      element: '[data-tour="client-selector"]',
+      title: 'New vs Existing Clients 💡',
+      description: 'Pro tip: Building a client database saves time on repeat customers. New clients are automatically saved when you complete the quote. Existing clients can be quickly selected with auto-complete search.',
       position: 'right',
       align: 'start',
       showButtons: ['next', 'previous', 'close']
     },
     {
-      id: 'add-items-section',
-      element: '[data-tour="add-items"]',
-      title: 'Add Services & Materials 🛠️',
-      description: 'This is where you add services and materials from your item library. You can customize quantities, prices, and descriptions for each quote.',
+      id: 'line-items-introduction',
+      element: '[data-testid="line-items-card"], [data-tour="add-items"], .line-items-section',
+      title: 'Your Service & Materials Hub 🛠️',
+      description: 'This is where the magic happens! Add services and materials from your personal library. Each item can be customized with quantities, descriptions, and pricing specific to this quote.',
       position: 'top',
       align: 'center',
-      showButtons: ['next', 'previous', 'close']
+      showButtons: ['next', 'previous', 'close'],
+      
+      // Enhanced error handling for line items section
+      onHighlightStarted: async (_element?: Element, _step?: any, _options?: any) => {
+        try {
+          if (!element) {
+            console.warn('Line items section not found, checking for dynamic loading...');
+            
+            const selectors = [
+              '[data-testid="line-items-card"]',
+              '[data-tour="add-items"]',
+              '.line-items-section',
+              '.quote-line-items'
+            ];
+            
+            const foundElement = await waitForElement(selectors, 4000, 300);
+            
+            if (foundElement) {
+              console.log('Line items section found with dynamic loading');
+              if (options?.driver?.refresh) {
+                options.driver.refresh();
+              }
+              return;
+            } else {
+              showTourError(
+                'The line items section is not available. Make sure you\'re on the quote creation page and it has fully loaded.',
+                { type: 'warning', duration: 5000 }
+              );
+              return;
+            }
+          }
+          
+          // Validate line items context
+          const validation = validateStepContext('line-items-introduction', [
+            '[data-testid="line-items-card"]'
+          ]);
+          
+          if (!validation.isValid) {
+            showTourError(
+              'The line items section may not be fully loaded yet.',
+              { type: 'info', duration: 3000 }
+            );
+          }
+          
+          // Ensure section is visible
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+          
+        } catch (error) {
+          console.error('Line items introduction error:', error);
+          showTourError(
+            'There was an issue with the line items section.',
+            { type: 'error', duration: 3000 }
+          );
+        }
+      }
     },
     {
-      id: 'line-items-table',
+      id: 'add-items-process',
+      element: '[data-testid="item-search-add"], [data-tour="item-search-add"], button:has-text("Add Item"), .add-item-button',
+      title: 'Enhanced Item Addition Process 🔍',
+      description: 'Click "Add Item" to browse your complete library. Use search and category filters to quickly find what you need.',
+      position: 'bottom',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close'],
+      
+      // Enhanced popover with interactive guidance
+      popover: {
+        title: 'Add Items to Your Quote 🔍',
+        description: 'Click "Add Item" to browse your complete library. Use search and category filters to quickly find what you need. Items are organized by categories like "Lawn Care", "Hardscaping", and "Materials" for easy navigation.',
+        side: 'auto',
+        align: 'center',
+        showProgress: true,
+        showEstimatedTime: true,
+        estimatedTimeMinutes: 5,
+        
+        // Responsive configuration
+        responsive: {
+          mobile: {
+            side: 'top',
+            align: 'center',
+            description: 'Tap "Add Item" to browse your library. Use search to find items quickly.'
+          },
+          tablet: {
+            side: 'bottom',
+            align: 'center'
+          },
+          desktop: {
+            side: 'bottom',
+            align: 'center'
+          }
+        },
+        
+        // Comprehensive system validation for line items
+        onNextClick: (_element?: Element, _step?: any, _options?: any) => {
+          // Use comprehensive step validation system
+          const stepValidation = validateStep('add-items-process');
+          
+          if (!stepValidation.isValid || !stepValidation.canProceed) {
+            // Check if this is a dependency issue
+            if (stepValidation.missingOperations.length > 0) {
+              const missingOps = stepValidation.missingOperations.map(op => op.name).join(', ');
+              showValidationMessage(
+                `Please complete these steps first: ${missingOps}`,
+                'warning'
+              );
+              return false;
+            }
+            
+            // Check if items have been added
+            const hasItems = document.querySelectorAll('[data-testid="line-item-row"]').length > 0;
+            const itemDialog = document.querySelector('[role="dialog"]');
+            
+            if (!hasItems && !itemDialog) {
+              showValidationMessage(
+                'Try clicking "Add Item" to see how easy it is to add services and materials to your quote!',
+                'info'
+              );
+              
+              // Highlight the add button with a gentle pulse
+              const addButton = document.querySelector('[data-testid="item-search-add"]');
+              if (addButton) {
+                (addButton as HTMLElement).style.animation = 'pulse 1s ease-in-out 3';
+                (addButton as HTMLElement).style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+                
+                setTimeout(() => {
+                  (addButton as HTMLElement).style.animation = '';
+                  (addButton as HTMLElement).style.boxShadow = '';
+                }, 3000);
+              }
+              
+              return false;
+            }
+          }
+          
+          // Mark operation as completed if items exist
+          const hasItems = document.querySelectorAll('[data-testid="line-item-row"]').length > 0;
+          if (hasItems) {
+            markOperationCompleted('line_items_addition');
+            
+            // Show progress feedback
+            const workflow = validateQuoteWorkflow();
+            showValidationMessage(
+              `Excellent! Quote is ${Math.round(workflow.overallCompletion)}% complete. ${workflow.canCreateQuote ? '✅ Ready to create quote!' : 'Keep adding details!'}`,
+              'info'
+            );
+          }
+          
+          return true; // Proceed to next step
+        },
+        
+        className: 'add-items-popover'
+      },
+      
+      validation: () => {
+        // Check multiple fallback selectors
+        const addButton = document.querySelector('[data-testid="item-search-add"]') ||
+                          document.querySelector('[data-tour="item-search-add"]') ||
+                          document.querySelector('button:has-text("Add Item")') ||
+                          document.querySelector('[data-testid="line-items-card"]');
+        return !!addButton;
+      }
+    },
+    {
+      id: 'item-library-search',
+      element: '[data-testid="item-library-search"], [data-tour="item-library-search"], input[placeholder*="Search items"]',
+      title: 'Search & Filter Your Library 📚',
+      description: 'When the item selector opens, you\'ll see search and category filters. This becomes invaluable as your library grows. You can also preview item details before adding them to your quote.',
+      position: 'top',
+      align: 'start',
+      showButtons: ['next', 'previous', 'close'],
+      validation: () => {
+        // This element might not be visible until dialog opens - that's okay
+        return true;
+      }
+    },
+    {
+      id: 'quantity-price-adjustments',
       element: '[data-tour="line-items-table"]',
-      title: 'Quote Line Items',
-      description: 'Your selected items appear here. You can adjust quantities, modify prices, and see real-time calculations.',
+      title: 'Real-Time Quantity & Price Control ⚡',
+      description: 'Once items are added, adjust quantities and modify prices directly in the table. Everything updates in real-time! You can also edit item descriptions to customize them for this specific client.',
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'previous', 'close']
     },
     {
-      id: 'financial-settings',
-      element: '[data-tour="financial-settings"]',
-      title: 'Tax & Markup Settings ⚙️',
-      description: 'Configure tax rates and markup percentages. These can be set as defaults in your company settings.',
+      id: 'item-management-features',
+      element: '[data-tour="item-actions"]',
+      title: 'Complete Item Management 📝',
+      description: 'Each line item has actions for editing quantities, updating prices, and removal. The enhanced table supports inline editing and provides instant feedback on all changes. Watch the totals update automatically!',
+      position: 'left',
+      align: 'center',
+      showButtons: ['next', 'previous', 'close'],
+      validation: () => {
+        // Check if we have any line items or fallback to table area
+        const itemActions = document.querySelector('[data-tour="item-actions"]') ||
+                           document.querySelector('[data-tour="line-items-table"]');
+        return !!itemActions;
+      }
+    },
+    {
+      id: 'financial-settings-intro',
+      element: '[data-testid="financial-settings"], [data-tour="financial-settings"], .financial-settings-section',
+      title: 'Professional Financial Configuration 💰',
+      description: 'Set your tax and markup rates here. These settings determine your profit margins and ensure compliance with local tax requirements. You can set defaults in company settings to save time.',
       position: 'left',
       align: 'center',
       showButtons: ['next', 'previous', 'close']
     },
     {
-      id: 'quote-totals',
-      element: '[data-tour="quote-totals"]',
-      title: 'Quote Calculations 💰',
-      description: 'See your quote totals update in real-time as you add items and adjust settings. Subtotal, tax, and final total are calculated automatically.',
+      id: 'tax-rate-setup',
+      element: '[data-tour="tax-rate-input"]',
+      title: 'Tax Rate Configuration 📊',
+      description: 'Enter your local tax rate as a percentage (e.g., 8.25 for 8.25%). This varies by location, so check your local requirements. Tax is calculated on the subtotal and clearly shown to clients.',
+      position: 'bottom',
+      align: 'start',
+      showButtons: ['next', 'previous', 'close'],
+      validation: () => {
+        // Look for tax rate input or fallback to financial settings
+        const taxInput = document.querySelector('[data-testid="tax-rate-input"]') ||
+                        document.querySelector('[data-tour="tax-rate-input"]') ||
+                        document.querySelector('input[id="tax-rate"]') ||
+                        document.querySelector('[data-testid="financial-settings"]');
+        return !!taxInput;
+      }
+    },
+    {
+      id: 'markup-strategy',
+      element: '[data-tour="markup-rate-input"]',
+      title: 'Profit Margin Strategy 🎯',
+      description: 'Your markup percentage covers overhead, profit, and business expenses. Typical ranges: 15-30% for services, 20-50% for products. This is your business growth engine - price appropriately!',
+      position: 'bottom',
+      align: 'start',
+      showButtons: ['next', 'previous', 'close'],
+      validation: () => {
+        // Look for markup rate input or fallback to financial settings
+        const markupInput = document.querySelector('[data-testid="markup-rate-input"]') ||
+                           document.querySelector('[data-tour="markup-rate-input"]') ||
+                           document.querySelector('input[id="markup-rate"]') ||
+                           document.querySelector('[data-testid="financial-settings"]');
+        return !!markupInput;
+      }
+    },
+    {
+      id: 'quote-calculations',
+      element: '[data-testid="quote-totals"], [data-tour="quote-totals"], .quote-totals-section',
+      title: 'Transparent Quote Calculations 🧮',
+      description: 'Watch your quote totals update in real-time! The breakdown shows subtotal, tax amount, markup amount, and final total. This transparency builds trust with clients and ensures accurate pricing.',
       position: 'left',
       align: 'center',
       showButtons: ['next', 'previous', 'close']
     },
     {
-      id: 'save-and-send',
-      element: '[data-tour="save-send-actions"]',
-      title: 'Save & Send Your Quote 🚀',
-      description: 'Save as draft, create the final quote, or send it directly to your client via email. You can also generate a professional PDF.',
+      id: 'save-generate-actions',
+      element: '[data-testid="save-send-actions"], [data-tour="save-send-actions"], .save-actions-section',
+      title: 'Professional Quote Completion 🚀',
+      description: 'You have three options: Save as Draft (continue later), Generate PDF (create final quote), or both! Final quotes get automatic numbering and can be emailed directly to clients.',
       position: 'top',
       align: 'center',
-      showButtons: ['previous', 'close']
+      showButtons: ['previous', 'close'],
+      
+      // Comprehensive system validation on final step
+      popover: {
+        title: 'Quote Completion & System Readiness ✅',
+        description: 'Let\'s verify your quote is ready for professional use. We\'ll check all essential components and provide recommendations.',
+        side: 'auto',
+        align: 'center',
+        showProgress: true,
+        showEstimatedTime: false,
+        
+        // Final validation before completion
+        onCloseClick: (_element?: Element, _step?: any, _options?: any) => {
+          // Perform comprehensive system validation
+          const workflow = validateQuoteWorkflow();
+          // const coverage = getSystemCoverage(); // Available for future use
+          
+          // Generate completion report
+          let message = '';
+          let messageType: 'info' | 'warning' | 'error' = 'info';
+          
+          if (workflow.canCreateQuote) {
+            message = `🎉 Excellent! Your quote system is ${Math.round(workflow.overallCompletion)}% ready. You can now create professional quotes!`;
+            messageType = 'info';
+            
+            // Mark final operations as completed
+            markOperationCompleted('quote_calculation');
+            
+          } else {
+            const essentialMissing = workflow.missingEssentials.map(op => op.name).join(', ');
+            message = `⚠️ Almost there! Please complete these essential steps: ${essentialMissing}`;
+            messageType = 'warning';
+          }
+          
+          // Add recommendations if any
+          if (workflow.recommendations.length > 0) {
+            message += `
+
+💡 Recommendations: ${workflow.recommendations.slice(0, 2).join(', ')}`;
+          }
+          
+          showValidationMessage(message, messageType);
+          
+          // Log coverage report for debugging
+          console.log('System Coverage Report:', generateCoverageReport());
+          
+          return true; // Allow tour to close
+        }
+      },
+      
+      onBeforeHighlight: () => {
+        // Scroll to make sure save actions are visible
+        const saveActions = document.querySelector('[data-testid="save-send-actions"]') ||
+                           document.querySelector('[data-tour="save-send-actions"]');
+        if (saveActions) {
+          saveActions.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Perform pre-completion validation
+        const workflow = validateQuoteWorkflow();
+        console.log('Pre-completion validation:', workflow);
+      }
     }
   ]
 }
@@ -534,7 +1218,7 @@ export const INTERACTIVE_TUTORIAL_TOUR: TourConfig = {
     },
     {
       id: 'practice-calculations',
-      element: '[data-tour="quote-totals"]',
+      element: '[data-testid="quote-totals"], [data-tour="quote-totals"], .quote-totals-section',
       title: 'Practice: Watch Calculations 💰',
       description: 'Notice how totals update automatically as you add items and adjust quantities. Try changing some quantities to see real-time calculations.',
       position: 'left',
@@ -543,7 +1227,7 @@ export const INTERACTIVE_TUTORIAL_TOUR: TourConfig = {
     },
     {
       id: 'practice-save-draft',
-      element: '[data-tour="save-send-actions"]',
+      element: '[data-testid="save-send-actions"], [data-tour="save-send-actions"], .save-actions-section',
       title: 'Practice: Save as Draft 💾',
       description: 'Save this practice quote as a draft. You can always delete it later or use it as a template for real quotes.',
       position: 'top',

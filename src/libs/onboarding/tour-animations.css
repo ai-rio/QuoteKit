@@ -1,0 +1,232 @@
+/**
+ * Tour Animation Styles
+ * Enhanced animations for Driver.js tour interactions
+ */
+
+/* Pulse animation for highlighting elements */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Validation message animations */
+@keyframes tourValidationFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translate(-50%, -50%) scale(0.9); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(1); 
+  }
+}
+
+@keyframes tourValidationFadeOut {
+  from { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(1); 
+  }
+  to { 
+    opacity: 0; 
+    transform: translate(-50%, -50%) scale(0.9); 
+  }
+}
+
+/* Enhanced popover styles */
+.enhanced-tour-popover {
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.enhanced-tour-popover .driver-popover-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin-bottom: 8px !important;
+}
+
+.enhanced-tour-popover .driver-popover-description {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #4b5563 !important;
+  margin-bottom: 16px !important;
+}
+
+/* Device-specific popover styles */
+.tour-popover-mobile {
+  max-width: calc(100vw - 32px) !important;
+  margin: 16px !important;
+}
+
+.tour-popover-mobile .driver-popover-title {
+  font-size: 16px !important;
+}
+
+.tour-popover-mobile .driver-popover-description {
+  font-size: 13px !important;
+}
+
+.tour-popover-tablet {
+  max-width: 400px !important;
+}
+
+.tour-popover-desktop {
+  max-width: 450px !important;
+}
+
+/* Progress indicator styles */
+.tour-popover-with-progress .driver-popover-progress-text {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  margin-bottom: 12px !important;
+  text-align: center !important;
+}
+
+/* Custom button styles */
+.enhanced-tour-popover .driver-popover-next-btn {
+  background: #059669 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.enhanced-tour-popover .driver-popover-next-btn:hover {
+  background: #047857 !important;
+  transform: translateY(-1px) !important;
+}
+
+.enhanced-tour-popover .driver-popover-prev-btn {
+  background: transparent !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  color: #4b5563 !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.enhanced-tour-popover .driver-popover-prev-btn:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+}
+
+.enhanced-tour-popover .driver-popover-close-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #6b7280 !important;
+  font-size: 18px !important;
+  padding: 4px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.enhanced-tour-popover .driver-popover-close-btn:hover {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+/* Step-specific popover styles */
+.client-selector-popover {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.add-items-popover {
+  border-left: 4px solid #059669 !important;
+}
+
+/* Validation message styles */
+.tour-validation-message {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.tour-validation-error {
+  background: rgba(254, 226, 226, 0.95) !important;
+  border-color: #fca5a5 !important;
+  color: #991b1b !important;
+}
+
+.tour-validation-warning {
+  background: rgba(254, 243, 199, 0.95) !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+
+.tour-validation-info {
+  background: rgba(219, 234, 254, 0.95) !important;
+  border-color: #93c5fd !important;
+  color: #1e40af !important;
+}
+
+/* Error notification styles */
+.tour-error-notification {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .enhanced-tour-popover {
+    margin: 8px !important;
+  }
+  
+  .tour-validation-message {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px !important;
+  }
+}
+
+/* Accessibility improvements */
+.enhanced-tour-popover:focus-within {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .enhanced-tour-popover {
+    border-width: 2px !important;
+    border-color: #000 !important;
+  }
+  
+  .enhanced-tour-popover .driver-popover-title {
+    color: #000 !important;
+  }
+  
+  .enhanced-tour-popover .driver-popover-description {
+    color: #000 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .enhanced-tour-popover,
+  .tour-validation-message,
+  .tour-error-notification {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}

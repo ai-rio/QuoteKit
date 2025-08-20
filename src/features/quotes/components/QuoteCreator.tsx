@@ -445,7 +445,7 @@ function QuoteCreatorInternal({
   return (
     <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       {/* Quote Header */}
-      <Card className="bg-paper-white border-stone-gray shadow-sm" data-tour="quote-details">
+      <Card className="bg-paper-white border-stone-gray shadow-sm" data-testid="quote-header" data-tour="quote-details">
         <CardHeader className="pb-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -486,7 +486,7 @@ function QuoteCreatorInternal({
                   </Badge>
                 )}
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2" data-tour="save-send-actions">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2" data-testid="save-send-actions" data-tour="save-send-actions">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -521,7 +521,7 @@ function QuoteCreatorInternal({
                     <TooltipContent side="bottom" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
                       <p className="text-xs">
                         Create final quote PDF for client. Requires client selection and at least one item. 
-                        Quote will be marked as &ldquo;sent&rdquo; and assigned a number.
+                        Quote will be marked as &quot;sent&quot; and assigned a number.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -552,7 +552,7 @@ function QuoteCreatorInternal({
             </TooltipProvider>
           </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6" data-tour="client-selector">
+        <CardContent className="p-4 sm:p-6" data-testid="client-selector" data-tour="client-selector">
           <ClientSelector
             selectedClient={selectedClient}
             onClientSelect={handleClientSelect}
@@ -563,11 +563,11 @@ function QuoteCreatorInternal({
       </Card>
 
       {/* Line Items Section */}
-      <Card className="bg-paper-white border-stone-gray shadow-sm" data-tour="add-items">
+      <Card className="bg-paper-white border-stone-gray shadow-sm" data-testid="line-items-card" data-tour="add-items">
         <CardHeader className="pb-3 sm:pb-4">
           <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Line Items</CardTitle>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6" data-tour="line-items-table">
+        <CardContent className="p-4 sm:p-6" data-testid="line-items-table" data-tour="line-items-table">
           <EnhancedLineItemsTable
             availableItems={availableItems}
             quoteLineItems={quoteLineItems}
@@ -600,7 +600,7 @@ function QuoteCreatorInternal({
         <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
             {/* Tax and Markup Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" data-tour="financial-settings">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4" data-testid="financial-settings" data-tour="financial-settings">
               <div className="space-y-1.5 sm:space-y-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="tax-rate" className="text-sm font-medium text-charcoal">Tax Rate (%)</Label>
@@ -627,6 +627,8 @@ function QuoteCreatorInternal({
                   value={taxRate}
                   onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
                   className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
+                  data-testid="tax-rate-input"
+                  data-tour="tax-rate-input"
                 />
               </div>
               <div className="space-y-1.5 sm:space-y-2">
@@ -655,12 +657,14 @@ function QuoteCreatorInternal({
                   value={markupRate}
                   onChange={(e) => setMarkupRate(parseFloat(e.target.value) || 0)}
                   className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green font-mono placeholder:text-charcoal/60 min-h-[44px] touch-manipulation"
+                  data-testid="markup-rate-input"
+                  data-tour="markup-rate-input"
                 />
               </div>
             </div>
 
             {/* Calculation Display */}
-            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t-2 border-stone-gray" data-tour="quote-totals">
+            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t-2 border-stone-gray" data-testid="quote-totals" data-tour="quote-totals">
               <div className="flex justify-end">
                 <div className="w-full sm:w-2/3 md:w-1/3 space-y-2 sm:space-y-3">
                   <div className="flex justify-between text-base sm:text-lg">
