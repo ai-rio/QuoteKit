@@ -148,6 +148,17 @@ export async function POST(request: NextRequest) {
  */
 async function checkBulkOperationsAccess(userId: string, supabase: any, operationCount: number = 1) {
   try {
+    // Get user email for admin check
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    // Admin/test user override - grant full access to carlos@ai.rio.br
+    if (user?.email === 'carlos@ai.rio.br') {
+      return {
+        hasAccess: true,
+        limit: 999999 // Very high limit for admin
+      }
+    }
+
     // Get user's subscription and features
     const { data: subscription } = await supabase
       .from('subscriptions')
@@ -210,6 +221,17 @@ async function checkBulkOperationsAccess(userId: string, supabase: any, operatio
  */
 async function checkPDFExportAccess(userId: string, supabase: any) {
   try {
+    // Get user email for admin check
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    // Admin/test user override - grant full access to carlos@ai.rio.br
+    if (user?.email === 'carlos@ai.rio.br') {
+      return {
+        hasAccess: true,
+        hasCustomBranding: true
+      }
+    }
+
     // Get user's subscription and features
     const { data: subscription } = await supabase
       .from('subscriptions')
