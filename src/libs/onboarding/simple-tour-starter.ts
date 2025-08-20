@@ -94,7 +94,7 @@ export function startTour(tourConfig: TourConfig, callbacks?: SimpleTourCallback
     smoothScroll: true,
     
     // Overlay configuration (official options)
-    overlayOpacity: 0.1,
+    overlayOpacity: 0.6, // Enhanced from 0.1 for better contrast
     stagePadding: 8,
     stageRadius: 6,
     

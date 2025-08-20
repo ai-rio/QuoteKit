@@ -42,8 +42,33 @@
 }
 
 .lawnquote-tour-touch .driver-popover-footer button:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
   transition: transform 0.1s ease;
+}
+
+/* Enhanced touch feedback with haptic-style animation */
+.lawnquote-tour-touch .driver-popover-footer button {
+  position: relative;
+  overflow: hidden;
+}
+
+.lawnquote-tour-touch .driver-popover-footer button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+  pointer-events: none;
+}
+
+.lawnquote-tour-touch .driver-popover-footer button:active::before {
+  width: 200%;
+  height: 200%;
 }
 
 /* Mobile-specific positioning */
@@ -102,8 +127,31 @@
 .lawnquote-tour-mobile .driver-popover-progress-bar {
   height: 100%;
   background: linear-gradient(90deg, #10b981, #059669);
-  transition: width 0.3s ease;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 12px 12px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Progress bar shimmer effect */
+.lawnquote-tour-mobile .driver-popover-progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: progressShimmer 2s infinite;
+}
+
+@keyframes progressShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 /* Mobile keyboard adjustments */
@@ -148,15 +196,38 @@
   }
 }
 
-/* Reduced motion support */
+/* Reduced motion support - Enhanced for new animations */
 @media (prefers-reduced-motion: reduce) {
-  .lawnquote-tour-touch .driver-popover-footer button:active {
-    transform: none;
-    transition: none;
+  .lawnquote-tour-touch .driver-popover-footer button:active,
+  .lawnquote-tour-mobile .driver-popover,
+  .lawnquote-tour-tablet .driver-popover,
+  .lawnquote-tour-gesture .driver-popover-swipe-hint,
+  .lawnquote-tour-touch [data-tour]:focus,
+  .lawnquote-tour-mobile .tour-mobile-success,
+  .lawnquote-tour-mobile .driver-popover-step-dot,
+  .lawnquote-tour-mobile .driver-popover-step-dot.active,
+  .lawnquote-tour-mobile .driver-popover-step-dot.completed,
+  .lawnquote-tour-mobile .driver-popover-step-dot.active::before {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
   }
   
-  .lawnquote-tour-mobile .driver-popover-progress-bar {
-    transition: none;
+  .lawnquote-tour-mobile .driver-popover-progress-bar,
+  .lawnquote-tour-mobile .driver-popover-progress-bar::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Keep essential visual feedback without motion */
+  .lawnquote-tour-mobile .driver-popover-footer button:hover {
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-step-dot.active {
+    background: #10b981 !important;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.4) !important;
   }
 }
 
@@ -239,6 +310,126 @@
   100% { transform: rotate(360deg); }
 }
 
+/* === MOBILE-SPECIFIC DELIGHTFUL ANIMATIONS === */
+
+/* Mobile popover entrance with bounce */
+.lawnquote-tour-mobile .driver-popover {
+  animation: mobilePopoverIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes mobilePopoverIn {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Tablet popover with slide from bottom */
+.lawnquote-tour-tablet .driver-popover {
+  animation: tabletSlideUp 0.3s ease-out;
+}
+
+@keyframes tabletSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gesture hint animation */
+.lawnquote-tour-gesture .driver-popover-swipe-hint {
+  animation: swipeHint 3s infinite;
+}
+
+@keyframes swipeHint {
+  0%, 80%, 100% {
+    opacity: 0.5;
+    transform: translateX(-50%) scale(1);
+  }
+  10%, 70% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(1.1);
+  }
+}
+
+/* Mobile button press feedback */
+.lawnquote-tour-mobile .driver-popover-footer button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lawnquote-tour-mobile .driver-popover-footer button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Touch target expansion animation */
+.lawnquote-tour-touch [data-tour]:focus {
+  animation: touchTargetExpand 0.2s ease-out;
+}
+
+@keyframes touchTargetExpand {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Mobile success celebration */
+.lawnquote-tour-mobile .tour-mobile-success {
+  animation: mobileSuccess 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes mobileSuccess {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+  75% {
+    transform: scale(1.15) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Mobile loading with personality */
+.lawnquote-tour-mobile .driver-popover-loading::after {
+  animation: mobileSpinBounce 1.2s ease-in-out infinite;
+}
+
+@keyframes mobileSpinBounce {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(180deg) scale(0.9);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.05);
+  }
+}
+
 /* Mobile-specific tour step indicators */
 .lawnquote-tour-mobile .driver-popover-step-indicator {
   display: flex;
@@ -252,11 +443,56 @@
   height: 8px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.2);
-  transition: background 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .lawnquote-tour-mobile .driver-popover-step-dot.active {
   background: #10b981;
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Step dot completion animation */
+.lawnquote-tour-mobile .driver-popover-step-dot.completed {
+  background: #10b981;
+  animation: dotComplete 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes dotComplete {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Active dot pulse */
+.lawnquote-tour-mobile .driver-popover-step-dot.active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid #10b981;
+  border-radius: 50%;
+  animation: dotPulse 2s infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
 }
 
 /* Responsive font scaling */

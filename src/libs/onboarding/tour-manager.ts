@@ -51,7 +51,7 @@ class TourManager {
       popoverClass: 'lawnquote-tour',
       stagePadding: 8,
       stageRadius: 6,
-      overlayOpacity: 0.1, // Very light overlay to avoid modal conflicts
+      overlayOpacity: 0.6, // Improved contrast for better visibility
       smoothScroll: true,
       allowClose: true,
       showProgress: true,
