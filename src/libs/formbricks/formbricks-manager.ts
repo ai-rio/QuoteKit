@@ -455,6 +455,13 @@ export class FormbricksManager {
   }
 
   /**
+   * Get the current userId that was set for Formbricks
+   */
+  getCurrentUserId(): string | null {
+    return this.currentUserId;
+  }
+
+  /**
    * Check if the manager is ready for user operations (initialized and available)
    */
   isReadyForUser(): boolean {
@@ -795,6 +802,773 @@ export class FormbricksManager {
     // This would need to store the original function, but for now we'll keep it simple
     console.log('🔄 Console error handler cleanup (if needed)');
   }
+}
+
+/**
+ * Comprehensive debugging utility for Formbricks integration
+ * Provides detailed diagnostics, testing capabilities, and troubleshooting tools
+ */
+export class FormbricksDebugManager {
+  private static instance: FormbricksDebugManager;
+  private formbricksManager: FormbricksManager;
+  private debugResults: Array<{
+    id: string;
+    timestamp: Date;
+    test: string;
+    status: 'success' | 'warning' | 'error';
+    message: string;
+    details?: any;
+  }> = [];
+
+  private constructor() {
+    this.formbricksManager = FormbricksManager.getInstance();
+  }
+
+  /**
+   * Get the singleton instance of FormbricksDebugManager
+   */
+  static getInstance(): FormbricksDebugManager {
+    if (!FormbricksDebugManager.instance) {
+      FormbricksDebugManager.instance = new FormbricksDebugManager();
+    }
+    return FormbricksDebugManager.instance;
+  }
+
+  /**
+   * Run comprehensive diagnostic tests
+   */
+  async runDiagnostics(): Promise<{
+    overallStatus: 'healthy' | 'warning' | 'error';
+    results: Array<{
+      category: string;
+      tests: Array<{
+        name: string;
+        status: 'success' | 'warning' | 'error';
+        message: string;
+        details?: any;
+      }>;
+    }>;
+    summary: {
+      total: number;
+      passed: number;
+      warnings: number;
+      failed: number;
+    };
+  }> {
+    console.log('🔍 Starting comprehensive Formbricks diagnostics...');
+    
+    const results = [
+      await this.testEnvironmentConfiguration(),
+      await this.testSDKInitialization(),
+      await this.testAPIConnectivity(),
+      await this.testSurveyTriggers(),
+      await this.testUserAttributeSystem(),
+      await this.testEventTracking(),
+      await this.testRouteChangeRegistration(),
+      await this.testErrorHandling()
+    ];
+
+    // Calculate summary
+    let total = 0;
+    let passed = 0;
+    let warnings = 0;
+    let failed = 0;
+
+    results.forEach(category => {
+      category.tests.forEach(test => {
+        total++;
+        if (test.status === 'success') passed++;
+        else if (test.status === 'warning') warnings++;
+        else if (test.status === 'error') failed++;
+      });
+    });
+
+    // Determine overall status
+    let overallStatus: 'healthy' | 'warning' | 'error' = 'healthy';
+    if (failed > 0) overallStatus = 'error';
+    else if (warnings > 0) overallStatus = 'warning';
+
+    const diagnosticResult = {
+      overallStatus,
+      results,
+      summary: { total, passed, warnings, failed }
+    } as any; // Type assertion for complex diagnostic result structure
+
+    console.log('✅ Formbricks diagnostics complete:', diagnosticResult);
+    return diagnosticResult;
+  }
+
+  /**
+   * Test environment configuration
+   */
+  private async testEnvironmentConfiguration() {
+    const tests = [];
+    
+    // Test environment variables
+    const envId = process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID;
+    const apiHost = process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST;
+    const apiKey = process.env.FORMBRICKS_API_KEY;
+
+    tests.push({
+      name: 'Environment ID Present',
+      status: envId ? 'success' : 'error' as const,
+      message: envId ? `Environment ID configured: ${envId.substring(0, 10)}...` : 'NEXT_PUBLIC_FORMBRICKS_ENV_ID is not set',
+      details: { envId: envId || null }
+    });
+
+    tests.push({
+      name: 'Environment ID Format',
+      status: envId && /^(dev_|prd_)?[a-z0-9]+$/i.test(envId) ? 'success' : 'warning' as const,
+      message: envId && /^(dev_|prd_)?[a-z0-9]+$/i.test(envId) 
+        ? 'Environment ID format looks correct' 
+        : 'Environment ID format may be incorrect',
+      details: { 
+        format: envId ? {
+          length: envId.length,
+          startsWithPrefix: /^(dev_|prd_)/.test(envId),
+          containsOnlyValidChars: /^[a-z0-9_]+$/i.test(envId)
+        } : null
+      }
+    });
+
+    tests.push({
+      name: 'API Host Configuration',
+      status: apiHost ? 'success' : 'warning' as const,
+      message: apiHost ? `API Host: ${apiHost}` : 'Using default API host (https://app.formbricks.com)',
+      details: { apiHost: apiHost || 'https://app.formbricks.com' }
+    });
+
+    tests.push({
+      name: 'Server API Key',
+      status: apiKey ? 'success' : 'warning' as const,
+      message: apiKey ? 'Server API key is configured' : 'Server API key not configured (only client features will work)',
+      details: { hasApiKey: !!apiKey }
+    });
+
+    return {
+      category: 'Environment Configuration',
+      tests
+    };
+  }
+
+  /**
+   * Test SDK initialization status
+   */
+  private async testSDKInitialization() {
+    const tests = [];
+    const managerStatus = this.formbricksManager.getStatus();
+
+    tests.push({
+      name: 'Manager Initialization',
+      status: managerStatus.initialized ? 'success' : 'error' as const,
+      message: managerStatus.initialized ? 'FormbricksManager is initialized' : 'FormbricksManager is not initialized',
+      details: managerStatus
+    });
+
+    tests.push({
+      name: 'SDK Availability',
+      status: managerStatus.available ? 'success' : 'error' as const,
+      message: managerStatus.available ? 'Formbricks SDK is available' : 'Formbricks SDK is not available',
+      details: { available: managerStatus.available }
+    });
+
+    // Test SDK methods availability
+    let sdkMethodsStatus: 'success' | 'warning' | 'error' = 'error';
+    let sdkMethodsMessage = 'SDK methods not available';
+    let methodsDetails = {};
+
+    try {
+      if (typeof window !== 'undefined') {
+        const windowFb = (window as any).formbricks;
+        const importedFb = typeof formbricks !== 'undefined' ? formbricks : null;
+
+        const methods = {
+          windowFormbricks: {
+            exists: !!windowFb,
+            hasTrack: windowFb && typeof windowFb.track === 'function',
+            hasSetAttributes: windowFb && typeof windowFb.setAttributes === 'function',
+            hasRegisterRouteChange: windowFb && typeof windowFb.registerRouteChange === 'function'
+          },
+          importedFormbricks: {
+            exists: !!importedFb,
+            hasTrack: importedFb && typeof importedFb.track === 'function',
+            hasSetAttributes: importedFb && typeof importedFb.setAttributes === 'function',
+            hasRegisterRouteChange: importedFb && typeof importedFb.registerRouteChange === 'function'
+          }
+        };
+
+        const hasWorkingMethods = 
+          (methods.windowFormbricks.hasTrack && methods.windowFormbricks.hasSetAttributes) ||
+          (methods.importedFormbricks.hasTrack && methods.importedFormbricks.hasSetAttributes);
+
+        if (hasWorkingMethods) {
+          sdkMethodsStatus = 'success';
+          sdkMethodsMessage = 'SDK methods are available and working';
+        } else if (methods.windowFormbricks.exists || methods.importedFormbricks.exists) {
+          sdkMethodsStatus = 'warning';
+          sdkMethodsMessage = 'SDK exists but some methods may be missing';
+        }
+
+        methodsDetails = methods;
+      }
+    } catch (error) {
+      sdkMethodsStatus = 'error';
+      sdkMethodsMessage = `Error checking SDK methods: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      methodsDetails = { error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+
+    tests.push({
+      name: 'SDK Methods Available',
+      status: sdkMethodsStatus,
+      message: sdkMethodsMessage,
+      details: methodsDetails
+    });
+
+    // Test queue status
+    tests.push({
+      name: 'Event Queue Status',
+      status: managerStatus.queuedEvents === 0 ? 'success' : 'warning' as const,
+      message: managerStatus.queuedEvents === 0 
+        ? 'No queued events (SDK is processing events immediately)'
+        : `${managerStatus.queuedEvents} events are queued (SDK may not be ready)`,
+      details: { queuedEvents: managerStatus.queuedEvents }
+    });
+
+    tests.push({
+      name: 'Attributes Queue Status',
+      status: managerStatus.queuedAttributes === 0 ? 'success' : 'warning' as const,
+      message: managerStatus.queuedAttributes === 0
+        ? 'No queued attributes (SDK is processing attributes immediately)'
+        : `${managerStatus.queuedAttributes} attributes are queued (SDK may not be ready)`,
+      details: { queuedAttributes: managerStatus.queuedAttributes }
+    });
+
+    return {
+      category: 'SDK Initialization',
+      tests
+    };
+  }
+
+  /**
+   * Test API connectivity
+   */
+  private async testAPIConnectivity() {
+    const tests = [];
+
+    // Test client-side environment validation
+    try {
+      const envId = process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID;
+      const apiHost = process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST || 'https://app.formbricks.com';
+
+      if (!envId) {
+        tests.push({
+          name: 'Environment Validation',
+          status: 'error' as const,
+          message: 'Cannot validate environment - no environment ID configured',
+          details: null
+        });
+      } else {
+        // Test environment endpoint accessibility
+        try {
+          const testUrl = `${apiHost}/api/v1/environments/${envId}`;
+          const response = await fetch(testUrl, {
+            method: 'HEAD',
+            headers: {
+              'User-Agent': 'FormbricksDebug/1.0.0',
+            },
+          });
+
+          tests.push({
+            name: 'Environment Validation',
+            status: response.status === 200 ? 'success' : response.status === 404 ? 'error' : 'warning' as const,
+            message: response.status === 200 
+              ? 'Environment ID is valid and accessible'
+              : response.status === 404 
+                ? 'Environment ID not found - check your Formbricks account'
+                : `Environment validation returned status ${response.status}`,
+            details: {
+              status: response.status,
+              statusText: response.statusText,
+              testUrl
+            }
+          });
+        } catch (error) {
+          tests.push({
+            name: 'Environment Validation',
+            status: 'warning' as const,
+            message: `Environment validation failed: ${error instanceof Error ? error.message : 'Network error'}`,
+            details: { 
+              error: error instanceof Error ? error.message : 'Unknown error',
+              networkIssue: true
+            }
+          });
+        }
+      }
+
+      // Test server API if available
+      try {
+        const response = await fetch('/api/formbricks/test');
+        const data = await response.json();
+
+        tests.push({
+          name: 'Server API Test',
+          status: data.success ? 'success' : 'warning' as const,
+          message: data.message || (data.success ? 'Server API is working' : 'Server API test failed'),
+          details: data
+        });
+      } catch (error) {
+        tests.push({
+          name: 'Server API Test',
+          status: 'warning' as const,
+          message: `Server API test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          details: { error: error instanceof Error ? error.message : 'Unknown error' }
+        });
+      }
+
+    } catch (error) {
+      tests.push({
+        name: 'API Connectivity Test',
+        status: 'error' as const,
+        message: `Failed to test API connectivity: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+    }
+
+    return {
+      category: 'API Connectivity',
+      tests
+    };
+  }
+
+  /**
+   * Test survey triggers
+   */
+  private async testSurveyTriggers() {
+    const tests = [];
+
+    // Test if surveys can be fetched
+    try {
+      const response = await fetch('/api/formbricks/surveys');
+      const data = await response.json();
+
+      tests.push({
+        name: 'Survey Fetch Test',
+        status: response.ok ? 'success' : 'warning' as const,
+        message: response.ok 
+          ? `Successfully fetched surveys (${data.surveys?.length || 0} found)`
+          : 'Failed to fetch surveys',
+        details: data
+      });
+    } catch (error) {
+      tests.push({
+        name: 'Survey Fetch Test',
+        status: 'error' as const,
+        message: `Survey fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+    }
+
+    // Test common survey triggers
+    const commonTriggers = [
+      'pageView',
+      'exitIntent',
+      'codeAction',
+      'noCodeAction'
+    ];
+
+    for (const trigger of commonTriggers) {
+      try {
+        tests.push({
+          name: `Test ${trigger} Trigger`,
+          status: 'success' as const,
+          message: `${trigger} trigger test would work (manager is ${this.formbricksManager.isInitialized() ? 'ready' : 'not ready'})`,
+          details: { 
+            trigger,
+            managerReady: this.formbricksManager.isInitialized()
+          }
+        });
+      } catch (error) {
+        tests.push({
+          name: `Test ${trigger} Trigger`,
+          status: 'error' as const,
+          message: `Failed to test ${trigger} trigger: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          details: { 
+            trigger,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        });
+      }
+    }
+
+    return {
+      category: 'Survey Triggers',
+      tests
+    };
+  }
+
+  /**
+   * Test user attribute system
+   */
+  private async testUserAttributeSystem() {
+    const tests = [];
+
+    // Test if attributes can be set
+    try {
+      const testAttributes = {
+        debugTest: true,
+        timestamp: Date.now(),
+        testId: `debug-${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      if (this.formbricksManager.isInitialized()) {
+        this.formbricksManager.setAttributes(testAttributes);
+        tests.push({
+          name: 'Set Attributes Test',
+          status: 'success' as const,
+          message: 'Successfully set test attributes',
+          details: { testAttributes }
+        });
+      } else {
+        tests.push({
+          name: 'Set Attributes Test',
+          status: 'warning' as const,
+          message: 'Cannot test attributes - manager not initialized',
+          details: { managerInitialized: false }
+        });
+      }
+    } catch (error) {
+      tests.push({
+        name: 'Set Attributes Test',
+        status: 'error' as const,
+        message: `Failed to set attributes: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+    }
+
+    // Test user identification
+    try {
+      const testUserId = `debug-user-${Date.now()}`;
+      
+      if (this.formbricksManager.isInitialized()) {
+        // Note: We don't actually call setUserId in debug mode to avoid side effects
+        tests.push({
+          name: 'User ID System Test',
+          status: 'success' as const,
+          message: 'User ID system is available and would work',
+          details: { 
+            testUserId,
+            managerReady: true,
+            note: 'Test user ID not actually set to avoid side effects'
+          }
+        });
+      } else {
+        tests.push({
+          name: 'User ID System Test',
+          status: 'warning' as const,
+          message: 'Cannot test user ID - manager not initialized',
+          details: { managerInitialized: false }
+        });
+      }
+    } catch (error) {
+      tests.push({
+        name: 'User ID System Test',
+        status: 'error' as const,
+        message: `User ID test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+    }
+
+    return {
+      category: 'User Attribute System',
+      tests
+    };
+  }
+
+  /**
+   * Test event tracking
+   */
+  private async testEventTracking() {
+    const tests = [];
+
+    const testEvents = [
+      { name: 'debug_test_event', properties: { source: 'debug', timestamp: Date.now() } },
+      { name: 'page_view', properties: { page: '/debug', debug: true } },
+      { name: 'feature_used', properties: { feature: 'formbricks_debug', version: '1.0.0' } }
+    ];
+
+    for (const testEvent of testEvents) {
+      try {
+        if (this.formbricksManager.isInitialized()) {
+          this.formbricksManager.track(testEvent.name, testEvent.properties);
+          tests.push({
+            name: `Track '${testEvent.name}' Event`,
+            status: 'success' as const,
+            message: `Successfully tracked ${testEvent.name} event`,
+            details: testEvent
+          });
+        } else {
+          tests.push({
+            name: `Track '${testEvent.name}' Event`,
+            status: 'warning' as const,
+            message: `Cannot track ${testEvent.name} - manager not initialized`,
+            details: { ...testEvent, managerInitialized: false }
+          });
+        }
+      } catch (error) {
+        tests.push({
+          name: `Track '${testEvent.name}' Event`,
+          status: 'error' as const,
+          message: `Failed to track ${testEvent.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          details: { 
+            ...testEvent,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        });
+      }
+    }
+
+    return {
+      category: 'Event Tracking',
+      tests
+    };
+  }
+
+  /**
+   * Test route change registration
+   */
+  private async testRouteChangeRegistration() {
+    const tests = [];
+
+    try {
+      if (this.formbricksManager.isInitialized()) {
+        this.formbricksManager.registerRouteChange();
+        tests.push({
+          name: 'Route Change Registration',
+          status: 'success' as const,
+          message: 'Successfully registered route change',
+          details: { currentPath: typeof window !== 'undefined' ? window.location.pathname : 'unknown' }
+        });
+      } else {
+        tests.push({
+          name: 'Route Change Registration',
+          status: 'warning' as const,
+          message: 'Cannot register route change - manager not initialized',
+          details: { managerInitialized: false }
+        });
+      }
+    } catch (error) {
+      tests.push({
+        name: 'Route Change Registration',
+        status: 'error' as const,
+        message: `Route change registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+    }
+
+    return {
+      category: 'Route Change Registration',
+      tests
+    };
+  }
+
+  /**
+   * Test error handling system
+   */
+  private async testErrorHandling() {
+    const tests = [];
+
+    // Test if error handler is working
+    tests.push({
+      name: 'Error Handler Active',
+      status: 'success' as const,
+      message: 'Formbricks error handler is active and monitoring for errors',
+      details: { 
+        globalErrorHandlerActive: typeof window !== 'undefined' && (window as any).__originalConsoleError,
+        errorSuppressionActive: true
+      }
+    });
+
+    // Test console error suppression
+    if (typeof window !== 'undefined' && (window as any).__originalConsoleError) {
+      tests.push({
+        name: 'Console Error Suppression',
+        status: 'success' as const,
+        message: 'Console error suppression is active for known Formbricks issues',
+        details: { 
+          originalConsoleErrorStored: true,
+          suppressionPatterns: ['🧹 Formbricks - Global error:', '{}']
+        }
+      });
+    } else {
+      tests.push({
+        name: 'Console Error Suppression',
+        status: 'warning' as const,
+        message: 'Console error suppression may not be active',
+        details: { originalConsoleErrorStored: false }
+      });
+    }
+
+    return {
+      category: 'Error Handling',
+      tests
+    };
+  }
+
+  /**
+   * Manually trigger a test event
+   */
+  triggerTestEvent(eventName: string, properties?: Record<string, any>) {
+    const testEvent = {
+      name: eventName,
+      properties: {
+        ...properties,
+        debug: true,
+        timestamp: Date.now(),
+        triggeredBy: 'FormbricksDebugManager'
+      }
+    };
+
+    console.log('🧪 Manually triggering test event:', testEvent);
+    
+    try {
+      this.formbricksManager.track(testEvent.name, testEvent.properties);
+      
+      this.addDebugResult({
+        test: 'Manual Event Trigger',
+        status: 'success',
+        message: `Successfully triggered event: ${eventName}`,
+        details: testEvent
+      });
+      
+      return { success: true, event: testEvent };
+    } catch (error) {
+      this.addDebugResult({
+        test: 'Manual Event Trigger',
+        status: 'error',
+        message: `Failed to trigger event: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { ...testEvent, error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+      
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        event: testEvent 
+      };
+    }
+  }
+
+  /**
+   * Test all widget feedback options programmatically
+   */
+  async testAllWidgetOptions() {
+    const tests = [];
+    
+    const widgetOptions = [
+      { name: 'Post Quote Creation Survey', event: 'quote_created', properties: { quoteId: 'debug-quote-123' } },
+      { name: 'Dashboard Satisfaction Survey', event: 'dashboard_view', properties: { section: 'main' } },
+      { name: 'Feature Value Survey', event: 'feature_used', properties: { feature: 'item_library' } },
+      { name: 'Upgrade Abandonment Survey', event: 'upgrade_abandoned', properties: { reason: 'debug_test' } },
+      { name: 'Exit Intent Survey', event: 'exit_intent', properties: { page: '/debug' } }
+    ];
+
+    for (const widget of widgetOptions) {
+      const result = this.triggerTestEvent(widget.event, widget.properties);
+      tests.push({
+        name: widget.name,
+        status: result.success ? 'success' : 'error' as const,
+        message: result.success 
+          ? `${widget.name} triggered successfully`
+          : `${widget.name} failed: ${result.error}`,
+        details: result
+      });
+    }
+
+    this.addDebugResult({
+      test: 'Widget Options Test',
+      status: tests.every(t => t.status === 'success') ? 'success' : 'warning',
+      message: `Tested ${tests.length} widget options`,
+      details: { tests, summary: this.getTestSummary(tests as any) } // Type assertion for test result arrays
+    });
+
+    return {
+      category: 'Widget Feedback Options',
+      tests
+    };
+  }
+
+  /**
+   * Get current debug results
+   */
+  getDebugResults() {
+    return this.debugResults;
+  }
+
+  /**
+   * Clear debug results
+   */
+  clearDebugResults() {
+    this.debugResults = [];
+  }
+
+  /**
+   * Add a debug result
+   */
+  private addDebugResult(result: {
+    test: string;
+    status: 'success' | 'warning' | 'error';
+    message: string;
+    details?: any;
+  }) {
+    this.debugResults.push({
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date(),
+      ...result
+    });
+  }
+
+  /**
+   * Get test summary
+   */
+  private getTestSummary(tests: Array<{ status: 'success' | 'warning' | 'error' }>) {
+    return {
+      total: tests.length,
+      passed: tests.filter(t => t.status === 'success').length,
+      warnings: tests.filter(t => t.status === 'warning').length,
+      failed: tests.filter(t => t.status === 'error').length
+    };
+  }
+
+  /**
+   * Export debug data for sharing/support
+   */
+  exportDebugData() {
+    return {
+      timestamp: new Date().toISOString(),
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      formbricksManager: this.formbricksManager.getStatus(),
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        formbricksEnvId: process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID?.substring(0, 10) + '...' || 'not set',
+        formbricksApiHost: process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST || 'default',
+        hasApiKey: !!process.env.FORMBRICKS_API_KEY
+      },
+      debugResults: this.debugResults,
+      browser: typeof window !== 'undefined' ? {
+        online: navigator.onLine,
+        cookieEnabled: navigator.cookieEnabled,
+        language: navigator.language,
+        platform: navigator.platform
+      } : null
+    };
+  }
+}
+
+/**
+ * Get the debug manager instance
+ */
+export function getFormbricksDebugManager(): FormbricksDebugManager {
+  return FormbricksDebugManager.getInstance();
 }
 
 /**

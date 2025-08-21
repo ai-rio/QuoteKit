@@ -5,7 +5,7 @@
  * to collect user feedback through various interactive components.
  */
 
-export { FeedbackShowcase } from './feedback-showcase';
+// export { FeedbackShowcase } from './feedback-showcase'; // Temporarily disabled - file removed
 export { 
   FeedbackFAB, 
   FeedbackTrigger, 

@@ -39,7 +39,7 @@ const defaultFeedbackOptions: FeedbackOption[] = [
     id: 'general',
     label: 'General Feedback',
     icon: MessageCircle,
-    description: 'Share your thoughts about QuoteKit',
+    description: 'Share your thoughts about LawnQuote',
     formbricksEvent: 'feedback_general',
     color: 'blue'
   },
@@ -48,7 +48,7 @@ const defaultFeedbackOptions: FeedbackOption[] = [
     label: 'Feature Request',
     icon: Lightbulb,
     description: 'Suggest a new feature or improvement',
-    formbricksEvent: 'feedback_feature_request',
+    formbricksEvent: 'feedback_feature_request_widget',
     color: 'yellow'
   },
   {
@@ -56,15 +56,15 @@ const defaultFeedbackOptions: FeedbackOption[] = [
     label: 'Report Issue',
     icon: AlertCircle,
     description: 'Report a bug or technical issue',
-    formbricksEvent: 'feedback_bug_report',
+    formbricksEvent: 'feedback_bug_report_widget',
     color: 'red'
   },
   {
     id: 'appreciation',
-    label: 'Love QuoteKit',
+    label: 'Love LawnQuote',
     icon: Heart,
-    description: 'Share what you love about QuoteKit',
-    formbricksEvent: 'feedback_appreciation',
+    description: 'Share what you love about LawnQuote',
+    formbricksEvent: 'feedback_appreciation_widget',
     color: 'green'
   }
 ];
@@ -86,6 +86,7 @@ export function FloatingFeedbackWidget({
   autoHideAfter = 0,
   feedbackOptions = defaultFeedbackOptions
 }: FloatingFeedbackWidgetProps) {
+
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -177,23 +178,42 @@ export function FloatingFeedbackWidget({
     return () => clearTimeout(hideTimer);
   }, [isVisible, autoHideAfter]);
 
+  // Add global click listener for debugging - MOVED BEFORE EARLY RETURN
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (target && target.closest('[data-widget="floating-feedback"]')) {
+        console.log('🌍 Global click detected on widget area:', {
+          target: target,
+          tagName: target.tagName,
+          className: target.className,
+          closest: target.closest('button'),
+          zIndex: window.getComputedStyle(target).zIndex
+        });
+      }
+    };
+    
+    document.addEventListener('click', handleGlobalClick, true);
+    return () => document.removeEventListener('click', handleGlobalClick, true);
+  }, []);
+
   // Handle toggle expanded state
   const handleToggleExpanded = useCallback(() => {
+    console.log('🔵 WIDGET EXPANDED');
     setIsExpanded(prev => {
       const newState = !prev;
-      
-      // Track widget interaction
       trackFeatureUsage('floating_feedback_widget', 'used', {
         action: newState ? 'expanded' : 'collapsed',
         page: currentPath
       });
-
       return newState;
     });
   }, [trackFeatureUsage, currentPath]);
 
   // Handle feedback option click
   const handleFeedbackOption = useCallback((option: FeedbackOption) => {
+    console.log('🎯 Survey triggered:', option.label);
+    
     // Track the feedback option selection
     trackEvent(FORMBRICKS_EVENTS.HELP_REQUESTED, {
       feedbackType: option.id,
@@ -210,6 +230,9 @@ export function FloatingFeedbackWidget({
         page: currentPath
       });
     }
+
+    // Survey should now be triggered by Formbricks automatically
+    console.log(`🔔 Survey triggered: ${option.label} (${option.formbricksEvent})`);
 
     // Close the widget after selection
     setIsExpanded(false);
@@ -247,22 +270,26 @@ export function FloatingFeedbackWidget({
     'left': 'left-6 top-1/2 -translate-y-1/2'
   };
 
-  // Don't render if not visible or Formbricks is not available
+  // Don't render if not visible or Formbricks is not available  
   if (!isVisible || !formbricksAvailable) {
     return null;
   }
 
   return (
     <div 
+      data-widget="floating-feedback"
       className={cn(
-        'fixed z-50 flex flex-col items-end',
+        'fixed flex flex-col items-end',
         positionClasses[position],
         className
       )}
+      style={{ zIndex: 10020 }} // Higher than driver.js debug panel (10010) // Higher than driver.js debug panel (10010)
     >
       {/* Expanded Options Panel */}
       {isExpanded && !isMinimized && (
-        <div className="mb-3 bg-white rounded-2xl shadow-xl border border-gray-200 p-4 w-80 animate-in slide-in-from-bottom-2 duration-200">
+        <div 
+          className="mb-3 bg-white rounded-2xl shadow-xl border border-gray-200 p-4 w-80 animate-in slide-in-from-bottom-2 duration-200"
+        >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Share Feedback</h3>
             <Button 
@@ -281,7 +308,20 @@ export function FloatingFeedbackWidget({
               return (
                 <button
                   key={option.id}
-                  onClick={() => handleFeedbackOption(option)}
+                  onClick={(e) => {
+                    console.log('🎯 FEEDBACK OPTION CLICKED!', {
+                      option: option.label,
+                      id: option.id,
+                      event: e,
+                      target: e.target
+                    });
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleFeedbackOption(option);
+                  }}
+                  onMouseDown={() => {
+                    console.log('🖱️ MOUSE DOWN on feedback option:', option.label);
+                  }}
                   className={cn(
                     'w-full text-left p-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-md',
                     colorClasses[option.color]
@@ -300,7 +340,7 @@ export function FloatingFeedbackWidget({
           </div>
           
           <p className="text-xs text-gray-500 mt-4 text-center">
-            Your feedback helps us improve QuoteKit
+            Your feedback helps us improve LawnQuote
           </p>
         </div>
       )}
@@ -334,7 +374,31 @@ export function FloatingFeedbackWidget({
 
         {/* Main Button */}
         <Button
-          onClick={isMinimized ? handleToggleMinimize : handleToggleExpanded}
+          onClick={(e) => {
+            console.log('🟦 MAIN WIDGET BUTTON CLICKED!', {
+              isMinimized,
+              isExpanded,
+              isVisible,
+              event: e,
+              target: e.target,
+              currentTarget: e.currentTarget
+            });
+            e.preventDefault();
+            e.stopPropagation();
+            if (isMinimized) {
+              console.log('🔄 Calling handleToggleMinimize');
+              handleToggleMinimize();
+            } else {
+              console.log('🔄 Calling handleToggleExpanded');
+              handleToggleExpanded();
+            }
+          }}
+          onMouseDown={(e) => {
+            console.log('🖱️ MOUSE DOWN on main button', { target: e.target });
+          }}
+          onMouseUp={(e) => {
+            console.log('🖱️ MOUSE UP on main button', { target: e.target });
+          }}
           className={cn(
             'h-14 w-14 rounded-full bg-forest-green hover:bg-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300',
             'hover:scale-110 active:scale-95',
@@ -351,7 +415,7 @@ export function FloatingFeedbackWidget({
 
         {/* Pulse Animation Ring */}
         {!isExpanded && !isMinimized && (
-          <div className="absolute inset-0 rounded-full bg-forest-green animate-ping opacity-20" />
+          <div className="absolute inset-0 rounded-full bg-forest-green animate-ping opacity-20 pointer-events-none" />
         )}
       </div>
     </div>

@@ -114,8 +114,8 @@ if (typeof window !== 'undefined') {
       
       console.log('⚡ Comprehensive Formbricks error suppression active');
     }
-  };;
-  
+  }
+
   // Apply suppression immediately
   setupComprehensiveErrorSuppression();
   

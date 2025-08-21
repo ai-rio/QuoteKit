@@ -1,14 +1,15 @@
 /**
- * Server-side API route for Formbricks surveys
+ * Server-side API route for Formbricks action classes
  * Handles authentication server-side to keep API keys secure
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-interface FormbricksSurvey {
+interface FormbricksActionClass {
   id: string;
   name: string;
-  status: string;
+  description: string;
+  type: string;
   createdAt: string;
   updatedAt: string;
   [key: string]: any;
@@ -29,10 +30,10 @@ export async function GET() {
       return NextResponse.json({ data: [] }, { status: 200 });
     }
 
-    // Use the updated Management API endpoint for surveys
-    const url = `${apiHost}/api/v1/management/surveys`;
+    // Use the Management API endpoint for action classes
+    const url = `${apiHost}/api/v1/management/action-classes`;
     
-    console.log('Fetching surveys from Formbricks API:', { url, hasApiKey: !!apiKey });
+    console.log('Fetching action classes from Formbricks API:', { url, hasApiKey: !!apiKey });
 
     // Make request to Formbricks API
     const response = await fetch(url, {
@@ -46,7 +47,7 @@ export async function GET() {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unable to read error response');
-      console.warn('Formbricks surveys API failed:', {
+      console.warn('Formbricks action classes API failed:', {
         status: response.status,
         statusText: response.statusText,
         url,
@@ -57,38 +58,38 @@ export async function GET() {
     }
 
     const data = await response.json();
-    console.log('Formbricks surveys API response:', { dataType: typeof data, isArray: Array.isArray(data) });
+    console.log('Formbricks action classes API response:', { dataType: typeof data, isArray: Array.isArray(data) });
     
     // Ensure we return data in expected format
-    let surveys: FormbricksSurvey[] = [];
+    let actionClasses: FormbricksActionClass[] = [];
     if (Array.isArray(data)) {
-      surveys = data;
+      actionClasses = data;
     } else if (data.data && Array.isArray(data.data)) {
-      surveys = data.data;
+      actionClasses = data.data;
     }
 
-    console.log('Returning surveys data:', { count: surveys.length });
+    console.log('Returning action classes data:', { count: actionClasses.length });
 
     return NextResponse.json({ 
-      data: surveys,
-      total: surveys.length,
+      data: actionClasses,
+      total: actionClasses.length,
       success: true 
     });
 
   } catch (error) {
-    console.warn('Error fetching Formbricks surveys:', error);
+    console.warn('Error fetching Formbricks action classes:', error);
     // Return empty array instead of error
     return NextResponse.json({ 
       data: [], 
       total: 0, 
       success: false,
-      message: 'Unable to fetch surveys at this time'
+      message: 'Unable to fetch action classes at this time'
     }, { status: 200 });
   }
 }
 
 /**
- * POST - Create a new survey
+ * POST - Create a new action class
  */
 export async function POST(request: NextRequest) {
   try {
@@ -109,52 +110,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const surveyData = await request.json();
+    const actionClassData = await request.json();
     
     // Validate required fields
-    if (!surveyData.name || !surveyData.questions) {
+    if (!actionClassData.name || !actionClassData.description) {
       return NextResponse.json({
         success: false,
-        message: 'Survey name and questions are required'
+        message: 'Action class name and description are required'
       }, { status: 400 });
     }
 
-    // Add environment ID to survey data and replace placeholders
-    const surveyPayload = {
-      ...surveyData,
+    // Add environment ID to action class data
+    const actionClassPayload = {
+      ...actionClassData,
       environmentId: environmentId,
-      type: surveyData.type || 'web',
-      status: surveyData.status || 'inProgress'
+      type: actionClassData.type || 'code'
     };
 
-    // Replace ENVIRONMENT_ID_PLACEHOLDER in nested objects if present
-    const payloadString = JSON.stringify(surveyPayload).replace(
-      /ENVIRONMENT_ID_PLACEHOLDER/g, 
-      environmentId
-    );
-    const finalPayload = JSON.parse(payloadString);
-
-    console.log('Creating survey in Formbricks:', { 
-      name: finalPayload.name,
-      type: finalPayload.type,
-      environmentId: finalPayload.environmentId,
-      questionsCount: finalPayload.questions?.length
+    console.log('Creating action class in Formbricks:', { 
+      name: actionClassPayload.name,
+      type: actionClassPayload.type,
+      environmentId: actionClassPayload.environmentId
     });
 
-    // Create survey via Formbricks Management API
-    const url = `${apiHost}/api/v1/management/surveys`;
+    // Create action class via Formbricks Management API
+    const url = `${apiHost}/api/v1/management/action-classes`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(finalPayload)
+      body: JSON.stringify(actionClassPayload)
     });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unable to read error response');
-      console.error('Failed to create survey:', {
+      console.error('Failed to create action class:', {
         status: response.status,
         statusText: response.statusText,
         error: errorText
@@ -162,28 +154,28 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({
         success: false,
-        message: `Failed to create survey: ${response.status} ${response.statusText}`,
+        message: `Failed to create action class: ${response.status} ${response.statusText}`,
         details: errorText
       }, { status: response.status });
     }
 
-    const createdSurvey = await response.json();
-    console.log('Survey created successfully:', { 
-      id: createdSurvey.id,
-      name: createdSurvey.name 
+    const createdActionClass = await response.json();
+    console.log('Action class created successfully:', { 
+      id: createdActionClass.id,
+      name: createdActionClass.name 
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Survey created successfully',
-      data: createdSurvey
+      message: 'Action class created successfully',
+      data: createdActionClass
     });
 
   } catch (error) {
-    console.error('Error creating survey:', error);
+    console.error('Error creating action class:', error);
     return NextResponse.json({
       success: false,
-      message: 'Failed to create survey',
+      message: 'Failed to create action class',
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }

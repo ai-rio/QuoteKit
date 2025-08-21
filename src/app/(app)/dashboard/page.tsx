@@ -327,7 +327,7 @@ export default async function DashboardPage() {
         widgetConfig={{
           position: 'bottom-right',
           showDelay: 5000,
-          autoHideAfter: 60000,
+          autoHideAfter: 0, // Disabled for testing
           hideOnPages: ['/login', '/signup', '/auth/*']
         }}
         trackingConfig={{

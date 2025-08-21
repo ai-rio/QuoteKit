@@ -3,6 +3,7 @@
 import {
   Activity,
   AlertTriangle,
+  Bug,
   Calendar,
   DollarSign,
   FileText,
@@ -323,6 +324,16 @@ export default function AdminDashboard() {
                 System Settings
               </Button>
             </Link>
+            {process.env.NODE_ENV === 'development' && (
+              <Link href="/debug/formbricks">
+                <Button 
+                  className="bg-blue-600 text-paper-white hover:bg-blue-700 font-bold px-6 py-3 rounded-lg transition-all duration-200 h-12 justify-start w-full border-2 border-blue-600 hover:border-blue-700"
+                >
+                  <Bug className="w-4 h-4 mr-2" />
+                  Debug Formbricks
+                </Button>
+              </Link>
+            )}
           </div>
         </CardContent>
       </Card>

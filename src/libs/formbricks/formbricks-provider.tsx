@@ -210,6 +210,18 @@ export function FormbricksProvider() {
         return;
       }
       
+      // Check if userId is already set to prevent the "userId already set" error
+      const currentUserId = manager.getCurrentUserId();
+      if (currentUserId === userId) {
+        console.log('👤 UserId already set to:', currentUserId, '- skipping duplicate call');
+        
+        // Still set attributes even if userId is already set
+        const attributes = mapUserToFormbricksAttributes(user);
+        manager.setAttributes(attributes);
+        console.log('✅ User attributes updated successfully:', attributes);
+        return;
+      }
+      
       manager.setUserId(userId).then(() => {
         console.log('✅ UserId set successfully, now setting attributes');
         
