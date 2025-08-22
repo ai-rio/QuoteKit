@@ -92,6 +92,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname()
   const { expandedSections, toggleSection, handleNavigation, isMobile } = useMobileSidebar()
   const { canAccess, isFreePlan, loading } = useFeatureAccess()
+  
 
   const isInSection = (sectionItems: NavItem[], currentPath: string) => {
     return sectionItems.some(item => 
@@ -106,7 +107,12 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar className="bg-forest-green text-white" data-tour="sidebar" {...props}>
+    <Sidebar 
+      className="bg-forest-green text-white transition-all duration-300 ease-in-out" 
+      data-tour="sidebar" 
+      collapsible="offcanvas"
+      {...props}
+    >
       <SidebarHeader className="p-4">
         <div className="flex items-center space-x-3 px-2">
           <LawnQuoteLogoIcon className="text-white flex-shrink-0" />

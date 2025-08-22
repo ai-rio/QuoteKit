@@ -22,6 +22,7 @@ export default function AppLayout({
   return (
     <OnboardingWrapper>
       <SidebarProvider 
+        defaultOpen={true}
         className="sidebar-provider"
         style={{
           '--sidebar-width': '16rem',
@@ -30,7 +31,7 @@ export default function AppLayout({
         } as React.CSSProperties}
       >
         <AppSidebar />
-        <SidebarInset className="bg-light-concrete">
+        <SidebarInset className="bg-light-concrete transition-all duration-200 ease-linear">
           <AppHeader />
           <div className="flex flex-1 flex-col p-4 min-h-[calc(100vh-4rem)]">
             {children}
