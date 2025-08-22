@@ -32,8 +32,8 @@ export function FormbricksProvider() {
       
       // If user logged out, reset Formbricks session
       if (!newUser && user) {
-        console.log('🔄 User logged out, resetting Formbricks session');
         const manager = FormbricksManager.getInstance();
+        console.log('🚪 User logged out, resetting Formbricks session');
         manager.resetUser();
       }
       
@@ -49,7 +49,7 @@ export function FormbricksProvider() {
     
     // Only initialize if we have environment variables configured
     const environmentId = process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID;
-    const appUrl = process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST;
+    const appUrl = process.env.NEXT_PUBLIC_FORMBRICKS_APP_URL;
     const debugMode = process.env.FORMBRICKS_DEBUG;
 
     console.log('🔧 DETAILED Environment variables check:', {
@@ -63,7 +63,7 @@ export function FormbricksProvider() {
       locationHref: typeof window !== 'undefined' ? window.location.href : 'N/A',
       allFormbricksEnvVars: {
         NEXT_PUBLIC_FORMBRICKS_ENV_ID: process.env.NEXT_PUBLIC_FORMBRICKS_ENV_ID,
-        NEXT_PUBLIC_FORMBRICKS_API_HOST: process.env.NEXT_PUBLIC_FORMBRICKS_API_HOST,
+        NEXT_PUBLIC_FORMBRICKS_APP_URL: process.env.NEXT_PUBLIC_FORMBRICKS_APP_URL,
         FORMBRICKS_DEBUG: process.env.FORMBRICKS_DEBUG,
       },
       // Show all NEXT_PUBLIC environment variables for debugging

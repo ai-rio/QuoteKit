@@ -1,10 +1,11 @@
 'use client';
 
-import { AlertCircle, ChevronUp, Heart,Lightbulb, MessageCircle, X } from 'lucide-react';
-import React, { useCallback,useEffect, useState } from 'react';
+import { AlertCircle, ChevronUp, Heart, Lightbulb, MessageCircle, X } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useFormbricksTracking } from '@/hooks/use-formbricks-tracking';
+import { FormbricksManager } from '@/libs/formbricks/formbricks-manager';
 import { FORMBRICKS_EVENTS } from '@/libs/formbricks/types';
 import { cn } from '@/utils/cn';
 
@@ -48,7 +49,7 @@ const defaultFeedbackOptions: FeedbackOption[] = [
     label: 'Feature Request',
     icon: Lightbulb,
     description: 'Suggest a new feature or improvement',
-    formbricksEvent: 'feedback_feature_request_widget',
+    formbricksEvent: 'feedback_feature_request', // Working!
     color: 'yellow'
   },
   {
@@ -56,18 +57,11 @@ const defaultFeedbackOptions: FeedbackOption[] = [
     label: 'Report Issue',
     icon: AlertCircle,
     description: 'Report a bug or technical issue',
-    formbricksEvent: 'feedback_bug_report_widget',
+    formbricksEvent: 'feedback_bug_report', // New action class key
     color: 'red'
-  },
-  {
-    id: 'appreciation',
-    label: 'Love LawnQuote',
-    icon: Heart,
-    description: 'Share what you love about LawnQuote',
-    formbricksEvent: 'feedback_appreciation_widget',
-    color: 'green'
   }
-];
+  // Adding incrementally - next will be appreciation survey
+];;;;;;
 
 const colorClasses = {
   blue: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100',
@@ -178,28 +172,8 @@ export function FloatingFeedbackWidget({
     return () => clearTimeout(hideTimer);
   }, [isVisible, autoHideAfter]);
 
-  // Add global click listener for debugging - MOVED BEFORE EARLY RETURN
-  useEffect(() => {
-    const handleGlobalClick = (e: MouseEvent) => {
-      const target = e.target as Element;
-      if (target && target.closest('[data-widget="floating-feedback"]')) {
-        console.log('🌍 Global click detected on widget area:', {
-          target: target,
-          tagName: target.tagName,
-          className: target.className,
-          closest: target.closest('button'),
-          zIndex: window.getComputedStyle(target).zIndex
-        });
-      }
-    };
-    
-    document.addEventListener('click', handleGlobalClick, true);
-    return () => document.removeEventListener('click', handleGlobalClick, true);
-  }, []);
-
   // Handle toggle expanded state
   const handleToggleExpanded = useCallback(() => {
-    console.log('🔵 WIDGET EXPANDED');
     setIsExpanded(prev => {
       const newState = !prev;
       trackFeatureUsage('floating_feedback_widget', 'used', {
@@ -212,7 +186,29 @@ export function FloatingFeedbackWidget({
 
   // Handle feedback option click
   const handleFeedbackOption = useCallback((option: FeedbackOption) => {
-    console.log('🎯 Survey triggered:', option.label);
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('formbricksDebug=true');
+    
+    if (isDebugMode) {
+      // Clear localStorage entries that might prevent survey display
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.includes('formbricks') || key.includes('survey')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+      
+      // Clear sessionStorage entries
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const keys = Object.keys(sessionStorage);
+        keys.forEach(key => {
+          if (key.includes('formbricks') || key.includes('survey')) {
+            sessionStorage.removeItem(key);
+          }
+        });
+      }
+    }
     
     // Track the feedback option selection
     trackEvent(FORMBRICKS_EVENTS.HELP_REQUESTED, {
@@ -231,11 +227,72 @@ export function FloatingFeedbackWidget({
       });
     }
 
-    // Survey should now be triggered by Formbricks automatically
-    console.log(`🔔 Survey triggered: ${option.label} (${option.formbricksEvent})`);
+    // Force Formbricks to check for surveys using FormbricksManager
+    const formbricksManager = FormbricksManager.getInstance();
+    
+    if (formbricksManager.isInitialized()) {
+      
+      try {
+        // In debug mode, reset the user session
+        if (isDebugMode) {
+          formbricksManager.resetUser();
+        }
+        
+        // Force Formbricks to register route change to trigger surveys
+        formbricksManager.registerRouteChange();
+        
+        // Additional attempt to trigger surveys in debug mode
+        if (isDebugMode) {
+          setTimeout(() => {
+            formbricksManager.registerRouteChange();
+          }, 500);
+        }
+      } catch (error) {
+        console.warn('Failed to trigger Formbricks route change:', error);
+      }
+    } else {
+      console.warn('FormbricksManager not initialized - cannot trigger surveys');
+    }
 
-    // Close the widget after selection
-    setIsExpanded(false);
+    // Wait a moment, then check if survey appeared
+    setTimeout(() => {
+      // Enhanced survey detection
+      const surveySelectors = [
+        '[role="dialog"]',
+        '.modal',
+        '[data-testid*="survey"]',
+        '[class*="survey"]',
+        '[class*="formbricks"]',
+        '[id*="formbricks"]',
+        '[data-formbricks]',
+        '.fb-survey',
+        '#formbricks-modal'
+      ];
+      
+      let possibleSurvey = null;
+      for (const selector of surveySelectors) {
+        possibleSurvey = document.querySelector(selector);
+        if (possibleSurvey) {
+          // Check if the container has actual content
+          const hasContent = possibleSurvey.children.length > 0 || possibleSurvey.textContent?.trim().length > 0;
+          const isVisible = window.getComputedStyle(possibleSurvey).display !== 'none' && 
+                           window.getComputedStyle(possibleSurvey).visibility !== 'hidden' &&
+                           window.getComputedStyle(possibleSurvey).opacity !== '0';
+          
+          if (hasContent && isVisible) {
+            setIsExpanded(false);
+            return;
+          }
+          break;
+        }
+      }
+      
+      if (!possibleSurvey) {
+        // Keep widget open for retry - don't close if no survey appeared
+        return;
+      }
+      
+    }, 2000);
   }, [trackEvent, currentPath, position]);
 
   // Handle widget close
@@ -283,7 +340,7 @@ export function FloatingFeedbackWidget({
         positionClasses[position],
         className
       )}
-      style={{ zIndex: 10020 }} // Higher than driver.js debug panel (10010) // Higher than driver.js debug panel (10010)
+      style={{ zIndex: 10020 }}
     >
       {/* Expanded Options Panel */}
       {isExpanded && !isMinimized && (
@@ -309,18 +366,9 @@ export function FloatingFeedbackWidget({
                 <button
                   key={option.id}
                   onClick={(e) => {
-                    console.log('🎯 FEEDBACK OPTION CLICKED!', {
-                      option: option.label,
-                      id: option.id,
-                      event: e,
-                      target: e.target
-                    });
                     e.preventDefault();
                     e.stopPropagation();
                     handleFeedbackOption(option);
-                  }}
-                  onMouseDown={() => {
-                    console.log('🖱️ MOUSE DOWN on feedback option:', option.label);
                   }}
                   className={cn(
                     'w-full text-left p-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-md',
@@ -375,29 +423,13 @@ export function FloatingFeedbackWidget({
         {/* Main Button */}
         <Button
           onClick={(e) => {
-            console.log('🟦 MAIN WIDGET BUTTON CLICKED!', {
-              isMinimized,
-              isExpanded,
-              isVisible,
-              event: e,
-              target: e.target,
-              currentTarget: e.currentTarget
-            });
             e.preventDefault();
             e.stopPropagation();
             if (isMinimized) {
-              console.log('🔄 Calling handleToggleMinimize');
               handleToggleMinimize();
             } else {
-              console.log('🔄 Calling handleToggleExpanded');
               handleToggleExpanded();
             }
-          }}
-          onMouseDown={(e) => {
-            console.log('🖱️ MOUSE DOWN on main button', { target: e.target });
-          }}
-          onMouseUp={(e) => {
-            console.log('🖱️ MOUSE UP on main button', { target: e.target });
           }}
           className={cn(
             'h-14 w-14 rounded-full bg-forest-green hover:bg-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300',

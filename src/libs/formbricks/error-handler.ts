@@ -57,6 +57,20 @@ export class FormbricksErrorHandler {
         }
       }
 
+      // Check for userId already set error (harmless)
+      const isUserIdAlreadySetError = this.isFormbricksUserIdAlreadySetError(args);
+      if (isUserIdAlreadySetError) {
+        this.suppressedErrors++;
+        console.debug(`🔇 [FormbricksErrorHandler] Suppressed userId already set error #${this.suppressedErrors}`);
+        
+        // Only show detailed message on first suppression of this error type
+        if (this.suppressedErrors === 1) {
+          console.debug('📋 Formbricks userId already set error suppressed - this is handled gracefully in our code');
+        }
+        
+        return; // Completely suppress the error
+      }
+
       // Check for Formbricks empty error patterns
       const isExactEmptyError = this.isFormbricksEmptyError(args);
 
@@ -91,7 +105,7 @@ export class FormbricksErrorHandler {
   }
 
   /**
-   * Check if this is the problematic Formbricks empty error
+   * Check if this is the problematic Formbricks empty error or userId already set error
    */
   private isFormbricksEmptyError(args: any[]): boolean {
     // Check for various patterns of Formbricks empty errors
@@ -115,6 +129,16 @@ export class FormbricksErrorHandler {
     
     // Also catch cases where the error message itself indicates empty error
     return args[0].includes('Global error:  {}') || args[0].includes('Global error: {}');
+  }
+
+  /**
+   * Check if this is the userId already set error (harmless)
+   */
+  private isFormbricksUserIdAlreadySetError(args: any[]): boolean {
+    return args.length >= 1 && 
+      typeof args[0] === 'string' && 
+      (args[0].includes('userId is already set in formbricks') ||
+       args[0].includes('please first call the logout function'));
   }
 
   /**
