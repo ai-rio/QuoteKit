@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { BookOpen, FileText, HelpCircle, Package, Play, Settings, Star, Users, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -13,102 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useOnboarding } from '@/contexts/onboarding-context'
-import { useTourReplay } from '@/hooks/use-tour-replay'
 import { useUserTier } from '@/hooks/use-user-tier'
+import { getTourConfig } from '@/libs/onboarding/tour-configs'
 
-interface TourOption {
-  id: string
-  name: string
-  description: string
-  icon: React.ComponentType<any>
-  category: 'essential' | 'advanced' | 'features'
-  estimatedTime: string
-  userTiers: string[]
-}
-
-const TOUR_OPTIONS: TourOption[] = [
-  {
-    id: 'welcome',
-    name: 'Welcome Tour',
-    description: 'Get started with QuoteKit basics',
-    icon: Play,
-    category: 'essential',
-    estimatedTime: '2 min',
-    userTiers: ['free', 'pro', 'enterprise']
-  },
-  {
-    id: 'settings',
-    name: 'Company Setup',
-    description: 'Configure your company information',
-    icon: Settings,
-    category: 'essential',
-    estimatedTime: '3 min',
-    userTiers: ['free', 'pro', 'enterprise']
-  },
-  {
-    id: 'quote-creation',
-    name: 'Quote Creation Guide',
-    description: 'Complete walkthrough of creating professional quotes',
-    icon: FileText,
-    category: 'essential',
-    estimatedTime: '8 min',
-    userTiers: ['free', 'pro', 'enterprise']
-  },
-  {
-    id: 'item-library',
-    name: 'Item Library Management',
-    description: 'Master your services and materials database',
-    icon: Package,
-    category: 'essential',
-    estimatedTime: '7 min',
-    userTiers: ['free', 'pro', 'enterprise']
-  },
-  {
-    id: 'pro-features',
-    name: 'Pro Features',
-    description: 'Advanced features for professional users',
-    icon: Star,
-    category: 'features',
-    estimatedTime: '5 min',
-    userTiers: ['pro', 'enterprise']
-  },
-  {
-    id: 'contextual-help',
-    name: 'Contextual Help',
-    description: 'Learn about help features and support',
-    icon: HelpCircle,
-    category: 'essential',
-    estimatedTime: '2 min',
-    userTiers: ['free', 'pro', 'enterprise']
-  },
-  {
-    id: 'freemium-highlights',
-    name: 'Free Plan Features',
-    description: 'Discover what you can do on the free plan',
-    icon: Zap,
-    category: 'features',
-    estimatedTime: '3 min',
-    userTiers: ['free']
-  },
-  {
-    id: 'interactive-tutorial',
-    name: 'Interactive Tutorial',
-    description: 'Hands-on practice with QuoteKit features',
-    icon: BookOpen,
-    category: 'advanced',
-    estimatedTime: '15 min',
-    userTiers: ['pro', 'enterprise']
-  },
-  {
-    id: 'personalized-onboarding',
-    name: 'Personalized Experience',
-    description: 'Customized onboarding based on your needs',
-    icon: Users,
-    category: 'advanced',
-    estimatedTime: '10 min',
-    userTiers: ['pro', 'enterprise']
-  }
-]
 
 interface HelpMenuProps {
   variant?: 'button' | 'icon'
@@ -124,41 +31,78 @@ export function HelpMenu({
   const [isOpen, setIsOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const { tier: userTier } = useUserTier()
-  const { getTourProgress } = useOnboarding()
-  const { replayTour, canReplayTour, isActive, currentTour } = useTourReplay()
+  const { getTourProgress, startTour, completeTour, availableTours, activeTour } = useOnboarding()
 
   // Prevent hydration mismatch
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  // Filter tours based on user tier
-  const availableTours = TOUR_OPTIONS.filter(tour => 
-    tour.userTiers.includes(userTier || 'free') && 
-    canReplayTour(tour.id)
-  )
+  // Simple page-to-tour mapping based on pathname
+  const getPageRelevantTours = () => {
+    if (typeof window === 'undefined') return availableTours
 
-  // Group tours by category
-  const groupedTours = {
-    essential: availableTours.filter(t => t.category === 'essential'),
-    features: availableTours.filter(t => t.category === 'features'),
-    advanced: availableTours.filter(t => t.category === 'advanced')
+    const pathname = window.location.pathname
+    
+    // Define page-to-tour mappings
+    const pageToTours: Record<string, string[]> = {
+      '/dashboard': ['welcome'],
+      '/quotes': ['quote-creation'],
+      '/quotes/new': ['quote-creation'], 
+      '/items': ['item-library'],
+      '/settings': ['settings'],
+      '/analytics': ['pro-features']
+    }
+
+    // Get tours for current page
+    const relevantTourIds = pageToTours[pathname] || []
+    
+    // Filter available tours to only include relevant ones
+    const filteredTours = availableTours.filter(tour => 
+      relevantTourIds.includes(tour.id)
+    )
+    
+    console.log('🎯 HelpMenu Page-Based Filtering:', {
+      currentPath: pathname,
+      availableTours: availableTours.length,
+      relevantTourIds,
+      filteredTours: filteredTours.length,
+      filteredTourIds: filteredTours.map(t => t.id)
+    })
+    
+    return filteredTours
   }
 
+  // Get page-filtered tours
+  const pageFilteredTours = getPageRelevantTours()
+
   const handleTourSelect = async (tourId: string) => {
+    console.log(`🎯 HelpMenu Dropdown: Starting tour ${tourId}`)
     setIsOpen(false)
+    
     try {
-      console.log(`🎯 HelpMenu: Starting tour ${tourId}`)
-      
-      // CRITICAL FIX: Add small delay to ensure DOM is ready and dropdown is closed
+      // Add small delay to ensure DOM is ready and dropdown is closed
       await new Promise(resolve => setTimeout(resolve, 200))
       
-      await replayTour(tourId)
+      console.log(`🚀 HelpMenu: Starting tour ${tourId} using simplified Debug Panel pattern...`)
       
-      console.log(`✅ HelpMenu: Tour ${tourId} started successfully`)
+      // Use the exact same simplified logic as OnboardingDebugPanel
+      const { tourManager } = await import('@/libs/onboarding/tour-manager')
+      
+      // Get tour config directly
+      const tourConfig = getTourConfig(tourId)
+      if (tourConfig) {
+        console.log(`🎪 Starting regular tour system for ${tourId}`)
+        await tourManager.initializeTour(tourId, tourConfig)
+        await startTour(tourId)
+        await tourManager.startTour()
+        console.log(`✅ HelpMenu: Tour ${tourId} started successfully`)
+      } else {
+        throw new Error(`Tour configuration not found: ${tourId}`)
+      }
+      
     } catch (error) {
       console.error('Failed to start tour:', error)
-      // Show user-friendly error message
       alert(`Failed to start tour: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -179,36 +123,23 @@ export function HelpMenu({
     }
   }
 
-  // CRITICAL FIX: Ensure component is always visible and functional
-  // This prevents hydration mismatches while ensuring the HelpMenu is always accessible
-  const TriggerButton = () => {
-    if (variant === 'icon') {
-      return (
-        <Button
-          variant="ghost"
-          size={size}
-          className="w-8 h-8 rounded-full bg-forest-green/10 text-forest-green hover:bg-forest-green/20 transition-colors flex items-center justify-center"
-          disabled={false}
-        >
-          <HelpCircle className="h-4 w-4" />
-        </Button>
-      )
+  const getIconForTour = (tourId: string) => {
+    // Map tour IDs to icons (same as TOUR_OPTIONS)
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      'welcome': Play,
+      'settings': Settings,
+      'quote-creation': FileText,
+      'item-library': Package,
+      'pro-features': Star,
+      'contextual-help': HelpCircle,
+      'freemium-highlights': Zap,
+      'interactive-tutorial': BookOpen,
+      'personalized-onboarding': Users
     }
-
-    return (
-      <Button
-        variant="outline"
-        size={size}
-        className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200"
-        disabled={false}
-      >
-        <HelpCircle className="h-4 w-4 mr-2" />
-        {showLabel && 'Help & Tours'}
-      </Button>
-    )
+    return iconMap[tourId] || HelpCircle
   }
 
-  const renderTourGroup = (title: string, tours: TourOption[]) => {
+  const renderTourGroup = (title: string, tours: any[]) => {
     if (tours.length === 0) return null
 
     return (
@@ -217,36 +148,33 @@ export function HelpMenu({
           {title}
         </DropdownMenuLabel>
         {tours.map((tour) => {
-          const Icon = tour.icon
+          const Icon = getIconForTour(tour.id)
           const status = getTourStatus(tour.id)
-          const isCurrentTour = currentTour === tour.id
+          const isCurrentTour = activeTour?.tourId === tour.id
 
           return (
             <DropdownMenuItem
               key={tour.id}
               onClick={() => handleTourSelect(tour.id)}
               className="cursor-pointer hover:bg-light-concrete focus:bg-light-concrete group"
-              disabled={isActive && !isCurrentTour}
+              disabled={!!activeTour && !isCurrentTour}
             >
               <div className="flex items-start gap-3 w-full">
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm">
                     {getStatusIcon(status, isCurrentTour)}
                   </span>
-                  <Icon className="h-4 w-4 text-forest-green" />
+                  <Icon className="h-4 w-4 text-forest-green group-hover:text-forest-green" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-charcoal group-hover:text-forest-green transition-colors">
-                      {tour.name}
-                    </p>
-                    <span className="text-xs text-charcoal/50 flex-shrink-0">
-                      {tour.estimatedTime}
-                    </span>
+                  <div className="font-medium text-sm text-charcoal group-hover:text-charcoal">
+                    {tour.title || tour.name}
                   </div>
-                  <p className="text-sm text-charcoal/70 truncate">
-                    {tour.description}
-                  </p>
+                  {tour.description && (
+                    <div className="text-xs text-charcoal/60 group-hover:text-charcoal/70 mt-0.5 line-clamp-2">
+                      {tour.description}
+                    </div>
+                  )}
                   {isCurrentTour && (
                     <div className="flex items-center gap-1 mt-1">
                       <div className="h-1.5 w-1.5 bg-forest-green rounded-full animate-pulse"></div>
@@ -266,57 +194,44 @@ export function HelpMenu({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <TriggerButton />
+        <Button
+          variant="outline"
+          size={size}
+          className="text-forest-green border-forest-green/60 bg-forest-green/5 hover:bg-forest-green hover:text-white hover:border-forest-green font-semibold transition-all duration-200"
+          disabled={false}
+        >
+          <HelpCircle className="h-4 w-4 mr-2" />
+          {showLabel && 'Help & Tours'}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         className="w-80 bg-paper-white border-stone-gray shadow-lg"
         align="end"
         sideOffset={8}
       >
-        <div className="px-3 py-2 border-b border-stone-gray/20">
-          <h3 className="font-semibold text-charcoal flex items-center gap-2">
-            <HelpCircle className="h-4 w-4 text-forest-green" />
-            Help & Interactive Tours
-          </h3>
-          <p className="text-sm text-charcoal/70 mt-1">
-            Re-watch any guide or learn something new
-          </p>
-        </div>
-
-        <div className="max-h-96 overflow-y-auto py-2">
-          {!isMounted ? (
-            <div className="px-3 py-4 text-center text-sm text-charcoal/50">
-              Loading tours...
-            </div>
-          ) : availableTours.length === 0 ? (
-            <div className="px-3 py-4 text-center text-sm text-charcoal/50">
-              No tours available
-            </div>
-          ) : (
-            <>
-              {renderTourGroup('Essential Guides', groupedTours.essential)}
-              {renderTourGroup('Feature Tours', groupedTours.features)}
-              {renderTourGroup('Advanced Training', groupedTours.advanced)}
-            </>
-          )}
-        </div>
-
-        {isActive && (
-          <div className="px-3 py-2 bg-light-concrete border-t border-stone-gray/20">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="h-2 w-2 bg-forest-green rounded-full animate-pulse"></div>
-              <span className="text-charcoal/70">
-                Tour in progress: <strong className="text-forest-green">{currentTour}</strong>
-              </span>
-            </div>
+        {pageFilteredTours.length === 0 ? (
+          <div className="p-4 text-center text-charcoal/60">
+            <p className="text-sm font-medium">No tours available</p>
+            <p className="text-xs mt-1">No tours available for this page</p>
           </div>
+        ) : (
+          <>
+            <DropdownMenuLabel className="text-sm font-semibold text-charcoal pb-1">
+              🎯 Interactive Tours & Help
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            
+            {renderTourGroup('Available Tours', pageFilteredTours)}
+            
+            {pageFilteredTours.length > 0 && (
+              <div className="px-2 py-2 border-t border-stone-gray/30">
+                <p className="text-xs text-charcoal/50 text-center">
+                  Found {pageFilteredTours.length} available tour{pageFilteredTours.length !== 1 ? 's' : ''} for this page
+                </p>
+              </div>
+            )}
+          </>
         )}
-
-        <div className="px-3 py-2 bg-stone-gray/10 border-t border-stone-gray/20">
-          <p className="text-xs text-charcoal/60 text-center">
-            💡 All tours can be replayed anytime • {isMounted ? availableTours.length : '...'} guides available
-          </p>
-        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )
