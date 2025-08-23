@@ -18,6 +18,7 @@ export class FormbricksManager {
   private attributeQueue: Record<string, any> = {};
   private currentUserId: string | null = null;
   private currentAttributes: Record<string, any> = {};
+  private hiddenFieldsSupported = true; // Assume supported until we get an error
 
   private constructor() {
     // Private constructor for singleton pattern
@@ -193,6 +194,9 @@ export class FormbricksManager {
 
       this.initialized = true;
       this.isAvailable = true;
+
+      console.log('🎯 [FormbricksManager] Initialization successful');
+      console.log(`🔧 [FormbricksManager] Hidden fields support: ${this.hiddenFieldsSupported ? 'enabled' : 'disabled'}`);
 
       this.processQueue();
     } catch (error) {
@@ -428,10 +432,16 @@ export class FormbricksManager {
     
     errorHandler.safeExecute(
       () => {
-        const trackProperties = properties ? {
-          ...properties,
-          hiddenFields: properties.hiddenFields || {}
-        } : undefined;
+        let trackProperties = properties ? { ...properties } : undefined;
+        
+        // Only include hiddenFields if they're supported
+        if (trackProperties && this.hiddenFieldsSupported) {
+          trackProperties.hiddenFields = properties?.hiddenFields || {};
+        } else if (trackProperties && trackProperties.hiddenFields) {
+          // Remove hiddenFields if they're not supported
+          const { hiddenFields, ...propsWithoutHiddenFields } = trackProperties;
+          trackProperties = propsWithoutHiddenFields;
+        }
         
         if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.track === 'function') {
           (window as any).formbricks.track(eventName, trackProperties);
@@ -442,7 +452,48 @@ export class FormbricksManager {
         }
       },
       `track event: ${eventName}`
-    );
+    ).catch((error) => {
+      // Check if the error is about hidden fields not being enabled
+      if (error && typeof error === 'object' && 'message' in error && 
+          typeof error.message === 'string' && 
+          error.message.includes('Hidden fields are not enabled')) {
+        
+        console.warn('🔧 [FormbricksManager] Hidden fields not supported, disabling for future requests');
+        this.hiddenFieldsSupported = false;
+        
+        // Retry the track call without hidden fields
+        const retryProperties = properties ? { ...properties } : undefined;
+        if (retryProperties && retryProperties.hiddenFields) {
+          const { hiddenFields, ...propsWithoutHiddenFields } = retryProperties;
+          this.track(eventName, propsWithoutHiddenFields);
+        } else {
+          this.track(eventName, retryProperties);
+        }
+      }
+    });
+  }
+
+  /**
+   * Check if hidden fields are supported by the current survey configuration
+   */
+  isHiddenFieldsSupported(): boolean {
+    return this.hiddenFieldsSupported;
+  }
+
+  /**
+   * Manually disable hidden fields support (useful for configuration)
+   */
+  disableHiddenFields(): void {
+    this.hiddenFieldsSupported = false;
+    console.warn('🔧 [FormbricksManager] Hidden fields manually disabled');
+  }
+
+  /**
+   * Re-enable hidden fields support (will be disabled again if error occurs)
+   */
+  enableHiddenFields(): void {
+    this.hiddenFieldsSupported = true;
+    console.log('🔧 [FormbricksManager] Hidden fields re-enabled');
   }
 
   /**
@@ -533,15 +584,43 @@ export class FormbricksManager {
     this.eventQueue.forEach(({ eventName, properties }) => {
       try {
         if (typeof fb.track === 'function') {
-          const trackProperties = properties ? {
-            ...properties,
-            hiddenFields: properties.hiddenFields || {}
-          } : undefined;
+          let trackProperties = properties ? { ...properties } : undefined;
+          
+          // Only include hiddenFields if they're supported
+          if (trackProperties && this.hiddenFieldsSupported) {
+            trackProperties.hiddenFields = properties?.hiddenFields || {};
+          } else if (trackProperties && trackProperties.hiddenFields) {
+            // Remove hiddenFields if they're not supported
+            const { hiddenFields, ...propsWithoutHiddenFields } = trackProperties;
+            trackProperties = propsWithoutHiddenFields;
+          }
           
           fb.track(eventName, trackProperties);
         }
       } catch (error) {
-        console.error('Failed to process queued event:', eventName, error);
+        // Check if the error is about hidden fields not being enabled
+        if (error && typeof error === 'object' && 'message' in error && 
+            typeof error.message === 'string' && 
+            error.message.includes('Hidden fields are not enabled')) {
+          
+          console.warn('🔧 [FormbricksManager] Hidden fields not supported in queue processing, disabling for future requests');
+          this.hiddenFieldsSupported = false;
+          
+          // Retry without hidden fields
+          try {
+            const retryProperties = properties ? { ...properties } : undefined;
+            if (retryProperties && retryProperties.hiddenFields) {
+              const { hiddenFields, ...propsWithoutHiddenFields } = retryProperties;
+              fb.track(eventName, propsWithoutHiddenFields);
+            } else {
+              fb.track(eventName, retryProperties);
+            }
+          } catch (retryError) {
+            console.error('Failed to process queued event after retry:', eventName, retryError);
+          }
+        } else {
+          console.error('Failed to process queued event:', eventName, error);
+        }
       }
     });
 

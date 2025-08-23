@@ -209,9 +209,9 @@ export function OnboardingProvider({
       // CRITICAL FIX: Clear phantom tours when Driver.js tour manager isn't actually active
       // This handles cases where localStorage has activeTour but Driver.js isn't running
       if (finalProgress.activeTour && typeof window !== 'undefined') {
-        // Dynamic import to avoid SSR issues
-        import('@/libs/onboarding/tour-manager').then(({ tourManager }) => {
-          if (!tourManager.isActive()) {
+        // Dynamic import to avoid SSR issues - use simple-tour-starter instead of tour-manager
+        import('@/libs/onboarding/simple-tour-starter').then(({ isTourActive }) => {
+          if (!isTourActive()) {
             console.log('🔧 OnboardingManager: Clearing phantom active tour - Driver.js not active');
             setProgress(prev => prev ? {
               ...prev,

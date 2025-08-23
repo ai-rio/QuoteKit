@@ -607,7 +607,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
     },
     {
       id: 'add-items-process',
-      element: '[data-testid="item-search-add"], [data-tour="item-search-add"], button:has-text("Add Item"), .add-item-button',
+      element: '[data-testid="item-search-add"], [data-tour="item-search-add"], .add-item-button',
       title: 'Enhanced Item Addition Process 🔍',
       description: 'Click "Add Item" to browse your complete library. Use search and category filters to quickly find what you need.',
       position: 'bottom',
@@ -706,7 +706,7 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
         // Check multiple fallback selectors
         const addButton = document.querySelector('[data-testid="item-search-add"]') ||
                           document.querySelector('[data-tour="item-search-add"]') ||
-                          document.querySelector('button:has-text("Add Item")') ||
+                          document.querySelector('.add-item-button') ||
                           document.querySelector('[data-testid="line-items-card"]');
         return !!addButton;
       }
@@ -1089,20 +1089,18 @@ export const CONTEXTUAL_HELP_TOUR: TourConfig = {
       showButtons: ['next', 'close']
     },
     {
-      id: 'help-tooltips',
-      element: '[data-tour="help-tooltip"]',
-      title: 'Interactive Tooltips',
-      description: 'Hover over or click these help icons to get detailed explanations about specific features and best practices.',
+      id: 'help-system-overview',
+      title: 'Help System Overview 📚',
+      description: 'You can access help from the Help & Tours button in the header, or look for contextual help icons throughout the interface.',
       position: 'bottom',
       align: 'center',
       showButtons: ['next', 'previous', 'close']
     },
     {
-      id: 'help-buttons',
-      element: '[data-tour="help-button"]',
-      title: 'Help Buttons',
-      description: 'Click these help buttons to launch specific mini-tours or get detailed guidance for complex workflows.',
-      position: 'left',
+      id: 'help-completion',
+      title: 'Help is Always Available ✨',
+      description: 'Remember, you can replay any tour or access help at any time. Just click the Help & Tours button in the header!',
+      position: 'bottom',
       align: 'center',
       showButtons: ['previous', 'close']
     }

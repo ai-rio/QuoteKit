@@ -71,6 +71,22 @@ export class FormbricksErrorHandler {
         return; // Completely suppress the error
       }
 
+      // Check for hidden fields not enabled error (configuration issue)
+      const isHiddenFieldsError = this.isFormbricksHiddenFieldsError(args);
+      if (isHiddenFieldsError) {
+        this.suppressedErrors++;
+        console.debug(`🔇 [FormbricksErrorHandler] Suppressed hidden fields error #${this.suppressedErrors}`);
+        
+        // Only show detailed message on first suppression of this error type
+        if (this.suppressedErrors === 1) {
+          console.warn('⚙️ Formbricks survey configuration: Hidden fields are not enabled');
+          console.warn('💡 This is handled gracefully - surveys will work without hidden fields');
+          console.warn('🔧 To enable hidden fields, update your Formbricks survey settings');
+        }
+        
+        return; // Completely suppress the error
+      }
+
       // Check for Formbricks empty error patterns
       const isExactEmptyError = this.isFormbricksEmptyError(args);
 
@@ -139,6 +155,16 @@ export class FormbricksErrorHandler {
       typeof args[0] === 'string' && 
       (args[0].includes('userId is already set in formbricks') ||
        args[0].includes('please first call the logout function'));
+  }
+
+  /**
+   * Check if this is the hidden fields not enabled error (configuration issue)
+   */
+  private isFormbricksHiddenFieldsError(args: any[]): boolean {
+    return args.length >= 1 && 
+      typeof args[0] === 'string' && 
+      (args[0].includes('Hidden fields are not enabled for this survey') ||
+       args[0].includes('Hidden fields are not enabled'));
   }
 
   /**

@@ -26,9 +26,11 @@ export function OnboardingManager({
     startTour,
     completeTour,
     skipTour,
+    exitTour,
     activeTour,
     shouldShowTour,
-    getTourProgress
+    getTourProgress,
+    clearPhantomActiveTour
   } = useOnboarding()
 
   // Import the simplified tour starter following official Driver.js patterns
@@ -107,6 +109,29 @@ export function OnboardingManager({
           if (debugMode) {
             console.log(`🧹 Tour cleanup completed: ${completedTourId}`)
           }
+          // FIXED: Clear activeTour state when tour is destroyed (close button pressed)
+          // This ensures the onboarding context knows the tour is no longer active
+          try {
+            if (activeTour?.tourId === completedTourId) {
+              console.log(`🎯 OnboardingManager: Tour ${completedTourId} was closed/destroyed - clearing context state`)
+              // Call exitTour to properly clear the onboarding context state
+              exitTour().catch(error => {
+                console.error(`Error calling exitTour for ${completedTourId}:`, error)
+                // Fallback: Force clear the state if exitTour fails
+                console.log(`🔧 OnboardingManager: Attempting fallback state clear via clearPhantomActiveTour`)
+                try {
+                  // Use the clearPhantomActiveTour method as a fallback
+                  clearPhantomActiveTour?.()
+                } catch (fallbackError) {
+                  console.error(`Error in fallback state clear:`, fallbackError)
+                }
+              })
+            } else if (debugMode) {
+              console.log(`🔍 OnboardingManager: Tour ${completedTourId} destroyed but not current active tour (activeTour: ${activeTour?.tourId})`)
+            }
+          } catch (error) {
+            console.error(`Error clearing tour state for ${completedTourId}:`, error)
+          }
         }
       }, {
         retryAttempts: 2 // Retry if elements not found initially
@@ -115,7 +140,7 @@ export function OnboardingManager({
     } catch (error) {
       console.error(`Error starting tour ${tourId}:`, error)
     }
-  }, [simpleTourStarter, handleTourComplete, handleTourSkip, debugMode])
+  }, [simpleTourStarter, handleTourComplete, handleTourSkip, debugMode, activeTour, exitTour, clearPhantomActiveTour])
 
   // Auto-start page-appropriate tours using simplified logic
   useEffect(() => {
@@ -256,6 +281,20 @@ export function OnboardingManager({
       }
     }
   }, [debugMode, activeTour?.tourId, simpleTourStarter])
+
+  // Watch for activeTour changes and start visual tour (for dropdown/manual starts)
+  useEffect(() => {
+    if (activeTour?.tourId && simpleTourStarter && !simpleTourStarter.isTourActive()) {
+      if (debugMode) {
+        console.log(`🎯 OnboardingManager: Detected activeTour change, starting visual tour: ${activeTour.tourId}`)
+      }
+      
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        startSimpleTour(activeTour.tourId)
+      }, 300)
+    }
+  }, [activeTour?.tourId, simpleTourStarter, startSimpleTour, debugMode])
 
   // Cleanup on unmount
   useEffect(() => {
