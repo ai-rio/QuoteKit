@@ -89,6 +89,180 @@ export const PAGE_TOUR_MAP: Record<string, PageTourConfig> = {
   }
 }
 
+// First-time visit tracking for autoload behavior
+export interface FirstVisitTracker {
+  hasVisited: (pagePath: string) => boolean
+  markVisited: (pagePath: string) => void
+  shouldAutoloadTour: (pagePath: string) => boolean
+  clearVisitHistory: () => void
+}
+
+class LocalStorageFirstVisitTracker implements FirstVisitTracker {
+  private readonly STORAGE_KEY = 'quotekit_first_visits'
+
+  private getVisitHistory(): Record<string, string> {
+    if (typeof window === 'undefined') return {}
+    
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY)
+      return stored ? JSON.parse(stored) : {}
+    } catch (error) {
+      console.warn('Error reading first visits from localStorage:', error)
+      return {}
+    }
+  }
+
+  private setVisitHistory(visits: Record<string, string>): void {
+    if (typeof window === 'undefined') return
+    
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(visits))
+    } catch (error) {
+      console.warn('Error saving first visits to localStorage:', error)
+    }
+  }
+
+  hasVisited(pagePath: string): boolean {
+    const visits = this.getVisitHistory()
+    return pagePath in visits
+  }
+
+  markVisited(pagePath: string): void {
+    const visits = this.getVisitHistory()
+    visits[pagePath] = new Date().toISOString()
+    this.setVisitHistory(visits)
+    
+    console.log('🎯 FirstVisitTracker: Marked visited:', pagePath)
+  }
+
+  shouldAutoloadTour(pagePath: string): boolean {
+    // Only autoload on first visit to a page
+    const isFirstVisit = !this.hasVisited(pagePath)
+    const pageConfig = PAGE_TOUR_MAP[pagePath]
+    
+    console.log('🎯 FirstVisitTracker: Autoload check:', {
+      pagePath,
+      isFirstVisit,
+      hasDefaultTour: !!pageConfig?.defaultTour,
+      defaultTour: pageConfig?.defaultTour
+    })
+    
+    // Autoload if it's the first visit and the page has a default tour
+    return isFirstVisit && !!pageConfig?.defaultTour
+  }
+
+  clearVisitHistory(): void {
+    if (typeof window === 'undefined') return
+    
+    try {
+      localStorage.removeItem(this.STORAGE_KEY)
+      console.log('🎯 FirstVisitTracker: Cleared all visit history')
+    } catch (error) {
+      console.warn('Error clearing first visits from localStorage:', error)
+    }
+  }
+}
+
+// Export singleton instance
+export const firstVisitTracker: FirstVisitTracker = new LocalStorageFirstVisitTracker()
+
+// Helper function to handle tour autoloading
+export function handleTourAutoload(pagePath: string, startTour: (tourId: string) => Promise<void>): void {
+  // Normalize the path for consistent tracking
+  const normalizedPath = normalizePagePath(pagePath)
+  
+  if (firstVisitTracker.shouldAutoloadTour(normalizedPath)) {
+    const pageConfig = PAGE_TOUR_MAP[normalizedPath]
+    
+    if (pageConfig?.defaultTour) {
+      console.log('🎯 TourAutoload: Starting default tour for first visit:', {
+        pagePath: normalizedPath,
+        defaultTour: pageConfig.defaultTour
+      })
+      
+      // Mark as visited immediately to prevent double-loading
+      firstVisitTracker.markVisited(normalizedPath)
+      
+      // Start the default tour with a small delay to ensure page is fully loaded
+      setTimeout(() => {
+        startTour(pageConfig.defaultTour!)
+          .then(() => {
+            console.log('✅ TourAutoload: Successfully started default tour:', pageConfig.defaultTour)
+          })
+          .catch((error) => {
+            console.error('❌ TourAutoload: Failed to start default tour:', error)
+            // If tour fails to start, we don't want to block future attempts
+            // So we don't mark it as visited in this case
+          })
+      }, 1000) // 1 second delay to ensure page is stable
+    }
+  } else if (!firstVisitTracker.hasVisited(normalizedPath)) {
+    // Mark as visited even if no default tour, so we track the visit
+    firstVisitTracker.markVisited(normalizedPath)
+  }
+}
+
+// Normalize page paths for consistent tracking (handle dynamic routes)
+export function normalizePagePath(pagePath: string): string {
+  // Handle dynamic routes by normalizing them to their pattern
+  if (pagePath.startsWith('/quotes/') && pagePath !== '/quotes/new') {
+    if (pagePath.includes('/edit')) {
+      return '/quotes/[id]/edit'
+    } else {
+      return '/quotes/[id]'
+    }
+  }
+  
+  return pagePath
+}
+
+// Development utilities for testing first-time autoload behavior
+export const firstVisitUtils = {
+  // Reset all visit history (for testing)
+  resetAllVisits: () => firstVisitTracker.clearVisitHistory(),
+  
+  // Check if a page has been visited
+  hasVisited: (pagePath: string) => firstVisitTracker.hasVisited(normalizePagePath(pagePath)),
+  
+  // Manually mark a page as visited (for testing)
+  markVisited: (pagePath: string) => firstVisitTracker.markVisited(normalizePagePath(pagePath)),
+  
+  // Get all visited pages (for debugging)
+  getVisitHistory: () => {
+    if (typeof window === 'undefined') return {}
+    
+    try {
+      const stored = localStorage.getItem('quotekit_first_visits')
+      return stored ? JSON.parse(stored) : {}
+    } catch (error) {
+      console.warn('Error reading visit history:', error)
+      return {}
+    }
+  },
+  
+  // Check which page would autoload a tour
+  checkAutoload: (pagePath: string) => {
+    const normalizedPath = normalizePagePath(pagePath)
+    const pageConfig = PAGE_TOUR_MAP[normalizedPath]
+    const shouldAutoload = firstVisitTracker.shouldAutoloadTour(normalizedPath)
+    
+    return {
+      pagePath,
+      normalizedPath,
+      isFirstVisit: !firstVisitTracker.hasVisited(normalizedPath),
+      hasPageConfig: !!pageConfig,
+      defaultTour: pageConfig?.defaultTour,
+      shouldAutoload
+    }
+  }
+}
+
+// Make utilities available on window for easy console access during development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  // @ts-ignore - Development utility
+  window.firstVisitUtils = firstVisitUtils
+}
+
 /**
  * Page Tour Router Class
  */

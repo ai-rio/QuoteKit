@@ -142,10 +142,10 @@ export function OnboardingManager({
     }
   }, [simpleTourStarter, handleTourComplete, handleTourSkip, debugMode, activeTour, exitTour, clearPhantomActiveTour])
 
-  // Auto-start page-appropriate tours using simplified logic
+  // Auto-start page-appropriate tours using first-time visit logic
   useEffect(() => {
     if (debugMode) {
-      console.log('🎯 OnboardingManager: Auto-start check (simplified approach)')
+      console.log('🎯 OnboardingManager: Auto-start check (with first-time visit logic)')
       console.log('  autoStartWelcome:', autoStartWelcome)
       console.log('  user?.id:', user?.id)
       console.log('  tierLoading:', tierLoading)
@@ -156,102 +156,108 @@ export function OnboardingManager({
       console.log('  window?.location?.pathname:', typeof window !== 'undefined' ? window.location.pathname : 'SSR')
     }
     
-    // Import page tour router dynamically to avoid SSR issues
+    // Import page tour router and first-time visit tracker dynamically to avoid SSR issues
     if (typeof window !== 'undefined' && simpleTourStarter) {
-      import('@/libs/onboarding/page-tour-router').then(({ pageTourRouter }) => {
-        const recommendedTour = pageTourRouter.getPageWelcomeTour()
-        const isAppRoute = pageTourRouter.isAppRoute()
-        
-        if (debugMode) {
-          console.log('🗺️ PageTourRouter: Current page analysis:')
-          console.log('  isAppRoute:', isAppRoute)
-          console.log('  recommendedTour:', recommendedTour)
-          console.log('  canStartTour:', recommendedTour ? pageTourRouter.canStartTour(recommendedTour) : false)
-          console.log('  availableTours:', pageTourRouter.getCurrentPageTours())
-        }
-        
-        // Validate that the recommended tour actually exists
-        let validTour = recommendedTour
-        if (recommendedTour) {
-          const tourConfig = getTourConfig(recommendedTour)
-          if (!tourConfig) {
-            console.warn(`⚠️ Recommended tour "${recommendedTour}" not found in TOUR_CONFIGS, falling back to welcome`)
-            validTour = 'welcome'
-          }
-        }
-        
+      import('@/libs/onboarding/page-tour-router').then(({ pageTourRouter, handleTourAutoload }) => {
+        // Basic checks for user authentication and readiness
         if (
           autoStartWelcome &&
           user?.id &&
           !tierLoading &&
-          !isActive &&
-          isAppRoute &&
-          validTour &&
-          shouldShowTour(validTour) &&
-          pageTourRouter.canStartTour(validTour)
+          !isActive
         ) {
-          // FIXED LOGIC: Check if this specific tour has been completed
-          // Following official Driver.js best practices - each tour is independent
-          const isSpecificTourCompleted = isTourCompleted(validTour)
+          const currentPath = window.location.pathname
           
           if (debugMode) {
-            console.log('🎯 OnboardingManager: Tour-specific checks (following official driver.js patterns):')
-            console.log('  validTour:', validTour)
-            console.log('  isSpecificTourCompleted:', isSpecificTourCompleted)
+            console.log('🎯 OnboardingManager: Checking first-time autoload for path:', currentPath)
           }
           
-          // Start tour if this specific tour hasn't been completed
-          // This follows the official Driver.js documentation pattern:
-          // - Each tour is independent
-          // - Tours can be started based on page context
-          // - No complex inter-tour dependencies
-          if (!isSpecificTourCompleted) {
-            if (debugMode) {
-              console.log(`🚀 OnboardingManager: Starting ${validTour} tour using official driver.js pattern`)
-            }
-            
-            // Clear any existing timeout to prevent double starts
-            if (tourStartTimeoutRef.current) {
-              clearTimeout(tourStartTimeoutRef.current)
-            }
-            
-            // Start tour with delay to ensure page is fully loaded
-            // This follows official Driver.js best practice for SPA navigation
-            tourStartTimeoutRef.current = setTimeout(() => {
+          // Use the new first-time autoload handler
+          try {
+            handleTourAutoload(currentPath, async (tourId: string) => {
               if (debugMode) {
-                console.log(`🎬 OnboardingManager: Executing ${validTour} tour with official driver.js`)
+                console.log('🚀 OnboardingManager: First-time autoload triggered for tour:', tourId)
               }
               
-              try {
-                startSimpleTour(validTour)
-              } catch (error) {
-                console.error(`Error starting ${validTour} tour:`, error)
+              // Validate the tour exists and user can access it
+              const tourConfig = getTourConfig(tourId)
+              if (!tourConfig) {
+                console.error(`First-time autoload failed: Tour "${tourId}" not found in TOUR_CONFIGS`)
+                return
               }
-            }, 1500) // Reduced delay - official driver.js handles timing better
+              
+              // Check if user should see this tour (tier-based filtering, etc.)
+              if (!shouldShowTour(tourId)) {
+                if (debugMode) {
+                  console.log('🚫 OnboardingManager: First-time autoload blocked - user should not see tour:', tourId)
+                }
+                return
+              }
+              
+              // Start the context tour first (this updates the state)
+              await startTour(tourId)
+              
+              // Then start the visual tour
+              setTimeout(() => {
+                startSimpleTour(tourId)
+              }, 500) // Small delay to ensure context is updated
+            })
+          } catch (error) {
+            console.error('Error in first-time autoload:', error)
+            
+            // Fallback to original logic if first-time tracking fails
+            if (debugMode) {
+              console.log('🔄 OnboardingManager: Falling back to original autoload logic')
+            }
+            
+            const recommendedTour = pageTourRouter.getPageWelcomeTour()
+            const isAppRoute = pageTourRouter.isAppRoute()
+            
+            if (
+              isAppRoute &&
+              recommendedTour &&
+              shouldShowTour(recommendedTour) &&
+              pageTourRouter.canStartTour(recommendedTour)
+            ) {
+              const isSpecificTourCompleted = isTourCompleted(recommendedTour)
+              
+              if (!isSpecificTourCompleted) {
+                if (debugMode) {
+                  console.log(`🚀 OnboardingManager: Fallback starting ${recommendedTour} tour`)
+                }
+                
+                // Clear any existing timeout to prevent double starts
+                if (tourStartTimeoutRef.current) {
+                  clearTimeout(tourStartTimeoutRef.current)
+                }
+                
+                tourStartTimeoutRef.current = setTimeout(() => {
+                  try {
+                    startSimpleTour(recommendedTour)
+                  } catch (error) {
+                    console.error(`Error starting fallback ${recommendedTour} tour:`, error)
+                  }
+                }, 1500)
 
-            return () => {
-              if (tourStartTimeoutRef.current) {
-                clearTimeout(tourStartTimeoutRef.current)
+                return () => {
+                  if (tourStartTimeoutRef.current) {
+                    clearTimeout(tourStartTimeoutRef.current)
+                  }
+                }
               }
             }
-          } else if (debugMode) {
-            console.log('❌ OnboardingManager: Specific tour already completed, not starting')
           }
         } else if (debugMode) {
-          console.log('❌ OnboardingManager: Conditions not met for auto-start')
+          console.log('❌ OnboardingManager: Conditions not met for first-time autoload')
           console.log('  Missing conditions:', {
             autoStartWelcome,
             hasUserId: !!user?.id,
             tierLoaded: !tierLoading,
-            notActive: !isActive,
-            isAppRoute,
-            hasRecommendedTour: !!validTour,
-            shouldShow: validTour ? shouldShowTour(validTour) : false,
-            canStart: validTour ? pageTourRouter.canStartTour(validTour) : false
+            notActive: !isActive
           })
         }
       }).catch(error => {
-        console.error('Error loading page tour router:', error)
+        console.error('Error loading page tour router or first-time tracker:', error)
       })
     }
   }, [
