@@ -1,7 +1,6 @@
-# Fly.io SECURE Configuration for QuoteKit
-# 🔒 SECURITY HARDENED - All secrets managed via `fly secrets set`
-# ✅ Zero hardcoded credentials
-# ✅ Optimized for stability, performance, and security
+# Fly.io Optimized Configuration for QuoteKit
+# Fixes: OOM kills, load balancing issues, health check failures
+# Optimized for: Stability, Performance, Cost Efficiency
 
 app = "quotekit-prelaunch-test"
 primary_region = "iad"  # Washington, D.C. - chosen for low latency to Supabase
@@ -12,7 +11,6 @@ kill_timeout = "5s"
   auto_rollback = true
 
 [build]
-  # 🔒 SECURITY: Only public keys in build args - all secrets managed via `fly secrets`
   [build.args]
     NEXT_PUBLIC_SUPABASE_URL = "https://bujajubcktlpblewxtel.supabase.co"
     NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NDMzNTQsImV4cCI6MjA3MDQxOTM1NH0.oLzfozz8_bYJrarlZyHJG3IM54AKLoIWI5D97TFwjH0"
@@ -20,6 +18,16 @@ kill_timeout = "5s"
     NEXT_PUBLIC_POSTHOG_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
     NEXT_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
     NEXT_PUBLIC_SITE_URL = "https://quotekit-prelaunch-test.fly.dev"
+    SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDg0MzM1NCwiZXhwIjoyMDcwNDE5MzU0fQ.pIsMT2ohSRtkLDWS57GGpQYQOL5SVtUd8gDyNtdKjS8"
+    STRIPE_SECRET_KEY = "sk_test_51PCRaPGgBK1ooXYFpk09Mu8FvgQXshbm4XbpP0DZZ2crzJOabfqA60dUSQfg8yXWcs8IarbP8QAhQe4fhcwXp2M200b5lTZLuH"
+    STRIPE_WEBHOOK_SECRET = "whsec_391ee7fb05561e9f61817d6a97d7fc7a673be11ea853af57fa144b11e551c2f7"
+    RESEND_API_KEY = "re_3VoudbyM_3L7J7KjqXuzFr9SiKRAXXBDA"
+    POSTHOG_PROJECT_API_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+    POSTHOG_PROJECT_ID = "205847"
+    POSTHOG_PERSONAL_API_KEY = "phx_fcpbWf847UQg1AOBNVuKL8pT3iiXGHit0wM8AHYYc88Am2E"
+    SUPABASE_DB_PASSWORD = "Luliflora1.@"
+    GOOGLE_CLIENT_ID = "768508478306-0g344icg3jbfvuv6tg4b4s394cekk3l0.apps.googleusercontent.com"
+    GOOGLE_CLIENT_SECRET = "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"
 
 [env]
   # Application environment
@@ -37,28 +45,13 @@ kill_timeout = "5s"
   SKIP_INSTALL_DEPS = "false"
   NPM_CONFIG_PRODUCTION = "false"
   
-  # Public environment variables (safe to expose)
+  # Public environment variables (needed at build time)
   NEXT_PUBLIC_SUPABASE_URL = "https://bujajubcktlpblewxtel.supabase.co"
   NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4NDMzNTQsImV4cCI6MjA3MDQxOTM1NH0.oLzfozz8_bYJrarlZyHJG3IM54AKLoIWI5D97TFwjH0"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_51PCRaPGgBK1ooXYFCVdD8Yr2O6moR1s5QzFRWopBmlsPBWHR2bLMvZ400elEJ3rzux9DNpnYadXJXnp0cqX7jmhv00c20JEgSB"
   NEXT_PUBLIC_POSTHOG_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
   NEXT_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
   NEXT_PUBLIC_SITE_URL = "https://quotekit-prelaunch-test.fly.dev"
-
-# 🔒 CRITICAL SECURITY NOTICE:
-# ALL SENSITIVE SECRETS MUST BE SET VIA: `fly secrets set KEY=VALUE`
-#
-# Required secrets to set:
-# fly secrets set SUPABASE_SERVICE_ROLE_KEY="your_service_role_key"
-# fly secrets set STRIPE_SECRET_KEY="your_stripe_secret_key"
-# fly secrets set STRIPE_WEBHOOK_SECRET="your_webhook_secret"
-# fly secrets set RESEND_API_KEY="your_resend_api_key"
-# fly secrets set POSTHOG_PROJECT_API_KEY="your_posthog_project_api_key"
-# fly secrets set POSTHOG_PROJECT_ID="your_project_id"
-# fly secrets set POSTHOG_PERSONAL_API_KEY="your_personal_api_key"
-# fly secrets set SUPABASE_DB_PASSWORD="your_db_password"
-# fly secrets set GOOGLE_CLIENT_ID="your_google_client_id"
-# fly secrets set GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
 [deploy]
   # Deployment strategy - OPTIMIZED
@@ -117,15 +110,24 @@ kill_timeout = "5s"
   NEXT_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
   NEXT_PUBLIC_SITE_URL = "https://quotekit-prelaunch-test.fly.dev"
   
-  # 🔒 SECURITY: All server-side secrets are now managed via `fly secrets`
-  # No hardcoded secrets in build configuration
+  # Server-side secrets needed for build (but will be overridden at runtime by secrets)
+  SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amFqdWJja3RscGJsZXd4dGVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDg0MzM1NCwiZXhwIjoyMDcwNDE5MzU0fQ.pIsMT2ohSRtkLDWS57GGpQYQOL5SVtUd8gDyNtdKjS8"
+  STRIPE_SECRET_KEY = "sk_test_51PCRaPGgBK1ooXYFpk09Mu8FvgQXshbm4XbpP0DZZ2crzJOabfqA60dUSQfg8yXWcs8IarbP8QAhQe4fhcwXp2M200b5lTZLuH"
+  STRIPE_WEBHOOK_SECRET = "whsec_391ee7fb05561e9f61817d6a97d7fc7a673be11ea853af57fa144b11e551c2f7"
+  RESEND_API_KEY = "re_3VoudbyM_3L7J7KjqXuzFr9SiKRAXXBDA"
+  POSTHOG_PROJECT_API_KEY = "phc_aTMaOPKid2gfZUqqSs2JjHQEBLOFBhQRJke8JbWF8ya"
+  POSTHOG_PROJECT_ID = "your-project-id"
+  POSTHOG_PERSONAL_API_KEY = "your-personal-api-key"
+  SUPABASE_DB_PASSWORD = "Luliflora1.@"
+  GOOGLE_CLIENT_ID = "768508478306-0g344icg3jbfvuv6tg4b4s394cekk3l0.apps.googleusercontent.com"
+  GOOGLE_CLIENT_SECRET = "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"
 
 # Security and network configuration
 [network]
   # Enable IPv6
   ipv6 = true
 
-# ENHANCED SECURITY HEADERS
+# SIMPLIFIED HEADERS - Removed complex CSP that might cause issues
 [[headers]]
   for = "/*"
   
@@ -134,33 +136,4 @@ kill_timeout = "5s"
     X-Robots-Tag = "noindex, nofollow"  # Prevent search engine indexing
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    
-    # Content Security Policy - Enhanced
-    Content-Security-Policy = """
-      default-src 'self';
-      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://m.stripe.network;
-      style-src 'self' 'unsafe-inline';
-      connect-src 'self' 
-                  https://api.stripe.com 
-                  https://m.stripe.network 
-                  https://hcaptcha.com 
-                  https://*.hcaptcha.com 
-                  https://vitals.vercel-insights.com 
-                  wss://ws-us3.pusher.com
-                  https://*.supabase.co
-                  https://app.posthog.com
-                  https://us.i.posthog.com
-                  data:;
-      img-src 'self' data: https: blob:;
-      font-src 'self' data:;
-      media-src 'self' blob:;
-      worker-src 'self' blob:;
-      frame-src https://js.stripe.com https://hooks.stripe.com;
-      base-uri 'self';
-      form-action 'self';
-      frame-ancestors 'none';
-    """

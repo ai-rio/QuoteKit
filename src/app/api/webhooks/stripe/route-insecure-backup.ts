@@ -1,111 +1,10 @@
-import crypto from "crypto";
-import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 
 import { upsertUserSubscription } from '@/features/account/controllers/upsert-user-subscription'
 import { handleBillingEdgeCase } from '@/features/billing/controllers/edge-case-coordinator'
 import { createStripeAdminClient, stripeAdmin } from '@/libs/stripe/stripe-admin'
-import { supabaseAdminClient } from "@/libs/supabase/supabase-admin";
-
-// 🔒 SECURITY: Webhook security constants
-const WEBHOOK_TIMEOUT_MS = 30000; // 30 second timeout
-const SIGNATURE_TOLERANCE_MS = 300000; // 5 minutes tolerance for timestamp
-const MAX_BODY_SIZE = 1024 * 1024; // 1MB max body size
-
-// 🔒 SECURITY: Rate limiting for webhook endpoint
-const webhookAttempts = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute window
-const MAX_WEBHOOK_ATTEMPTS = 100; // Max 100 webhooks per minute per IP
-
-function rateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const window = webhookAttempts.get(identifier);
-
-  if (!window || now > window.resetTime) {
-    webhookAttempts.set(identifier, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW_MS,
-    });
-    return true;
-  }
-
-  if (window.count >= MAX_WEBHOOK_ATTEMPTS) {
-    return false;
-  }
-
-  window.count++;
-  return true;
-}
-
-// 🔒 SECURITY: Enhanced signature verification with timestamp validation
-function verifyWebhookSignature(
-  body: string,
-  signature: string,
-  webhookSecret: string,
-  tolerance: number = SIGNATURE_TOLERANCE_MS,
-): { valid: boolean; timestamp?: number; error?: string } {
-  try {
-    // Parse signature header
-    const elements = signature.split(",");
-    let timestamp: number | undefined;
-    let signatures: string[] = [];
-
-    for (const element of elements) {
-      const [key, value] = element.split("=");
-      if (key === "t") {
-        timestamp = parseInt(value, 10);
-      } else if (key === "v1") {
-        signatures.push(value);
-      }
-    }
-
-    if (!timestamp) {
-      return { valid: false, error: "No timestamp found in signature" };
-    }
-
-    // 🔒 SECURITY: Check timestamp tolerance to prevent replay attacks
-    const timestampDiff = Math.abs(Date.now() - (timestamp * 1000));
-    if (timestampDiff > tolerance) {
-      return {
-        valid: false,
-        timestamp,
-        error:
-          `Timestamp outside tolerance window: ${timestampDiff}ms > ${tolerance}ms`,
-      };
-    }
-
-    // 🔒 SECURITY: Verify signature using constant-time comparison
-    const payload = `${timestamp}.${body}`;
-    const expectedSignature = crypto
-      .createHmac("sha256", webhookSecret)
-      .update(payload)
-      .digest("hex");
-
-    const signatureValid = signatures.some((sig) =>
-      crypto.timingSafeEqual(
-        Buffer.from(expectedSignature, "hex"),
-        Buffer.from(sig, "hex"),
-      )
-    );
-
-    if (!signatureValid) {
-      return {
-        valid: false,
-        timestamp,
-        error: "Signature verification failed",
-      };
-    }
-
-    return { valid: true, timestamp };
-  } catch (error) {
-    return {
-      valid: false,
-      error: `Signature verification error: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
-    };
-  }
-}
+import { supabaseAdminClient } from '@/libs/supabase/supabase-admin'
 
 // Helper function to convert Unix timestamp to Date
 const toDateTime = (secs: number): Date => {
@@ -115,321 +14,253 @@ const toDateTime = (secs: number): Date => {
 };
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-  const requestId = crypto.randomUUID();
-
-  console.log(
-    `🔒 [SECURE-WEBHOOK:${requestId}] ===== WEBHOOK REQUEST RECEIVED =====`,
-  );
-
+  console.log(`🚀 [WEBHOOK] ===== STRIPE WEBHOOK REQUEST RECEIVED =====`)
+  
   try {
-    // 🔒 SECURITY: Get client IP for rate limiting and audit
-    const clientIP = request.headers.get("x-forwarded-for") ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-
-    // 🔒 SECURITY: Rate limiting
-    if (!rateLimit(clientIP)) {
-      console.error(
-        `🛡️ [SECURE-WEBHOOK:${requestId}] Rate limit exceeded for IP: ${clientIP}`,
-      );
-      return NextResponse.json({ error: "Rate limit exceeded" }, {
-        status: 429,
-      });
-    }
-
-    // 🔒 SECURITY: Body size check
-    const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
-      console.error(
-        `🛡️ [SECURE-WEBHOOK:${requestId}] Body size too large: ${contentLength}`,
-      );
-      return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-    }
-
-    // STEP 1: Extract and validate request data
-    console.log(`📥 [STEP 1:${requestId}] Extracting request data...`);
-    let body: string;
-    let signature: string;
-
+    // STEP 1: Extract request body and signature
+    console.log(`📥 [STEP 1] Extracting request body and signature...`)
+    let body, signature
     try {
-      // 🔒 SECURITY: Set timeout for body extraction
-      const timeout = new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Request timeout")),
-          WEBHOOK_TIMEOUT_MS,
-        )
-      );
-
-      body = await Promise.race([request.text(), timeout]) as string;
-      signature = request.headers.get("stripe-signature") || "";
-
-      if (!signature) {
-        console.error(
-          `🛡️ [SECURE-WEBHOOK:${requestId}] Missing Stripe signature`,
-        );
-        return NextResponse.json({ error: "Missing signature" }, {
-          status: 400,
-        });
-      }
-
-      console.log(
-        `✅ [STEP 1:${requestId}] Request data extracted successfully`,
-      );
+      body = await request.text()
+      signature = request.headers.get('stripe-signature')
+      
+      console.log(`✅ [STEP 1 SUCCESS] Request data extracted:`, {
+        bodyLength: body.length,
+        hasSignature: !!signature,
+        signaturePrefix: signature ? signature.substring(0, 20) + '...' : 'none'
+      })
     } catch (extractError) {
-      console.error(
-        `💥 [STEP 1:${requestId}] Request extraction failed:`,
-        extractError,
-      );
-      return NextResponse.json({ error: "Failed to read request" }, {
-        status: 400,
-      });
+      console.error(`💥 [STEP 1 CRITICAL ERROR] Failed to extract request data:`, {
+        error: extractError,
+        message: extractError instanceof Error ? extractError.message : 'Unknown extraction error'
+      })
+      return NextResponse.json({ error: 'Failed to read request' }, { status: 400 })
     }
 
-    // STEP 2: Get webhook secret from environment (NOT database for security)
-    console.log(
-      `🔑 [STEP 2:${requestId}] Getting webhook secret from environment...`,
-    );
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!webhookSecret) {
-      console.error(
-        `💥 [STEP 2:${requestId}] Webhook secret not configured in environment`,
-      );
-      return NextResponse.json({ error: "Webhook not configured" }, {
-        status: 500,
-      });
+    if (!signature) {
+      console.error(`💥 [STEP 1 CRITICAL ERROR] Missing Stripe signature`)
+      return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
     }
 
-    // STEP 3: 🔒 SECURITY - Enhanced signature verification with timing attack protection
-    console.log(
-      `🔐 [STEP 3:${requestId}] Performing enhanced signature verification...`,
-    );
-    const verificationResult = verifyWebhookSignature(
-      body,
-      signature,
-      webhookSecret,
-    );
-
-    if (!verificationResult.valid) {
-      console.error(`🛡️ [STEP 3:${requestId}] Signature verification failed:`, {
-        error: verificationResult.error,
-        timestamp: verificationResult.timestamp,
-        clientIP,
-      });
-
-      // 🔒 SECURITY: Log potential attack attempt
-      await logSecurityEvent({
-        type: "webhook_signature_failure",
-        ip: clientIP,
-        error: verificationResult.error,
-        timestamp: new Date().toISOString(),
-        requestId,
-      });
-
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-    }
-
-    console.log(`✅ [STEP 3:${requestId}] Signature verified successfully`);
-
-    // STEP 4: Parse and validate event
-    let event: Stripe.Event;
+    // STEP 2: Get Stripe configuration for webhook secret
+    console.log(`🔧 [STEP 2] Getting Stripe configuration for webhook verification...`)
+    let configData, config, stripeConfig, stripe
     try {
-      event = JSON.parse(body) as Stripe.Event;
+      const configResult = await supabaseAdminClient
+        .from('admin_settings')
+        .select('value')
+        .eq('key', 'stripe_config')
+        .single()
 
-      // 🔒 SECURITY: Basic event validation
-      if (!event.id || !event.type || !event.data) {
-        throw new Error("Invalid event structure");
+      configData = configResult.data
+      if (configResult.error) {
+        console.error(`💥 [STEP 2 CRITICAL ERROR] Failed to get Stripe config from database:`, {
+          error: configResult.error,
+          message: configResult.error.message,
+          code: configResult.error.code,
+          details: configResult.error.details,
+          hint: configResult.error.hint
+        })
+        return NextResponse.json({ error: 'Webhook configuration error' }, { status: 400 })
       }
 
-      console.log(`✅ [STEP 4:${requestId}] Event parsed:`, {
+      config = configData?.value as any;
+      if (!config?.webhook_secret) {
+        console.error(`💥 [STEP 2 CRITICAL ERROR] Webhook secret not configured in database`)
+        return NextResponse.json({ error: 'Webhook not configured' }, { status: 400 })
+      }
+
+      stripeConfig = configData?.value as any
+      stripe = createStripeAdminClient(stripeConfig)
+      
+      console.log(`✅ [STEP 2 SUCCESS] Stripe configuration loaded and client created`)
+      
+    } catch (configError) {
+      console.error(`💥 [STEP 2 CRITICAL ERROR] Stripe configuration setup failed:`, {
+        error: configError,
+        message: configError instanceof Error ? configError.message : 'Unknown config error',
+        stack: configError instanceof Error ? configError.stack : undefined
+      })
+      return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
+    }
+
+    // STEP 3: Verify webhook signature
+    console.log(`🔐 [STEP 3] Verifying webhook signature...`)
+    let event: Stripe.Event
+    try {
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        config.webhook_secret
+      )
+      
+      console.log(`✅ [STEP 3 SUCCESS] Webhook signature verified:`, {
         eventId: event.id,
         eventType: event.type,
         created: event.created,
-      });
-    } catch (parseError) {
-      console.error(
-        `💥 [STEP 4:${requestId}] Event parsing failed:`,
-        parseError,
-      );
-      return NextResponse.json({ error: "Invalid event data" }, {
-        status: 400,
-      });
+        livemode: event.livemode
+      })
+      
+    } catch (signatureError: any) {
+      console.error(`💥 [STEP 3 CRITICAL ERROR] Webhook signature verification failed:`, {
+        error: signatureError,
+        message: signatureError.message,
+        type: signatureError.type,
+        stack: signatureError.stack,
+        signatureProvided: !!signature,
+        webhookSecretConfigured: !!config.webhook_secret
+      })
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    // STEP 5: 🔒 Enhanced idempotency check with race condition protection
-    console.log(`🔄 [STEP 5:${requestId}] Checking event idempotency...`);
+    // STEP 4: Enhanced idempotency check
+    console.log(`🔄 [STEP 4] Checking for duplicate event processing...`)
     try {
-      const { data: existingEvent, error: idempotencyError } =
-        await supabaseAdminClient
-          .from("stripe_webhook_events")
-          .select("processed, processed_at, processing_started_at")
-          .eq("stripe_event_id", event.id)
-          .single();
-
-      if (idempotencyError && idempotencyError.code !== "PGRST116") {
-        throw idempotencyError;
-      }
+      const { data: existingEvent } = await supabaseAdminClient
+        .from('stripe_webhook_events')
+        .select('processed, processed_at')
+        .eq('stripe_event_id', event.id)
+        .single()
 
       if (existingEvent?.processed) {
-        console.log(
-          `ℹ️ [STEP 5:${requestId}] Event already processed at ${existingEvent.processed_at}`,
-        );
-        return NextResponse.json({
-          received: true,
-          message: "Event already processed",
-        });
+        console.log(`ℹ️ [STEP 4 INFO] Event ${event.id} already processed at ${existingEvent.processed_at}`)
+        return NextResponse.json({ received: true, message: 'Event already processed' })
       }
-
-      // 🔒 SECURITY: Check if event is currently being processed (race condition protection)
-      if (existingEvent?.processing_started_at) {
-        const processingAge = Date.now() -
-          new Date(existingEvent.processing_started_at).getTime();
-        if (processingAge < 300000) { // 5 minutes processing window
-          console.log(
-            `⏳ [STEP 5:${requestId}] Event currently being processed`,
-          );
-          return NextResponse.json({
-            received: true,
-            message: "Event being processed",
-          });
-        }
-      }
-
-      console.log(
-        `✅ [STEP 5:${requestId}] Event is new and ready for processing`,
-      );
+      
+      console.log(`✅ [STEP 4 SUCCESS] Event ${event.id} is new, proceeding with processing`)
+      
     } catch (idempotencyError) {
-      console.error(
-        `⚠️ [STEP 5:${requestId}] Idempotency check failed:`,
-        idempotencyError,
-      );
-      // Continue processing - better to process twice than miss an event
+      console.error(`⚠️ [STEP 4 WARNING] Idempotency check failed (proceeding anyway):`, {
+        eventId: event.id,
+        error: idempotencyError,
+        message: idempotencyError instanceof Error ? idempotencyError.message : 'Unknown idempotency error'
+      })
+      // Continue processing even if idempotency check fails
     }
 
-    // STEP 6: Record processing start with atomic update
-    console.log(
-      `📝 [STEP 6:${requestId}] Recording webhook processing start...`,
-    );
+    // STEP 5: Log the webhook event for debugging and idempotency
+    console.log(`📝 [STEP 5] Logging webhook event: ${event.type} (${event.id})`)
     try {
       await supabaseAdminClient
-        .from("stripe_webhook_events")
+        .from('stripe_webhook_events')
         .upsert({
           stripe_event_id: event.id,
           event_type: event.type,
           processed: false,
-          processing_started_at: new Date().toISOString(),
           data: event.data as any,
-          created_at: new Date().toISOString(),
-          request_id: requestId,
-          client_ip: clientIP,
+          created_at: new Date().toISOString()
         }, {
-          onConflict: "stripe_event_id",
-          ignoreDuplicates: false,
-        });
-
-      console.log(`✅ [STEP 6:${requestId}] Webhook processing start recorded`);
+          onConflict: 'stripe_event_id',
+          ignoreDuplicates: false
+        })
+        
+      console.log(`✅ [STEP 5 SUCCESS] Webhook event logged successfully`)
+      
     } catch (logError) {
-      console.error(
-        `💥 [STEP 6:${requestId}] Failed to log webhook start:`,
-        logError,
-      );
-      // Continue processing - logging failure shouldn't stop webhook processing
+      console.error(`💥 [STEP 5 CRITICAL ERROR] Failed to log webhook event:`, {
+        eventId: event.id,
+        eventType: event.type,
+        error: logError,
+        message: logError instanceof Error ? logError.message : 'Unknown logging error',
+        stack: logError instanceof Error ? logError.stack : undefined
+      })
+      return NextResponse.json({ error: 'Failed to log event' }, { status: 500 })
     }
 
-    // STEP 7: Process webhook with enhanced error handling
-    console.log(`⚙️ [STEP 7:${requestId}] Processing webhook event...`);
-    let processingResult: { success: boolean; error?: string } = {
-      success: false,
-    };
-
+    // STEP 6: Process webhook event with retry logic
+    console.log(`⚙️ [STEP 6] Processing webhook event with retry logic...`)
+    let processingResult: { success: boolean; error?: string } = { success: false }
     try {
       processingResult = await processWebhookEventWithRetry(event, 3)
+      
+      if (processingResult.success) {
+        console.log(`✅ [STEP 6 SUCCESS] Webhook event processed successfully`)
+      } else {
+        console.error(`💥 [STEP 6 ERROR] Webhook event processing failed:`, {
+          eventId: event.id,
+          eventType: event.type,
+          error: processingResult.error
+        })
+      }
+      
     } catch (processingError) {
-      console.error(
-        `💥 [STEP 7:${requestId}] Webhook processing failed:`,
-        processingError,
-      );
-      processingResult = {
-        success: false,
-        error: processingError instanceof Error
-          ? processingError.message
-          : "Unknown error",
-      };
+      console.error(`💥 [STEP 6 CRITICAL ERROR] Final webhook processing failure:`, {
+        eventId: event.id,
+        eventType: event.type,
+        error: processingError,
+        message: processingError instanceof Error ? processingError.message : 'Unknown processing error',
+        stack: processingError instanceof Error ? processingError.stack : undefined
+      })
+      processingResult = { 
+        success: false, 
+        error: processingError instanceof Error ? processingError.message : 'Unknown processing error' 
+      }
     }
 
-    // STEP 8: Update processing status atomically
-    console.log(`💾 [STEP 8:${requestId}] Updating processing status...`);
+    // STEP 7: Update event processing status
+    console.log(`💾 [STEP 7] Updating event processing status...`)
     try {
       await supabaseAdminClient
-        .from("stripe_webhook_events")
-        .update({
-          processed: processingResult.success,
+        .from('stripe_webhook_events')
+        .update({ 
+          processed: processingResult.success, 
           processed_at: new Date().toISOString(),
-          processing_completed_at: new Date().toISOString(),
-          error_message: processingResult.error || null,
-          processing_time_ms: Date.now() - startTime,
+          error_message: processingResult.error || null
         })
-        .eq("stripe_event_id", event.id);
-    } catch (updateError) {
-      console.error(
-        `⚠️ [STEP 8:${requestId}] Status update failed:`,
-        updateError,
-      );
-    }
-
-    // 🔒 SECURITY: Log successful webhook processing
-    await logSecurityEvent({
-      type: "webhook_processed",
-      eventId: event.id,
-      eventType: event.type,
-      success: processingResult.success,
-      processingTime: Date.now() - startTime,
-      ip: clientIP,
-      requestId,
-    });
-
-    if (!processingResult.success) {
-      console.error(
-        `🚨 [FAILURE:${requestId}] Webhook processing failed: ${processingResult.error}`,
-      );
-      return NextResponse.json({
-        error: "Processing failed",
-        message: processingResult.error,
+        .eq('stripe_event_id', event.id)
+        
+      console.log(`✅ [STEP 7 SUCCESS] Event processing status updated:`, {
         eventId: event.id,
-        requestId,
-      }, { status: 500 });
+        processed: processingResult.success,
+        hasError: !!processingResult.error
+      })
+      
+    } catch (updateError) {
+      console.error(`⚠️ [STEP 7 WARNING] Failed to update webhook event status (non-critical):`, {
+        eventId: event.id,
+        error: updateError,
+        message: updateError instanceof Error ? updateError.message : 'Unknown update error'
+      })
     }
 
-    console.log(
-      `🎉 [SUCCESS:${requestId}] Webhook processed successfully in ${
-        Date.now() - startTime
-      }ms`,
-    );
-    return NextResponse.json({
-      received: true,
-      eventId: event.id,
-      requestId,
-      processingTime: Date.now() - startTime,
-    });
+    // STEP 8: Return appropriate response
+    if (!processingResult.success) {
+      console.error(`🚨 [FAILURE] ===== WEBHOOK PROCESSING FAILED =====`)
+      console.error(`🚨 [FAILURE] Event ID: ${event.id}`)
+      console.error(`🚨 [FAILURE] Event Type: ${event.type}`)
+      console.error(`🚨 [FAILURE] Error: ${processingResult.error}`)
+      
+      // For failed events, we return 500 so Stripe will retry
+      return NextResponse.json({
+        error: 'Processing failed',
+        message: processingResult.error || 'Unknown error',
+        eventId: event.id
+      }, { status: 500 })
+    }
+
+    console.log(`🎉 [SUCCESS] ===== WEBHOOK PROCESSING COMPLETED SUCCESSFULLY =====`)
+    console.log(`🎉 [SUCCESS] Event ID: ${event.id}`)
+    console.log(`🎉 [SUCCESS] Event Type: ${event.type}`)
+    
+    return NextResponse.json({ received: true, eventId: event.id })
+
   } catch (error) {
-    console.error(
-      `💥 [CRITICAL-FAILURE:${requestId}] Unexpected webhook error:`,
-      error,
-    );
-
-    // 🔒 SECURITY: Log critical failures
-    await logSecurityEvent({
-      type: "webhook_critical_failure",
-      error: error instanceof Error ? error.message : "Unknown error",
-      requestId,
-      timestamp: new Date().toISOString(),
-    });
-
-    return NextResponse.json({
-      error: "Webhook processing failed",
-      requestId,
-    }, { status: 500 });
+    console.error(`💥 [CRITICAL FAILURE] ===== WEBHOOK HANDLER TOP-LEVEL FAILURE =====`)
+    console.error(`💥 [CRITICAL FAILURE] Unexpected error in webhook processing:`, {
+      error: error,
+      message: error instanceof Error ? error.message : 'Unknown top-level error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : 'Unknown',
+      cause: error instanceof Error ? error.cause : undefined
+    })
+    
+    return NextResponse.json(
+      { 
+        error: 'Webhook processing failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    )
   }
 }
 
@@ -2048,41 +1879,5 @@ async function getUserIdFromCustomerId(customerId: string): Promise<string | nul
   } catch (error) {
     console.error('Failed to get user ID from customer ID:', error)
     return null
-  }
-}
-
-// 🔒 SECURITY: Security event logging for audit and monitoring
-async function logSecurityEvent(event: {
-  type: string;
-  eventId?: string;
-  eventType?: string;
-  success?: boolean;
-  error?: string;
-  ip?: string;
-  timestamp?: string;
-  requestId?: string;
-  processingTime?: number;
-}): Promise<void> {
-  try {
-    await supabaseAdminClient
-      .from("webhook_security_log")
-      .insert({
-        event_type: event.type,
-        stripe_event_id: event.eventId,
-        stripe_event_type: event.eventType,
-        success: event.success,
-        error_message: event.error,
-        client_ip: event.ip,
-        processing_time_ms: event.processingTime,
-        request_id: event.requestId,
-        timestamp: event.timestamp || new Date().toISOString(),
-        metadata: {
-          user_agent: "stripe-webhook",
-          security_level: "high",
-        },
-      });
-  } catch (logError) {
-    console.error("Failed to log security event:", logError);
-    // Don't throw - logging failures shouldn't break webhook processing
   }
 }
