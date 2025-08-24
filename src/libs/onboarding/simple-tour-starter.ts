@@ -1,24 +1,11 @@
 /**
- * Simple Tour Starter - Following Official Driver.js Documentation
+ * UPDATED: Simplified Tour Starter with Close Button Removed
  * 
- * Based on official patterns from driver.js documentation:
- * https://driverjs.com/docs/basic-usage
- * 
- * Official Pattern:
- * import { driver } from "driver.js";
- * import "driver.js/dist/driver.css";
- * 
- * const driverObj = driver({
- *   showProgress: true,
- *   steps: [
- *     { element: '.selector', popover: { title: 'Title', description: 'Description' } }
- *   ]
- * });
- * 
- * driverObj.drive();
+ * Clean UX approach:
+ * - ESC key and outside clicks handle tour exit
+ * - Done button on final step handles tour completion  
+ * - No close (X) button to eliminate conflicts
  */
-
-import "driver.js/dist/driver.css";
 
 import { driver } from "driver.js";
 
@@ -27,107 +14,99 @@ import type { TourConfig } from "@/libs/onboarding/tour-manager";
 // Global reference to active driver instance for cleanup
 let activeDriverInstance: ReturnType<typeof driver> | null = null;
 
+// REMOVED: Enhanced positioning function that was causing button issues
+// Using Driver.js native positioning instead
+
 export interface SimpleTourCallbacks {
   onCompleted?: (tourId: string) => void;
   onSkipped?: (tourId: string) => void;
   onDestroyed?: (tourId: string) => void;
+  onStepChange?: (currentStep: number, totalSteps: number) => void;
 }
 
 /**
- * Start a tour using official Driver.js patterns
- * 
- * This function follows the exact patterns from the official documentation:
- * 1. Import driver function and CSS
- * 2. Create driver instance with configuration
- * 3. Call drive() to start the tour
- * 
- * @param tourConfig - Our internal tour configuration
- * @param callbacks - Optional callbacks for tour events
+ * CRITICAL FIX: Simplified tour starter with minimal customizations
+ * Removed all complex positioning and styling that was breaking buttons
  */
 export function startTour(tourConfig: TourConfig, callbacks?: SimpleTourCallbacks): void {
-  console.log(`🚀 Starting tour using official driver.js pattern: ${tourConfig.id}`);
+  console.log(`🚀 SIMPLIFIED: Starting tour: ${tourConfig.id}`);
 
-  // Clean up any existing tour first (official best practice)
+  // Clean up any existing tour first
   if (activeDriverInstance?.isActive()) {
     console.log('🧹 Cleaning up existing active tour');
     activeDriverInstance.destroy();
   }
 
-  // Convert our TourStep format to official Driver.js DriveStep format
-  // Following the official documentation structure exactly
-  const driverSteps = tourConfig.steps.map((step: any) => ({
-    // Element selector (official property)
-    element: step.element,
+  // Convert steps to simple Driver.js format
+  const driverSteps = tourConfig.steps.map((step: any, index: number) => {
+    const isLastStep = index === tourConfig.steps.length - 1;
     
-    // Popover configuration (official structure)
-    popover: {
-      title: step.title,
-      description: step.description,
-      side: step.position || 'bottom',  // Official position property
-      align: step.align || 'start',     // Official align property
-    }
-  }));
+    return {
+      element: step.element,
+      popover: {
+        title: step.title,
+        description: step.description,
+        side: step.position || 'bottom',
+        align: step.align || 'start',
+        showButtons: isLastStep 
+          ? ['previous', 'close'] // Last step shows Done button (close = Done)
+          : ['next', 'previous'] // Regular steps have no close button
+      }
+    };
+  });
 
-  // Create driver instance using official configuration structure
-  // Following exact patterns from the official documentation
+  // CRITICAL: Minimal Driver.js configuration - no complex customizations
   const driverObj = driver({
-    // Progress configuration (official options)
-    showProgress: tourConfig.showProgress ?? true,
-    progressText: "{{current}} of {{total}}",
-    
-    // Control options (official options)
-    allowClose: tourConfig.allowClose ?? true,
+    // Basic settings only
+    showProgress: true,
+    progressText: "Step {{current}} of {{total}}",
+    allowClose: true,
     allowKeyboardControl: true,
-    
-    // Animation and styling (official options)
+    overlayClickBehavior: 'close' as 'close',
     animate: true,
     smoothScroll: true,
     
-    // Overlay configuration (official options)
-    overlayOpacity: 0.6,
-    stagePadding: 8,
-    stageRadius: 6,
-    
-    // Button configuration (official options)
-    showButtons: ['next', 'previous', 'close'],
+    // Basic button configuration (no close button)
     nextBtnText: 'Next',
     prevBtnText: 'Previous',
     doneBtnText: 'Done',
+    // Note: showButtons is set per step above to show Done only on last step
     
-    // Steps array (official property)
+    // Simple steps - no complex modifications
     steps: driverSteps,
     
-    // Global event handlers (official callbacks)
+    // Minimal event handlers
     onDestroyed: () => {
       console.log(`✅ Tour destroyed: ${tourConfig.id}`);
       activeDriverInstance = null;
-      
-      // Call appropriate callback based on tour state
       if (callbacks?.onDestroyed) {
         callbacks.onDestroyed(tourConfig.id);
       }
     },
     
-    onDestroyStarted: () => {
-      console.log(`🏁 Tour destruction started: ${tourConfig.id}`);
+    // Basic step tracking
+    onHighlighted: (element, step, options) => {
+      const stepIndex = options?.state?.activeIndex || 0;
+      console.log(`✨ Step ${stepIndex + 1} of ${driverSteps.length}`);
+      
+      if (callbacks?.onStepChange) {
+        callbacks.onStepChange(stepIndex + 1, driverSteps.length);
+      }
     },
     
-    // Handle close button clicks specifically
-    onCloseClick: () => {
-      console.log(`🔴 Tour close button clicked: ${tourConfig.id}`);
-      // Force destroy the tour immediately since driver.js close button isn't working properly
-      if (activeDriverInstance?.isActive()) {
-        console.log(`🧹 Force destroying active tour: ${tourConfig.id}`);
-        activeDriverInstance.destroy();
+    // Done button detection (only on last step)
+    onCloseClick: (element, step, options) => {
+      // This will only be called for Done button on last step
+      console.log(`🎉 Tour completed: ${tourConfig.id}`);
+      if (callbacks?.onCompleted) {
+        callbacks.onCompleted(tourConfig.id);
       }
     }
   });
 
-  // Store reference for cleanup
+  // Store reference and start tour
   activeDriverInstance = driverObj;
 
-  // Start the tour using official method
-  // According to docs: driverObj.drive() starts the tour
   try {
     driverObj.drive();
     console.log(`✅ Tour started successfully: ${tourConfig.id}`);

@@ -96,7 +96,7 @@ export const WELCOME_TOUR: TourConfig = {
   ]
 }
 
-// Quote Creation Tour
+// Quote Creation Tour - Enhanced with smooth positioning and Done button fix
 export const QUOTE_CREATION_TOUR: TourConfig = {
   id: 'quote-creation',
   name: 'Create Your First Quote',
@@ -109,8 +109,8 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
   overlayClickBehavior: 'ignore',
   
   // Enhanced progress configuration
-  progressText: 'Step {{current}} of {{total}} • {{percent}}% complete',
-  popoverClass: 'enhanced-tour-popover tour-popover-with-progress',
+  progressText: 'Step {{current}} of {{total}}',
+  popoverClass: 'lawnquote-tour enhanced-positioning',
   
   // Tour-level error recovery configuration
   onDestroyed: () => {
@@ -804,10 +804,10 @@ export const QUOTE_CREATION_TOUR: TourConfig = {
       id: 'save-generate-actions',
       element: '[data-testid="save-send-actions"], [data-tour="save-send-actions"], .save-actions-section',
       title: 'Professional Quote Completion 🚀',
-      description: 'You have three options: Save as Draft (continue later), Generate PDF (create final quote), or both! Final quotes get automatic numbering and can be emailed directly to clients.',
+      description: 'You have three options: Save as Draft (continue later), Generate PDF (create final quote), or both! Final quotes get automatic numbering and can be emailed directly to clients. Congratulations on completing the Quote Creation tour!',
       position: 'top',
       align: 'center',
-      showButtons: ['previous', 'close'],
+      showButtons: ['previous', 'close'], // Close button will become Done button automatically
       
       // Comprehensive system validation on final step
       popover: {

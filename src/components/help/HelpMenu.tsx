@@ -84,26 +84,26 @@ export function HelpMenu({
       // Add small delay to ensure DOM is ready and dropdown is closed
       await new Promise(resolve => setTimeout(resolve, 200))
       
-      console.log(`🚀 HelpMenu: Starting tour ${tourId} using simplified Debug Panel pattern...`)
+      console.log(`🚀 HelpMenu: Starting tour ${tourId} using onboarding context only...`)
       
-      // Use the exact same simplified logic as OnboardingDebugPanel
-      const { tourManager } = await import('@/libs/onboarding/tour-manager')
-      
-      // Get tour config directly
-      const tourConfig = getTourConfig(tourId)
-      if (tourConfig) {
-        console.log(`🎪 Starting regular tour system for ${tourId}`)
-        await tourManager.initializeTour(tourId, tourConfig)
-        await startTour(tourId)
-        await tourManager.startTour()
-        console.log(`✅ HelpMenu: Tour ${tourId} started successfully`)
-      } else {
-        throw new Error(`Tour configuration not found: ${tourId}`)
-      }
+      // CRITICAL FIX: Use ONLY the onboarding context, not direct tour manager
+      // This prevents conflicts and double initialization
+      await startTour(tourId)
+      console.log(`✅ HelpMenu: Tour ${tourId} started successfully via context`)
       
     } catch (error) {
-      console.error('Failed to start tour:', error)
-      alert(`Failed to start tour: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('❌ HelpMenu: Failed to start tour:', error)
+      
+      // Show user-friendly error message
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      console.warn('Tour Error:', errorMsg)
+      
+      // Use a more user-friendly alert
+      if (typeof document !== 'undefined') {
+        setTimeout(() => {
+          alert(`Unable to start the "${tourId}" tour. Please try refreshing the page or contact support if the issue persists.`)
+        }, 100)
+      }
     }
   }
 

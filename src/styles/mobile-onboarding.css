@@ -24,21 +24,24 @@
   margin-bottom: 16px;
 }
 
-/* Touch-optimized buttons */
+/* Touch-optimized buttons - Enhanced for accessibility */
 .lawnquote-tour-touch .driver-popover-footer {
   padding: 16px;
-  gap: 12px;
+  gap: 16px; /* Increased gap for better button separation */
 }
 
 .lawnquote-tour-touch .driver-popover-footer button {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 12px 20px;
+  min-height: 48px; /* Increased for better accessibility */
+  min-width: 48px;
+  padding: 14px 24px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 8px;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  /* Enhanced contrast for mobile */
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+  letter-spacing: 0.025em;
 }
 
 .lawnquote-tour-touch .driver-popover-footer button:active {
@@ -248,10 +251,18 @@
   }
 }
 
-/* Focus management for accessibility */
-.lawnquote-tour-mobile .driver-popover-footer button:focus {
-  outline: 2px solid #3b82f6;
+/* Enhanced focus management for accessibility */
+.lawnquote-tour-mobile .driver-popover-footer button:focus-visible {
+  outline: 3px solid #fbbf24;
   outline-offset: 2px;
+  position: relative;
+  z-index: 10;
+}
+
+/* Mobile button active state with enhanced feedback */
+.lawnquote-tour-mobile .driver-popover-footer button:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
 }
 
 /* Touch target optimization */
@@ -360,14 +371,37 @@
   }
 }
 
-/* Mobile button press feedback */
+/* Mobile button press feedback - Enhanced UX */
 .lawnquote-tour-mobile .driver-popover-footer button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .lawnquote-tour-mobile .driver-popover-footer button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile primary button styling */
+.lawnquote-tour-mobile .driver-popover-footer .driver-popover-next-btn,
+.lawnquote-tour-mobile .driver-popover-footer .driver-popover-done-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+/* Mobile secondary button styling */
+.lawnquote-tour-mobile .driver-popover-footer button:not(.driver-popover-next-btn):not(.driver-popover-done-btn) {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+  font-weight: 600;
+}
+
+.lawnquote-tour-mobile .driver-popover-footer button:not(.driver-popover-next-btn):not(.driver-popover-done-btn):hover {
+  background: #f9fafb;
+  color: #374151;
+  border-color: #d1d5db;
 }
 
 /* Touch target expansion animation */
@@ -495,7 +529,7 @@
   }
 }
 
-/* Responsive font scaling */
+/* Responsive font scaling - Enhanced button sizing */
 @media (max-width: 375px) {
   .lawnquote-tour-mobile .driver-popover-title {
     font-size: 1rem;
@@ -506,8 +540,13 @@
   }
   
   .lawnquote-tour-mobile .driver-popover-footer button {
-    font-size: 0.9rem;
-    padding: 10px 16px;
+    font-size: 0.95rem;
+    padding: 12px 18px;
+    min-height: 50px; /* Larger touch target on small screens */
+  }
+  
+  .lawnquote-tour-mobile .driver-popover-footer {
+    gap: 12px; /* Slightly smaller gap on very small screens */
   }
 }
 

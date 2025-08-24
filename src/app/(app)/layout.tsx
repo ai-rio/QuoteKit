@@ -1,6 +1,6 @@
+import "driver.js/dist/driver.css"
 import "@/styles/driver-tour.css"
 
-import { TourTestComponent } from "@/components/debug/TourTestComponent"
 import { AppHeader } from "@/components/layout/app-header"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { OnboardingDebugPanel } from "@/components/onboarding/OnboardingDebugPanel"
@@ -40,7 +40,6 @@ export default function AppLayout({
         </SidebarInset>
         <OnboardingManager autoStartWelcome={true} enableTierBasedTours={true} debugMode={true} />
         <OnboardingDebugPanel />
-        <TourTestComponent />
       </SidebarProvider>
     </OnboardingWrapper>
   )

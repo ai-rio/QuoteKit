@@ -34,140 +34,42 @@ export function fixDebugPanelButtons() {
 }
 
 export function fixDriverButtons() {
-  // Wait for DOM to be ready
+  // CRITICAL FIX: MINIMAL approach - only check that buttons exist and are clickable
+  console.log('🔧 SIMPLIFIED: Checking Driver.js buttons with minimal interference')
+  
   setTimeout(() => {
     const popover = document.querySelector('.driver-popover')
     if (popover) {
-      console.log('🔍 Found popover, inspecting structure:', popover.innerHTML)
+      const buttons = popover.querySelectorAll('button, [role="button"]')
+      console.log(`✅ Found ${buttons.length} buttons in Driver.js popover`)
       
-      // Find all buttons and ensure they're clickable
-      const buttons = popover.querySelectorAll(`
-        button, 
-        [role="button"], 
-        .driver-popover-btn,
-        .driver-popover-close-btn,
-        .driver-popover-next-btn,
-        .driver-popover-prev-btn,
-        .driver-popover-done-btn,
-        svg,
-        [class*="close"],
-        [class*="Close"]
-      `)
-      
-      console.log('🔍 Found buttons:', buttons.length)
-      
+      // ONLY ensure buttons are visible and clickable - NO OTHER CHANGES
       buttons.forEach((button, index) => {
         const element = button as HTMLElement
         
-        // Enhanced close button detection
-        const isCloseButton = element.classList.contains('driver-popover-close-btn') || 
-                             element.getAttribute('aria-label')?.includes('close') ||
-                             element.getAttribute('aria-label')?.includes('Close') ||
-                             element.textContent?.includes('×') ||
-                             element.innerHTML?.includes('×') ||
-                             element.innerHTML?.includes('close') ||
-                             element.tagName === 'SVG' ||
-                             element.parentElement?.classList.contains('driver-popover-close-btn')
+        // Log button info for debugging
+        console.log(`Button ${index + 1}: "${element.textContent?.trim()}" - Clickable: ${getComputedStyle(element).pointerEvents !== 'none'}`)
         
-        console.log(`🔍 Button ${index}:`, {
-          tagName: element.tagName,
-          className: element.className,
-          isCloseButton,
-          textContent: element.textContent,
-          innerHTML: element.innerHTML.substring(0, 100),
-          ariaLabel: element.getAttribute('aria-label')
-        })
-        
-        // Force pointer events and z-index
-        element.style.pointerEvents = 'auto'
-        element.style.position = isCloseButton ? 'absolute' : 'relative'
-        element.style.zIndex = isCloseButton ? '10003' : '10002'
-        element.style.cursor = 'pointer'
-        element.style.transform = 'none'
-        element.style.willChange = 'auto'
-        
-        // Force CSS properties via setAttribute for maximum priority
-        element.setAttribute('style', 
-          `${element.getAttribute('style') || ''}; pointer-events: auto !important; z-index: ${isCloseButton ? '10003' : '10002'} !important; cursor: pointer !important;`
-        )
-        
-        // Remove any existing click handlers
-        const newElement = element.cloneNode(true) as HTMLElement
-        element.parentNode?.replaceChild(newElement, element)
-        
-        // Add aggressive click listener for close buttons
-        if (isCloseButton) {
-          // Multiple event types to ensure capture
-          ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach(eventType => {
-            newElement.addEventListener(eventType, (e) => {
-              console.log(`🎯 Close button ${eventType}:`, {
-                type: e.type,
-                target: e.target,
-                currentTarget: e.currentTarget
-              })
-              
-              if (eventType === 'click') {
-                e.preventDefault()
-                e.stopPropagation()
-                
-                // Force tour destruction
-                const driverInstance = (window as any).driver
-                if (driverInstance && typeof driverInstance.destroy === 'function') {
-                  console.log('🚫 Forcing tour destruction via window.driver')
-                  driverInstance.destroy()
-                } else {
-                  // Fallback: remove popover directly
-                  console.log('🚫 Fallback: removing popover directly')
-                  const popover = document.querySelector('.driver-popover')
-                  const overlay = document.querySelector('.driver-overlay')
-                  if (popover) popover.remove()
-                  if (overlay) overlay.remove()
-                }
-              }
-            }, { capture: true, passive: false })
-          })
-        } else {
-          // Regular button handling
-          newElement.addEventListener('click', (e) => {
-            console.log('🎯 Button clicked:', {
-              className: newElement.className,
-              isCloseButton,
-              textContent: newElement.textContent
-            })
-          }, { capture: true, passive: false })
+        // MINIMAL fix: only ensure pointer-events if it's disabled
+        if (getComputedStyle(element).pointerEvents === 'none') {
+          element.style.pointerEvents = 'auto'
+          console.log(`🔧 Fixed pointer-events for: ${element.textContent?.trim()}`)
         }
       })
       
-      console.log('🔧 Fixed', buttons.length, 'Driver.js buttons')
+      // Check specifically for close button
+      const closeButton = popover.querySelector('.driver-popover-close-btn, button[aria-label*="close"], button[aria-label*="Close"]')
+      if (closeButton) {
+        console.log('✅ Close button found and should work')
+      } else {
+        console.warn('⚠️ No close button found - this may be the issue!')
+      }
       
-      // CRITICAL FIX: Ensure modals and their elements stay interactive
-      fixModalInteractionsDuringTour()
-      
-      // Also ensure debug panel and high z-index elements stay interactive
-      const highZIndexElements = document.querySelectorAll(`
-        [style*="z-index: 10003"],
-        [style*="z-index: 10004"],
-        .onboarding-debug-panel,
-        .z-\\[10004\\]
-      `)
-      
-      highZIndexElements.forEach((element) => {
-        const el = element as HTMLElement
-        el.style.pointerEvents = 'auto'
-        el.style.zIndex = '10004'
-        
-        // Ensure all buttons within these elements work
-        const buttons = el.querySelectorAll('button, [role="button"]')
-        buttons.forEach((btn) => {
-          const button = btn as HTMLElement
-          button.style.pointerEvents = 'auto'
-          button.style.zIndex = '10005'
-          button.style.position = 'relative'
-          console.log('🔧 Fixed button in high z-index element:', button.textContent?.trim())
-        })
-      })
+      // REMOVED: All complex modal fixing that was causing issues
+    } else {
+      console.log('🔍 No Driver.js popover found yet')
     }
-  }, 100)
+  }, 50) // Reduced delay
 }
 
 // CRITICAL FIX: Dedicated function for modal interactions during tours
@@ -251,10 +153,10 @@ if (typeof window !== 'undefined') {
         const addedNodes = Array.from(mutation.addedNodes)
         addedNodes.forEach((node) => {
           if (node instanceof Element) {
-            // Fix Driver.js buttons
+            // Fix Driver.js buttons with minimal delay
             if (node.classList.contains('driver-popover') || 
                 node.querySelector('.driver-popover')) {
-              fixDriverButtons()
+              setTimeout(fixDriverButtons, 50)
             }
             
             // Fix debug panel buttons

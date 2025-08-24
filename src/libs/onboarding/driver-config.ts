@@ -1,10 +1,5 @@
 import { Config as DriverConfig,driver, DriveStep } from 'driver.js';
 
-// Import CSS only in browser environment
-if (typeof window !== 'undefined') {
-  require('driver.js/dist/driver.css');
-}
-
 // Custom types for enhanced TypeScript support
 export interface TourStep extends DriveStep {
   id: string;
@@ -38,140 +33,139 @@ export interface TourState {
   skippedAt?: Date;
 }
 
-// Custom configuration matching LawnQuote design system
+// UPDATED: Enhanced configuration with close button removed for cleaner UX
+// Tour exit: ESC key, outside clicks | Tour completion: Done button on final step
 export const defaultDriverConfig: Partial<DriverConfig> = {
   animate: true,
   smoothScroll: true,
+  showButtons: ['next', 'previous'], // Remove close button from default buttons
   allowClose: true,
-  // allowClickMaskNextStep: false, // Property may not exist in all driver.js versions
-  allowKeyboardControl: false, // CRITICAL FIX: Disable to prevent ESC key conflicts
+  allowKeyboardControl: true, // Enable ESC key to close tour
   disableActiveInteraction: false,
-  overlayClickBehavior: 'close' as 'close', // Allow closing on overlay click
+  overlayClickBehavior: 'close' as 'close', // Allow clicking overlay to close tour
   
-  // Custom popover configuration
-  popoverClass: 'lawnquote-driver-popover',
-  popoverOffset: 10,
+  // Enhanced popover configuration for better positioning
+  popoverClass: 'lawnquote-driver-popover enhanced-positioning',
+  popoverOffset: 12, // Slightly larger offset for better visibility
+  stagePadding: 8, // Consistent padding around highlighted elements
+  stageRadius: 8, // Smooth rounded corners
   
   // Progress configuration
   showProgress: true,
-  progressText: '{{current}} of {{total}}',
+  progressText: 'Step {{current}} of {{total}}',
   
-  // Navigation buttons
-  nextBtnText: 'Next →',
-  prevBtnText: '← Previous',
-  doneBtnText: 'Got it!',
+  // Navigation buttons with better UX text
+  nextBtnText: 'Next',
+  prevBtnText: 'Previous', 
+  doneBtnText: 'Done',
+  // Close button removed - using ESC key and outside clicks instead
   
-  // Callbacks for analytics and state management
-  // Note: onInitialized is not a valid driver.js config property
-  
-  onHighlightStarted: (element?: Element) => {
-    console.log('Step highlighted:', element);
-    // CRITICAL FIX: Ensure modals and high z-index elements stay interactive
-    fixModalInteractions();
+  // Enhanced callbacks for smooth positioning and proper cleanup
+  onHighlightStarted: (element?: Element, step?: any) => {
+    console.log('🎯 Step highlighting started:', step?.element || 'no element');
+    
+    // Ensure element is optimally positioned
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    }
   },
   
-  onHighlighted: (element?: Element) => {
-    console.log('Step shown:', element);
-    // CRITICAL FIX: Re-fix modal interactions after each step
-    setTimeout(() => fixModalInteractions(), 100);
+  onHighlighted: (element?: Element, step?: any) => {
+    console.log('✅ Step highlighted:', step?.element || 'no element');
+    
+    // Apply positioning enhancements after highlight
+    setTimeout(() => {
+      const popover = document.querySelector('.driver-popover');
+      if (popover) {
+        enhancePopoverPositioning(popover as HTMLElement);
+      }
+    }, 50);
   },
   
   onDeselected: (element?: Element) => {
-    console.log('Step deselected:', element);
+    console.log('⬅️ Step deselected');
   },
   
   onDestroyed: () => {
-    console.log('Tour ended');
-    // CRITICAL FIX: Restore normal event handling
-    restoreModalInteractions();
+    console.log('🏁 Tour completed/closed');
+    // Clean up any positioning enhancements
+    cleanupPositioningEnhancements();
   },
 };
 
-// CRITICAL FIX: Modal interaction fix functions
-function fixModalInteractions() {
-  if (typeof window === 'undefined') return;
-  
-  // Set up custom ESC key handler that works with driver.js
-  const handleEscKey = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' || event.keyCode === 27) {
-      // Check if there's an open modal first (higher priority)
-      const openModal = document.querySelector('[data-radix-dialog-content][data-state="open"], [role="dialog"][aria-modal="true"]');
-      if (openModal) {
-        // Let the modal handle the ESC key
-        return;
-      }
-      
-      // Otherwise, close the tour
-      const driverInstance = (window as any).driver;
-      if (driverInstance && typeof driverInstance.destroy === 'function') {
-        event.preventDefault();
-        event.stopPropagation();
-        driverInstance.destroy();
-      }
-    }
-  };
-  
-  // Remove any existing listener first
-  document.removeEventListener('keydown', handleEscKey, true);
-  // Add with capture to ensure it runs before driver.js handlers
-  document.addEventListener('keydown', handleEscKey, true);
-  
-  // Store reference for cleanup
-  (window as any).__driverEscHandler = handleEscKey;
-  
-  // Fix modal z-index and pointer events immediately
-  setTimeout(() => {
-    const modals = document.querySelectorAll(`
-      [data-radix-dialog-content],
-      [role="dialog"],
-      [aria-modal="true"],
-      .fixed.inset-0.z-50
-    `);
-    
-    modals.forEach((modal) => {
-      const el = modal as HTMLElement;
-      el.style.zIndex = '10010'; // Higher than driver.js
-      el.style.pointerEvents = 'auto';
-      el.style.position = 'fixed';
-      
-      // Fix all buttons within modals
-      const buttons = el.querySelectorAll('button, [role="button"]');
-      buttons.forEach((btn) => {
-        const button = btn as HTMLElement;
-        button.style.pointerEvents = 'auto';
-        button.style.zIndex = '10011';
-        button.style.position = 'relative';
-      });
-    });
-    
-    // Ensure modal overlays are also properly positioned - FIXED CSS SELECTORS
-    const overlays = document.querySelectorAll(`
-      [data-radix-dialog-overlay],
-      .fixed.inset-0[class*="bg-black"],
-      .fixed.inset-0[class*="bg-background"]
-    `);
-    
-    overlays.forEach((overlay) => {
-      const el = overlay as HTMLElement;
-      el.style.zIndex = '10009'; // Just below modal content
-      el.style.pointerEvents = 'auto';
-    });
-    
-    console.log('🔧 Fixed modal interactions - found', modals.length, 'modals and', overlays.length, 'overlays');
-  }, 50);
-}
-
-function restoreModalInteractions() {
-  if (typeof window === 'undefined') return;
-  
-  // Remove custom ESC handler
-  const handler = (window as any).__driverEscHandler;
-  if (handler) {
-    document.removeEventListener('keydown', handler, true);
-    delete (window as any).__driverEscHandler;
+// Enhanced positioning functions for smooth modal follow behavior
+function enhancePopoverPositioning(popover: HTMLElement) {
+  // CRITICAL FIX: Add null checks to prevent crashes
+  if (!popover || !popover.classList || !popover.style) {
+    console.warn('⚠️ Popover element is null or missing properties - skipping positioning');
+    return;
   }
   
-  console.log('🔧 Restored normal modal interactions');
+  try {
+    // Add smooth positioning class
+    popover.classList.add('enhanced-tour-positioning');
+    
+    // Ensure popover follows highlighted element smoothly
+    popover.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    popover.style.willChange = 'transform';
+  
+  // Apply responsive positioning logic
+  const viewport = {
+    width: window.innerWidth,
+    height: window.innerHeight
+  };
+  
+  // Adjust positioning based on viewport size
+  if (viewport.width < 768) {
+    // Mobile: prefer bottom positioning with center align
+    popover.style.maxWidth = 'calc(100vw - 2rem)';
+    popover.style.margin = '1rem';
+  } else if (viewport.width < 1024) {
+    // Tablet: balanced positioning
+    popover.style.maxWidth = '400px';
+  } else {
+    // Desktop: full positioning options
+    popover.style.maxWidth = '450px';
+  }
+  
+  // Ensure popover doesn't get cut off
+  const popoverRect = popover.getBoundingClientRect();
+  const padding = 16;
+  
+  // Adjust horizontal position if needed
+  if (popoverRect.left < padding) {
+    popover.style.left = `${padding}px`;
+  } else if (popoverRect.right > viewport.width - padding) {
+    popover.style.right = `${padding}px`;
+    popover.style.left = 'auto';
+  }
+  
+  // Adjust vertical position if needed
+  if (popoverRect.top < padding) {
+    popover.style.top = `${padding}px`;
+  } else if (popoverRect.bottom > viewport.height - padding) {
+    popover.style.bottom = `${padding}px`;
+    popover.style.top = 'auto';
+  }
+  
+    console.log('✨ Enhanced popover positioning applied');
+  } catch (error) {
+    console.error('❌ Error enhancing popover positioning:', error);
+    // Continue without positioning enhancements to prevent crash
+  }
+}
+
+function cleanupPositioningEnhancements() {
+  // Remove enhanced positioning classes
+  document.querySelectorAll('.enhanced-tour-positioning').forEach(el => {
+    el.classList.remove('enhanced-tour-positioning');
+  });
+  
+  console.log('🧹 Cleaned up positioning enhancements');
 }
 
 // Error handling wrapper
