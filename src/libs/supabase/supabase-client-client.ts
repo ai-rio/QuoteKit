@@ -18,13 +18,9 @@ export function createSupabaseClientClient(url?: string, key?: string) {
       debug: process.env.NODE_ENV === 'development',
       // Set proper storage for browser environment
       storage: typeof window !== 'undefined' ? window.localStorage : undefined
-    },
-    // Remove problematic fetch customization that violates CORS
-    global: {
-      headers: {
-        'Content-Type': 'application/json'
-      }
     }
+    // Removed global Content-Type header that was breaking file uploads
+    // Content-Type should be set per request, not globally
   };
   
   console.log('🔧 Creating Supabase client with URL:', supabaseUrl);

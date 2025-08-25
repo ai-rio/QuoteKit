@@ -1,4 +1,4 @@
-import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { Document, Image,Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import React from 'react';
 
 import { PDFGenerationOptions } from './types';
@@ -23,6 +23,15 @@ const styles = StyleSheet.create({
   },
   companyInfo: {
     flex: 1,
+  },
+  logoContainer: {
+    marginBottom: 10,
+    alignItems: 'flex-start',
+  },
+  logo: {
+    width: 80,
+    height: 60,
+    objectFit: 'contain',
   },
   companyName: {
     fontSize: 20,
@@ -170,6 +179,15 @@ export function QuotePDFTemplate({ quote, company, showWatermark = false, waterm
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.companyInfo}>
+            {/* Company Logo */}
+            {company.logo_url && (
+              <View style={styles.logoContainer}>
+                <Image
+                  src={company.logo_url}
+                  style={styles.logo}
+                />
+              </View>
+            )}
             <Text style={styles.companyName}>
               {company.company_name || 'Your Company Name'}
             </Text>

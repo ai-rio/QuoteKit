@@ -20,6 +20,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log(`[PDF Generation] Starting for user ${user.id}, quote ${id}`);
+
     // Check PDF export feature access
     const pdfAccess = await checkPDFExportAccess(user.id, supabase);
     if (!pdfAccess.hasAccess) {
@@ -40,6 +42,7 @@ export async function GET(
       .single();
 
     if (quoteError || !quote) {
+      console.error('[PDF Generation] Quote not found:', quoteError);
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
@@ -50,6 +53,15 @@ export async function GET(
       .eq('id', user.id) // Fixed: use 'id' instead of 'user_id'
       .single();
 
+    console.log(`[PDF Generation] Company settings query result:`, {
+      company: company ? {
+        company_name: company.company_name,
+        logo_url: company.logo_url,
+        hasLogo: !!company.logo_url
+      } : null,
+      error: companyError
+    });
+
     // If no company settings, use defaults
     const companyData = company || {
       company_name: null,
@@ -57,6 +69,12 @@ export async function GET(
       company_phone: null,
       logo_url: null,
     };
+
+    console.log(`[PDF Generation] Final company data for PDF:`, {
+      company_name: companyData.company_name,
+      logo_url: companyData.logo_url,
+      hasLogo: !!companyData.logo_url
+    });
 
     // Prepare PDF data with watermark info
     const pdfData: PDFGenerationOptions = {
@@ -87,8 +105,12 @@ export async function GET(
       watermarkText: pdfAccess.hasCustomBranding ? undefined : 'Created with QuoteKit',
     };
 
+    console.log(`[PDF Generation] About to generate PDF with logo URL:`, pdfData.company.logo_url);
+
     // Generate PDF
     const pdfBuffer = await renderToBuffer(QuotePDFTemplate(pdfData));
+
+    console.log(`[PDF Generation] PDF generated successfully, size: ${pdfBuffer.byteLength} bytes`);
 
     // Increment PDF export usage counter
     const { error: usageError } = await supabase.rpc('increment_usage', {

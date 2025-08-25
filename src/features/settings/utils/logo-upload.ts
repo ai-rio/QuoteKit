@@ -27,13 +27,24 @@ export async function uploadLogo(file: File, userId: string): Promise<LogoUpload
     const { error: uploadError } = await supabase.storage
       .from('company-logos')
       .upload(fileName, file, {
+        contentType: file.type, // Explicitly set content type
         cacheControl: '3600',
         upsert: false
       });
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      return { url: null, fileName: null, error: 'Failed to upload logo' };
+      
+      // Provide more specific error messages based on the error
+      if (uploadError.message?.includes('mime type')) {
+        return { url: null, fileName: null, error: 'Unsupported file type. Please use PNG, JPG, or GIF.' };
+      } else if (uploadError.message?.includes('size')) {
+        return { url: null, fileName: null, error: 'File is too large. Maximum size is 5MB.' };
+      } else if (uploadError.message?.includes('permission') || uploadError.message?.includes('policy')) {
+        return { url: null, fileName: null, error: 'Permission denied. Please try logging in again.' };
+      } else {
+        return { url: null, fileName: null, error: `Upload failed: ${uploadError.message || 'Unknown error'}` };
+      }
     }
 
     // Get public URL
