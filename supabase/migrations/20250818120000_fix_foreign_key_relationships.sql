@@ -10,10 +10,11 @@ BEGIN
     SELECT EXISTS (
         SELECT 1 FROM information_schema.table_constraints tc
         JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+        JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
         WHERE tc.table_name = 'subscriptions' 
         AND tc.constraint_type = 'FOREIGN KEY'
         AND kcu.column_name = 'stripe_price_id'
-        AND kcu.referenced_table_name = 'stripe_prices'
+        AND ccu.table_name = 'stripe_prices'
     ) INTO constraint_exists;
     
     IF NOT constraint_exists THEN
@@ -43,10 +44,11 @@ BEGIN
     SELECT EXISTS (
         SELECT 1 FROM information_schema.table_constraints tc
         JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+        JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
         WHERE tc.table_name = 'stripe_prices' 
         AND tc.constraint_type = 'FOREIGN KEY'
         AND kcu.column_name = 'stripe_product_id'
-        AND kcu.referenced_table_name = 'stripe_products'
+        AND ccu.table_name = 'stripe_products'
     ) INTO constraint_exists;
     
     IF NOT constraint_exists THEN
@@ -150,4 +152,8 @@ CREATE POLICY "Allow public read-only access." ON public.stripe_prices FOR SELEC
 DROP PUBLICATION IF EXISTS supabase_realtime;
 CREATE PUBLICATION supabase_realtime FOR TABLE public.stripe_products, public.stripe_prices;
 
-RAISE NOTICE 'Foreign key relationships fix completed successfully';
+-- Log completion
+DO $$
+BEGIN
+    RAISE NOTICE 'Foreign key relationships fix completed successfully';
+END $$;

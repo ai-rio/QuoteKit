@@ -7,7 +7,7 @@
  * - No close (X) button to eliminate conflicts
  */
 
-import { driver } from "driver.js";
+import { driver, DriveStep } from "driver.js";
 
 import type { TourConfig } from "@/libs/onboarding/tour-manager";
 
@@ -73,7 +73,7 @@ export function startTour(tourConfig: TourConfig, callbacks?: SimpleTourCallback
     // Note: showButtons is set per step above to show Done only on last step
     
     // Simple steps - no complex modifications
-    steps: driverSteps,
+    steps: driverSteps as DriveStep[],
     
     // Minimal event handlers
     onDestroyed: () => {

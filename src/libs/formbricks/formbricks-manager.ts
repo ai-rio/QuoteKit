@@ -446,7 +446,7 @@ export class FormbricksManager {
         if (typeof window !== 'undefined' && (window as any).formbricks && typeof (window as any).formbricks.track === 'function') {
           (window as any).formbricks.track(eventName, trackProperties);
         } else if (typeof formbricks.track === 'function') {
-          formbricks.track(eventName, trackProperties);
+          formbricks.track(eventName, trackProperties as any);
         } else {
           throw new Error('track method not available on Formbricks SDK');
         }

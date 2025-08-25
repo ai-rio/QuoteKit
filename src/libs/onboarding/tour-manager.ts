@@ -155,7 +155,7 @@ class TourManager {
           : (step.showButtons || ['next', 'previous']), // No close button for regular steps
         
         // Enhanced popover positioning with error handling
-        onPopoverRender: (popover: HTMLElement, step: any) => {
+        onPopoverRender: (popover: any, step: any) => {
           try {
             // CRITICAL: Add null check before calling enhancePopoverForStep
             if (popover) {

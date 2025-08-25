@@ -50,7 +50,7 @@ async function validateAdminAccess(userId: string) {
   }
 
   // Step 4: Enhanced IP and request validation
-  const headersList = headers()
+  const headersList = await headers()
   const currentIP = headersList.get('x-forwarded-for') || 
                    headersList.get('x-real-ip') ||
                    'unknown'
@@ -107,7 +107,7 @@ export default async function AdminLayout({
     
     // Log failed access attempt
     try {
-      const headersList = headers()
+      const headersList = await headers()
       await supabase
         .from('admin_audit_log')
         .insert({

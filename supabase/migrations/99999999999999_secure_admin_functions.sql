@@ -3,9 +3,71 @@
 -- =====================================================
 -- This migration hardens admin functions with enhanced security
 
--- Drop insecure existing functions
-DROP FUNCTION IF EXISTS public.is_admin(UUID);
-DROP FUNCTION IF EXISTS public.current_user_is_admin();
+-- Replace insecure existing functions with secure implementations
+-- Note: We replace instead of drop to avoid breaking RLS policies
+
+-- Add admin fields to users table if not exists
+ALTER TABLE public.users 
+ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS admin_verified_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS last_admin_login TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS admin_login_attempts INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS admin_locked_until TIMESTAMPTZ;
+
+-- Replace the existing is_admin() function with secure implementation
+-- This maintains compatibility with existing RLS policies
+CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID DEFAULT auth.uid())
+RETURNS BOOLEAN 
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  admin_status BOOLEAN := false;
+  current_time TIMESTAMPTZ := NOW();
+BEGIN
+  -- SECURITY: Only authenticated users can check admin status
+  IF auth.uid() IS NULL THEN
+    RETURN false;
+  END IF;
+
+  -- SECURITY: Users can only check their own admin status unless they are admin
+  IF user_id != auth.uid() THEN
+    -- Check if current user is admin to allow admin-to-admin checks
+    SELECT COALESCE(is_admin, false) INTO admin_status 
+    FROM public.users 
+    WHERE id = auth.uid();
+    
+    IF NOT admin_status THEN
+      -- Log unauthorized access attempt
+      INSERT INTO public.admin_audit_log (user_id, action, success, error_message)
+      VALUES (auth.uid(), 'unauthorized_admin_check', false, 'Attempted to check other user admin status');
+      RETURN false;
+    END IF;
+  END IF;
+
+  -- Get admin status from public.users table (more secure than auth.users)
+  SELECT COALESCE(u.is_admin, false)
+  INTO admin_status
+  FROM public.users u
+  WHERE u.id = user_id
+    AND (u.admin_locked_until IS NULL OR u.admin_locked_until <= current_time);
+
+  RETURN admin_status;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Replace current_user_is_admin() function 
+CREATE OR REPLACE FUNCTION public.current_user_is_admin()
+RETURNS BOOLEAN
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+  RETURN public.is_admin(auth.uid());
+END;
+$$ LANGUAGE plpgsql;
+
+-- Drop other insecure functions that don't have RLS dependencies
 DROP FUNCTION IF EXISTS public.get_admin_user_details(UUID);
 DROP FUNCTION IF EXISTS public.can_access_admin_functions();
 
@@ -25,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.admin_audit_log (
 -- Enable RLS on audit log
 ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
 
--- Only admins can read audit logs
+-- Only admins can read audit logs (now that is_admin column exists)
 CREATE POLICY "Admin audit logs are viewable by admins only" ON public.admin_audit_log
   FOR SELECT USING (
     EXISTS (
@@ -33,14 +95,6 @@ CREATE POLICY "Admin audit logs are viewable by admins only" ON public.admin_aud
       WHERE id = auth.uid() AND is_admin = true
     )
   );
-
--- Add admin fields to users table if not exists
-ALTER TABLE public.users 
-ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false,
-ADD COLUMN IF NOT EXISTS admin_verified_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS last_admin_login TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS admin_login_attempts INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS admin_locked_until TIMESTAMPTZ;
 
 -- Create rate-limited, secure admin verification function
 CREATE OR REPLACE FUNCTION public.verify_admin_access(check_user_id UUID DEFAULT auth.uid())
@@ -162,8 +216,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Grant minimal necessary permissions - NO ANON ACCESS
+GRANT EXECUTE ON FUNCTION public.is_admin(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.current_user_is_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.verify_admin_access(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.validate_admin_session() TO authenticated;
+
+-- SECURITY: Revoke any previous anon access to admin functions
+REVOKE ALL ON FUNCTION public.is_admin(UUID) FROM anon;
+REVOKE ALL ON FUNCTION public.current_user_is_admin() FROM anon;
 
 -- Create index for audit log performance
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_user_timestamp 
@@ -177,9 +237,11 @@ ON public.users(id) WHERE is_admin = true;
 DO $$
 BEGIN
   RAISE NOTICE 'SECURITY: Admin functions hardened successfully:';
-  RAISE NOTICE '- Removed anon access to admin functions';
+  RAISE NOTICE '- Replaced is_admin() function with secure implementation';
+  RAISE NOTICE '- Removed anon access to admin functions';  
   RAISE NOTICE '- Added rate limiting and audit logging';
   RAISE NOTICE '- Enhanced session validation';
   RAISE NOTICE '- Added account lockout protection';
+  RAISE NOTICE '- Maintained RLS policy compatibility';
   RAISE NOTICE 'SECURITY ENHANCEMENT COMPLETE';
 END $$;

@@ -32,7 +32,7 @@ export function TourTestComponent() {
     try {
       console.log('🔧 Testing tour with close button functionality')
       
-      // Simple test tour config
+      // Simple test tour config with proper TourConfig interface
       const testTourConfig = {
         id: 'close-button-test',
         name: 'Close Button Test',
@@ -42,15 +42,13 @@ export function TourTestComponent() {
             id: 'step-1',
             element: 'body',
             title: 'Step 1: Test ESC Key',
-            description: 'This is step 1. Try pressing ESC key or clicking outside this popup to exit the tour.',
-            position: 'center' as const
+            description: 'This is step 1. Try pressing ESC key or clicking outside this popup to exit the tour.'
           },
           {
             id: 'step-2', 
             element: 'body',
             title: 'Step 2: Test Done Button',
-            description: 'This is the final step. The "Done" button should complete the tour. No X button should be visible.',
-            position: 'center' as const
+            description: 'This is the final step. The "Done" button should complete the tour. No X button should be visible.'
           }
         ]
       }

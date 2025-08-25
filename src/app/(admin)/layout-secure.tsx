@@ -48,7 +48,7 @@ async function validateAdminAccess(userId: string) {
   }
 
   // Step 4: Verify IP consistency (basic MITM protection)
-  const headersList = headers()
+  const headersList = await headers()
   const currentIP = headersList.get('x-forwarded-for') || 
                    headersList.get('x-real-ip') ||
                    'unknown'
