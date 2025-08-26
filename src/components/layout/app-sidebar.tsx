@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Crown,FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users } from "lucide-react"
+import { BarChart3, ClipboardCheck,Crown, FileText, Home, LogOut, MoreVertical, Package, Plus, Settings, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import * as React from "react"
@@ -53,6 +53,11 @@ const navGroups = [
         title: "My Quotes",
         url: "/quotes",
         icon: FileText,
+      },
+      {
+        title: "Assessments",
+        url: "/assessments",
+        icon: ClipboardCheck,
       },
       {
         title: "Item Library",

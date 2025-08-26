@@ -232,6 +232,29 @@ export interface PropertyAssessmentWithDetails extends PropertyAssessment {
   video_count?: number;
 }
 
+// Assessment with relationship data for UI components
+export interface PropertyAssessmentWithDetails extends PropertyAssessment {
+  properties?: {
+    id: string;
+    service_address: string;
+    property_name?: string;
+    property_type: string;
+    clients?: {
+      id: string;
+      name: string;
+      email?: string;
+      phone?: string;
+    };
+  };
+  quotes?: Array<{
+    id: string;
+    quote_number: string;
+    status: string;
+    total: number;
+    created_at: string;
+  }>;
+}
+
 // Assessment form data types for server actions
 export interface CreateAssessmentData {
   property_id: string;

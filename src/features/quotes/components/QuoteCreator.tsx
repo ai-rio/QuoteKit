@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
+import { AssessmentToQuoteIntegration } from '@/features/assessments/components/AssessmentToQuoteIntegration';
+import { PropertyAssessment } from '@/features/assessments/types';
 import { getPropertyById } from '@/features/clients/actions';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { PropertySelector } from '@/features/clients/components/PropertySelector';
@@ -25,6 +27,7 @@ import { CompanySettings } from '@/features/settings/types';
 import { createQuote, saveDraft } from '../actions';
 import { CreateQuoteData, Quote, QuoteLineItem, QuoteStatus,SaveDraftData } from '../types';
 import { calculateQuote } from '../utils';
+import { AssessmentSelector } from './AssessmentSelector';
 import { EnhancedLineItemsTable } from './EnhancedLineItemsTable';
 import { QuoteWorkflowTracker, useWorkflowStepTracking } from './quote-workflow-tracker';
 import { QuoteNumbering } from './QuoteNumbering';
@@ -74,6 +77,11 @@ function QuoteCreatorInternal({
   // Property state - Blueprint integration
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [propertyLoading, setPropertyLoading] = useState(false);
+  
+  // Assessment state - Assessment-to-quote integration
+  const [selectedAssessment, setSelectedAssessment] = useState<PropertyAssessment | null>(null);
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null);
+  const [showAssessmentIntegration, setShowAssessmentIntegration] = useState(false);
   
   // Legacy client info for backward compatibility
   const [clientName, setClientName] = useState(
@@ -156,6 +164,11 @@ function QuoteCreatorInternal({
   const handlePropertySelect = (property: Property | null) => {
     setSelectedProperty(property);
     
+    // Reset assessment selection when property changes
+    setSelectedAssessment(null);
+    setSelectedAssessmentId(null);
+    setShowAssessmentIntegration(false);
+    
     if (property) {
       // Track property selection workflow step (if available)
       if ('trackPropertySelected' in workflowTracking && typeof workflowTracking.trackPropertySelected === 'function') {
@@ -168,6 +181,23 @@ function QuoteCreatorInternal({
         });
       }
     }
+  };
+
+  // Handle assessment selection
+  const handleAssessmentSelect = (assessmentId: string | null, assessment: PropertyAssessment | null) => {
+    setSelectedAssessmentId(assessmentId);
+    setSelectedAssessment(assessment);
+    setShowAssessmentIntegration(!!assessment);
+  };
+
+  // Handle quote creation from assessment
+  const handleQuoteCreatedFromAssessment = (quoteId: string) => {
+    setSavedQuoteId(quoteId);
+    toast({
+      title: 'Success',
+      description: 'Quote created successfully from assessment data',
+    });
+    router.push(`/quotes/${quoteId}`);
   };
 
   // Mark as having unsaved changes when data changes
@@ -677,6 +707,37 @@ function QuoteCreatorInternal({
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Assessment Selection Section - Only show if property is selected */}
+      {selectedProperty && (
+        <Card className="bg-paper-white border-stone-gray shadow-sm">
+          <CardContent className="p-4 sm:p-6">
+            <AssessmentSelector
+              property={selectedProperty}
+              selectedAssessmentId={selectedAssessmentId || undefined}
+              onAssessmentSelect={handleAssessmentSelect}
+              onCreateNewAssessment={() => {
+                // Navigate to create assessment for this property
+                router.push(`/assessments/new?property_id=${selectedProperty.id}`);
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Assessment-Based Quote Generation */}
+      {showAssessmentIntegration && selectedAssessment && (
+        <Card className="bg-paper-white border-stone-gray shadow-sm">
+          <CardContent className="p-4 sm:p-6">
+            <AssessmentToQuoteIntegration
+              assessment={selectedAssessment}
+              property={selectedProperty || undefined}
+              availableItems={availableItems}
+              onQuoteCreated={handleQuoteCreatedFromAssessment}
+            />
           </CardContent>
         </Card>
       )}

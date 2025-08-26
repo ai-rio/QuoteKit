@@ -669,6 +669,45 @@ export async function getAssessmentAnalytics(): Promise<ActionResponse<Assessmen
 }
 
 // =====================================================
+// PROPERTY-SPECIFIC ASSESSMENTS
+// =====================================================
+
+export async function getAssessmentsForProperty(propertyId: string): Promise<ActionResponse<PropertyAssessment[]>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    if (!propertyId) {
+      return { data: null, error: { message: 'Property ID is required' } };
+    }
+
+    const { data: assessments, error } = await supabase
+      .from('property_assessments')
+      .select('*')
+      .eq('property_id', propertyId)
+      .eq('user_id', user.id)
+      .order('assessment_date', { ascending: false });
+
+    if (error) {
+      console.error('Database error fetching assessments for property:', error);
+      return { data: null, error };
+    }
+
+    return { data: assessments || [], error: null };
+  } catch (error) {
+    console.error('Unexpected error fetching assessments for property:', error);
+    return { 
+      data: null, 
+      error: { message: 'An unexpected error occurred while fetching assessments' } 
+    };
+  }
+}
+
+// =====================================================
 // ASSESSMENT DASHBOARD DATA
 // =====================================================
 
