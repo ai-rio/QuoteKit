@@ -286,7 +286,6 @@ export function AssessmentViewer({ assessment }: AssessmentViewerProps) {
       {assessment.assessment_status === 'completed' && (
         <AssessmentReport
           assessment={assessment}
-          property={property as any} // Type assertion for now - property structure is compatible
           showActions={true}
         />
       )}

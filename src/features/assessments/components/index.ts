@@ -1,5 +1,6 @@
 export { AssessmentCard } from './AssessmentCard';
 export { AssessmentFormRefactored as AssessmentForm } from './AssessmentForm';
+export { AssessmentIntegration } from './AssessmentIntegration';
 export { AssessmentReport } from './AssessmentReport';
 export { AssessmentsManager } from './AssessmentsManager';
 export { AssessmentStats } from './AssessmentStats';

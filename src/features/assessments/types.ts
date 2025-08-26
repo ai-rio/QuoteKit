@@ -220,20 +220,7 @@ export interface AssessmentMedia {
 
 // Extended assessment with property and client details
 export interface PropertyAssessmentWithDetails extends PropertyAssessment {
-  property_name?: string;
-  service_address?: string;
-  property_type?: string;
-  client_id?: string;
-  client_name?: string;
-  company_name?: string;
-  client_type?: string;
-  media_count?: number;
-  photo_count?: number;
-  video_count?: number;
-}
-
-// Assessment with relationship data for UI components
-export interface PropertyAssessmentWithDetails extends PropertyAssessment {
+  // Property relationship data
   properties?: {
     id: string;
     service_address: string;
@@ -246,6 +233,7 @@ export interface PropertyAssessmentWithDetails extends PropertyAssessment {
       phone?: string;
     };
   };
+  // Quote relationship data
   quotes?: Array<{
     id: string;
     quote_number: string;
@@ -253,6 +241,17 @@ export interface PropertyAssessmentWithDetails extends PropertyAssessment {
     total: number;
     created_at: string;
   }>;
+  // Additional computed fields
+  property_name?: string;
+  service_address?: string;
+  property_type?: string;
+  client_id?: string;
+  client_name?: string;
+  company_name?: string;
+  client_type?: string;
+  media_count?: number;
+  photo_count?: number;
+  video_count?: number;
 }
 
 // Assessment form data types for server actions

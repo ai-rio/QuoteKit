@@ -17,10 +17,10 @@ export type Database = {
     Functions: {
       graphql: {
         Args: {
+          extensions?: Json
           operationName?: string
           query?: string
           variables?: Json
-          extensions?: Json
         }
         Returns: Json
       }
@@ -141,6 +141,165 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      assessment_media: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          assessment_id: string
+          caption: string | null
+          category: string | null
+          compressed_generated: boolean | null
+          created_at: string | null
+          description: string | null
+          file_size_bytes: number | null
+          filename: string
+          id: string
+          is_featured: boolean | null
+          location_description: string | null
+          media_type: Database["public"]["Enums"]["assessment_media_type"]
+          metadata: Json | null
+          mime_type: string | null
+          original_filename: string | null
+          processing_status: string | null
+          public_url: string | null
+          requires_approval: boolean | null
+          sort_order: number | null
+          storage_bucket: string | null
+          storage_path: string
+          tags: string[] | null
+          taken_at: string | null
+          thumbnail_generated: boolean | null
+          updated_at: string | null
+          user_id: string
+          visible_to_client: boolean | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assessment_id: string
+          caption?: string | null
+          category?: string | null
+          compressed_generated?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          file_size_bytes?: number | null
+          filename: string
+          id?: string
+          is_featured?: boolean | null
+          location_description?: string | null
+          media_type: Database["public"]["Enums"]["assessment_media_type"]
+          metadata?: Json | null
+          mime_type?: string | null
+          original_filename?: string | null
+          processing_status?: string | null
+          public_url?: string | null
+          requires_approval?: boolean | null
+          sort_order?: number | null
+          storage_bucket?: string | null
+          storage_path: string
+          tags?: string[] | null
+          taken_at?: string | null
+          thumbnail_generated?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          visible_to_client?: boolean | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assessment_id?: string
+          caption?: string | null
+          category?: string | null
+          compressed_generated?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          file_size_bytes?: number | null
+          filename?: string
+          id?: string
+          is_featured?: boolean | null
+          location_description?: string | null
+          media_type?: Database["public"]["Enums"]["assessment_media_type"]
+          metadata?: Json | null
+          mime_type?: string | null
+          original_filename?: string | null
+          processing_status?: string | null
+          public_url?: string | null
+          requires_approval?: boolean | null
+          sort_order?: number | null
+          storage_bucket?: string | null
+          storage_path?: string
+          tags?: string[] | null
+          taken_at?: string | null
+          thumbnail_generated?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          visible_to_client?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_media_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["assessment_id"]
+          },
+          {
+            foreignKeyName: "assessment_media_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "property_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_reports: {
+        Row: {
+          assessment_id: string
+          created_at: string | null
+          html_content: string | null
+          id: string
+          pdf_url: string | null
+          report_data: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string | null
+          html_content?: string | null
+          id: string
+          pdf_url?: string | null
+          report_data: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string | null
+          html_content?: string | null
+          id?: string
+          pdf_url?: string | null
+          report_data?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_reports_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["assessment_id"]
+          },
+          {
+            foreignKeyName: "assessment_reports_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "property_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       batch_jobs: {
         Row: {
@@ -3146,6 +3305,13 @@ export type Database = {
             foreignKeyName: "properties_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "properties_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "client_analytics"
             referencedColumns: ["client_id"]
           },
@@ -3154,6 +3320,290 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_assessments: {
+        Row: {
+          assessment_date: string | null
+          assessment_notes: string | null
+          assessment_number: string | null
+          assessment_reviewed_by: string | null
+          assessment_status:
+            | Database["public"]["Enums"]["assessment_status"]
+            | null
+          assessor_contact: string | null
+          assessor_name: string
+          bare_spots_count: number | null
+          client_walkthrough_completed: boolean | null
+          compaction_level: number | null
+          completed_date: string | null
+          complexity_score: number | null
+          crane_access_needed: boolean | null
+          created_at: string | null
+          distance_to_disposal_feet: number | null
+          drainage_quality: number | null
+          dump_truck_access: boolean | null
+          electrical_outlets_available: number | null
+          environmental_considerations: string | null
+          equipment_needed:
+            | Database["public"]["Enums"]["equipment_category"][]
+            | null
+          erosion_issues: boolean | null
+          estimated_disposal_cost: number | null
+          estimated_equipment_cost: number | null
+          estimated_labor_cost: number | null
+          estimated_material_cost: number | null
+          estimated_total_cost: number | null
+          existing_mulch_area: number | null
+          fence_linear_feet: number | null
+          flower_bed_area: number | null
+          follow_up_needed: boolean | null
+          follow_up_notes: string | null
+          gate_width_feet: number | null
+          grass_type: string | null
+          hardscape_area_measured: number | null
+          hoa_restrictions: string | null
+          id: string
+          internal_notes: string | null
+          irrigation_status:
+            | Database["public"]["Enums"]["irrigation_status"]
+            | null
+          irrigation_zones_count: number | null
+          lawn_area_estimated: number | null
+          lawn_area_measured: number | null
+          lawn_condition: Database["public"]["Enums"]["lawn_condition"] | null
+          material_requirements: Json | null
+          measurements_verified: boolean | null
+          neighbor_considerations: string | null
+          obstacles: Json | null
+          overall_condition:
+            | Database["public"]["Enums"]["assessment_overall_condition"]
+            | null
+          parking_available: boolean | null
+          permit_required: boolean | null
+          photos_taken_count: number | null
+          priority_level: number | null
+          profit_margin_percent: number | null
+          property_id: string
+          quote_id: string | null
+          recommendations: string | null
+          review_date: string | null
+          safety_hazards: string[] | null
+          scheduled_date: string | null
+          shrub_count: number | null
+          slope_grade_percent: number | null
+          soil_condition: Database["public"]["Enums"]["soil_condition"] | null
+          soil_ph: number | null
+          special_considerations: Json | null
+          temperature_f: number | null
+          thatch_thickness_inches: number | null
+          total_estimated_hours: number | null
+          tree_count: number | null
+          updated_at: string | null
+          user_id: string
+          utility_lines_marked: boolean | null
+          vehicle_access_width_feet: number | null
+          water_source_access: boolean | null
+          weather_conditions: string | null
+          weed_coverage_percent: number | null
+        }
+        Insert: {
+          assessment_date?: string | null
+          assessment_notes?: string | null
+          assessment_number?: string | null
+          assessment_reviewed_by?: string | null
+          assessment_status?:
+            | Database["public"]["Enums"]["assessment_status"]
+            | null
+          assessor_contact?: string | null
+          assessor_name: string
+          bare_spots_count?: number | null
+          client_walkthrough_completed?: boolean | null
+          compaction_level?: number | null
+          completed_date?: string | null
+          complexity_score?: number | null
+          crane_access_needed?: boolean | null
+          created_at?: string | null
+          distance_to_disposal_feet?: number | null
+          drainage_quality?: number | null
+          dump_truck_access?: boolean | null
+          electrical_outlets_available?: number | null
+          environmental_considerations?: string | null
+          equipment_needed?:
+            | Database["public"]["Enums"]["equipment_category"][]
+            | null
+          erosion_issues?: boolean | null
+          estimated_disposal_cost?: number | null
+          estimated_equipment_cost?: number | null
+          estimated_labor_cost?: number | null
+          estimated_material_cost?: number | null
+          estimated_total_cost?: number | null
+          existing_mulch_area?: number | null
+          fence_linear_feet?: number | null
+          flower_bed_area?: number | null
+          follow_up_needed?: boolean | null
+          follow_up_notes?: string | null
+          gate_width_feet?: number | null
+          grass_type?: string | null
+          hardscape_area_measured?: number | null
+          hoa_restrictions?: string | null
+          id?: string
+          internal_notes?: string | null
+          irrigation_status?:
+            | Database["public"]["Enums"]["irrigation_status"]
+            | null
+          irrigation_zones_count?: number | null
+          lawn_area_estimated?: number | null
+          lawn_area_measured?: number | null
+          lawn_condition?: Database["public"]["Enums"]["lawn_condition"] | null
+          material_requirements?: Json | null
+          measurements_verified?: boolean | null
+          neighbor_considerations?: string | null
+          obstacles?: Json | null
+          overall_condition?:
+            | Database["public"]["Enums"]["assessment_overall_condition"]
+            | null
+          parking_available?: boolean | null
+          permit_required?: boolean | null
+          photos_taken_count?: number | null
+          priority_level?: number | null
+          profit_margin_percent?: number | null
+          property_id: string
+          quote_id?: string | null
+          recommendations?: string | null
+          review_date?: string | null
+          safety_hazards?: string[] | null
+          scheduled_date?: string | null
+          shrub_count?: number | null
+          slope_grade_percent?: number | null
+          soil_condition?: Database["public"]["Enums"]["soil_condition"] | null
+          soil_ph?: number | null
+          special_considerations?: Json | null
+          temperature_f?: number | null
+          thatch_thickness_inches?: number | null
+          total_estimated_hours?: number | null
+          tree_count?: number | null
+          updated_at?: string | null
+          user_id: string
+          utility_lines_marked?: boolean | null
+          vehicle_access_width_feet?: number | null
+          water_source_access?: boolean | null
+          weather_conditions?: string | null
+          weed_coverage_percent?: number | null
+        }
+        Update: {
+          assessment_date?: string | null
+          assessment_notes?: string | null
+          assessment_number?: string | null
+          assessment_reviewed_by?: string | null
+          assessment_status?:
+            | Database["public"]["Enums"]["assessment_status"]
+            | null
+          assessor_contact?: string | null
+          assessor_name?: string
+          bare_spots_count?: number | null
+          client_walkthrough_completed?: boolean | null
+          compaction_level?: number | null
+          completed_date?: string | null
+          complexity_score?: number | null
+          crane_access_needed?: boolean | null
+          created_at?: string | null
+          distance_to_disposal_feet?: number | null
+          drainage_quality?: number | null
+          dump_truck_access?: boolean | null
+          electrical_outlets_available?: number | null
+          environmental_considerations?: string | null
+          equipment_needed?:
+            | Database["public"]["Enums"]["equipment_category"][]
+            | null
+          erosion_issues?: boolean | null
+          estimated_disposal_cost?: number | null
+          estimated_equipment_cost?: number | null
+          estimated_labor_cost?: number | null
+          estimated_material_cost?: number | null
+          estimated_total_cost?: number | null
+          existing_mulch_area?: number | null
+          fence_linear_feet?: number | null
+          flower_bed_area?: number | null
+          follow_up_needed?: boolean | null
+          follow_up_notes?: string | null
+          gate_width_feet?: number | null
+          grass_type?: string | null
+          hardscape_area_measured?: number | null
+          hoa_restrictions?: string | null
+          id?: string
+          internal_notes?: string | null
+          irrigation_status?:
+            | Database["public"]["Enums"]["irrigation_status"]
+            | null
+          irrigation_zones_count?: number | null
+          lawn_area_estimated?: number | null
+          lawn_area_measured?: number | null
+          lawn_condition?: Database["public"]["Enums"]["lawn_condition"] | null
+          material_requirements?: Json | null
+          measurements_verified?: boolean | null
+          neighbor_considerations?: string | null
+          obstacles?: Json | null
+          overall_condition?:
+            | Database["public"]["Enums"]["assessment_overall_condition"]
+            | null
+          parking_available?: boolean | null
+          permit_required?: boolean | null
+          photos_taken_count?: number | null
+          priority_level?: number | null
+          profit_margin_percent?: number | null
+          property_id?: string
+          quote_id?: string | null
+          recommendations?: string | null
+          review_date?: string | null
+          safety_hazards?: string[] | null
+          scheduled_date?: string | null
+          shrub_count?: number | null
+          slope_grade_percent?: number | null
+          soil_condition?: Database["public"]["Enums"]["soil_condition"] | null
+          soil_ph?: number | null
+          special_considerations?: Json | null
+          temperature_f?: number | null
+          thatch_thickness_inches?: number | null
+          total_estimated_hours?: number | null
+          tree_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+          utility_lines_marked?: boolean | null
+          vehicle_access_width_feet?: number | null
+          water_source_access?: boolean | null
+          weather_conditions?: string | null
+          weed_coverage_percent?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_assessments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_assessments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_assessments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_analytics"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "property_assessments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -3242,6 +3692,13 @@ export type Database = {
             foreignKeyName: "quotes_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "client_analytics"
             referencedColumns: ["client_id"]
           },
@@ -3251,6 +3708,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "quotes_property_id_fkey"
@@ -4655,6 +5119,95 @@ export type Database = {
       }
     }
     Views: {
+      assessment_analytics: {
+        Row: {
+          assessment_date: string | null
+          assessment_duration_hours: number | null
+          assessment_id: string | null
+          assessment_number: string | null
+          assessment_status:
+            | Database["public"]["Enums"]["assessment_status"]
+            | null
+          client_id: string | null
+          client_name: string | null
+          client_type: Database["public"]["Enums"]["client_type"] | null
+          client_walkthrough_completed: boolean | null
+          company_name: string | null
+          complexity_score: number | null
+          created_at: string | null
+          estimated_total_cost: number | null
+          featured_media_count: number | null
+          follow_up_needed: boolean | null
+          hardscape_area_measured: number | null
+          has_quote: boolean | null
+          irrigation_status:
+            | Database["public"]["Enums"]["irrigation_status"]
+            | null
+          lawn_area_measured: number | null
+          lawn_condition: Database["public"]["Enums"]["lawn_condition"] | null
+          measurements_verified: boolean | null
+          media_count: number | null
+          overall_condition:
+            | Database["public"]["Enums"]["assessment_overall_condition"]
+            | null
+          photo_count: number | null
+          priority_level: number | null
+          profit_margin_percent: number | null
+          property_id: string | null
+          property_name: string | null
+          property_type: Database["public"]["Enums"]["property_type"] | null
+          quote_id: string | null
+          service_address: string | null
+          shrub_count: number | null
+          soil_condition: Database["public"]["Enums"]["soil_condition"] | null
+          total_estimated_hours: number | null
+          tree_count: number | null
+          updated_at: string | null
+          user_id: string | null
+          video_count: number | null
+          weed_coverage_percent: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_assessments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_summary: {
+        Row: {
+          assessments_this_month: number | null
+          assessments_this_week: number | null
+          assessments_with_quotes: number | null
+          average_assessment_value: number | null
+          average_complexity: number | null
+          average_labor_hours: number | null
+          completed_count: number | null
+          critical_condition_count: number | null
+          excellent_condition_count: number | null
+          fair_condition_count: number | null
+          followup_required_count: number | null
+          good_condition_count: number | null
+          high_complexity_count: number | null
+          in_progress_count: number | null
+          max_complexity: number | null
+          most_recent_assessment: string | null
+          poor_condition_count: number | null
+          quote_conversion_rate_percent: number | null
+          quoted_value: number | null
+          reviewed_count: number | null
+          scheduled_count: number | null
+          total_assessments: number | null
+          total_estimated_hours: number | null
+          total_estimated_value: number | null
+          total_media_files: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       client_analytics: {
         Row: {
           acceptance_rate_percent: number | null
@@ -4723,6 +5276,13 @@ export type Database = {
             foreignKeyName: "properties_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "assessment_analytics"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "properties_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "client_analytics"
             referencedColumns: ["client_id"]
           },
@@ -4758,10 +5318,10 @@ export type Database = {
     Functions: {
       apply_optimization_config: {
         Args: {
-          p_enabled?: boolean
-          p_config_type: string
-          p_config_key: string
           p_config_value: Json
+          p_config_key: string
+          p_config_type: string
+          p_enabled?: boolean
         }
         Returns: boolean
       }
@@ -4788,11 +5348,11 @@ export type Database = {
       calculate_regional_performance_scores: {
         Args: Record<PropertyKey, never>
         Returns: {
-          region: string
-          improvement_recommendations: Json
-          performance_grade: string
-          health_status: string
           performance_score: number
+          health_status: string
+          performance_grade: string
+          improvement_recommendations: Json
+          region: string
         }[]
       }
       calculate_security_score: {
@@ -4801,9 +5361,9 @@ export type Database = {
       }
       check_performance_thresholds: {
         Args: {
-          p_metric_value: number
           p_function_name: string
           p_metric_name: string
+          p_metric_value: number
         }
         Returns: undefined
       }
@@ -4814,10 +5374,10 @@ export type Database = {
       check_rls_status: {
         Args: Record<PropertyKey, never>
         Returns: {
+          policy_count: number
           table_schema: string
           table_name: string
           rls_enabled: boolean
-          policy_count: number
         }[]
       }
       check_security_compliance: {
@@ -4825,7 +5385,7 @@ export type Database = {
         Returns: Json
       }
       check_usage_limit: {
-        Args: { p_limit: number; p_user_id: string; p_usage_type: string }
+        Args: { p_user_id: string; p_usage_type: string; p_limit: number }
         Returns: boolean
       }
       cleanup_connection_pool_data: {
@@ -4865,7 +5425,7 @@ export type Database = {
         Returns: boolean
       }
       execute_automatic_rollback: {
-        Args: { p_reason: string; p_migration_id: string }
+        Args: { p_migration_id: string; p_reason: string }
         Returns: boolean
       }
       generate_optimization_recommendations: {
@@ -4888,9 +5448,25 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: string
       }
+      get_assessment_dashboard: {
+        Args: { p_user_id: string }
+        Returns: {
+          scheduled_date: string
+          assessment_id: string
+          assessment_number: string
+          property_name: string
+          priority_level: number
+          estimated_total_cost: number
+          photo_count: number
+          client_name: string
+          assessment_status: Database["public"]["Enums"]["assessment_status"]
+          complexity_score: number
+        }[]
+      }
       get_batch_job_status: {
         Args: { p_job_id: string }
         Returns: {
+          execution_time_ms: number
           id: string
           operation_type: string
           total_items: number
@@ -4898,7 +5474,6 @@ export type Database = {
           failed_items: number
           progress_percent: number
           status: string
-          execution_time_ms: number
           created_at: string
           completed_at: string
           error_summary: string
@@ -4918,10 +5493,10 @@ export type Database = {
       get_current_usage: {
         Args: { p_user_id: string }
         Returns: {
-          quotes_count: number
-          pdf_exports_count: number
           api_calls_count: number
           bulk_operations_count: number
+          quotes_count: number
+          pdf_exports_count: number
         }[]
       }
       get_global_optimization_status: {
@@ -4929,44 +5504,44 @@ export type Database = {
         Returns: {
           optimization_summary: Json
           optimization_id: string
+          created_at: string
+          auto_applied: boolean
+          performance_improvement: number
+          recommendations_count: number
           overall_performance: Json
           regional_health_score: number
-          performance_improvement: number
           total_optimizations: number
-          recommendations_count: number
-          auto_applied: boolean
-          created_at: string
         }[]
       }
       get_migration_status: {
         Args: { p_migration_id?: string }
         Returns: {
+          error_rate: number
           active_alerts: Json
-          rollback_count: number
           duration_minutes: number
+          rollback_count: number
+          function_health: Json
+          migration_id: string
           current_state: string
           progress_percent: number
           health_score: number
           traffic_split_percent: number
           performance_improvement: number
-          error_rate: number
-          function_health: Json
-          migration_id: string
         }[]
       }
       get_onboarding_stats: {
         Args: {
+          user_id_param?: string
           end_date?: string
           start_date?: string
           tour_id_param?: string
-          user_id_param?: string
         }
         Returns: {
-          skipped_tours: number
           completion_rate: number
+          skipped_tours: number
+          completed_tours: number
           average_completion_time: unknown
           total_users: number
-          completed_tours: number
           in_progress_tours: number
         }[]
       }
@@ -4992,8 +5567,8 @@ export type Database = {
       get_pending_admin_alerts: {
         Args: Record<PropertyKey, never>
         Returns: {
-          type: string
           id: string
+          type: string
           title: string
           message: string
           severity: string
@@ -5003,16 +5578,15 @@ export type Database = {
       }
       get_performance_baseline: {
         Args: {
+          p_baseline_type: string
           p_environment: string
           p_function_name: string
-          p_baseline_type: string
         }
         Returns: number
       }
       get_performance_summary: {
-        Args: { p_function_name?: string; p_days_back?: number }
+        Args: { p_days_back?: number; p_function_name?: string }
         Returns: {
-          avg_api_calls: number
           function_name: string
           operation_type: string
           avg_execution_time_ms: number
@@ -5020,6 +5594,7 @@ export type Database = {
           max_execution_time_ms: number
           total_invocations: number
           avg_db_queries: number
+          avg_api_calls: number
           error_rate: number
           improvement_vs_baseline: number
         }[]
@@ -5027,17 +5602,17 @@ export type Database = {
       get_production_validation_status: {
         Args: { p_validation_id?: string; p_limit?: number }
         Returns: {
-          performance_score: number
+          created_at: string
           validation_id: string
           overall_status: string
           overall_score: number
           deployment_ready: boolean
           estimated_risk: string
           critical_issues: number
+          performance_score: number
           security_score: number
           reliability_score: number
           business_score: number
-          created_at: string
           validation_summary: Json
         }[]
       }
@@ -5048,9 +5623,9 @@ export type Database = {
       get_user_edge_case_summary: {
         Args: { p_user_id: string }
         Returns: {
+          failed_events: number
           total_events: number
           successful_events: number
-          failed_events: number
           recent_failures: number
           unread_notifications: number
           active_disputes: number
@@ -5064,8 +5639,8 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: {
           total_tours: number
-          completion_percentage: number
           completed_tours: number
+          completion_percentage: number
         }[]
       }
       get_user_tier: {
@@ -5075,17 +5650,17 @@ export type Database = {
       get_webhook_performance_summary: {
         Args: { p_event_type?: string; p_days_back?: number }
         Returns: {
+          total_events: number
           event_type: string
           avg_processing_time_ms: number
-          total_events: number
           success_rate: number
           retry_rate: number
-          improvement_vs_baseline: number
           dead_letter_rate: number
+          improvement_vs_baseline: number
         }[]
       }
       increment_usage: {
-        Args: { p_user_id: string; p_usage_type: string; p_amount?: number }
+        Args: { p_amount?: number; p_user_id: string; p_usage_type: string }
         Returns: undefined
       }
       is_admin: {
@@ -5102,7 +5677,7 @@ export type Database = {
       }
       log_pdf_generation: {
         Args: {
-          p_quote_id: string
+          p_user_id: string
           p_template_id: string
           p_generation_type: string
           p_status: string
@@ -5111,18 +5686,18 @@ export type Database = {
           p_storage_path?: string
           p_error_message?: string
           p_metadata?: Json
-          p_user_id: string
+          p_quote_id: string
         }
         Returns: string
       }
       log_security_event: {
         Args: {
-          p_threat_level: string
-          p_details?: Json
-          p_function_name: string
           p_source_ip: unknown
-          p_user_id: string
+          p_threat_level: string
+          p_function_name: string
           p_event_type: string
+          p_user_id: string
+          p_details?: Json
         }
         Returns: string
       }
@@ -5132,24 +5707,21 @@ export type Database = {
       }
       record_edge_function_performance: {
         Args: {
-          p_api_calls_made?: number
-          p_memory_usage_mb?: number
-          p_error_count?: number
-          p_metadata?: Json
           p_user_id?: string
           p_function_name: string
           p_operation_type: string
           p_execution_time_ms: number
           p_database_queries?: number
+          p_api_calls_made?: number
+          p_memory_usage_mb?: number
+          p_error_count?: number
+          p_metadata?: Json
         }
         Returns: string
       }
       record_webhook_stage: {
         Args: {
           p_status: string
-          p_stripe_event_id: string
-          p_event_type: string
-          p_stage: string
           p_handler_name?: string
           p_execution_time_ms?: number
           p_database_queries?: number
@@ -5157,26 +5729,29 @@ export type Database = {
           p_error_message?: string
           p_retry_attempt?: number
           p_metadata?: Json
+          p_stripe_event_id: string
+          p_event_type: string
+          p_stage: string
         }
         Returns: string
       }
       schedule_function_warmup: {
         Args: {
-          p_function_name: string
           p_strategy?: string
+          p_function_name: string
           p_frequency?: number
         }
         Returns: undefined
       }
       send_to_dead_letter_queue: {
         Args: {
-          p_error_message?: string
-          p_error_stack?: string
           p_requires_manual_review?: boolean
-          p_stripe_event_id: string
-          p_event_type: string
-          p_event_data: Json
+          p_error_stack?: string
+          p_error_message?: string
           p_failure_reason: string
+          p_event_data: Json
+          p_event_type: string
+          p_stripe_event_id: string
         }
         Returns: string
       }
@@ -5209,17 +5784,17 @@ export type Database = {
         Returns: undefined
       }
       update_onboarding_progress: {
-        Args: { progress_data: Json; mark_completed?: boolean }
+        Args: { mark_completed?: boolean; progress_data: Json }
         Returns: undefined
       }
       update_performance_baseline: {
         Args: {
-          p_measurement_unit: string
-          p_sample_size?: number
-          p_function_name: string
-          p_environment: string
           p_baseline_type: string
           p_baseline_value: number
+          p_sample_size?: number
+          p_measurement_unit: string
+          p_function_name: string
+          p_environment: string
         }
         Returns: undefined
       }
@@ -5242,16 +5817,51 @@ export type Database = {
       verify_admin_access: {
         Args: { check_user_id?: string }
         Returns: {
-          is_valid: boolean
-          error_code: string
           last_login: string
           user_email: string
+          is_valid: boolean
+          error_code: string
         }[]
       }
     }
     Enums: {
+      assessment_media_type:
+        | "photo"
+        | "video"
+        | "document"
+        | "audio_note"
+        | "360_photo"
+      assessment_overall_condition:
+        | "excellent"
+        | "good"
+        | "fair"
+        | "poor"
+        | "critical"
+      assessment_status:
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "reviewed"
+        | "requires_followup"
       client_status: "lead" | "active" | "inactive" | "archived"
       client_type: "residential" | "commercial"
+      equipment_category:
+        | "mowing"
+        | "landscaping"
+        | "irrigation"
+        | "soil_care"
+        | "tree_care"
+        | "cleanup"
+        | "specialized"
+        | "safety"
+      irrigation_status:
+        | "none"
+        | "excellent"
+        | "good"
+        | "needs_repair"
+        | "outdated"
+        | "broken"
+      lawn_condition: "pristine" | "healthy" | "patchy" | "poor" | "dead"
       pricing_plan_interval: "day" | "week" | "month" | "year"
       pricing_type: "one_time" | "recurring"
       property_access: "easy" | "moderate" | "difficult" | "gate_required"
@@ -5263,6 +5873,13 @@ export type Database = {
         | "declined"
         | "expired"
         | "converted"
+      soil_condition:
+        | "excellent"
+        | "good"
+        | "compacted"
+        | "sandy"
+        | "clay"
+        | "contaminated"
       subscription_status:
         | "trialing"
         | "active"
@@ -5390,8 +6007,48 @@ export const Constants = {
   },
   public: {
     Enums: {
+      assessment_media_type: [
+        "photo",
+        "video",
+        "document",
+        "audio_note",
+        "360_photo",
+      ],
+      assessment_overall_condition: [
+        "excellent",
+        "good",
+        "fair",
+        "poor",
+        "critical",
+      ],
+      assessment_status: [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "reviewed",
+        "requires_followup",
+      ],
       client_status: ["lead", "active", "inactive", "archived"],
       client_type: ["residential", "commercial"],
+      equipment_category: [
+        "mowing",
+        "landscaping",
+        "irrigation",
+        "soil_care",
+        "tree_care",
+        "cleanup",
+        "specialized",
+        "safety",
+      ],
+      irrigation_status: [
+        "none",
+        "excellent",
+        "good",
+        "needs_repair",
+        "outdated",
+        "broken",
+      ],
+      lawn_condition: ["pristine", "healthy", "patchy", "poor", "dead"],
       pricing_plan_interval: ["day", "week", "month", "year"],
       pricing_type: ["one_time", "recurring"],
       property_access: ["easy", "moderate", "difficult", "gate_required"],
@@ -5403,6 +6060,14 @@ export const Constants = {
         "declined",
         "expired",
         "converted",
+      ],
+      soil_condition: [
+        "excellent",
+        "good",
+        "compacted",
+        "sandy",
+        "clay",
+        "contaminated",
       ],
       subscription_status: [
         "trialing",
