@@ -11,6 +11,7 @@ This directory contains all documentation for the QuoteKit project, organized by
 ### 🚀 **Development & Implementation**
 - `development/` - Development guides, coding standards, and implementation details
   - `driver.js/` - **User Onboarding System** - Complete driver.js implementation with guided tours
+  - `blueprint-upgrade/` - **Blueprint Implementation** - Comprehensive lawn care software blueprint (75% complete)
 - `type-fixes/` - TypeScript error fixes and type safety improvements
 - `testing/` - Testing strategies, procedures, and quality assurance
 
@@ -39,6 +40,7 @@ This directory contains all documentation for the QuoteKit project, organized by
 
 - **Getting Started**: See `development/README.md`
 - **User Onboarding**: See `development/driver.js/README.md` - Complete guided tour system
+- **Blueprint Implementation**: See `development/blueprint-upgrade/README.md` - Lawn care software blueprint (75% complete)
 - **Architecture Overview**: See `architecture/README.md`
 - **Deployment Guide**: See `deployment/README.md`
 - **Feature Specifications**: See `features/README.md`
