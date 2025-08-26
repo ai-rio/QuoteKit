@@ -66,10 +66,10 @@ export function PropertyManager({ clientId }: PropertyManagerProps) {
       try {
         setLoading(true);
         const response = await getPropertiesByClient(clientId);
-        if (response.error) {
+        if (response?.error) {
           setError(response.error.message || 'Failed to load properties');
         } else {
-          setProperties(response.data || []);
+          setProperties(response?.data || []);
         }
       } catch (err) {
         setError('An unexpected error occurred');
@@ -101,7 +101,7 @@ export function PropertyManager({ clientId }: PropertyManagerProps) {
     startTransition(async () => {
       try {
         const response = await deleteProperty(propertyId);
-        if (response.error) {
+        if (response?.error) {
           setError(response.error.message || 'Failed to delete property');
         } else {
           setProperties(properties.filter((p) => p.id !== propertyId));
@@ -138,9 +138,9 @@ export function PropertyManager({ clientId }: PropertyManagerProps) {
           response = await createProperty(formData);
         }
 
-        if (response.error) {
+        if (response?.error) {
           setError(response.error.message || 'Failed to save property');
-        } else if (response.data) {
+        } else if (response?.data) {
           if (editingProperty) {
             setProperties(properties.map((p) => 
               p.id === editingProperty.id ? response.data! : p

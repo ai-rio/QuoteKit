@@ -158,7 +158,7 @@ function QuoteCreatorInternal({
     
     if (property) {
       // Track property selection workflow step (if available)
-      if ('trackPropertySelected' in workflowTracking && workflowTracking.trackPropertySelected) {
+      if ('trackPropertySelected' in workflowTracking && typeof workflowTracking.trackPropertySelected === 'function') {
         workflowTracking.trackPropertySelected({
           propertyId: property.id,
           propertyName: property.property_name || 'Unnamed Property',

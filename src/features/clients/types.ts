@@ -89,7 +89,7 @@ export interface ClientOption {
 }
 
 // Form validation schema types
-export type ClientFormErrors = Partial<CommercialClientFormData>;
+export type ClientFormErrors = Partial<Record<keyof CommercialClientFormData, string>>;
 
 // =====================================================
 // PROPERTY TYPES - Blueprint Implementation

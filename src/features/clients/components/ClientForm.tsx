@@ -94,14 +94,11 @@ export function ClientForm({ client, onSuccess, onCancel, showCard = true }: Cli
         newErrors.primary_contact_person = 'Primary contact person is required for commercial clients';
       }
 
-      const creditTerms = Number(commercialData.credit_terms);
-      const creditLimit = Number(commercialData.credit_limit);
-
-      if (isNaN(creditTerms) || creditTerms < 0 || creditTerms > 365) {
+      if (commercialData.credit_terms < 0 || commercialData.credit_terms > 365) {
         newErrors.credit_terms = 'Credit terms must be between 0 and 365 days';
       }
 
-      if (isNaN(creditLimit) || creditLimit < 0) {
+      if (commercialData.credit_limit < 0) {
         newErrors.credit_limit = 'Credit limit cannot be negative';
       }
     }
@@ -159,7 +156,7 @@ export function ClientForm({ client, onSuccess, onCancel, showCard = true }: Cli
     });
   };
 
-  const handleInputChange = (field: keyof ClientFormData, value: string | number) => {
+  const handleInputChange = (field: keyof CommercialClientFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
