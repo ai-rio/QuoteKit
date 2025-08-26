@@ -415,8 +415,6 @@ SELECT link_quotes_to_default_properties() as quotes_updated;
 -- Add properties to realtime subscriptions
 DROP PUBLICATION IF EXISTS supabase_realtime;
 CREATE PUBLICATION supabase_realtime FOR TABLE 
-  public.products, 
-  public.prices, 
   public.properties;
 
 -- =====================================================
