@@ -967,6 +967,46 @@ export async function togglePropertyStatus(propertyId: string, isActive: boolean
   }
 }
 
+export async function getPropertiesByClient(clientId: string): Promise<ActionResponse<Property[]>> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { data: null, error: { message: 'User not authenticated' } };
+    }
+
+    // Verify client ownership
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('id', clientId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (clientError || !clientData) {
+      return { data: null, error: { message: 'Invalid client selection or access denied' } };
+    }
+
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('client_id', clientId)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Database error fetching properties by client:', error);
+      return { data: null, error };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Unexpected error fetching properties by client:', error);
+    return { data: null, error: { message: 'Failed to fetch properties' } };
+  }
+}
+
 export async function bulkPropertyOperation(operation: BulkPropertyOperation): Promise<ActionResponse<{ affected: number }>> {
   try {
     const supabase = await createSupabaseServerClient();

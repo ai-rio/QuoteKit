@@ -15,8 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
+import { getPropertyById } from '@/features/clients/actions';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
-import { ClientOption } from '@/features/clients/types';
+import { PropertySelector } from '@/features/clients/components/PropertySelector';
+import { ClientOption, Property } from '@/features/clients/types';
 import { LineItem } from '@/features/items/types';
 import { CompanySettings } from '@/features/settings/types';
 
@@ -60,7 +62,7 @@ function QuoteCreatorInternal({
     // For now, fall back to legacy data if available
     if (initialDraft?.client_name || templateData?.client_name) {
       return {
-        id: '', // We don't have the ID for legacy data
+        id: initialDraft?.client_id || '', // We don't have the ID for legacy data
         name: initialDraft?.client_name || templateData?.client_name || '',
         email: initialDraft?.client_contact || templateData?.client_contact || null,
         phone: null,
@@ -68,6 +70,10 @@ function QuoteCreatorInternal({
     }
     return null;
   });
+
+  // Property state - Blueprint integration
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [propertyLoading, setPropertyLoading] = useState(false);
   
   // Legacy client info for backward compatibility
   const [clientName, setClientName] = useState(
@@ -123,6 +129,12 @@ function QuoteCreatorInternal({
   // Handle client selection
   const handleClientSelect = (client: ClientOption) => {
     setSelectedClient(client);
+    
+    // Reset property selection when client changes
+    if (!client || (selectedProperty && selectedProperty.client_id !== client.id)) {
+      setSelectedProperty(null);
+    }
+    
     if (client) {
       setClientName(client.name);
       setClientContact(client.email || client.phone || '');
@@ -140,11 +152,29 @@ function QuoteCreatorInternal({
     }
   };
 
+  // Handle property selection
+  const handlePropertySelect = (property: Property | null) => {
+    setSelectedProperty(property);
+    
+    if (property) {
+      // Track property selection workflow step (if available)
+      if ('trackPropertySelected' in workflowTracking && workflowTracking.trackPropertySelected) {
+        workflowTracking.trackPropertySelected({
+          propertyId: property.id,
+          propertyName: property.property_name || 'Unnamed Property',
+          serviceAddress: property.service_address,
+          propertyType: property.property_type,
+          selectionMethod: 'search',
+        });
+      }
+    }
+  };
+
   // Mark as having unsaved changes when data changes
   useEffect(() => {
     if (!initialDraft && !templateData) return;
     setHasUnsavedChanges(true);
-  }, [selectedClient, clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft, templateData]);
+  }, [selectedClient, selectedProperty, clientName, clientContact, quoteLineItems, taxRate, markupRate, initialDraft, templateData]);
 
   // Track quote creation start time when user starts working on the quote
   useEffect(() => {
@@ -164,6 +194,30 @@ function QuoteCreatorInternal({
     }
   }, [templateData]);
 
+  // Load property data if property_id exists in initial data
+  useEffect(() => {
+    const loadPropertyFromInitialData = async () => {
+      const propertyId = initialDraft?.property_id || templateData?.property_id;
+      if (!propertyId || selectedProperty) return;
+
+      try {
+        setPropertyLoading(true);
+        const response = await getPropertyById(propertyId);
+        if (response?.data && !response?.error) {
+          setSelectedProperty(response.data as Property);
+        } else {
+          console.warn('Could not load property from initial data:', response?.error?.message);
+        }
+      } catch (error) {
+        console.warn('Error loading property from initial data:', error);
+      } finally {
+        setPropertyLoading(false);
+      }
+    };
+
+    loadPropertyFromInitialData();
+  }, [initialDraft?.property_id, templateData?.property_id, selectedProperty]);
+
   // Auto-save every 30 seconds if there are unsaved changes
   const autoSave = useCallback(async () => {
     // Only auto-save if we have a client name and some content
@@ -179,6 +233,7 @@ function QuoteCreatorInternal({
         client_id: selectedClient?.id || null,
         client_name: clientName,
         client_contact: clientContact || null,
+        property_id: selectedProperty?.id || null, // Blueprint integration
         quote_data: quoteLineItems,
         tax_rate: taxRate,
         markup_rate: markupRate,
@@ -317,6 +372,7 @@ function QuoteCreatorInternal({
         client_id: selectedClient?.id || null,
         client_name: clientName,
         client_contact: clientContact || null,
+        property_id: selectedProperty?.id || null, // Blueprint integration
         quote_data: quoteLineItems,
         tax_rate: taxRate,
         markup_rate: markupRate,
@@ -370,12 +426,20 @@ function QuoteCreatorInternal({
       return;
     }
 
+    // Optional property validation - show warning if client has properties but none selected
+    // This is informational only and doesn't block quote creation for backward compatibility
+    if (selectedClient?.id && !selectedProperty) {
+      // Note: We could check if client has properties and warn, but for simplicity in M1.6
+      // we'll just proceed. Future enhancement could add this validation.
+    }
+
     setIsLoading(true);
 
     const quoteData: CreateQuoteData = {
       client_id: selectedClient?.id || null,
       client_name: clientName,
       client_contact: clientContact || null,
+      property_id: selectedProperty?.id || null, // Blueprint integration
       quote_data: quoteLineItems,
       tax_rate: taxRate,
       markup_rate: markupRate,
@@ -561,6 +625,61 @@ function QuoteCreatorInternal({
           />
         </CardContent>
       </Card>
+
+      {/* Property Details - Blueprint Integration */}
+      {selectedClient && (
+        <Card className="bg-paper-white border-stone-gray shadow-sm">
+          <CardHeader className="pb-3 sm:pb-4">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base sm:text-lg font-bold text-charcoal">Property Details</CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 text-charcoal/40 hover:text-charcoal/60 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="bg-charcoal text-paper-white border-charcoal max-w-xs">
+                    <p className="text-xs">
+                      Select the property location for this quote. Property information helps with accurate pricing and service planning.
+                      If no property is selected, the quote will be associated with the client only.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6" data-testid="property-selector" data-tour="property-selector">
+            <PropertySelector
+              clientId={selectedClient?.id || null}
+              selectedProperty={selectedProperty}
+              onPropertySelect={handlePropertySelect}
+              placeholder="Select a property for this quote..."
+              className="min-h-[44px] touch-manipulation"
+            />
+            {selectedProperty && (
+              <div className="mt-3 p-3 bg-forest-green/5 border border-forest-green/20 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Badge variant="secondary" className="bg-forest-green/10 text-forest-green border-forest-green/20">
+                    {selectedProperty.property_type}
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-charcoal">
+                      {selectedProperty.property_name || 'Property'}
+                    </p>
+                    <p className="text-xs text-stone-gray/80 mt-1">
+                      {selectedProperty.service_address}
+                    </p>
+                    {selectedProperty.property_notes && (
+                      <p className="text-xs text-stone-gray/70 mt-1">
+                        {selectedProperty.property_notes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Line Items Section */}
       <Card className="bg-paper-white border-stone-gray shadow-sm" data-testid="line-items-card" data-tour="add-items">

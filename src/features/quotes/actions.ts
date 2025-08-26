@@ -135,6 +135,7 @@ export async function createQuote(quoteData: CreateQuoteData): Promise<ActionRes
       client_id: quoteData.client_id || null,
       client_name: quoteData.client_name?.trim() || '',
       client_contact: quoteData.client_contact?.trim() || null,
+      property_id: quoteData.property_id || null, // Blueprint integration
       quote_data: quoteData.quote_data as any,
       subtotal: calculation.subtotal,
       tax_rate: quoteData.tax_rate,
@@ -269,6 +270,7 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
       if (draftData.client_id !== undefined) updateData.client_id = draftData.client_id;
       if (draftData.client_name !== undefined) updateData.client_name = draftData.client_name?.trim() || '';
       if (draftData.client_contact !== undefined) updateData.client_contact = draftData.client_contact?.trim() || null;
+      if (draftData.property_id !== undefined) updateData.property_id = draftData.property_id; // Blueprint integration
       if (draftData.quote_data !== undefined) updateData.quote_data = draftData.quote_data as any;
       if (draftData.tax_rate !== undefined) updateData.tax_rate = draftData.tax_rate;
       if (draftData.markup_rate !== undefined) updateData.markup_rate = draftData.markup_rate;
@@ -345,6 +347,7 @@ export async function saveDraft(draftData: SaveDraftData): Promise<ActionRespons
       client_id: draftData.client_id || null,
       client_name: draftData.client_name?.trim() || '',
       client_contact: draftData.client_contact?.trim() || null,
+      property_id: draftData.property_id || null, // Blueprint integration
       quote_data: (draftData.quote_data || []) as any,
       subtotal: calculation.subtotal,
       tax_rate: draftData.tax_rate || 0,

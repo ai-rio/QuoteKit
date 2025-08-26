@@ -11,6 +11,7 @@ export interface DatabaseQuote {
   client_id: string | null; // Allow null as per database schema
   client_name: string;
   client_contact: string | null; // Allow null as per database schema
+  property_id: string | null; // Blueprint integration - property reference
   title: string | null;
   description?: string;
   quote_data: any; // JSON data containing line items
@@ -45,6 +46,8 @@ export interface Quote {
   client_id?: string | null;
   client_name: string; // Kept for backward compatibility
   client_contact: string | null; // Kept for backward compatibility
+  // Property information - Blueprint integration
+  property_id?: string | null;
   quote_data: QuoteLineItem[];
   subtotal: number;
   tax_rate: number;
@@ -75,6 +78,8 @@ export interface CreateQuoteData {
   client_id?: string | null;
   client_name: string; // Fallback if no client_id provided
   client_contact: string | null; // Fallback if no client_id provided
+  // Property information - Blueprint integration
+  property_id?: string | null;
   quote_data: QuoteLineItem[];
   tax_rate: number;
   markup_rate: number;
@@ -90,6 +95,8 @@ export interface SaveDraftData {
   client_id?: string | null;
   client_name?: string; // Fallback if no client_id provided
   client_contact?: string | null; // Fallback if no client_id provided
+  // Property information - Blueprint integration
+  property_id?: string | null;
   quote_data?: QuoteLineItem[];
   tax_rate?: number;
   markup_rate?: number;
@@ -123,8 +130,10 @@ export function convertDatabaseQuoteToQuote(dbQuote: DatabaseQuote): Quote {
   return {
     id: dbQuote.id,
     user_id: dbQuote.user_id,
+    client_id: dbQuote.client_id,
     client_name: dbQuote.client_name,
     client_contact: dbQuote.client_contact || '', // Handle null client_contact
+    property_id: dbQuote.property_id, // Blueprint integration
     quote_data: dbQuote.quote_data as unknown as QuoteLineItem[],
     subtotal: dbQuote.subtotal,
     tax_rate: dbQuote.tax_rate,
