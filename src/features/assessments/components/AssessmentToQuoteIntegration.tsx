@@ -12,6 +12,11 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
 import { Property } from '@/features/clients/types';
 import { LineItem } from '@/features/items/types';
+import { 
+  AssessmentPricingResult, 
+  calculateAssessmentPricing, 
+  calculateLaborHours,
+  generateAssessmentLineItems} from '@/features/quotes/pricing-engine/PropertyConditionPricing';
 
 import { generateQuoteFromAssessment } from '../actions/assessment-quote-integration';
 import { PropertyAssessment } from '../types';
@@ -31,12 +36,8 @@ interface AssessmentQuotePreview {
     priority: 'high' | 'medium' | 'low';
   }>;
   estimatedTotal: number;
-  complexityMultiplier: number;
-  conditionAdjustments: Array<{
-    condition: string;
-    adjustment: number;
-    reason: string;
-  }>;
+  pricingResult: AssessmentPricingResult;
+  laborHours: number;
 }
 
 export function AssessmentToQuoteIntegration({
@@ -50,135 +51,30 @@ export function AssessmentToQuoteIntegration({
   const [preview, setPreview] = useState<AssessmentQuotePreview | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Generate quote preview based on assessment data
+  // Generate quote preview based on assessment data using advanced pricing engine
   const generatePreview = () => {
-    const suggestedItems: AssessmentQuotePreview['suggestedItems'] = [];
-    const conditionAdjustments: AssessmentQuotePreview['conditionAdjustments'] = [];
+    // Use the comprehensive pricing engine
+    const basePrice = availableItems.reduce((sum, item) => sum + item.cost, 0);
+    const pricingResult = calculateAssessmentPricing(assessment, availableItems, basePrice);
     
-    // Lawn condition-based suggestions
-    if (assessment.lawn_condition) {
-      switch (assessment.lawn_condition) {
-        case 'dead':
-        case 'poor':
-          // Suggest lawn renovation items
-          const seedingItem = availableItems.find(item => 
-            item.name.toLowerCase().includes('seed') || 
-            item.name.toLowerCase().includes('sod')
-          );
-          if (seedingItem) {
-            suggestedItems.push({
-              item: seedingItem,
-              quantity: Math.ceil((assessment.lawn_area_measured || assessment.lawn_area_estimated || 1000) / 1000),
-              reason: `Lawn condition is ${assessment.lawn_condition} - requires renovation`,
-              priority: 'high'
-            });
-          }
-          conditionAdjustments.push({
-            condition: 'Poor Lawn Condition',
-            adjustment: 1.3,
-            reason: 'Additional prep work and materials needed'
-          });
-          break;
-        case 'patchy':
-          // Suggest overseeding
-          const overseedItem = availableItems.find(item => 
-            item.name.toLowerCase().includes('overseed')
-          );
-          if (overseedItem) {
-            suggestedItems.push({
-              item: overseedItem,
-              quantity: Math.ceil((assessment.lawn_area_measured || assessment.lawn_area_estimated || 1000) / 1000),
-              reason: 'Patchy lawn requires overseeding',
-              priority: 'medium'
-            });
-          }
-          break;
-      }
-    }
-
-    // Soil condition adjustments
-    if (assessment.soil_condition) {
-      switch (assessment.soil_condition) {
-        case 'compacted':
-          const aerationItem = availableItems.find(item => 
-            item.name.toLowerCase().includes('aerat')
-          );
-          if (aerationItem) {
-            suggestedItems.push({
-              item: aerationItem,
-              quantity: Math.ceil((assessment.lawn_area_measured || assessment.lawn_area_estimated || 1000) / 1000),
-              reason: 'Compacted soil requires aeration',
-              priority: 'high'
-            });
-          }
-          conditionAdjustments.push({
-            condition: 'Compacted Soil',
-            adjustment: 1.2,
-            reason: 'Additional equipment and time required'
-          });
-          break;
-        case 'contaminated':
-          conditionAdjustments.push({
-            condition: 'Contaminated Soil',
-            adjustment: 1.5,
-            reason: 'Specialized handling and disposal required'
-          });
-          break;
-      }
-    }
-
-    // Weed coverage adjustments
-    if (assessment.weed_coverage_percent && assessment.weed_coverage_percent > 30) {
-      const weedControlItem = availableItems.find(item => 
-        item.name.toLowerCase().includes('weed') || 
-        item.name.toLowerCase().includes('herbicide')
-      );
-      if (weedControlItem) {
-        suggestedItems.push({
-          item: weedControlItem,
-          quantity: Math.ceil((assessment.lawn_area_measured || assessment.lawn_area_estimated || 1000) / 1000),
-          reason: `High weed coverage (${assessment.weed_coverage_percent}%) requires treatment`,
-          priority: 'high'
-        });
-      }
-    }
-
-    // Equipment access adjustments
-    let complexityMultiplier = 1.0;
-    if (assessment.vehicle_access_width_feet && assessment.vehicle_access_width_feet < 8) {
-      complexityMultiplier += 0.2;
-      conditionAdjustments.push({
-        condition: 'Limited Access',
-        adjustment: 1.2,
-        reason: 'Narrow access requires smaller equipment and more labor'
-      });
-    }
-
-    if (!assessment.dump_truck_access) {
-      complexityMultiplier += 0.15;
-      conditionAdjustments.push({
-        condition: 'No Dump Truck Access',
-        adjustment: 1.15,
-        reason: 'Manual material transport required'
-      });
-    }
-
-    // Calculate estimated total
-    const baseTotal = suggestedItems.reduce((sum, item) => 
-      sum + (item.item.cost * item.quantity), 0
+    // Generate intelligent line item suggestions
+    const suggestedItems = generateAssessmentLineItems(assessment, availableItems);
+    
+    // Calculate labor hours based on assessment
+    const laborHours = calculateLaborHours(assessment);
+    
+    // Calculate total with suggested items and adjustments
+    const itemsTotal = suggestedItems.reduce((sum, suggestion) => 
+      sum + (suggestion.item.cost * suggestion.quantity), 0
     );
     
-    const adjustmentMultiplier = conditionAdjustments.reduce((mult, adj) => 
-      mult * adj.adjustment, 1
-    );
-
-    const estimatedTotal = baseTotal * adjustmentMultiplier * complexityMultiplier;
+    const estimatedTotal = pricingResult.finalPrice + itemsTotal;
 
     setPreview({
       suggestedItems,
       estimatedTotal,
-      complexityMultiplier,
-      conditionAdjustments
+      pricingResult,
+      laborHours
     });
     setShowPreview(true);
   };
@@ -199,8 +95,12 @@ export function AssessmentToQuoteIntegration({
           quantity: item.quantity,
           reason: item.reason
         })),
-        conditionAdjustments: preview.conditionAdjustments,
-        complexityMultiplier: preview.complexityMultiplier
+        conditionAdjustments: preview.pricingResult.adjustments.map(adj => ({
+          condition: adj.factor,
+          adjustment: adj.multiplier,
+          reason: adj.reason
+        })),
+        complexityMultiplier: preview.pricingResult.totalMultiplier
       });
 
       if (result?.error) {
@@ -331,20 +231,31 @@ export function AssessmentToQuoteIntegration({
               </div>
             )}
 
-            {/* Condition Adjustments */}
-            {preview.conditionAdjustments.length > 0 && (
+            {/* Pricing Adjustments */}
+            {preview.pricingResult.adjustments.length > 0 && (
               <div>
                 <h4 className="font-medium text-charcoal mb-2">Pricing Adjustments</h4>
                 <div className="space-y-2">
-                  {preview.conditionAdjustments.map((adjustment, index) => (
+                  {preview.pricingResult.adjustments.map((adjustment, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <div>
-                        <div className="font-medium">{adjustment.condition}</div>
+                        <div className="font-medium">{adjustment.factor}</div>
                         <div className="text-sm text-charcoal-600">{adjustment.reason}</div>
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            adjustment.category === 'condition' ? 'bg-red-50 text-red-700' :
+                            adjustment.category === 'complexity' ? 'bg-yellow-50 text-yellow-700' :
+                            adjustment.category === 'access' ? 'bg-blue-50 text-blue-700' :
+                            'bg-purple-50 text-purple-700'
+                          }
+                        >
+                          {adjustment.category}
+                        </Badge>
                       </div>
                       <div className="text-right">
                         <Badge variant="outline">
-                          +{((adjustment.adjustment - 1) * 100).toFixed(0)}%
+                          +{((adjustment.multiplier - 1) * 100).toFixed(0)}%
                         </Badge>
                       </div>
                     </div>
@@ -355,7 +266,7 @@ export function AssessmentToQuoteIntegration({
 
             {/* Estimated Total */}
             <div className="bg-forest-green/10 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-lg font-semibold text-forest-green">
                   Estimated Total
                 </span>
@@ -363,9 +274,19 @@ export function AssessmentToQuoteIntegration({
                   ${preview.estimatedTotal.toFixed(2)}
                 </span>
               </div>
-              {preview.complexityMultiplier > 1 && (
+              
+              <div className="grid grid-cols-2 gap-4 text-sm text-charcoal-600">
+                <div>
+                  <span className="font-medium">Labor Hours:</span> {preview.laborHours}h
+                </div>
+                <div>
+                  <span className="font-medium">Total Multiplier:</span> {preview.pricingResult.totalMultiplier.toFixed(2)}x
+                </div>
+              </div>
+              
+              {preview.pricingResult.adjustments.length > 0 && (
                 <div className="text-sm text-charcoal-600 mt-2">
-                  Includes {((preview.complexityMultiplier - 1) * 100).toFixed(0)}% complexity adjustment
+                  Includes {preview.pricingResult.adjustments.length} condition-based adjustments
                 </div>
               )}
             </div>

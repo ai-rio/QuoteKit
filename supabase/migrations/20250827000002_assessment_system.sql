@@ -89,11 +89,7 @@ CREATE TABLE public.property_assessments (
   quote_id UUID REFERENCES public.quotes(id) ON DELETE SET NULL,
   
   -- Assessment metadata
-  assessment_number TEXT GENERATED ALWAYS AS (
-    'ASS-' || EXTRACT(YEAR FROM created_at) || '-' || 
-    LPAD(EXTRACT(DOY FROM created_at)::TEXT, 3, '0') || '-' ||
-    SUBSTRING(id::TEXT, 1, 8)
-  ) STORED,
+  assessment_number TEXT, -- Will be set by trigger
   assessment_date TIMESTAMPTZ DEFAULT NOW(),
   scheduled_date TIMESTAMPTZ,
   completed_date TIMESTAMPTZ,
@@ -644,6 +640,28 @@ COMMENT ON VIEW public.assessment_summary IS 'Aggregate assessment statistics by
 
 COMMENT ON FUNCTION get_assessment_dashboard(UUID) IS 'Optimized function for assessment dashboard queries with <150ms performance target';
 
+-- =====================================================
+-- ASSESSMENT NUMBER GENERATION TRIGGER
+-- =====================================================
+
+-- Function to generate assessment numbers
+CREATE OR REPLACE FUNCTION generate_assessment_number()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.assessment_number := 'ASS-' || 
+    EXTRACT(YEAR FROM NEW.created_at) || '-' || 
+    LPAD(EXTRACT(DOY FROM NEW.created_at)::TEXT, 3, '0') || '-' ||
+    SUBSTRING(NEW.id::TEXT, 1, 8);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-generate assessment numbers
+CREATE TRIGGER generate_assessment_number_trigger
+  BEFORE INSERT ON public.property_assessments
+  FOR EACH ROW
+  EXECUTE FUNCTION generate_assessment_number();
+
 -- Migration completion notification
 DO $$
 BEGIN
@@ -655,5 +673,6 @@ BEGIN
   RAISE NOTICE 'Created assessment analytics and summary views';
   RAISE NOTICE 'Configured Supabase Storage bucket for media uploads';
   RAISE NOTICE 'Added automated triggers for data consistency';
+  RAISE NOTICE 'Added assessment number generation trigger';
   RAISE NOTICE 'Ready for M2.2: Quote-Assessment Integration';
 END $$;

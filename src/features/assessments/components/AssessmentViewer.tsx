@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
 import { AssessmentOverallCondition,AssessmentStatus, PropertyAssessment, PropertyAssessmentWithDetails } from '../types';
+import { AssessmentReport } from './AssessmentReport';
 import { AssessmentToQuoteIntegration } from './AssessmentToQuoteIntegration';
 
 interface AssessmentViewerProps {
@@ -281,6 +282,16 @@ export function AssessmentViewer({ assessment }: AssessmentViewerProps) {
       </div>
 
       {/* Quote Generation Section */}
+      {/* Assessment Report */}
+      {assessment.assessment_status === 'completed' && (
+        <AssessmentReport
+          assessment={assessment}
+          property={property as any} // Type assertion for now - property structure is compatible
+          showActions={true}
+        />
+      )}
+
+      {/* Quote Generation */}
       {assessment.assessment_status === 'completed' && !assessment.quote_id && (
         <Card className="bg-paper-white">
           <CardHeader>
