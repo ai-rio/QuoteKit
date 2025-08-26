@@ -7,6 +7,13 @@ import { handleBillingEdgeCase } from '@/features/billing/controllers/edge-case-
 import { createStripeAdminClient, stripeAdmin } from '@/libs/stripe/stripe-admin'
 import { supabaseAdminClient } from "@/libs/supabase/supabase-admin";
 
+import { 
+  handleHomeownerInvoiceFinalized,
+  handleHomeownerInvoicePaymentFailed,
+  handleHomeownerInvoicePaymentSucceeded,
+  handleHomeownerInvoiceVoided
+} from './b2b2c-handlers';
+
 // 🔒 SECURITY: Webhook security constants
 const WEBHOOK_TIMEOUT_MS = 30000; // 30 second timeout
 const SIGNATURE_TOLERANCE_MS = 300000; // 5 minutes tolerance for timestamp
@@ -559,10 +566,24 @@ async function processWebhookEvent(event: Stripe.Event): Promise<void> {
 
     case 'invoice.payment_succeeded':
       await handlePaymentSucceeded(event)
+      // Also handle B2B2C homeowner payments
+      await handleHomeownerInvoicePaymentSucceeded(event)
       break
 
     case 'invoice.payment_failed':
       await handlePaymentFailed(event)
+      // Also handle B2B2C homeowner payment failures
+      await handleHomeownerInvoicePaymentFailed(event)
+      break
+
+    case 'invoice.finalized':
+      // Handle B2B2C invoice finalization (when sent to homeowner)
+      await handleHomeownerInvoiceFinalized(event)
+      break
+
+    case 'invoice.voided':
+      // Handle B2B2C invoice cancellation
+      await handleHomeownerInvoiceVoided(event)
       break
 
     case 'customer.created':
