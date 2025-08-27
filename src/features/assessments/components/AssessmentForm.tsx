@@ -368,6 +368,8 @@ export function AssessmentFormRefactored({
             formData={formData}
             errors={errors}
             onChange={handleInputChange}
+            initialProperty={initialProperty}
+            initialClientId={initialClientId}
           />
         </TabsContent>
 

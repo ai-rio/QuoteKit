@@ -60,18 +60,18 @@ import {
 interface QuotePaymentStatusProps {
   quote: {
     id: string;
-    quote_number: string;
+    quote_number?: string;  // Make optional to match Quote interface
     title?: string;
     total: number;
-    stripe_invoice_id?: string;
-    stripe_customer_id?: string;
-    invoice_status?: string;
-    homeowner_email?: string;
-    homeowner_name?: string;
-    invoice_sent_at?: string;
-    payment_received_at?: string;
-    payment_due_date?: string;
-    payment_terms?: number;
+    stripe_invoice_id?: string | null;
+    stripe_customer_id?: string | null;
+    invoice_status?: string | null;
+    homeowner_email?: string | null;
+    homeowner_name?: string | null;
+    invoice_sent_at?: string | null;
+    payment_received_at?: string | null;
+    payment_due_date?: string | null;
+    payment_terms?: number | null;
     properties?: {
       service_address: string;
       property_name?: string;
@@ -276,7 +276,7 @@ export function QuotePaymentStatus({ quote, onStatusUpdate }: QuotePaymentStatus
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="text-charcoal/70">Quote #:</span>
-            <span className="font-medium text-charcoal">{quote.quote_number}</span>
+            <span className="font-medium text-charcoal">{quote.quote_number || 'Draft'}</span>
           </div>
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-charcoal/70" />

@@ -12,16 +12,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface QuotePaymentSuccessPageProps {
-  searchParams: {
+  searchParams: Promise<{
     quote?: string;
     session_id?: string;
-  };
+  }>;
 }
 
-export default function QuotePaymentSuccessPage({ 
+export default async function QuotePaymentSuccessPage({ 
   searchParams 
 }: QuotePaymentSuccessPageProps) {
-  const quoteId = searchParams.quote;
+  // Await searchParams to handle the async nature
+  const params = await searchParams;
+  const quoteId = params.quote;
 
   return (
     <div className="min-h-screen bg-light-concrete flex items-center justify-center p-4">

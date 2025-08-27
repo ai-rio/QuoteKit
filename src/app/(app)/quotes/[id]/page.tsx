@@ -27,7 +27,13 @@ export default async function QuotePage({ params }: QuotePageProps) {
   const [quoteResult, companyResult] = await Promise.all([
     supabase
       .from('quotes')
-      .select('*')
+      .select(`
+        *,
+        properties (
+          service_address,
+          property_name
+        )
+      `)
       .eq('id', id)
       .eq('user_id', user.id)
       .single(),

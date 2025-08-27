@@ -30,6 +30,7 @@ import { deleteQuotes } from '../actions';
 import { useDuplicateQuote } from '../hooks/useDuplicateQuote';
 import { Quote } from '../types';
 import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
+import { QuotePaymentStatus } from './QuotePaymentStatus';
 import { QuotePDFViewer } from './QuotePDFViewer';
 import { SendEmailDialog } from './SendEmailDialog';
 
@@ -61,6 +62,7 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { duplicate, isDuplicating } = useDuplicateQuote();
 
   const formatCurrency = (amount: number) => {
@@ -164,6 +166,13 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
     if (!isDeleting) {
       setDeleteDialogOpen(false);
     }
+  };
+
+  const handlePaymentStatusUpdate = () => {
+    // Trigger a refresh of the page to get updated payment status
+    // In a real app, you might want to use a more sophisticated state management approach
+    setRefreshKey(prev => prev + 1);
+    router.refresh();
   };
 
   // Calculate tax amount
@@ -377,6 +386,13 @@ export function QuoteViewer({ quote, company }: QuoteViewerProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* B2B2C Payment Status - S2.2 Implementation */}
+      <QuotePaymentStatus 
+        key={refreshKey}
+        quote={quote} 
+        onStatusUpdate={handlePaymentStatusUpdate}
+      />
 
       {/* PDF Viewer */}
       <QuotePDFViewer quote={quote} company={company} />

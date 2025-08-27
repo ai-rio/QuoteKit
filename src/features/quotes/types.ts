@@ -29,6 +29,16 @@ export interface DatabaseQuote {
   template_name?: string;
   created_at: string;
   updated_at: string;
+  // B2B2C Payment fields - S2.1/S2.2 implementation
+  stripe_invoice_id?: string | null;
+  stripe_customer_id?: string | null;
+  invoice_status?: string | null;
+  invoice_sent_at?: string | null;
+  payment_received_at?: string | null;
+  homeowner_email?: string | null;
+  homeowner_name?: string | null;
+  payment_due_date?: string | null;
+  payment_terms?: number | null;
 }
 
 export interface QuoteLineItem {
@@ -64,6 +74,21 @@ export interface Quote {
   notes?: string | null;
   is_template?: boolean;
   template_name?: string | null;
+  // B2B2C Payment fields - S2.1/S2.2 implementation
+  stripe_invoice_id?: string | null;
+  stripe_customer_id?: string | null;
+  invoice_status?: string | null;
+  invoice_sent_at?: string | null;
+  payment_received_at?: string | null;
+  homeowner_email?: string | null;
+  homeowner_name?: string | null;
+  payment_due_date?: string | null;
+  payment_terms?: number | null;
+  // Property relationship for payment UI
+  properties?: {
+    service_address: string;
+    property_name?: string;
+  } | null;
 }
 
 export interface QuoteCalculation {
@@ -149,5 +174,15 @@ export function convertDatabaseQuoteToQuote(dbQuote: DatabaseQuote): Quote {
     notes: dbQuote.notes,
     is_template: dbQuote.is_template || false,
     template_name: dbQuote.template_name,
+    // B2B2C Payment fields - S2.1/S2.2 implementation
+    stripe_invoice_id: dbQuote.stripe_invoice_id,
+    stripe_customer_id: dbQuote.stripe_customer_id,
+    invoice_status: dbQuote.invoice_status,
+    invoice_sent_at: dbQuote.invoice_sent_at,
+    payment_received_at: dbQuote.payment_received_at,
+    homeowner_email: dbQuote.homeowner_email,
+    homeowner_name: dbQuote.homeowner_name,
+    payment_due_date: dbQuote.payment_due_date,
+    payment_terms: dbQuote.payment_terms,
   };
 }
