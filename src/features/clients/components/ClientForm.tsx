@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 import { createClient, updateClient } from '../actions';
@@ -445,18 +446,21 @@ export function ClientForm({ client, onSuccess, onCancel, showCard = true }: Cli
           <Label htmlFor="client-status" className="text-lg text-charcoal font-medium">
             Client Status
           </Label>
-          <select
-            id="client-status"
+          <Select
             name="client_status"
             value={formData.client_status}
-            onChange={(e) => handleInputChange('client_status', e.target.value)}
-            className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green rounded-md px-3 py-2"
+            onValueChange={(value) => handleInputChange('client_status', value)}
           >
-            <option value="lead">Lead</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="archived">Archived</option>
-          </select>
+            <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="lead">Lead</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
           {errors.client_status && (
             <p className="text-error-red text-sm font-medium">{errors.client_status}</p>
           )}
@@ -466,19 +470,21 @@ export function ClientForm({ client, onSuccess, onCancel, showCard = true }: Cli
           <Label htmlFor="preferred-communication" className="text-lg text-charcoal font-medium">
             Preferred Communication
           </Label>
-          <select
-            id="preferred-communication"
+          <Select
             name="preferred_communication"
             value={formData.preferred_communication}
-            onChange={(e) => handleInputChange('preferred_communication', e.target.value)}
-            className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green rounded-md px-3 py-2"
+            onValueChange={(value) => handleInputChange('preferred_communication', value)}
           >
-            <option value="">Select preference</option>
-            <option value="email">Email</option>
-            <option value="phone">Phone</option>
-            <option value="text">Text Message</option>
-            <option value="portal">Client Portal</option>
-          </select>
+            <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
+              <SelectValue placeholder="Select preference" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="email">Email</SelectItem>
+              <SelectItem value="phone">Phone</SelectItem>
+              <SelectItem value="text">Text Message</SelectItem>
+              <SelectItem value="portal">Client Portal</SelectItem>
+            </SelectContent>
+          </Select>
           {errors.preferred_communication && (
             <p className="text-error-red text-sm font-medium">{errors.preferred_communication}</p>
           )}

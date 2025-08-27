@@ -45,7 +45,7 @@ export function EnhancedQuotePreview({
             <Calculator className="h-5 w-5" />
             Intelligent Quote Preview
           </CardTitle>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-charcoal">
             Generated: {preview.generatedAt.toLocaleString()}
           </div>
         </div>

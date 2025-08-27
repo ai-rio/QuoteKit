@@ -1,0 +1,127 @@
+/* Assessment Form UX Improvements */
+
+/* Enhanced focus visibility for assessment forms */
+.assessment-form *:focus-visible {
+  outline: 2px solid hsl(var(--forest-green)) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* Improved tab navigation for keyboard users */
+.assessment-form [data-slot="tabs-trigger"]:focus-visible {
+  z-index: 1;
+  box-shadow: 0 0 0 3px hsl(var(--forest-green) / 0.2);
+}
+
+/* Enhanced form field contrast */
+.assessment-form [data-slot="input"],
+.assessment-form [data-slot="textarea"],
+.assessment-form [data-slot="select-trigger"] {
+  /* Ensure minimum 4.5:1 contrast ratio for WCAG AA compliance */
+  color: hsl(var(--charcoal)) !important;
+  background-color: hsl(var(--paper-white)) !important;
+  border-color: hsl(var(--stone-gray) / 0.4) !important;
+}
+
+/* Placeholder text improvements */
+.assessment-form [data-slot="input"]::placeholder,
+.assessment-form [data-slot="textarea"]::placeholder {
+  color: hsl(var(--charcoal) / 0.6) !important;
+  opacity: 1 !important;
+}
+
+/* Error state improvements */
+.assessment-form [aria-invalid="true"] {
+  border-color: hsl(var(--error-red)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--error-red) / 0.1) !important;
+}
+
+/* Improved hover states */
+.assessment-form [data-slot="input"]:hover:not(:focus):not(:disabled),
+.assessment-form [data-slot="textarea"]:hover:not(:focus):not(:disabled),
+.assessment-form [data-slot="select-trigger"]:hover:not(:focus):not(:disabled) {
+  border-color: hsl(var(--stone-gray) / 0.6) !important;
+}
+
+/* Enhanced disabled state visibility */
+.assessment-form [data-slot="input"]:disabled,
+.assessment-form [data-slot="textarea"]:disabled,
+.assessment-form [data-slot="select-trigger"]:disabled {
+  background-color: hsl(var(--stone-gray) / 0.1) !important;
+  color: hsl(var(--charcoal) / 0.5) !important;
+  cursor: not-allowed !important;
+}
+
+/* Label improvements for better readability */
+.assessment-form [data-slot="label"] {
+  color: hsl(var(--charcoal)) !important;
+  font-weight: 600 !important;
+}
+
+/* Tab accessibility improvements */
+.assessment-form [data-slot="tabs-trigger"] {
+  transition: all 0.2s ease-in-out !important;
+}
+
+.assessment-form [data-slot="tabs-trigger"][data-state="active"] {
+  background-color: hsl(var(--paper-white)) !important;
+  color: hsl(var(--forest-green)) !important;
+  font-weight: 600 !important;
+  border-color: hsl(var(--forest-green) / 0.2) !important;
+}
+
+.assessment-form [data-slot="tabs-trigger"]:not([data-state="active"]):hover {
+  color: hsl(var(--forest-green)) !important;
+  background-color: hsl(var(--stone-gray) / 0.1) !important;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .assessment-form [data-slot="tabs-list"] {
+    padding: 2px !important;
+    gap: 1px !important;
+  }
+  
+  .assessment-form [data-slot="tabs-trigger"] {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    min-width: 0 !important;
+  }
+  
+  .assessment-form [data-slot="tabs-trigger"] span:first-child {
+    margin-right: 4px !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .assessment-form [data-slot="input"],
+  .assessment-form [data-slot="textarea"],
+  .assessment-form [data-slot="select-trigger"] {
+    border-width: 2px !important;
+    border-color: hsl(var(--charcoal)) !important;
+  }
+  
+  .assessment-form [data-slot="label"] {
+    font-weight: 700 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .assessment-form * {
+    transition-duration: 0.01s !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .assessment-form [data-slot="tabs-list"],
+  .assessment-form button {
+    display: none !important;
+  }
+  
+  .assessment-form [data-slot="tabs-content"] {
+    display: block !important;
+  }
+}

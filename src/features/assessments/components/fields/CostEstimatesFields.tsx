@@ -45,7 +45,7 @@ export function CostEstimatesFields({ formData, errors, onChange }: CostEstimate
             Estimated Material Cost ($)
           </Label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-stone-gray" />
+            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-charcoal" />
             <Input
               id="estimated_material_cost"
               type="number"
@@ -64,7 +64,7 @@ export function CostEstimatesFields({ formData, errors, onChange }: CostEstimate
             Estimated Labor Cost ($)
           </Label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-stone-gray" />
+            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-charcoal" />
             <Input
               id="estimated_labor_cost"
               type="number"
@@ -83,7 +83,7 @@ export function CostEstimatesFields({ formData, errors, onChange }: CostEstimate
             Estimated Equipment Cost ($)
           </Label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-stone-gray" />
+            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-charcoal" />
             <Input
               id="estimated_equipment_cost"
               type="number"
@@ -102,7 +102,7 @@ export function CostEstimatesFields({ formData, errors, onChange }: CostEstimate
             Estimated Disposal Cost ($)
           </Label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-stone-gray" />
+            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-charcoal" />
             <Input
               id="estimated_disposal_cost"
               type="number"
@@ -128,13 +128,13 @@ export function CostEstimatesFields({ formData, errors, onChange }: CostEstimate
               max="100"
               value={formData.profit_margin_percent}
               onChange={(e) => onChange('profit_margin_percent', Number(e.target.value))}
-              className={errors.profit_margin_percent ? 'border-red-500' : ''}
+              className={errors.profit_margin_percent ? 'border-error-red' : ''}
               placeholder="20"
             />
-            <span className="absolute right-3 top-3 text-stone-gray">%</span>
+            <span className="absolute right-3 top-3 text-charcoal">%</span>
           </div>
           {errors.profit_margin_percent && (
-            <p className="text-sm text-red-600">{errors.profit_margin_percent}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.profit_margin_percent}</p>
           )}
         </div>
 

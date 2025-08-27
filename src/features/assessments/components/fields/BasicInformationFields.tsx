@@ -36,9 +36,10 @@ export function BasicInformationFields({
   initialClientId 
 }: BasicInformationFieldsProps) {
   const [clients, setClients] = useState<any[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId || '');
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(initialProperty || null);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loadingClients, setLoadingClients] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load clients on component mount
   useEffect(() => {
@@ -48,34 +49,49 @@ export function BasicInformationFields({
         const response = await getClients();
         if (response?.data) {
           setClients(response.data);
-          
-          // If we have an initial property, find its client
-          if (initialProperty && !initialClientId) {
-            const propertyClient = response.data.find(client => 
-              client.id === initialProperty.client_id
-            );
-            if (propertyClient) {
-              setSelectedClientId(propertyClient.id);
-            }
-          }
+          setIsInitialized(true);
         }
       } catch (error) {
         console.error('Error loading clients:', error);
+        setIsInitialized(true);
       } finally {
         setLoadingClients(false);
       }
     };
 
     loadClients();
-  }, [initialProperty, initialClientId]);
+  }, []);
 
-  // Update selected property when form data changes
+  // Set initial data after clients are loaded
   useEffect(() => {
-    if (formData.property_id && !selectedProperty) {
-      // Property ID exists but no selected property - this happens when editing
-      // The property will be set by the parent component
+    if (isInitialized && clients.length > 0) {
+      // Set initial client
+      let clientId = initialClientId;
+      
+      // If we have an initial property but no explicit client ID, find the client
+      if (initialProperty && !initialClientId) {
+        const propertyClient = clients.find(client => 
+          client.id === initialProperty.client_id
+        );
+        if (propertyClient) {
+          clientId = propertyClient.id;
+        }
+      }
+
+      if (clientId) {
+        setSelectedClientId(clientId);
+      }
+
+      // Set initial property
+      if (initialProperty) {
+        setSelectedProperty(initialProperty);
+        // Make sure the form data is updated with the property ID
+        if (initialProperty.id !== formData.property_id) {
+          onChange('property_id', initialProperty.id);
+        }
+      }
     }
-  }, [formData.property_id, selectedProperty]);
+  }, [isInitialized, clients, initialProperty, initialClientId, formData.property_id, onChange]);
 
   const handleClientSelect = (clientId: string) => {
     setSelectedClientId(clientId);
@@ -88,6 +104,12 @@ export function BasicInformationFields({
     onChange('property_id', property?.id || '');
   };
 
+  // Get the currently selected client name for display
+  const selectedClient = clients.find(client => client.id === selectedClientId);
+  const selectedClientName = selectedClient 
+    ? (selectedClient.company_name || selectedClient.name)
+    : '';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -97,37 +119,51 @@ export function BasicInformationFields({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Client Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="client_select" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="client_select" className="text-base text-charcoal font-semibold">
             Client *
           </Label>
-          <Select
-            value={selectedClientId}
-            onValueChange={handleClientSelect}
-            disabled={loadingClients || !!initialClientId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={loadingClients ? "Loading clients..." : "Select client"} />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.company_name || client.name}
-                  {client.company_name && (
-                    <span className="text-sm text-stone-gray ml-2">({client.name})</span>
-                  )}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {initialClientId ? (
+            // Show read-only client when pre-selected
+            <div className="h-11 px-3 py-2 border border-stone-gray bg-stone-gray/10 rounded-md flex items-center text-charcoal">
+              <Users className="mr-2 h-4 w-4 text-forest-green" />
+              {loadingClients ? (
+                <span className="text-stone-gray/60">Loading...</span>
+              ) : selectedClientName ? (
+                <span>{selectedClientName}</span>
+              ) : (
+                <span className="text-stone-gray/60">Client pre-selected</span>
+              )}
+            </div>
+          ) : (
+            <Select
+              value={selectedClientId}
+              onValueChange={handleClientSelect}
+              disabled={loadingClients}
+            >
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder={loadingClients ? "Loading clients..." : "Select client"} />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.company_name || client.name}
+                    {client.company_name && client.name && (
+                      <span className="text-sm text-charcoal ml-2">({client.name})</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {initialClientId && (
-            <p className="text-sm text-stone-gray">Client pre-selected</p>
+            <p className="text-sm text-charcoal">Client pre-selected from URL</p>
           )}
         </div>
 
         {/* Property Selection */}
-        <div className="space-y-2">
-          <Label className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label className="text-base text-charcoal font-semibold">
             Property *
           </Label>
           <PropertySelector
@@ -135,35 +171,39 @@ export function BasicInformationFields({
             selectedProperty={selectedProperty}
             onPropertySelect={handlePropertySelect}
             placeholder="Select property for assessment..."
-            className={errors.property_id ? 'border-red-500' : ''}
+            className={errors.property_id ? 'border-error-red' : ''}
             disabled={!selectedClientId}
           />
           {errors.property_id && (
-            <p className="text-sm text-red-600">{errors.property_id}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.property_id}</p>
           )}
           {!selectedClientId && (
-            <p className="text-sm text-stone-gray">Select a client first</p>
+            <p className="text-sm text-charcoal">
+              {loadingClients ? "Loading clients..." : "Select a client first"}
+            </p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="assessor_name" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="assessor_name" className="text-base text-charcoal font-semibold">
             Assessor Name *
           </Label>
           <Input
             id="assessor_name"
             value={formData.assessor_name}
             onChange={(e) => onChange('assessor_name', e.target.value)}
-            className={errors.assessor_name ? 'border-red-500' : ''}
+            className={errors.assessor_name ? 'border-error-red' : ''}
             placeholder="Enter assessor name"
+            aria-invalid={errors.assessor_name ? 'true' : 'false'}
+            aria-describedby={errors.assessor_name ? 'assessor_name-error' : undefined}
           />
           {errors.assessor_name && (
-            <p className="text-sm text-red-600">{errors.assessor_name}</p>
+            <p id="assessor_name-error" className="text-sm text-error-red font-medium" role="alert">{errors.assessor_name}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="assessor_contact" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="assessor_contact" className="text-base text-charcoal font-semibold">
             Assessor Contact
           </Label>
           <Input
@@ -174,12 +214,12 @@ export function BasicInformationFields({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="scheduled_date" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="scheduled_date" className="text-base text-charcoal font-semibold">
             Scheduled Date
           </Label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-3 h-4 w-4 text-stone-gray" />
+            <Calendar className="absolute left-3 top-1/2 h-4 w-4 text-charcoal transform -translate-y-1/2 pointer-events-none" />
             <Input
               id="scheduled_date"
               type="datetime-local"
@@ -190,15 +230,15 @@ export function BasicInformationFields({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="assessment_status" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="assessment_status" className="text-base text-charcoal font-semibold">
             Assessment Status
           </Label>
           <Select
             value={formData.assessment_status}
             onValueChange={(value) => onChange('assessment_status', value as AssessmentStatus)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-11">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -211,8 +251,8 @@ export function BasicInformationFields({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="weather_conditions" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="weather_conditions" className="text-base text-charcoal font-semibold">
             Weather Conditions
           </Label>
           <Input
@@ -223,8 +263,8 @@ export function BasicInformationFields({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="temperature_f" className="text-lg text-charcoal font-medium">
+        <div className="space-y-3">
+          <Label htmlFor="temperature_f" className="text-base text-charcoal font-semibold">
             Temperature (°F)
           </Label>
           <Input
@@ -233,6 +273,8 @@ export function BasicInformationFields({
             value={formData.temperature_f}
             onChange={(e) => onChange('temperature_f', e.target.value ? Number(e.target.value) : '')}
             placeholder="Temperature in Fahrenheit"
+            min="-50"
+            max="150"
           />
         </div>
       </div>

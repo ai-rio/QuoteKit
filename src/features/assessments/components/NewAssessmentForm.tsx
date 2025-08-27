@@ -76,7 +76,7 @@ export function NewAssessmentForm({ initialProperty, initialClientId }: NewAsses
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-forest-green">New Property Assessment</h1>
-          <p className="text-charcoal-600 mt-1">
+          <p className="text-charcoal mt-1">
             Create a detailed assessment for accurate quoting and service planning
           </p>
         </div>

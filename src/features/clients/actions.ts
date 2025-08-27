@@ -200,6 +200,10 @@ export async function createClient(formData: FormData): Promise<ActionResponse<C
     const creditTerms = formData.get('credit_terms') as string;
     const creditLimit = formData.get('credit_limit') as string;
 
+    // Structured address fields (JSON strings)
+    const structuredAddressString = formData.get('structured_address') as string;
+    const structuredBillingAddressString = formData.get('structured_billing_address') as string;
+
     // Validation
     if (!name?.trim()) {
       return { data: null, error: { message: 'Client name is required' } };
@@ -223,6 +227,26 @@ export async function createClient(formData: FormData): Promise<ActionResponse<C
       }
     }
 
+    // Parse structured address data
+    let structuredAddress = null;
+    let structuredBillingAddress = null;
+    
+    try {
+      if (structuredAddressString) {
+        structuredAddress = JSON.parse(structuredAddressString);
+      }
+    } catch (error) {
+      console.warn('Failed to parse structured_address:', error);
+    }
+    
+    try {
+      if (structuredBillingAddressString) {
+        structuredBillingAddress = JSON.parse(structuredBillingAddressString);
+      }
+    } catch (error) {
+      console.warn('Failed to parse structured_billing_address:', error);
+    }
+
     // Build client data object
     const clientData: any = {
       user_id: user.id,
@@ -234,6 +258,9 @@ export async function createClient(formData: FormData): Promise<ActionResponse<C
       client_type: clientType || 'residential',
       client_status: clientStatus || 'lead',
       preferred_communication: preferredCommunication || null,
+      
+      // Enhanced address fields
+      structured_address: structuredAddress,
     };
 
     // Add commercial fields if client type is commercial
@@ -246,6 +273,9 @@ export async function createClient(formData: FormData): Promise<ActionResponse<C
       clientData.service_area = serviceArea?.trim() || null;
       clientData.credit_terms = creditTerms ? parseInt(creditTerms) : 30;
       clientData.credit_limit = creditLimit ? parseFloat(creditLimit) : 0;
+      
+      // Enhanced billing address field
+      clientData.structured_billing_address = structuredBillingAddress;
     }
 
     const { data, error } = await supabase
@@ -299,6 +329,10 @@ export async function updateClient(clientId: string, formData: FormData): Promis
     const creditTerms = formData.get('credit_terms') as string;
     const creditLimit = formData.get('credit_limit') as string;
 
+    // Structured address fields (JSON strings)
+    const structuredAddressString = formData.get('structured_address') as string;
+    const structuredBillingAddressString = formData.get('structured_billing_address') as string;
+
     // Validation
     if (!name?.trim()) {
       return { data: null, error: { message: 'Client name is required' } };
@@ -322,6 +356,26 @@ export async function updateClient(clientId: string, formData: FormData): Promis
       }
     }
 
+    // Parse structured address data
+    let structuredAddress = null;
+    let structuredBillingAddress = null;
+    
+    try {
+      if (structuredAddressString) {
+        structuredAddress = JSON.parse(structuredAddressString);
+      }
+    } catch (error) {
+      console.warn('Failed to parse structured_address:', error);
+    }
+    
+    try {
+      if (structuredBillingAddressString) {
+        structuredBillingAddress = JSON.parse(structuredBillingAddressString);
+      }
+    } catch (error) {
+      console.warn('Failed to parse structured_billing_address:', error);
+    }
+
     // Build update data object
     const updateData: any = {
       name: name.trim(),
@@ -333,6 +387,9 @@ export async function updateClient(clientId: string, formData: FormData): Promis
       client_status: clientStatus || 'lead',
       preferred_communication: preferredCommunication || null,
       updated_at: new Date().toISOString(),
+      
+      // Enhanced address fields
+      structured_address: structuredAddress,
     };
 
     // Add commercial fields if client type is commercial
@@ -345,6 +402,9 @@ export async function updateClient(clientId: string, formData: FormData): Promis
       updateData.service_area = serviceArea?.trim() || null;
       updateData.credit_terms = creditTerms ? parseInt(creditTerms) : 30;
       updateData.credit_limit = creditLimit ? parseFloat(creditLimit) : 0;
+      
+      // Enhanced billing address field
+      updateData.structured_billing_address = structuredBillingAddress;
     } else {
       // Clear commercial fields for residential clients
       updateData.company_name = null;
@@ -355,6 +415,7 @@ export async function updateClient(clientId: string, formData: FormData): Promis
       updateData.service_area = null;
       updateData.credit_terms = null;
       updateData.credit_limit = null;
+      updateData.structured_billing_address = null;
     }
 
     const { data, error } = await supabase

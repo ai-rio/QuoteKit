@@ -109,28 +109,28 @@ export function ConditionSummary({ assessment }: ConditionSummaryProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
           {assessment.lawn_area_measured && (
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Lawn Area</div>
+              <div className="text-sm font-medium text-charcoal">Lawn Area</div>
               <div className="text-lg font-semibold">{assessment.lawn_area_measured.toLocaleString()} sq ft</div>
             </div>
           )}
           
           {assessment.tree_count > 0 && (
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Trees</div>
+              <div className="text-sm font-medium text-charcoal">Trees</div>
               <div className="text-lg font-semibold">{assessment.tree_count}</div>
             </div>
           )}
           
           {assessment.shrub_count > 0 && (
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Shrubs</div>
+              <div className="text-sm font-medium text-charcoal">Shrubs</div>
               <div className="text-lg font-semibold">{assessment.shrub_count}</div>
             </div>
           )}
           
           {assessment.complexity_score && (
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Complexity</div>
+              <div className="text-sm font-medium text-charcoal">Complexity</div>
               <div className="text-lg font-semibold">{assessment.complexity_score}/10</div>
             </div>
           )}

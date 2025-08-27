@@ -68,26 +68,26 @@ export function AssessmentReport({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Status</div>
+              <div className="text-sm font-medium text-charcoal">Status</div>
               <Badge variant={assessment.assessment_status === 'completed' ? 'default' : 'secondary'}>
                 {assessment.assessment_status?.replace('_', ' ').toUpperCase()}
               </Badge>
             </div>
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Overall Condition</div>
+              <div className="text-sm font-medium text-charcoal">Overall Condition</div>
               <div className="font-medium">
                 {assessment.overall_condition?.replace('_', ' ').toUpperCase() || 'Not assessed'}
               </div>
             </div>
             <div>
-              <div className="text-sm font-medium text-charcoal/70">Priority Level</div>
+              <div className="text-sm font-medium text-charcoal">Priority Level</div>
               <div className="font-medium">{assessment.priority_level}/10</div>
             </div>
           </div>
 
           {assessment.assessment_notes && (
             <div>
-              <div className="text-sm font-medium text-charcoal/70 mb-2">Assessment Notes</div>
+              <div className="text-sm font-medium text-charcoal mb-2">Assessment Notes</div>
               <div className="text-sm bg-gray-50 p-3 rounded-lg">
                 {assessment.assessment_notes}
               </div>
@@ -108,32 +108,32 @@ export function AssessmentReport({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div>
-                <div className="text-sm font-medium text-charcoal/70">Property Address</div>
+                <div className="text-sm font-medium text-charcoal">Property Address</div>
                 <div>{assessment.properties?.service_address || assessment.service_address || 'N/A'}</div>
               </div>
               <div>
-                <div className="text-sm font-medium text-charcoal/70">Property Type</div>
+                <div className="text-sm font-medium text-charcoal">Property Type</div>
                 <div>{assessment.properties?.property_type || assessment.property_type || 'N/A'}</div>
               </div>
               <div>
-                <div className="text-sm font-medium text-charcoal/70">Assessor</div>
+                <div className="text-sm font-medium text-charcoal">Assessor</div>
                 <div>{assessment.assessor_name}</div>
               </div>
             </div>
             <div className="space-y-3">
               <div>
-                <div className="text-sm font-medium text-charcoal/70">Assessment Date</div>
+                <div className="text-sm font-medium text-charcoal">Assessment Date</div>
                 <div>{new Date(assessment.assessment_date).toLocaleDateString()}</div>
               </div>
               {assessment.completed_date && (
                 <div>
-                  <div className="text-sm font-medium text-charcoal/70">Completed Date</div>
+                  <div className="text-sm font-medium text-charcoal">Completed Date</div>
                   <div>{new Date(assessment.completed_date).toLocaleDateString()}</div>
                 </div>
               )}
               {assessment.weather_conditions && (
                 <div>
-                  <div className="text-sm font-medium text-charcoal/70">Weather Conditions</div>
+                  <div className="text-sm font-medium text-charcoal">Weather Conditions</div>
                   <div>{assessment.weather_conditions}</div>
                 </div>
               )}
@@ -152,24 +152,24 @@ export function AssessmentReport({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {assessment.estimated_labor_cost && (
                 <div>
-                  <div className="text-sm font-medium text-charcoal/70">Labor Cost</div>
+                  <div className="text-sm font-medium text-charcoal">Labor Cost</div>
                   <div className="text-lg font-semibold">${assessment.estimated_labor_cost.toLocaleString()}</div>
                 </div>
               )}
               {assessment.estimated_material_cost && (
                 <div>
-                  <div className="text-sm font-medium text-charcoal/70">Material Cost</div>
+                  <div className="text-sm font-medium text-charcoal">Material Cost</div>
                   <div className="text-lg font-semibold">${assessment.estimated_material_cost.toLocaleString()}</div>
                 </div>
               )}
               {assessment.estimated_equipment_cost && (
                 <div>
-                  <div className="text-sm font-medium text-charcoal/70">Equipment Cost</div>
+                  <div className="text-sm font-medium text-charcoal">Equipment Cost</div>
                   <div className="text-lg font-semibold">${assessment.estimated_equipment_cost.toLocaleString()}</div>
                 </div>
               )}
               <div>
-                <div className="text-sm font-medium text-charcoal/70">Total Estimate</div>
+                <div className="text-sm font-medium text-charcoal">Total Estimate</div>
                 <div className="text-xl font-bold text-forest-green">${assessment.estimated_total_cost.toLocaleString()}</div>
               </div>
             </div>

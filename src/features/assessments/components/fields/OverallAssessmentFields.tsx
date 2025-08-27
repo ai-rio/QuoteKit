@@ -88,14 +88,14 @@ export function OverallAssessmentFields({ formData, errors, onChange }: OverallA
               onChange={(e) => onChange('priority_level', Number(e.target.value))}
               className="w-full"
             />
-            <div className="flex justify-between text-sm text-stone-gray mt-1">
+            <div className="flex justify-between text-sm text-charcoal mt-1">
               <span>Low (1)</span>
               <span className="font-medium text-charcoal">{formData.priority_level}</span>
               <span>High (10)</span>
             </div>
           </div>
           {errors.priority_level && (
-            <p className="text-sm text-red-600">{errors.priority_level}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.priority_level}</p>
           )}
         </div>
 
@@ -110,11 +110,11 @@ export function OverallAssessmentFields({ formData, errors, onChange }: OverallA
             max="10"
             value={formData.complexity_score}
             onChange={(e) => onChange('complexity_score', e.target.value ? Number(e.target.value) : '')}
-            className={errors.complexity_score ? 'border-red-500' : ''}
+            className={errors.complexity_score ? 'border-error-red' : ''}
             placeholder="Rate job complexity"
           />
           {errors.complexity_score && (
-            <p className="text-sm text-red-600">{errors.complexity_score}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.complexity_score}</p>
           )}
         </div>
 

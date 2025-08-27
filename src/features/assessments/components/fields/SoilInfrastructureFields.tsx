@@ -71,11 +71,11 @@ export function SoilInfrastructureFields({ formData, errors, onChange }: SoilInf
             max="14"
             value={formData.soil_ph}
             onChange={(e) => onChange('soil_ph', e.target.value ? Number(e.target.value) : '')}
-            className={errors.soil_ph ? 'border-red-500' : ''}
+            className={errors.soil_ph ? 'border-error-red' : ''}
             placeholder="Soil pH level"
           />
           {errors.soil_ph && (
-            <p className="text-sm text-red-600">{errors.soil_ph}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.soil_ph}</p>
           )}
         </div>
 
@@ -93,14 +93,14 @@ export function SoilInfrastructureFields({ formData, errors, onChange }: SoilInf
               onChange={(e) => onChange('drainage_quality', Number(e.target.value))}
               className="w-full"
             />
-            <div className="flex justify-between text-sm text-stone-gray mt-1">
+            <div className="flex justify-between text-sm text-charcoal mt-1">
               <span>Poor (1)</span>
               <span className="font-medium text-charcoal">{formData.drainage_quality || 3}</span>
               <span>Excellent (5)</span>
             </div>
           </div>
           {errors.drainage_quality && (
-            <p className="text-sm text-red-600">{errors.drainage_quality}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.drainage_quality}</p>
           )}
         </div>
 

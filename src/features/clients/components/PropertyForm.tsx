@@ -314,7 +314,7 @@ export function PropertyForm({
             Client *
           </Label>
           <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-            <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+            <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
               <SelectValue placeholder={isLoadingClients ? "Loading clients..." : "Select a client"} />
             </SelectTrigger>
             <SelectContent>
@@ -405,7 +405,7 @@ export function PropertyForm({
               Property Type *
             </Label>
             <Select value={formData.property_type} onValueChange={(value: PropertyType) => handleInputChange('property_type', value)}>
-              <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+              <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
                 <SelectValue placeholder="Select property type" />
               </SelectTrigger>
               <SelectContent>
@@ -429,7 +429,7 @@ export function PropertyForm({
               Property Access
             </Label>
             <Select value={formData.property_access} onValueChange={(value: PropertyAccess) => handleInputChange('property_access', value)}>
-              <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+              <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
                 <SelectValue placeholder="Select access type" />
               </SelectTrigger>
               <SelectContent>
@@ -652,7 +652,7 @@ export function PropertyForm({
                   Service Frequency
                 </Label>
                 <Select value={formData.service_frequency} onValueChange={(value) => handleInputChange('service_frequency', value)}>
-                  <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+                  <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -670,7 +670,7 @@ export function PropertyForm({
                   Preferred Service Time
                 </Label>
                 <Select value={formData.preferred_service_time} onValueChange={(value) => handleInputChange('preferred_service_time', value)}>
-                  <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green">
+                  <SelectTrigger className="border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green data-[placeholder]:text-charcoal/60">
                     <SelectValue placeholder="Select preferred time" />
                   </SelectTrigger>
                   <SelectContent>

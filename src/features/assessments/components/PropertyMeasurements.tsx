@@ -180,11 +180,11 @@ export function PropertyMeasurements({ formData, errors, onChange }: PropertyMea
                 type="number"
                 value={formData.lawn_area_measured}
                 onChange={(e) => onChange('lawn_area_measured', e.target.value ? parseFloat(e.target.value) : '')}
-                className={errors.lawn_area_measured ? 'border-red-500' : ''}
+                className={errors.lawn_area_measured ? 'border-error-red' : ''}
                 placeholder="Enter measured lawn area"
               />
               {errors.lawn_area_measured && (
-                <p className="text-sm text-red-600">{errors.lawn_area_measured}</p>
+                <p className="text-sm text-error-red font-medium" role="alert">{errors.lawn_area_measured}</p>
               )}
             </div>
 
@@ -296,13 +296,13 @@ export function PropertyMeasurements({ formData, errors, onChange }: PropertyMea
                   <div key={area.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <span className="font-medium text-charcoal">{area.name}</span>
-                      <span className="text-charcoal-600 ml-2">{area.area.toLocaleString()} sq ft</span>
+                      <span className="text-charcoal ml-2">{area.area.toLocaleString()} sq ft</span>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeCustomArea(area.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-error-red hover:text-error-red/80"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -410,9 +410,9 @@ export function PropertyMeasurements({ formData, errors, onChange }: PropertyMea
                   className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-forest-green hover:bg-forest-green/5 transition-colors"
                 >
                   <div className="text-center">
-                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-charcoal-600">Click to upload photos</span>
-                    <p className="text-sm text-charcoal-400 mt-1">PNG, JPG up to 10MB each</p>
+                    <Upload className="h-8 w-8 text-charcoal mx-auto mb-2" />
+                    <span className="text-charcoal">Click to upload photos</span>
+                    <p className="text-sm text-charcoal mt-1">PNG, JPG up to 10MB each</p>
                   </div>
                 </Label>
               </div>
@@ -442,7 +442,7 @@ export function PropertyMeasurements({ formData, errors, onChange }: PropertyMea
               </div>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-charcoal-600">
+            <div className="flex items-center gap-4 text-sm text-charcoal">
               <span>Photos taken: {uploadedPhotos.length}</span>
               {uploadedPhotos.length > 0 && (
                 <span>Total size: {(uploadedPhotos.reduce((total, file) => total + file.size, 0) / 1024 / 1024).toFixed(1)} MB</span>

@@ -342,26 +342,33 @@ export function AssessmentFormRefactored({
   };
 
   const FormContent = () => (
-    <div className="space-y-6">
+    <div className="assessment-form space-y-6">
       {/* Progress Indicator */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-charcoal font-medium">Assessment Progress</span>
-          <span className="text-stone-gray">{calculateProgress()}% Complete</span>
+          <span className="text-charcoal font-semibold">Assessment Progress</span>
+          <span className="text-charcoal font-medium">{calculateProgress()}% Complete</span>
         </div>
-        <Progress value={calculateProgress()} className="h-2" />
+        <Progress value={calculateProgress()} className="h-3 bg-stone-gray/20" />
       </div>
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-6">
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.id} value={tab.id} className="text-xs">
-              <span className="mr-1">{tab.icon}</span>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="mb-6 overflow-x-auto">
+          <TabsList className="grid w-full min-w-max grid-cols-7 gap-1 md:grid-cols-7 lg:w-fit lg:min-w-0">
+            {tabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.id} 
+                value={tab.id} 
+                className="text-xs px-2 py-2 min-w-0 flex-shrink-0 md:px-3 lg:text-sm"
+                aria-label={`${tab.label} section`}
+              >
+                <span className="mr-1 text-base" role="img" aria-hidden="true">{tab.icon}</span>
+                <span className="truncate">{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value="basic" className="space-y-6">
           <BasicInformationFields
@@ -424,18 +431,18 @@ export function AssessmentFormRefactored({
 
       {/* Error Display */}
       {errors.submit && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600">{errors.submit}</p>
+        <div className="bg-error-red/5 border border-error-red/20 rounded-lg p-4" role="alert">
+          <p className="text-error-red font-medium">{errors.submit}</p>
         </div>
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-between pt-6 border-t border-stone-gray/20">
+      <div className="flex flex-col sm:flex-row gap-4 sm:justify-between pt-6 border-t border-stone-gray/30">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="bg-paper-white border-stone-gray text-charcoal hover:bg-light-concrete font-bold px-6 py-3 rounded-lg transition-all duration-200"
+          className="bg-paper-white border-stone-gray/50 text-charcoal hover:bg-stone-gray/10 hover:border-stone-gray font-semibold px-6 py-3 h-12 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-forest-green focus-visible:ring-offset-2"
         >
           Cancel
         </Button>
@@ -444,7 +451,7 @@ export function AssessmentFormRefactored({
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="bg-equipment-yellow border-equipment-yellow text-charcoal hover:bg-equipment-yellow/90 font-bold px-6 py-3 rounded-lg transition-all duration-200"
+          className="bg-forest-green border-forest-green text-paper-white hover:bg-forest-green/90 disabled:opacity-60 disabled:cursor-not-allowed font-semibold px-6 py-3 h-12 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-forest-green focus-visible:ring-offset-2"
         >
           {isSubmitting ? (
             <>

@@ -44,9 +44,9 @@ export function QuotePreview({ preview }: QuotePreviewProps) {
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{suggestion.reason}</p>
                   <div className="text-sm">
-                    <span className="text-gray-500">Qty: </span>
+                    <span className="text-charcoal">Qty: </span>
                     <span className="font-medium">{suggestion.quantity}</span>
-                    <span className="text-gray-500 ml-4">Unit Cost: </span>
+                    <span className="text-charcoal ml-4">Unit Cost: </span>
                     <span className="font-medium">${suggestion.item.cost}</span>
                   </div>
                 </div>
@@ -83,7 +83,7 @@ export function QuotePreview({ preview }: QuotePreviewProps) {
               <span>${preview.pricingResult.equipmentCosts.reduce((sum, equipment) => sum + equipment.totalCost, 0).toLocaleString()}</span>
             </div>
             {preview.pricingResult.adjustments.map((adj, index) => (
-              <div key={index} className="flex justify-between text-xs text-gray-500">
+              <div key={index} className="flex justify-between text-xs text-charcoal">
                 <span>{adj.reason}:</span>
                 <span>{adj.multiplier > 1 ? '+' : ''}{((adj.multiplier - 1) * 100).toFixed(1)}%</span>
               </div>

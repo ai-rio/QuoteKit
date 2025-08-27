@@ -76,10 +76,10 @@ export function MediaGallery({ assessment, media }: MediaGalleryProps) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Camera className="h-8 w-8 text-gray-400" />
+                    <Camera className="h-8 w-8 text-charcoal" />
                   )
                 ) : (
-                  <div className="flex flex-col items-center gap-2 text-gray-500">
+                  <div className="flex flex-col items-center gap-2 text-charcoal">
                     {getMediaIcon(item.type)}
                     <span className="text-sm font-medium">{item.type.toUpperCase()}</span>
                   </div>
@@ -100,7 +100,7 @@ export function MediaGallery({ assessment, media }: MediaGalleryProps) {
                 )}
                 
                 {item.description && (
-                  <div className="text-xs text-charcoal/70">{item.description}</div>
+                  <div className="text-xs text-charcoal">{item.description}</div>
                 )}
               </div>
             </div>
@@ -109,7 +109,7 @@ export function MediaGallery({ assessment, media }: MediaGalleryProps) {
         
         {/* Media Summary */}
         <div className="mt-6 pt-4 border-t">
-          <div className="flex gap-4 text-sm text-charcoal/70">
+          <div className="flex gap-4 text-sm text-charcoal">
             <span>
               Photos: {media.filter(m => m.type.toLowerCase() === 'photo' || m.type.toLowerCase() === 'image').length}
             </span>

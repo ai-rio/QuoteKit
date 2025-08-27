@@ -44,6 +44,7 @@ import {
 import { deleteClient,getClientsWithAnalytics } from '../actions';
 import { Client, ClientSearchFilters,ClientWithAnalytics } from '../types';
 import { ClientForm } from './ClientForm';
+import { EnhancedClientModal } from './EnhancedClientForm';
 
 interface ClientListProps {
   onClientSelect?: (client: ClientWithAnalytics) => void;
@@ -235,7 +236,7 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
               <Select value={filters.hasQuotes?.toString() || 'all'} onValueChange={(value) => 
                 handleFilterChange(value === 'all' ? undefined : value === 'true')
               }>
-                <SelectTrigger className="bg-light-concrete text-charcoal border-stone-gray">
+                <SelectTrigger className="bg-light-concrete text-charcoal border-stone-gray data-[placeholder]:text-charcoal/60">
                   <SelectValue placeholder="Filter by quotes" />
                 </SelectTrigger>
                 <SelectContent className="bg-paper-white border-stone-gray">
@@ -248,7 +249,7 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
               <Select value={filters.sortBy} onValueChange={(value) => 
                 handleSortChange(value as ClientSearchFilters['sortBy'])
               }>
-                <SelectTrigger className="bg-light-concrete text-charcoal border-stone-gray">
+                <SelectTrigger className="bg-light-concrete text-charcoal border-stone-gray data-[placeholder]:text-charcoal/60">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-paper-white border-stone-gray">
@@ -465,39 +466,25 @@ export function ClientList({ onClientSelect, selectable = false }: ClientListPro
         </Card>
       )}
 
-      {/* Create Client Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-charcoal text-section-title">Add New Client</DialogTitle>
-          </DialogHeader>
-          <ClientForm
-            onSuccess={handleCreateClient}
-            onCancel={() => setShowCreateDialog(false)}
-            showCard={false}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Create Client Dialog - Enhanced Version */}
+      <EnhancedClientModal
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onSuccess={handleCreateClient}
+        mode="create"
+      />
 
-      {/* Edit Client Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-paper-white border-stone-gray max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-charcoal text-section-title">Edit Client</DialogTitle>
-          </DialogHeader>
-          {selectedClient && (
-            <ClientForm
-              client={selectedClient}
-              onSuccess={handleEditClient}
-              onCancel={() => {
-                setShowEditDialog(false);
-                setSelectedClient(null);
-              }}
-              showCard={false}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Edit Client Dialog - Enhanced Version */}
+      <EnhancedClientModal
+        client={selectedClient || undefined}
+        isOpen={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setSelectedClient(null);
+        }}
+        onSuccess={handleEditClient}
+        mode="edit"
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

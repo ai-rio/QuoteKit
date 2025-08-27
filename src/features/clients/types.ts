@@ -1,11 +1,40 @@
+// Structured address interface for enhanced address support
+export interface ClientStructuredAddress {
+  // Raw formatted address (backward compatibility)
+  formatted_address: string;
+  
+  // Google Places data
+  place_id?: string | null;
+  
+  // Parsed address components
+  street_number?: string | null;
+  route?: string | null;
+  locality?: string | null; // City
+  administrative_area_level_1?: string | null; // State
+  administrative_area_level_2?: string | null; // County
+  country?: string | null;
+  postal_code?: string | null;
+  
+  // Constructed fields for easy access
+  street_address?: string | null; // street_number + route
+  city?: string | null; // locality
+  state?: string | null; // administrative_area_level_1
+  zip_code?: string | null; // postal_code
+  
+  // Geocoding data
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
 export interface Client {
   id: string;
   user_id: string;
   name: string;
   email?: string | null;
   phone?: string | null;
-  address?: string | null;
+  address?: string | null; // Legacy field for backward compatibility
   notes?: string | null;
+  
   // Blueprint commercial fields
   company_name?: string | null;
   billing_address?: string | null;
@@ -18,6 +47,11 @@ export interface Client {
   service_area?: string | null;
   credit_terms?: number | null;
   credit_limit?: number | null;
+  
+  // Enhanced address fields (new)
+  structured_address?: ClientStructuredAddress | null;
+  structured_billing_address?: ClientStructuredAddress | null;
+  
   created_at: string;
   updated_at: string;
 }
@@ -27,10 +61,13 @@ interface BaseClientFormData {
   name: string;
   email: string;
   phone: string;
-  address: string;
+  address: string; // Legacy field for backward compatibility
   notes: string;
   client_status: 'lead' | 'active' | 'inactive' | 'archived';
   preferred_communication: 'email' | 'phone' | 'text' | 'portal' | '';
+  
+  // Enhanced address fields (optional for forms)
+  structured_address?: ClientStructuredAddress;
 }
 
 // Residential client form data
@@ -42,13 +79,16 @@ interface ResidentialClientFormData extends BaseClientFormData {
 export interface CommercialClientFormData extends BaseClientFormData {
   client_type: 'commercial';
   company_name: string;
-  billing_address: string;
+  billing_address: string; // Legacy field for backward compatibility
   primary_contact_person: string;
   tax_id: string;
   business_license: string;
   service_area: string;
   credit_terms: number;
   credit_limit: number;
+  
+  // Enhanced billing address field (optional for forms)
+  structured_billing_address?: ClientStructuredAddress;
 }
 
 // Discriminated union for client form data

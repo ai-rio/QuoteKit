@@ -64,7 +64,7 @@ export function NotesQualityFields({ formData, errors, onChange }: NotesQualityF
               Photos Taken Count
             </Label>
             <div className="relative">
-              <Camera className="absolute left-3 top-3 h-4 w-4 text-stone-gray" />
+              <Camera className="absolute left-3 top-3 h-4 w-4 text-charcoal" />
               <Input
                 id="photos_taken_count"
                 type="number"
@@ -158,7 +158,7 @@ export function NotesQualityFields({ formData, errors, onChange }: NotesQualityF
             rows={3}
             className="bg-stone-50 border-stone-300"
           />
-          <p className="text-sm text-stone-gray">These notes are private and will not be shared with the client.</p>
+          <p className="text-sm text-charcoal">These notes are private and will not be shared with the client.</p>
         </div>
       </div>
     </div>

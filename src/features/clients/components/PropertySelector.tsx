@@ -77,11 +77,13 @@ export function PropertySelector({
     loadProperties();
   }, [clientId]);
 
-  // Reset selected property if it's no longer in the list
+  // Reset selected property if it's no longer in the list, but preserve initially selected property
   useEffect(() => {
     if (selectedProperty && properties.length > 0) {
       const stillExists = properties.find(p => p.id === selectedProperty.id);
       if (!stillExists) {
+        // Only reset if the property truly doesn't exist in the client's properties
+        // This prevents clearing an initially selected property while properties are loading
         onPropertySelect(null);
       }
     }
@@ -128,7 +130,7 @@ export function PropertySelector({
         }}
         disabled={disabled || loading || !clientId}
       >
-        <SelectTrigger className="w-full border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green hover:bg-light-concrete/80">
+        <SelectTrigger className="w-full border-stone-gray bg-light-concrete text-charcoal focus:border-forest-green focus:ring-forest-green hover:bg-light-concrete/80 data-[placeholder]:text-charcoal/60">
           <div className="flex items-center truncate">
             <Home className="mr-2 h-4 w-4 flex-shrink-0" />
             {loading ? (
@@ -155,7 +157,7 @@ export function PropertySelector({
           </div>
         </SelectTrigger>
         <SelectContent>
-          {!hasProperties ? (
+          {!hasProperties && !loading ? (
             <div className="p-4 text-center">
               <div className="mb-2">
                 <MapPin className="h-8 w-8 mx-auto text-stone-gray/60" />
@@ -178,9 +180,6 @@ export function PropertySelector({
             </div>
           ) : (
             <>
-              <SelectItem value="">
-                <span className="text-stone-gray/60">No property selected</span>
-              </SelectItem>
               {activeProperties.map((property) => (
                 <SelectItem key={property.id} value={property.id}>
                   <div className="flex items-center gap-2 w-full">

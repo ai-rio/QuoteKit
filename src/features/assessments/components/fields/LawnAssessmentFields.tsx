@@ -129,13 +129,13 @@ export function LawnAssessmentFields({ formData, errors, onChange }: LawnAssessm
               max="100"
               value={formData.weed_coverage_percent}
               onChange={(e) => onChange('weed_coverage_percent', e.target.value ? Number(e.target.value) : '')}
-              className={errors.weed_coverage_percent ? 'border-red-500' : ''}
+              className={errors.weed_coverage_percent ? 'border-error-red' : ''}
               placeholder="Percentage of weed coverage"
             />
-            <span className="absolute right-3 top-3 text-stone-gray">%</span>
+            <span className="absolute right-3 top-3 text-charcoal">%</span>
           </div>
           {errors.weed_coverage_percent && (
-            <p className="text-sm text-red-600">{errors.weed_coverage_percent}</p>
+            <p className="text-sm text-error-red font-medium" role="alert">{errors.weed_coverage_percent}</p>
           )}
         </div>
 

@@ -7,18 +7,18 @@ import { cn } from '@/utils/cn';
 import { SexyBoarder } from '../sexy-boarder';
 
 const buttonVariants = cva(
-  'w-fit inline-flex items-center justify-center whitespace-nowrap text-sm rounded-md font-alt font-medium transition-colors disabled:pointer-events-none disabled:opacity-50',
+  'w-fit inline-flex items-center justify-center whitespace-nowrap text-sm rounded-md font-alt font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-forest-green focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
-        default: 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
-        orange: 'bg-orange-500 hover:bg-orange-400',
-        sexy: 'transition-all bg-black hover:bg-opacity-0',
+        default: 'bg-forest-green text-paper-white hover:bg-forest-green/90 focus-visible:bg-forest-green/90',
+        destructive: 'bg-error-red text-paper-white hover:bg-error-red/90 focus-visible:bg-error-red/90',
+        outline: 'border-2 border-charcoal bg-paper-white text-charcoal hover:bg-charcoal hover:text-paper-white focus-visible:bg-charcoal focus-visible:text-paper-white',
+        secondary: 'bg-stone-gray/20 text-charcoal border-2 border-stone-gray/30 hover:bg-stone-gray/30 hover:border-stone-gray/50 focus-visible:bg-stone-gray/30',
+        ghost: 'text-charcoal hover:bg-stone-gray/10 hover:text-forest-green focus-visible:bg-stone-gray/20 focus-visible:text-forest-green',
+        link: 'text-forest-green underline-offset-4 hover:underline focus-visible:text-forest-green/80',
+        orange: 'bg-orange-600 text-paper-white hover:bg-orange-700 focus-visible:bg-orange-700',
+        sexy: 'transition-all bg-charcoal text-paper-white hover:bg-forest-green focus-visible:bg-forest-green',
       },
       size: {
         default: 'h-10 px-4',
