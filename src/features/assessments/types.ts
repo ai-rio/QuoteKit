@@ -18,7 +18,9 @@ export type LawnCondition =
   | 'healthy'
   | 'patchy'
   | 'poor'
-  | 'dead';
+  | 'dead'
+  | 'fair'
+  | 'excellent';
 
 export type SoilCondition =
   | 'excellent'
@@ -26,7 +28,8 @@ export type SoilCondition =
   | 'compacted'
   | 'sandy'
   | 'clay'
-  | 'contaminated';
+  | 'contaminated'
+  | 'poor';
 
 export type IrrigationStatus =
   | 'none'

@@ -40,6 +40,7 @@ export function BasicInformationFields({
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loadingClients, setLoadingClients] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRunInitialSetup, setHasRunInitialSetup] = useState(false);
 
   // Load clients on component mount
   useEffect(() => {
@@ -64,7 +65,11 @@ export function BasicInformationFields({
 
   // Set initial data after clients are loaded
   useEffect(() => {
-    if (isInitialized && clients.length > 0) {
+    console.log('🔍 DEBUG: useEffect triggered', { isInitialized, clientsLength: clients.length, initialProperty: initialProperty?.id, initialClientId, hasRunInitialSetup });
+    
+    if (isInitialized && clients.length > 0 && !hasRunInitialSetup) {
+      console.log('🔍 DEBUG: Running initial setup...');
+      
       // Set initial client
       let clientId = initialClientId;
       
@@ -79,27 +84,48 @@ export function BasicInformationFields({
       }
 
       if (clientId) {
+        console.log('🔍 DEBUG: Setting selectedClientId to:', clientId);
         setSelectedClientId(clientId);
       }
 
       // Set initial property
       if (initialProperty) {
+        console.log('🔍 DEBUG: Setting selectedProperty to:', initialProperty.id);
         setSelectedProperty(initialProperty);
         // Make sure the form data is updated with the property ID
         if (initialProperty.id !== formData.property_id) {
+          console.log('🔍 DEBUG: Calling onChange for property_id:', initialProperty.id);
           onChange('property_id', initialProperty.id);
         }
       }
+      
+      // Mark as setup complete
+      setHasRunInitialSetup(true);
+      console.log('🔍 DEBUG: Initial setup complete');
+    } else {
+      console.log('🔍 DEBUG: Skipping setup - already completed or not ready');
     }
-  }, [isInitialized, clients, initialProperty, initialClientId, formData.property_id, onChange]);
+  }, [isInitialized, clients.length, initialProperty?.id, initialClientId, hasRunInitialSetup]);
 
   const handleClientSelect = (clientId: string) => {
+    console.log('🔍 DEBUG: handleClientSelect called with:', clientId);
+    console.log('🔍 DEBUG: Current selectedClientId:', selectedClientId);
+    
+    // Only reset property if client actually changed
+    const isClientChanged = selectedClientId !== clientId;
+    console.log('🔍 DEBUG: isClientChanged:', isClientChanged);
+    
     setSelectedClientId(clientId);
-    setSelectedProperty(null);
-    onChange('property_id', '');
+    
+    if (isClientChanged) {
+      console.log('🔍 DEBUG: Resetting property because client changed');
+      setSelectedProperty(null);
+      onChange('property_id', '');
+    }
   };
 
   const handlePropertySelect = (property: Property | null) => {
+    console.log('🔍 DEBUG: handlePropertySelect called with:', property?.id, property?.property_name);
     setSelectedProperty(property);
     onChange('property_id', property?.id || '');
   };
@@ -123,39 +149,25 @@ export function BasicInformationFields({
           <Label htmlFor="client_select" className="text-base text-charcoal font-semibold">
             Client *
           </Label>
-          {initialClientId ? (
-            // Show read-only client when pre-selected
-            <div className="h-11 px-3 py-2 border border-stone-gray bg-stone-gray/10 rounded-md flex items-center text-charcoal">
-              <Users className="mr-2 h-4 w-4 text-forest-green" />
-              {loadingClients ? (
-                <span className="text-stone-gray/60">Loading...</span>
-              ) : selectedClientName ? (
-                <span>{selectedClientName}</span>
-              ) : (
-                <span className="text-stone-gray/60">Client pre-selected</span>
-              )}
-            </div>
-          ) : (
-            <Select
-              value={selectedClientId}
-              onValueChange={handleClientSelect}
-              disabled={loadingClients}
-            >
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder={loadingClients ? "Loading clients..." : "Select client"} />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.company_name || client.name}
-                    {client.company_name && client.name && (
-                      <span className="text-sm text-charcoal ml-2">({client.name})</span>
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Select
+            value={selectedClientId}
+            onValueChange={handleClientSelect}
+            disabled={loadingClients}
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue placeholder={loadingClients ? "Loading clients..." : "Select client"} />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.company_name || client.name}
+                  {client.company_name && client.name && (
+                    <span className="text-sm text-charcoal ml-2">({client.name})</span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {initialClientId && (
             <p className="text-sm text-charcoal">Client pre-selected from URL</p>
           )}

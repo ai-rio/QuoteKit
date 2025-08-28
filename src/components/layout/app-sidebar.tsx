@@ -147,9 +147,11 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>        
-        {/* New Quote - Standalone primary action button */}
+        
+        {/* Primary Action Buttons */}
         <SidebarGroup>
-          <SidebarMenu className="space-y-1">
+          <SidebarMenu className="space-y-2">
+            {/* New Quote - Primary action button */}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link 
@@ -163,6 +165,24 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                 >
                   <Plus className="w-5 h-5 mr-3 flex-shrink-0" />
                   <span className="text-sm">New Quote</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            {/* New Assessment - Secondary action button */}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link 
+                  href="/assessments/new" 
+                  onClick={handleNavigation}
+                  className={`flex items-center p-3 rounded-md font-medium min-h-[44px] touch-manipulation transition-all duration-150 ease-out active:scale-95 ${
+                    pathname === '/assessments/new' || pathname.startsWith('/assessments/new/')
+                      ? 'bg-white/20 text-white font-bold border-l-2 border-white hover:bg-white/30' 
+                      : 'bg-white/10 text-white font-semibold hover:bg-white/20 hover:text-white border border-white/30 hover:border-white/50'
+                  }`}
+                >
+                  <ClipboardCheck className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="text-sm">New Assessment</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

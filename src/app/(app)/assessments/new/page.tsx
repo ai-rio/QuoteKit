@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { getSession } from '@/features/account/controllers/get-session';
-import { NewAssessmentForm } from '@/features/assessments/components/NewAssessmentForm';
+import { EnhancedAssessmentForm } from '@/features/assessments/components/EnhancedAssessmentForm';
 import { getPropertyById } from '@/features/clients/actions';
 import { Property } from '@/features/clients/types';
 
@@ -39,7 +39,8 @@ export default async function NewAssessmentPage({ searchParams }: NewAssessmentP
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <PageBreadcrumbs />
         <div className="max-w-4xl mx-auto">
-          <NewAssessmentForm 
+          <EnhancedAssessmentForm 
+            mode="create"
             initialProperty={selectedProperty}
             initialClientId={params.client_id || null}
           />

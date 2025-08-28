@@ -76,6 +76,37 @@ export function AssessmentsManager({ initialAssessments }: AssessmentsManagerPro
     }
   };
 
+  const getWorkflowStatusColor = (workflowStatus?: string) => {
+    switch (workflowStatus) {
+      case 'completed':
+        return 'bg-equipment-yellow text-charcoal border-equipment-yellow/20';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'error':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'pending':
+      default:
+        return 'bg-forest-green/10 text-forest-green border-forest-green/20';
+    }
+  };
+
+  const getWorkflowStatusLabel = (workflowStatus?: string, assessmentStatus?: string) => {
+    if (assessmentStatus === 'completed') {
+      switch (workflowStatus) {
+        case 'completed':
+          return 'Quote Ready';
+        case 'processing':
+          return 'Generating Quote';
+        case 'error':
+          return 'Quote Error';
+        case 'pending':
+        default:
+          return 'Ready for Quote';
+      }
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}

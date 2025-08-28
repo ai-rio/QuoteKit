@@ -1,4 +1,5 @@
 export { AssessmentCard } from './AssessmentCard';
+export { AssessmentCompletionBridge } from './AssessmentCompletionBridge';
 export { AssessmentFormRefactored as AssessmentForm } from './AssessmentForm';
 export { AssessmentIntegration } from './AssessmentIntegration';
 export { AssessmentReport } from './AssessmentReport';
@@ -6,6 +7,9 @@ export { AssessmentsManager } from './AssessmentsManager';
 export { AssessmentStats } from './AssessmentStats';
 export { AssessmentToQuoteIntegration } from './AssessmentToQuoteIntegration';
 export { AssessmentViewer } from './AssessmentViewer';
+export { CleanAssessmentForm } from './CleanAssessmentForm';
 export { EditAssessmentForm } from './EditAssessmentForm';
+export { EnhancedAssessmentForm } from './EnhancedAssessmentForm';
 export { NewAssessmentForm } from './NewAssessmentForm';
+export { PricingExplanationPanel } from './PricingExplanationPanel';
 export { PropertyMeasurements } from './PropertyMeasurements';

@@ -228,13 +228,19 @@ export function AssessmentFormRefactored({
   }, [assessment]);
 
   const validateForm = (): boolean => {
+    console.log('🔎 DEBUG: validateForm called');
+    console.log('🔎 DEBUG: assessor_name:', formData.assessor_name);
+    console.log('🔎 DEBUG: property_id:', formData.property_id);
+    
     const newErrors: AssessmentFormErrors = {};
 
     // Basic validation
     if (!formData.assessor_name.trim()) {
+      console.log('🔎 DEBUG: Missing assessor name');
       newErrors.assessor_name = 'Assessor name is required';
     }
     if (!formData.property_id) {
+      console.log('🔎 DEBUG: Missing property ID');
       newErrors.property_id = 'Property selection is required';
     }
 
@@ -271,8 +277,15 @@ export function AssessmentFormRefactored({
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    console.log('🚀 DEBUG: handleSubmit called');
+    console.log('🚀 DEBUG: Form data:', formData);
+    
+    if (!validateForm()) {
+      console.log('🚀 DEBUG: Form validation failed, not submitting');
+      return;
+    }
 
+    console.log('🚀 DEBUG: Form validation passed, submitting...');
     try {
       if (isEditing && assessment) {
         const updateData: UpdateAssessmentData = {

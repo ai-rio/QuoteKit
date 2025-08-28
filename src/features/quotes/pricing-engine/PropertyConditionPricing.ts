@@ -115,14 +115,17 @@ const PRICING_CONSTANTS = {
       compacted: 1.25,
       sandy: 1.15,
       clay: 1.20,
-      contaminated: 1.60
+      contaminated: 1.60,
+      poor: 1.30
     },
     lawn_condition: {
       pristine: 1.0,
       healthy: 1.0,
       patchy: 1.15,
       poor: 1.35,
-      dead: 1.50
+      dead: 1.50,
+      fair: 1.10,
+      excellent: 0.95
     }
   },
   // Complexity impact on different cost categories
