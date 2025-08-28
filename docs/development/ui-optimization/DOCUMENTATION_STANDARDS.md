@@ -17,6 +17,7 @@ This documentation standard applies to **ALL QuoteKit development initiatives**,
 - **API Development**: `docs/development/api-v2/`, `docs/development/webhook-system/`
 - **Infrastructure**: `docs/development/deployment-automation/`, `docs/development/monitoring/`
 - **Integrations**: `docs/development/stripe-integration/`, `docs/development/third-party-apis/`
+- **Testing Initiatives**: `docs/development/testing-automation/`, `docs/development/performance-testing/`
 
 ### **Benefits of Standardization**
 - **Team Efficiency**: Any developer can navigate any initiative documentation instantly
@@ -185,6 +186,117 @@ COMPLETED MIGRATION:
 
 ---
 
+## 🧪 Testing Scripts & Artifacts Organization
+
+### **CRITICAL: No Testing Scripts in Project Root**
+**MANDATORY RULE**: All testing scripts, validation files, and testing artifacts MUST be organized within the documentation structure or appropriate project directories. **NEVER create testing files in project root.**
+
+### **Testing Script Placement Guidelines**
+
+#### **Testing Documentation** (Follow Four-Category System)
+```
+docs/development/[initiative]/
+├── 00-planning/
+│   └── P###-testing-strategy.md              # Test planning and strategy
+├── 01-specifications/  
+│   └── S###-test-requirements.md             # Test specifications and scenarios
+├── 02-implementation/
+│   └── I###-DRAFT-testing-implementation.md  # Test execution guides
+└── 03-reports/
+    └── R###-DRAFT-testing-results.md         # Test results and validation reports
+```
+
+#### **Executable Testing Scripts** (Organized in Project Structure)
+```
+scripts/testing/[initiative]/                  # Initiative-specific test scripts
+├── unit-tests/
+├── integration-tests/
+├── performance-tests/
+└── validation-scripts/
+
+tests/[initiative]/                            # Initiative-specific test suites  
+├── unit/
+├── integration/
+├── e2e/
+└── performance/
+
+docs/development/[initiative]/testing-assets/  # Test data, fixtures, configurations
+├── test-data/
+├── fixtures/
+├── configurations/
+└── mock-data/
+```
+
+### **Testing Script Naming Convention**
+
+#### **Documentation Files**
+- **Planning**: `P001-testing-strategy.md`, `P002-test-case-analysis.md`
+- **Specifications**: `S001-test-requirements.md`, `S002-validation-criteria.md`  
+- **Implementation**: `I001-DRAFT-test-execution-guide.md`, `I002-DRAFT-automation-setup.md`
+- **Reports**: `R001-DRAFT-test-results.md`, `R002-DRAFT-validation-report.md`
+
+#### **Executable Scripts**
+```
+scripts/testing/[initiative]/
+├── test-[feature]-unit.js
+├── test-[feature]-integration.js
+├── validate-[feature]-performance.js
+└── setup-[feature]-testing.js
+
+tests/[initiative]/
+├── [feature].test.ts
+├── [feature].integration.test.ts
+├── [feature].e2e.test.ts
+└── [feature].performance.test.ts
+```
+
+### **Prohibited Testing Practices**
+```
+❌ NEVER CREATE IN ROOT:
+- test-results.md
+- validation-report.md  
+- testing-summary.md
+- performance-analysis.md
+- test-[anything].js/ts in root
+- validation-[anything].js/ts in root
+
+❌ NEVER CREATE WITHOUT INITIATIVE CONTEXT:
+- generic-test-script.js
+- random-validation.md
+- standalone-test-results.md
+```
+
+### **Required Testing Practices**
+```
+✅ ALWAYS ORGANIZE BY INITIATIVE:
+docs/development/payment-system/00-planning/P001-testing-strategy.md
+docs/development/ui-optimization/03-reports/R001-DRAFT-test-results.md
+scripts/testing/assessment-engine/test-assessment-validation.js
+tests/mobile-interface/mobile-responsiveness.test.ts
+
+✅ ALWAYS USE DRAFT PREFIX FOR RESULTS:
+- R001-DRAFT-testing-results.md (until validated)
+- R002-DRAFT-performance-validation.md (until approved)
+- I001-DRAFT-testing-implementation.md (until tested)
+```
+
+### **Testing Initiative Examples**
+```
+docs/development/testing-automation/           # Testing system improvements
+├── 00-planning/P001-test-automation-strategy.md
+├── 01-specifications/S001-ci-cd-requirements.md  
+├── 02-implementation/I001-DRAFT-automation-setup.md
+└── 03-reports/R001-DRAFT-automation-results.md
+
+docs/development/performance-testing/          # Performance validation initiative
+├── 00-planning/P001-performance-baseline.md
+├── 01-specifications/S001-benchmark-requirements.md
+├── 02-implementation/I001-DRAFT-load-testing.md  
+└── 03-reports/R001-DRAFT-performance-analysis.md
+```
+
+---
+
 ## ⚡ Quality Standards
 
 ### **File Quality Checklist**
@@ -219,6 +331,8 @@ COMPLETED MIGRATION:
 4. **REQUIRED** README.md update after file changes in any initiative
 5. **FORBIDDEN** to remove DRAFT without user approval and testing
 6. **MANDATORY** Create initiative folder structure before starting any new project documentation
+7. **CRITICAL** NEVER create testing scripts, validation files, or test results in project root
+8. **REQUIRED** Organize all testing artifacts within initiative-specific documentation structure
 
 ### **For Development Teams**
 1. **Reference** this DOCUMENTATION_STANDARDS.md for ALL project documentation
