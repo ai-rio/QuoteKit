@@ -1,54 +1,12 @@
 # QuoteKit Documentation
 
-This directory contains all documentation for the QuoteKit project, organized by category for easy navigation.
+This directory contains all project documentation, organized by initiative.
 
-## 📁 Directory Structure
+## Initiatives
 
-### 🏗️ **Architecture & Design**
-- `architecture/` - System architecture, database schemas, and design decisions
-- `design-system/` - UI/UX design system and component specifications
-
-### 🚀 **Development & Implementation**
-- `development/` - Development guides, coding standards, and implementation details
-  - `driver.js/` - **User Onboarding System** - Complete driver.js implementation with guided tours
-  - `blueprint-upgrade/` - **Blueprint Implementation** - Comprehensive lawn care software blueprint (75% complete)
-- `type-fixes/` - TypeScript error fixes and type safety improvements
-- `testing/` - Testing strategies, procedures, and quality assurance
-
-### 🔧 **Features & Functionality**
-- `features/` - Feature specifications, user stories, and product requirements
-- `integrations/` - Third-party integrations (Stripe, Supabase, etc.)
-- `api/` - API documentation and specifications
-
-### 🚀 **Deployment & Operations**
-- `deployment/` - Deployment guides, infrastructure, and CI/CD
-- `security/` - Security guidelines, best practices, and compliance
-
-### 📊 **Business & Strategy**
-- `business/` - Business models, pricing strategies, and market analysis
-- `planning/` - Project planning, roadmaps, and sprint documentation
-
-### 🛠️ **Tools & Utilities**
-- `tools/` - Development tools, scripts, and utilities
-- `templates/` - Document templates and boilerplates
-
-### 📚 **Reference**
-- `reference/` - Quick references, troubleshooting, and FAQs
-- `legacy/` - Archived and backup documentation
-
-## 🔍 Quick Navigation
-
-- **Getting Started**: See `development/README.md`
-- **User Onboarding**: See `development/driver.js/README.md` - Complete guided tour system
-- **Blueprint Implementation**: See `development/blueprint-upgrade/README.md` - Lawn care software blueprint (75% complete)
-- **Architecture Overview**: See `architecture/README.md`
-- **Deployment Guide**: See `deployment/README.md`
-- **Feature Specifications**: See `features/README.md`
-
-## 📝 Contributing
-
-When adding new documentation:
-1. Choose the appropriate category folder
-2. Follow the naming convention: `kebab-case.md`
-3. Update this README if adding new categories
-4. Include proper headers and table of contents for longer documents
+- [Database Maintenance](./development/database-maintenance/)
+- [Deployment Automation](./development/deployment-automation/)
+- [Documentation Standards](./development/documentation-standards/)
+- [Formbricks Integration](./development/formbricks-integration/)
+- [Project Maintenance](./development/project-maintenance/)
+- [Project Overview](./development/project-overview/)

@@ -1,192 +1,53 @@
-# Driver.js User Onboarding Integration for LawnQuote
+# Driver.js Documentation
 
-## Overview
+This directory contains comprehensive documentation related to the `driver.js` integration within the QuoteKit project. The documentation is organized into four main categories: Planning, Specifications, Implementation, and Reports, following the project's documentation standards.
 
-This document outlines the comprehensive integration plan for implementing driver.js user onboarding in LawnQuote, a Next.js 15 quote management system for landscaping businesses. The implementation follows MoSCoW prioritization methodology to ensure systematic delivery of user onboarding features.
+## Table of Contents
 
-## Project Context
-
-**LawnQuote System:**
-- Next.js 15 + TypeScript + Supabase + Stripe
-- Feature-based architecture with comprehensive quote management
-- Freemium model with tier-based access control
-- Mobile-responsive design with shadcn/ui components
-
-**Driver.js Library:**
-- Version: Latest (1.x)
-- Lightweight, vanilla JavaScript tour engine
-- Zero dependencies, highly customizable
-- TypeScript support with comprehensive API
-
-## Implementation Status
-
-### ✅ Completed Phases (M1-M2 Sprints + Fixes)
-1. **Foundation Setup** (Must Have) - **COMPLETE**
-   - Driver.js integration and TypeScript support
-   - OnboardingProvider React Context
-   - Database persistence with Supabase integration
-   - Type-safe implementation with 0 TypeScript errors
-
-2. **Core User Journeys** (Must Have) - **COMPLETE**
-   - Welcome tour with 6-step dashboard overview
-   - Tier-aware onboarding system (Free/Pro/Enterprise)
-   - Tour completion tracking and progress persistence
-
-3. **Enhanced User Experience** (M2 Sprint) - **COMPLETE**
-   - Quote creation walkthrough with step-by-step guidance
-   - Item library introduction for services and materials
-   - Settings configuration tour for company profile setup
-   - Debug panel for development and testing
-
-4. **Page-Aware Tour System** (Bug Fixes) - **COMPLETE** ✅
-   - Fixed dashboard-only tour triggering limitation
-   - Implemented intelligent page-aware tour routing
-   - Prevented multiple simultaneous tour instances
-   - Enhanced state management and cleanup
-   - Added comprehensive debug utilities
-
-### 🔄 Upcoming Phases (Sprint 3)
-4. **Advanced Features** (Should Have)
-5. **Premium Enhancements** (Could Have)
-6. **Future Innovations** (Won't Have - This Release)
-
-### Integration Architecture
-- **Context-Aware Tours**: Different tours for different user states
-- **Progressive Disclosure**: Gradual feature introduction
-- **Tier-Aware Onboarding**: Different experiences for Free vs Pro users
-- **Analytics Integration**: Track onboarding completion and drop-off points
-- **Page-Aware Routing**: Intelligent tour suggestions based on current page ✅
-- **Single Tour Policy**: Prevents overwhelming users with multiple simultaneous tours ✅
-- **Enhanced State Management**: Proper cleanup and phantom tour prevention ✅
-
-## Implementation File Structure
-
-```
-# M1-M2 Sprint Implementation (Completed)
-src/
-├── types/onboarding.ts                 # TypeScript definitions
-├── contexts/
-│   ├── onboarding-context.tsx          # React Context Provider
-│   └── onboarding-wrapper.tsx          # Context wrapper component
-├── libs/onboarding/
-│   ├── tour-manager.ts                 # Core tour management
-│   ├── tour-configs.ts                 # Tour configurations
-│   └── onboarding-client.ts            # Database client
-├── components/onboarding/
-│   ├── OnboardingManager.tsx           # Main onboarding manager
-│   ├── onboarding-debug.tsx            # Debug utilities
-│   ├── OnboardingDebugPanel.tsx        # Development debug panel
-│   └── TourTrigger.tsx                 # Tour trigger components
-├── styles/onboarding.css               # Custom styling
-tests/unit/onboarding.test.ts           # Test suite
-
-# Documentation
-docs/development/driver.js/
-├── README.md                           # This overview document
-├── moscow-implementation-plan.md       # Detailed MoSCoW breakdown
-└── [Future planning docs...]           # Additional docs as needed
-```
-
-## Quick Start
-
-1. **Dependencies Installed** ✅
-   ```bash
-   # Already installed
-   driver.js@1.3.6
-   ```
-
-2. **Integration Complete** ✅
-   ```typescript
-   // Available at: src/libs/onboarding/tour-manager.ts
-   import { tourManager } from '@/libs/onboarding/tour-manager';
-   import { useOnboarding } from '@/contexts/onboarding-context';
-   ```
-
-3. **React Context Ready** ✅
-   ```typescript
-   // OnboardingProvider already integrated in layout
-   const { startTour, completeTour, shouldShowTour } = useOnboarding();
-   ```
-
-## Key Features Implementation Status
-
-### Must Have (M) - ✅ M1-M2 Sprints Complete
-- [x] **First-time user welcome tour** - Implemented with 6-step dashboard overview
-- [x] **Dashboard navigation introduction** - Complete sidebar and navigation tour
-- [x] **Quote creation walkthrough** - Tier-aware quote creation guide with step-by-step process
-- [x] **Settings configuration guide** - Company profile and defaults setup
-- [x] **Item library introduction** - Services and materials management tour
-- [x] **Debug panel integration** - Development tools for testing and debugging tours
-
-### Should Have (S)
-- [ ] Feature-specific contextual help
-- [ ] Progressive onboarding across sessions
-- [ ] Tier-specific feature highlights
-- [ ] Mobile-optimized tours
-
-### Could Have (C)
-- [ ] Interactive tutorials with real data
-- [ ] Gamified onboarding progress
-- [ ] Personalized tour recommendations
-- [ ] Advanced analytics dashboard
-
-### Won't Have (W)
-- [ ] AI-powered tour customization
-- [ ] Multi-language tour support
-- [ ] Video-embedded tours
-- [ ] Third-party integrations
-
-## Implementation Results
-
-### ✅ M1-M2 Sprint Achievements
-- **Driver.js Integration**: Successfully installed and configured
-- **TypeScript Support**: 100% type-safe with full IntelliSense
-- **React Context**: OnboardingProvider with database persistence
-- **Welcome Tour**: 6-step dashboard overview implemented
-- **Quote Creation Tour**: Complete walkthrough for first-time quote creation
-- **Item Library Tour**: Services and materials management introduction
-- **Settings Tour**: Company profile and configuration setup
-- **Tier Awareness**: Free/Pro/Enterprise onboarding paths
-- **Debug Tools**: Development panel for testing and debugging
-- **Test Coverage**: Comprehensive unit tests with 17+ test cases
-- **Zero Errors**: Full TypeScript compilation without errors
-- **ESLint Clean**: All 22 ESLint errors resolved, maintaining code quality
-
-### 📊 Target Metrics (To Be Measured)
-- **Onboarding Completion Rate**: Target 80%+ (baseline to be established)
-- **Time to First Quote**: Reduce by 50% (measurement in progress)
-- **Feature Discovery Rate**: Increase by 60% (analytics integration pending)
-- **User Retention (7-day)**: Improve by 25% (tracking implementation needed)
-
-## Next Steps - Sprint 3 Planning
-
-### 🎯 Immediate Actions
-1. **Review M2 Implementation**: Complete code review and user testing
-2. **User Feedback Collection**: Gather experience data from enhanced tours
-3. **Analytics Integration**: Connect with PostHog for comprehensive tour tracking
-4. **Performance Monitoring**: Measure completion rates across all tours
-
-### 🚀 Sprint 3 Goals
-1. **Contextual Help System** (S1.1 from [MoSCoW Plan](./moscow-implementation-plan.md))
-2. **Progressive Onboarding** (S1.2)
-3. **Mobile Optimization** (S2.2)
-4. **Feature-Specific Tours** (S1.3)
-
-### 📋 Ready for Implementation
-- **Contextual Help Tooltips**: On-demand help for complex features
-- **Progressive Session Tours**: Multi-session onboarding experience
-- **Mobile-Responsive Tours**: Optimized for tablet and mobile devices
-- **Advanced Analytics**: Detailed tour performance metrics
-
-## Resources
-
-- [Driver.js Official Documentation](https://driverjs.com/)
-- [LawnQuote Project Overview](../../README-PROJECT.md)
-- [Component System Documentation](../components/)
-- [Testing Strategy Guide](../testing/)
+*   [00-planning/ - Planning Documents](#00-planning---planning-documents)
+*   [01-specifications/ - Specification Documents](#01-specifications---specification-documents)
+*   [02-implementation/ - Implementation Documents](#02-implementation---implementation-documents)
+*   [03-reports/ - Report Documents](#03-reports---report-documents)
 
 ---
 
-**Last Updated**: January 2025  
-**Version**: 2.0  
-**Status**: M1-M2 Sprints Complete ✅
+### 00-planning/ - Planning Documents
+
+This section contains documents outlining the initial planning, strategies, and high-level overviews for the `driver.js` implementation.
+
+*   [`P001-driverjs-onboarding-overview.md`](./00-planning/P001-driverjs-onboarding-overview.md): Provides a comprehensive overview of the driver.js user onboarding integration.
+*   [`P002-driverjs-implementation-fix-plan.md`](./00-planning/P002-driverjs-implementation-fix-plan.md): Details the systematic plan for fixing and simplifying the driver.js implementation.
+*   [`P003-driverjs-moscow-implementation-plan.md`](./00-planning/P003-driverjs-moscow-implementation-plan.md): Outlines the MoSCoW (Must have, Should have, Could have, Won't have) prioritization for the driver.js implementation across sprints.
+
+### 01-specifications/ - Specification Documents
+
+This section includes detailed technical specifications, architectural designs, and user journey mappings for the `driver.js` system.
+
+*   [`S001-driverjs-react-component-specifications.md`](./01-specifications/S001-driverjs-react-component-specifications.md): Specifies the React components needed for the driver.js integration.
+*   [`S002-driverjs-technical-architecture.md`](./01-specifications/S002-driverjs-technical-architecture.md): Outlines the technical architecture for integrating driver.js into the application.
+*   [`S003-driverjs-testing-strategy.md`](./01-specifications/S003-driverjs-testing-strategy.md): Details the comprehensive testing strategy for the driver.js onboarding implementation.
+*   [`S004-driverjs-tour-configurations-and-behaviors.md`](./01-specifications/S004-driverjs-tour-configurations-and-behaviors.md): Defines all current tour configurations, their expected behaviors, and test scenarios.
+*   [`S005-driverjs-tour-design-enhancement-analysis.md`](./01-specifications/S005-driverjs-tour-design-enhancement-analysis.md): Analyzes and recommends enhancements for tour design based on best practices.
+*   [`S006-driverjs-user-journey-mapping.md`](./01-specifications/S006-driverjs-user-journey-mapping.md): Maps out comprehensive user journeys for the driver.js onboarding flows.
+
+### 02-implementation/ - Implementation Documents
+
+This section contains documents detailing the actual implementation, fixes, and guides for deploying and maintaining the `driver.js` system.
+
+*   [`I001-COMPLETE-analytics-integration.md`](./02-implementation/I001-COMPLETE-analytics-integration.md): Outlines the comprehensive analytics strategy and implementation for tracking user onboarding behavior.
+*   [`I002-COMPLETE-driverjs-deployment-guide.md`](./02-implementation/I002-COMPLETE-driverjs-deployment-guide.md): Covers the deployment process for the driver.js onboarding system.
+*   [`I003-COMPLETE-driverjs-implementation.md`](./02-implementation/I003-COMPLETE-driverjs-implementation.md): Provides a summary of the completed driver.js tour system implementation.
+*   [`I004-COMPLETE-driverjs-maintenance-support-guide.md`](./02-implementation/I004-COMPLETE-driverjs-maintenance-support-guide.md): Provides guidance for maintaining and supporting the driver.js onboarding system.
+*   [`I005-COMPLETE-overlay-contrast-enhancement-guide.md`](./02-implementation/I005-COMPLETE-overlay-contrast-enhancement-guide.md): Details the enhancements made to improve tour overlay contrast.
+*   [`I006-COMPLETE-page-specific-tours-fix.md`](./02-implementation/I006-COMPLETE-page-specific-tours-fix.md): Documents the fix for page-specific tours, resolving issues where tours only worked on the dashboard.
+*   [`I007-COMPLETE-tour-mapping-fix.md`](./02-implementation/I007-COMPLETE-tour-mapping-fix.md): Details the fix for incorrect tour mappings in the page tour router.
+*   [`I008-COMPLETE-driverjs-walkthrough-fixes.md`](./02-implementation/I008-COMPLETE-driverjs-walkthrough-fixes.md): Documents the fixes for walkthrough system issues, including dashboard-only triggering and multiple tour instances.
+
+### 03-reports/ - Report Documents
+
+This section contains reports and summaries of completed work, including current system documentation and sprint summaries.
+
+*   [`R001-COMPLETE-current-tour-system-documentation.md`](./03-reports/R001-COMPLETE-current-tour-system-documentation.md): Provides documentation of the current state of the QuoteKit Tour System.
+*   [`R002-COMPLETE-driverjs-implementation-summary.md`](./03-reports/R002-COMPLETE-driverjs-implementation-summary.md): Offers a comprehensive summary of the completed driver.js user onboarding implementation.
+*   [`R003-COMPLETE-sprint3-implementation-summary.md`](./03-reports/R003-COMPLETE-sprint3-implementation-summary.md): Summarizes the completed Sprint 3 implementation of the driver.js onboarding system.
+

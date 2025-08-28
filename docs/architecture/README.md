@@ -1,35 +1,30 @@
-# Architecture Documentation
+# Architecture Initiative
 
-This directory contains system architecture documentation, database schemas, and architectural decision records (ADRs).
+This directory contains all documentation related to the architecture of QuoteKit.
 
-## 📁 Contents
+## 00-planning
 
-### Core Architecture
-- `LawnQuote - Full Application Blueprint.md` - Complete application blueprint
-- `lq-architecture.md` - System architecture overview
-- `component-mapping.md` - Component architecture mapping
+- [P001-adr-clean-subscription-schema.md](./00-planning/P001-adr-clean-subscription-schema.md)
+- [P002-clean-schema-benefits-analysis.md](./00-planning/P002-clean-schema-benefits-analysis.md)
+- [P003-lawnquote-full-application-blueprint.md](./00-planning/P003-lawnquote-full-application-blueprint.md)
+- [P004-benefits-analysis.md](./00-planning/P004-benefits-analysis.md)
+- [P005-lq-architecture.md](./00-planning/P005-lq-architecture.md)
+- [P006-migration-plan.md](./00-planning/P006-migration-plan.md)
 
-### Database & Schema
-- `comprehensive-subscription-schema.sql` - Complete subscription schema
-- `clean-subscription-schema.sql` - Cleaned subscription schema
-- `clean-subscription-types.ts` - TypeScript types for subscription schema
-- `FINAL-CLEAN-SCHEMA-MIGRATION.md` - Final schema migration guide
-- `CONSOLIDATED_MIGRATION_GUIDE.md` - Consolidated migration documentation
+## 01-specifications
 
-### Migration & Implementation
-- `migration-plan.md` - Database migration planning
-- `migration-from-current-schema.md` - Migration from current schema
-- `implementation-guide.md` - Architecture implementation guide
-- `benefits-analysis.md` - Architecture benefits analysis
-- `CLEAN-SCHEMA-BENEFITS-ANALYSIS.md` - Clean schema benefits
+- [S001-clean-subscription-schema.sql](./01-specifications/S001-clean-subscription-schema.sql)
+- [S002-clean-subscription-types.ts](./01-specifications/S002-clean-subscription-types.ts)
+- [S003-component-mapping.md](./01-specifications/S003-component-mapping.md)
+- [S004-comprehensive-subscription-schema.sql](./01-specifications/S004-comprehensive-subscription-schema.sql)
+- [S005-subscription-schema-overview.md](./01-specifications/S005-subscription-schema-overview.md)
 
-### Decision Records
-- `ADR-001-clean-subscription-schema.md` - ADR for clean subscription schema
-- `subscription-schema-overview.md` - Subscription schema overview
+## 02-implementation
 
-## 🔍 Quick Navigation
+- [I001-DRAFT-consolidated-migration-guide.md](./02-implementation/I001-DRAFT-consolidated-migration-guide.md)
+- [I002-DRAFT-implementation-guide.md](./02-implementation/I002-DRAFT-implementation-guide.md)
+- [I003-DRAFT-migration-from-current-schema.md](./02-implementation/I003-DRAFT-migration-from-current-schema.md)
 
-- **Database Schema**: Start with `comprehensive-subscription-schema.sql`
-- **Migration Guide**: See `CONSOLIDATED_MIGRATION_GUIDE.md`
-- **System Overview**: Check `lq-architecture.md`
-- **Implementation**: Follow `implementation-guide.md`
+## 03-reports
+
+- [R001-DRAFT-clean-schema-migration.md](./03-reports/R001-DRAFT-clean-schema-migration.md)
