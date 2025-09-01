@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Grep", "Glob", "LS",
+      "Bash(bun:*)", 
+      "Bash(supabase:*)",
+      "Bash(stripe:*)",
+      "Bash(docker build:*)",
+      "Bash(fly:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gitleaks:*)",
+      "Bash(trivy:*)",
+      "Write(**/*.ts)",
+      "Write(**/*.tsx)",
+      "Write(**/*.js)",
+      "Write(**/*.json)",
+      "Write(**/*.md)",
+      "mcp__github__*",
+      "mcp__shadcn-ui-v4__*",
+      "mcp__serena__*",
+      "mcp__playwright__*"
+    ],
+    "deny": [
+      "Read(./.env*)",
+      "Read(./supabase/.env*)",
+      "Bash(rm -rf:*)",
+      "Bash(git push:*)",
+      "Bash(fly destroy:*)",
+      "Write(**/*secret*)",
+      "Write(**/*key*)"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "bunx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_SERVICE_ROLE_KEY}",
+        "SUPABASE_PROJECT_ID": "${NEXT_PUBLIC_SUPABASE_URL}",
+        "SUPABASE_URL": "${NEXT_PUBLIC_SUPABASE_URL}",
+        "SUPABASE_ANON_KEY": "${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+      }
+    },
+    "stripe": {
+      "command": "bunx", 
+      "args": ["-y", "@stripe/mcp", "--tools=all"],
+      "env": {
+        "STRIPE_SECRET_KEY": "${STRIPE_SECRET_KEY}",
+        "STRIPE_PUBLISHABLE_KEY": "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}",
+        "STRIPE_WEBHOOK_SECRET": "${STRIPE_WEBHOOK_SECRET}"
+      }
+    },
+    "playwright": {
+      "command": "bunx",
+      "args": ["@anthropic/mcp-playwright"],
+      "env": {
+        "PLAYWRIGHT_BASE_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
